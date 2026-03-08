@@ -1,0 +1,348 @@
+@base = http://localhost:8080
+
+# Tip: enable cookies in VS Code settings:
+#   "rest-client.enableCookies": true
+# Auth variables (set to an existing user to run authenticated tests)
+@email = teacher@ad.unsw.edu.au
+@password = P@ssw0rd-ChangeMe
+@code = 1234
+
+### Health
+GET {{base}}/api/health
+
+### Auth (Path prefix: /api/auth)
+### Registration - Send code
+POST {{base}}/api/auth/send-code/
+Content-Type: application/json
+
+{
+  "email": "{{email}}"
+}
+
+### Registration - Verify code (requires code; in DEBUG server returns dev_code)
+POST {{base}}/api/auth/verify-code/
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "code": "{{code}}"
+}
+
+### Registration - Set password (complete)
+POST {{base}}/api/auth/set-password/
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### Login
+POST {{base}}/api/auth/login/
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### Auth status (expects cookie)
+GET {{base}}/api/auth/status/
+
+### Logout
+POST {{base}}/api/auth/logout/
+
+### Password reset - Send code
+POST {{base}}/api/auth/reset/send-code/
+Content-Type: application/json
+
+{
+  "email": "{{email}}"
+}
+
+### Password reset - Verify code
+POST {{base}}/api/auth/reset/verify-code/
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "code": "{{code}}"
+}
+
+### Password reset - Complete
+POST {{base}}/api/auth/reset/complete/
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### Profile (Path prefix: /api/profile) — requires auth
+### Status
+GET {{base}}/api/profile/status/
+
+### Options
+GET {{base}}/api/profile/options/
+
+### Submit profile
+POST {{base}}/api/profile/submit/
+Content-Type: application/json
+
+{
+  "gender": "female",
+  "city": "Sydney",
+  "age_group": "18-24",
+  "education_level": "Undergraduate",
+  "income_level": "<30k",
+  "social_value": 5,
+  "interests": ["tech", "music"],
+  "sociability": 6,
+  "openness": 7,
+  "shopping_frequency": "monthly",
+  "buying_behavior": "value",
+  "decision_factor": "price",
+  "shopping_preference": "online",
+  "digital_time": "2-4h",
+  "content_preference": "video",
+  "interaction_style": "commenter",
+  "influencer_type": "micro"
+}
+
+### My profile
+GET {{base}}/api/profile/me/
+
+### Upload avatar URL
+POST {{base}}/api/profile/avatar/
+Content-Type: application/json
+
+{
+  "avatar_url": "https://example.com/avatar.png"
+}
+
+### Update display name
+POST {{base}}/api/profile/display-name/
+Content-Type: application/json
+
+{
+  "display_name": "Alice"
+}
+
+### Users (Path prefix: /api/users) — requires auth
+### change {id}
+### User detail
+GET {{base}}/api/users/1/profile/
+
+### Follow user
+POST {{base}}/api/users/2/follow/
+
+### Unfollow user
+DELETE {{base}}/api/users/2/follow/
+
+### List following
+GET {{base}}/api/users/1/following/
+
+### List followers
+GET {{base}}/api/users/1/followers/
+
+### Set user as teacher (superuser only)
+POST {{base}}/api/users/1/admin/
+Content-Type: application/json
+
+{ "is_superuser": true, "is_admin": true }
+
+### User posts
+GET {{base}}/api/users/1/posts/?tab=
+
+### User posts analytics
+GET {{base}}/api/users/1/posts/analytics/?limit=20
+
+### Courses (Path prefix: /api/courses) — requires auth
+### List all courses
+GET {{base}}/api/courses/
+
+### Join by code
+POST {{base}}/api/courses/join/
+Content-Type: application/json
+
+{
+  "join_code": "JOINCOMM"
+}
+
+### Create course
+POST {{base}}/api/courses/create/
+Content-Type: application/json
+
+{
+  "course_code": "COMP9900",
+  "course_name": "Capstone Project",
+  "term": "25T3",
+  "start_date": "2025-09-01",
+  "end_date": "2025-11-30"
+}
+
+### Update course
+PUT {{base}}/api/courses/1/
+Content-Type: application/json
+
+{
+  "course_code": "COMM5010",
+  "course_name": "Social Media Strategy",
+  "term": "25T3",
+  "start_date": "2025-09-01",
+  "end_date": "2026-12-01"
+}
+
+### Course profile (GET)
+GET {{base}}/api/courses/1/profile/
+
+### Course profile (POST)
+POST {{base}}/api/courses/1/profile/
+Content-Type: application/json
+
+{
+  "avatar_url": "http://example.com/course.png",
+  "content_preference": "video"
+}
+
+### Managed courses
+GET {{base}}/api/courses/managed/
+
+### User’s courses
+GET {{base}}/api/users/1/courses/
+
+### Course posts (Path: /api/courses/{id}/posts) — requires auth
+### List posts
+GET {{base}}/api/courses/1/posts/?hashtag=&tab=&following=0
+
+### Create post
+POST {{base}}/api/courses/1/posts/
+Content-Type: application/json
+
+{
+  "content": "Hello course! #welcome @bob",
+  "attachments": [],
+  "mentions": ["bob"],
+  "mention_entities": [{"id": 2, "label": "bob"}],
+  "hashtags": ["welcome"]
+}
+
+### Post detail
+GET {{base}}/api/courses/1/posts/1/
+
+### Update post
+PATCH {{base}}/api/courses/1/posts/1/
+Content-Type: application/json
+
+{
+  "content": "Edited content"
+}
+
+### Like post
+POST {{base}}/api/courses/1/posts/1/like/
+
+### Unlike post
+DELETE {{base}}/api/courses/1/posts/1/like/
+
+### Comments list
+GET {{base}}/api/courses/1/posts/1/comments/
+
+### Add comment
+POST {{base}}/api/courses/1/posts/1/comments/
+Content-Type: application/json
+
+{
+  "content": "Nice post!"
+}
+
+### Post analytics
+GET {{base}}/api/courses/1/posts/1/analytics/
+
+### Suggestions (@ and #)
+GET {{base}}/api/courses/1/posts/suggestions/?q=bo
+
+### Course AI users (Path: /api/courses/{id}/ai-users) — requires auth
+### List AI users
+GET {{base}}/api/courses/1/ai-users/
+
+### Create AI user
+POST {{base}}/api/courses/1/ai-users/
+Content-Type: application/json
+
+{
+  "username": "ai_alice",
+  "display_name": "AI Alice",
+  "gender": "Female",
+  "city": "Sydney"
+}
+
+### AI user detail
+GET {{base}}/api/courses/1/ai-users/1/
+
+### Update AI user
+PATCH {{base}}/api/courses/1/ai-users/1/
+Content-Type: application/json
+
+{
+  "display_name": "AI Alice Updated"
+}
+
+### Delete AI user
+DELETE {{base}}/api/courses/1/ai-users/1/
+
+
+### Admin dashboard (Path: /api/admin) — requires auth
+### Summary
+GET {{base}}/api/admin/dashboard/
+
+### Course dashboard
+GET {{base}}/api/admin/dashboard/courses/4/
+
+### Course hashtag dashboard
+GET {{base}}/api/admin/dashboard/courses/4/hashtags/welcome/
+
+### Course student dashboard
+GET {{base}}/api/admin/dashboard/courses/1/students/1/
+
+### Demo module (Path prefix: /api/messages) — public/simple
+### Create message
+POST {{base}}/api/messages/
+Content-Type: application/json
+
+{
+  "content": "Hello database"
+}
+
+### Messages list
+GET {{base}}/api/messages/
+
+### Files list
+GET {{base}}/api/messages/files/
+
+### Notifications list (by user)
+GET {{base}}/api/messages/notifications/?user=alice
+
+### Mark notifications read (by user)
+PATCH {{base}}/api/messages/notifications/?user=alice
+Content-Type: application/json
+
+{
+  "ids": [1,2,3]
+}
+
+### Simulate notification
+POST {{base}}/api/messages/notifications/simulate
+Content-Type: application/json
+
+{
+  "actor": "bob",
+  "recipient": "alice",
+  "action": "replied",
+  "subject": "bob replied to your post",
+  "body": "Thanks for sharing!",
+  "metadata": { "post_id": "post-42" }
+}
+
+### Delete post
+DELETE {{base}}/api/courses/1/posts/1/
+

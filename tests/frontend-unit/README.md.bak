@@ -1,0 +1,24 @@
+Frontend Unit Tests (Vitest + RTL)
+
+This is an isolated test project that imports the app component from `../../frontend/src`. It avoids modifying your existing appâ€™s package.json.
+
+Setup
+- From this folder, install deps: `npm install` 
+- Run tests: `npm test` (headless) or `npm run test:ui` (watch/UI)
+
+Whatâ€™s covered
+- Loads and renders messages list (status text â€œShowing 1 message.â€?
+- Rejects empty message submission (shows validation error)
+- Submits a new message and refreshes list (POST called, content appears)
+- File upload: error without file; success with file (shows â€œUploaded pic.pngâ€?
+- WebSocket notification increments unread (shows â€œUnread: 1â€?
+
+Key expectations (assertions)
+- Loading state is visible before fetch resolves
+- After fetch, a message item text appears
+- Empty submit shows â€œMessage cannot be emptyâ€?- POST /api/messages/ is called when submitting valid content
+- Upload without selecting file shows â€œPlease choose a file to upload.â€?- Successful upload shows â€œUploaded <filename>â€?- After a mocked WS notification, unread counter becomes 1
+
+Notes
+- Tests stub global `fetch` and provide a mock `WebSocket`
+- If CSS import causes issues, Vitest config enables CSS handling via Vite

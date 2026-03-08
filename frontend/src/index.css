@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply bg-orange-50 text-slate-900 font-display;
+  }
+}
+
+@layer components {
+  .auth-page {
+    @apply min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-100 via-white to-orange-50 p-6;
+  }
+
+  .auth-card {
+    @apply relative w-full max-w-xl rounded-3xl bg-white/90 p-8 shadow-2xl ring-1 ring-orange-100 backdrop-blur;
+  }
+
+  .nav-pill {
+    @apply inline-flex items-center gap-2 rounded-full bg-orange-500 px-6 py-3 text-white font-semibold shadow-lg shadow-orange-200 transition hover:bg-orange-600;
+  }
+
+  .input-shell {
+    @apply flex items-center gap-3 rounded-2xl border border-orange-200 bg-orange-50/60 px-4 py-3 transition focus-within:border-orange-400 focus-within:ring-2 focus-within:ring-orange-100;
+  }
+
+  .brand-button {
+    @apply inline-flex justify-center rounded-full bg-gradient-to-r from-brand to-brand-dark px-6 py-3 font-semibold text-white shadow-lg shadow-orange-200 transition hover:from-brand-dark hover:to-brand;
+  }
+
+  .secondary-button {
+    @apply inline-flex justify-center rounded-full border border-orange-200 px-6 py-3 font-semibold text-brand transition hover:border-brand hover:text-brand-dark;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-brand hover:text-brand;
+  }
+
+  .chip.active {
+    @apply border-transparent bg-gradient-to-r from-brand to-brand-dark text-white shadow-sm;
+  }
+}

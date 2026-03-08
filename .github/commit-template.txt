@@ -1,0 +1,9 @@
+# Ticket: W16B-XX
+
+# Summary (imperative):
+
+# Details (optional):
+# - Why?
+# - Any risks / TODOs?
+
+# Lines starting with '#' are ignored.

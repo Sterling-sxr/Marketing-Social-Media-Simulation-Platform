@@ -1,0 +1,3 @@
+PNG PLACEHOLDER
+This is a small placeholder file used for multipart upload tests.
+It is not a real image; the backend stores bytes and metadata only.
