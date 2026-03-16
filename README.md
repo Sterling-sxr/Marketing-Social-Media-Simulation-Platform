@@ -31,6 +31,28 @@ The backend container will automatically run Django migrations on startup. MinIO
 - Rebuild backend/frontend after code changes: `docker compose up -d --build backend frontend`
 - Restart the nginx gateway after rebuilding: `docker compose restart gateway`
 - Stop the stack: `docker compose down` (add `-v` to remove volumes/data)
+- Run frontend with Docker hot reload: `docker compose up -d postgres redis rabbitmq minio minio-init backend gateway frontend-dev --build --no-deps`
+- Open frontend dev server: `http://localhost:5173`
+
+## Frontend Hot Reload In Docker
+Use `frontend-dev` for day-to-day frontend coding. It mounts local source code and runs Vite in dev mode.
+
+```bash
+# 1) Start backend stack + frontend dev container
+docker compose up -d postgres redis rabbitmq minio minio-init backend gateway frontend-dev --build --no-deps
+
+# 2) If the production frontend container is running, stop it
+docker compose stop frontend
+
+# 3) Watch frontend logs (first run installs npm deps)
+docker compose logs -f frontend-dev
+```
+
+Notes:
+- Edit files under `frontend/src`; browser refreshes automatically (HMR).
+- `frontend-dev` runs on `http://localhost:5173`.
+- API and media proxy target defaults to `http://gateway` inside Docker network.
+- Override API target if needed: `VITE_API_BASE=http://gateway docker compose up -d frontend-dev`.
 
 ## Git Workflow
 - Create feature/fix branches from `sprint3` (or the active sprint branch) using names such as `W16B-42-short-description`.
