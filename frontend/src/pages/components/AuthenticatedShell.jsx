@@ -162,21 +162,28 @@ export default function AuthenticatedShell({
 
   const compactName = displayName || "User";
   const compactLinks = useMemo(() => {
+    const dedupeByTo = (items) =>
+      Array.from(
+        new Map((items || []).filter(Boolean).map((item) => [item.to, item])).values()
+      );
+
     if (mobileNavLinks && mobileNavLinks.length) {
-      return mobileNavLinks.slice(0, 5);
+      return dedupeByTo(mobileNavLinks).slice(0, 5);
     }
     const uid = authUser?.id;
-    const preferred = [
+    const preferred = Array.from(
+      new Set([
       "/studenthome",
       "/courses",
       "/notifications",
       uid ? `/people/${uid}` : "/login",
       uid ? "/student/analysis" : "/login",
-    ];
+      ])
+    );
     const linksByTo = new Map(sidebarLinks.map((item) => [item.to, item]));
     const picked = preferred.map((to) => linksByTo.get(to)).filter(Boolean);
     if (picked.length >= 4) return picked.slice(0, 5);
-    return sidebarLinks.slice(0, 5);
+    return dedupeByTo(sidebarLinks).slice(0, 5);
   }, [mobileNavLinks, sidebarLinks, authUser?.id]);
 
   return (
