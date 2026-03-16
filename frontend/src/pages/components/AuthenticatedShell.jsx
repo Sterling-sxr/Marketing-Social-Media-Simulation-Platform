@@ -55,6 +55,8 @@ export default function AuthenticatedShell({
   subtitle,
   children,
   links,
+  mobileNavLinks,
+  hideMobileNav = false,
   showNotifications = false, // Pages that need auto-polling pass true
 }) {
   const navigate = useNavigate();
@@ -158,11 +160,30 @@ export default function AuthenticatedShell({
     return uniq;
   }, [links, authUser?.id, authUser?.is_superuser, authUser?.is_staff]);
 
+  const compactName = displayName || "User";
+  const compactLinks = useMemo(() => {
+    if (mobileNavLinks && mobileNavLinks.length) {
+      return mobileNavLinks.slice(0, 5);
+    }
+    const uid = authUser?.id;
+    const preferred = [
+      "/studenthome",
+      "/courses",
+      "/notifications",
+      uid ? `/people/${uid}` : "/login",
+      uid ? "/student/analysis" : "/login",
+    ];
+    const linksByTo = new Map(sidebarLinks.map((item) => [item.to, item]));
+    const picked = preferred.map((to) => linksByTo.get(to)).filter(Boolean);
+    if (picked.length >= 4) return picked.slice(0, 5);
+    return sidebarLinks.slice(0, 5);
+  }, [mobileNavLinks, sidebarLinks, authUser?.id]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-fuchsia-50 via-white to-sky-100">
       {/* Top navigation bar */}
       <header className="border-b border-fuchsia-100/60 bg-white/70 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 lg:px-6 lg:py-4">
           {/* Donut brand section */}
           <button
             type="button"
@@ -174,29 +195,29 @@ export default function AuthenticatedShell({
             <img
               src="/logo.jpg"
               alt="Donut logo"
-              className="shrink-0 h-10 w-10 sm:h-11 sm:w-11 lg:h-12 lg:w-12 rounded-lg object-cover
+              className="shrink-0 h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 rounded-lg object-cover
                          transition-transform duration-200 group-hover:scale-105"
             />
             <span
               className="bg-[linear-gradient(90deg,#f97316_0%,#fda34b_30%,#e879f9_70%,#c084fc_100%)]
-                            bg-clip-text text-transparent drop-shadow-[0_1px_1px_rgba(255,255,255,0.3)]"
+                            bg-clip-text text-lg text-transparent drop-shadow-[0_1px_1px_rgba(255,255,255,0.3)] sm:text-xl"
             >
               Donut
             </span>
           </button>
           {/* Action area on the right */}
-          <div className="flex items-center gap-5">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3 lg:gap-5">
             {/* User card */}
             <div
-              className="flex items-center gap-3 rounded-full border border-fuchsia-200/70
-                         bg-white/90 px-4 py-2 shadow-[0_4px_12px_rgba(217,70,239,0.08)]
+              className="flex min-w-0 items-center gap-2 rounded-full border border-fuchsia-200/70
+                         bg-white/90 px-2.5 py-1.5 shadow-[0_4px_12px_rgba(217,70,239,0.08)] sm:gap-3 sm:px-4 sm:py-2
                          transition-all duration-200 hover:shadow-[0_8px_20px_rgba(217,70,239,0.12)]
                          hover:border-fuchsia-300/70"
             >
               <div
-                className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full
+                className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full
                            bg-gradient-to-br from-fuchsia-300 via-pink-200 to-amber-200
-                           text-base font-semibold text-slate-800
+                           text-sm font-semibold text-slate-800 sm:h-10 sm:w-10 sm:text-base
                            shadow-[inset_0_1px_2px_rgba(255,255,255,0.6),0_2px_8px_rgba(217,70,239,0.15)]
                            transition-transform duration-200 group-hover:scale-[1.05]"
               >
@@ -210,11 +231,11 @@ export default function AuthenticatedShell({
                   initials
                 )}
               </div>
-              <div className="leading-tight">
-                <p className="text-sm font-semibold text-slate-800">
-                  {displayName}
+              <div className="min-w-0 leading-tight">
+                <p className="max-w-[120px] truncate text-xs font-semibold text-slate-800 sm:max-w-[180px] sm:text-sm">
+                  {compactName}
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="hidden text-xs text-slate-500 sm:block">
                   {authUser?.email || authUser?.username || "Welcome back"}
                 </p>
               </div>
@@ -224,7 +245,7 @@ export default function AuthenticatedShell({
             <button
               type="button"
               className="group inline-flex items-center gap-2 rounded-2xl
-                        px-4 py-2 text-sm font-semibold text-orange-600
+                        px-2.5 py-1.5 text-xs font-semibold text-orange-600 sm:px-4 sm:py-2 sm:text-sm
                         bg-[linear-gradient(135deg,#FFE7CF_0%,#F1E9FF_100%)]
                         shadow-[0_6px_18px_rgba(17,24,39,.08)]
                         transition-all duration-200
@@ -253,15 +274,15 @@ export default function AuthenticatedShell({
                   d="M21 12a1 1 0 0 0-1-1h-7v2h7a1 1 0 0 0 1-1zm-3.707-4.707-1.414 1.414L18.586 11H13v2h5.586l-2.707 2.293 1.414 1.414L22 12l-4.707-4.707z"
                 />
               </svg>
-              Logout
+              <span className="hidden sm:inline">Logout</span>
             </button>
           </div>
         </div>
       </header>
 
       {/* Main content region */}
-      <div className="mx-auto flex w-full max-w-6xl gap-6 px-6 py-8">
-        <aside className="flex w-16 flex-shrink-0 flex-col gap-2 rounded-3xl border border-fuchsia-100/70 bg-white/80 p-2 shadow-lg shadow-fuchsia-100/50 lg:w-60 lg:p-4">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-3 py-3 sm:gap-4 sm:px-4 sm:py-4 lg:flex-row lg:gap-6 lg:px-6 lg:py-8">
+        <aside className="hidden w-16 flex-shrink-0 flex-col gap-2 rounded-3xl border border-fuchsia-100/70 bg-white/80 p-2 shadow-lg shadow-fuchsia-100/50 lg:flex lg:w-60 lg:p-4">
           {sidebarLinks.map((link) => {
             const active = isActiveLink(link.to, location);
             const isMessages = link.to === "/notifications";
@@ -311,13 +332,17 @@ export default function AuthenticatedShell({
           })}
         </aside>
 
-        <main className="flex-1 space-y-6 rounded-3xl border border-fuchsia-100/70 bg-white/90 p-6 shadow-xl shadow-fuchsia-100/50">
+        <main className="flex-1 space-y-4 rounded-2xl border border-fuchsia-100/70 bg-white/90 p-4 pb-24 shadow-lg shadow-fuchsia-100/40 sm:space-y-5 sm:p-5 sm:pb-24 lg:space-y-6 lg:rounded-3xl lg:p-6 lg:pb-6 lg:shadow-xl lg:shadow-fuchsia-100/50">
           <div className="space-y-1">
             {title ? (
-              <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
+              <h1 className="break-words text-xl font-bold text-slate-900 sm:text-2xl">
+                {title}
+              </h1>
             ) : null}
             {subtitle ? (
-              <p className="text-sm text-slate-500">{subtitle}</p>
+              <p className="break-words text-xs text-slate-500 sm:text-sm">
+                {subtitle}
+              </p>
             ) : null}
           </div>
           <div key={location.pathname + location.search} className="space-y-6">
@@ -325,6 +350,59 @@ export default function AuthenticatedShell({
           </div>
         </main>
       </div>
+
+      {!hideMobileNav ? (
+        <nav
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-fuchsia-100/80 bg-white/95 px-2 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] shadow-[0_-8px_24px_rgba(148,163,184,0.16)] backdrop-blur lg:hidden"
+          aria-label="Mobile navigation"
+        >
+          <div className="mx-auto grid w-full max-w-6xl grid-cols-5 gap-1">
+            {compactLinks.map((link) => {
+              const active = isActiveLink(link.to, location);
+              const isMessages = link.to === "/notifications";
+              return (
+                <NavLink
+                  key={`mobile-${link.to}`}
+                  to={link.to}
+                  end
+                  className={() =>
+                    classNames(
+                      "relative inline-flex min-h-[60px] flex-col items-center justify-center rounded-xl px-1 py-1 text-[11px] font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand/40",
+                      active
+                        ? "bg-gradient-to-r from-brand/10 to-violet-100 text-brand"
+                        : "text-slate-600 hover:bg-fuchsia-50 hover:text-brand"
+                    )
+                  }
+                  aria-label={
+                    isMessages ? `Messages, ${notificationLabel}` : link.label
+                  }
+                >
+                  <span
+                    className={classNames(
+                      "relative inline-flex items-center justify-center rounded-lg p-1.5",
+                      active
+                        ? "bg-gradient-to-r from-orange-100 to-pink-100 text-fuchsia-600 shadow-sm"
+                        : "text-slate-500"
+                    )}
+                  >
+                    {link.icon}
+                    {isMessages && unread > 0 ? (
+                      <span
+                        className="absolute -right-1.5 -top-1.5 inline-flex min-w-[18px] items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold leading-5 text-white shadow"
+                        aria-hidden="true"
+                        title={`${unread} unread`}
+                      >
+                        {unread > 99 ? "99+" : unread}
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="mt-0.5 truncate">{link.label}</span>
+                </NavLink>
+              );
+            })}
+          </div>
+        </nav>
+      ) : null}
       <ToastHost />
     </div>
   );
