@@ -127,6 +127,7 @@ export default function CourseFeedPage() {
     profile: null,
     error: "",
   });
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
   const isEditing = Boolean(editingPost);
 
@@ -327,6 +328,10 @@ export default function CourseFeedPage() {
     loadTags();
   }, [loadTags]);
 
+  useEffect(() => {
+    setMobileFilterOpen(false);
+  }, [location.pathname, location.search]);
+
   // Toolbar actions (top right)
   const handleRefresh = () => loadFeed();
 
@@ -361,6 +366,29 @@ export default function CourseFeedPage() {
       navigate(`/courses/${courseId}/profile`);
     }
   };
+
+  const handleFilterAll = useCallback(() => {
+    setLeftFilter({ type: "all" });
+    navigate(`/courses/${courseId}`, { replace: true });
+    setMobileFilterOpen(false);
+  }, [courseId, navigate]);
+
+  const handleFilterFollowing = useCallback(() => {
+    setLeftFilter({ type: "following" });
+    navigate(`/courses/${courseId}?tab=following`, { replace: true });
+    setMobileFilterOpen(false);
+  }, [courseId, navigate]);
+
+  const handleFilterTag = useCallback(
+    (value) => {
+      setLeftFilter({ type: "tag", tag: value });
+      navigate(`/courses/${courseId}/hashtags/${encodeURIComponent(value)}`, {
+        replace: true,
+      });
+      setMobileFilterOpen(false);
+    },
+    [courseId, navigate]
+  );
   const openComposer = () => {
     if (courseReadOnly) return;
     setEditingPost(null);
@@ -1013,6 +1041,7 @@ export default function CourseFeedPage() {
 
   /** ====== Avatar / user card presentation ====== */
   const { initials, displayName, photoUrl } = useAvatar(authUser);
+  const compactName = displayName || "User";
 
   /** ------------------- UI ------------------- */
   const leftItemBase =
@@ -1087,7 +1116,7 @@ export default function CourseFeedPage() {
     <div className="min-h-screen bg-gradient-to-br from-fuchsia-50 via-white to-sky-100">
       {/* Header with logo + user card + logout */}
       <header className="border-b border-fuchsia-100/60 bg-white/70 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4 gap-4">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 lg:px-6 lg:py-4">
           {/* Left: logo */}
           <button
             type="button"
@@ -1098,28 +1127,28 @@ export default function CourseFeedPage() {
             <img
               src="/logo.jpg"
               alt="Donut logo"
-              className="shrink-0 h-10 w-10 sm:h-11 sm:w-11 lg:h-12 lg:w-12 rounded-lg object-cover transition-transform duration-200 group-hover:scale-105"
+              className="shrink-0 h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 rounded-lg object-cover transition-transform duration-200 group-hover:scale-105"
             />
             <span
               className="bg-[linear-gradient(90deg,#f97316_0%,#fda34b_30%,#e879f9_70%,#c084fc_100%)]
-                            bg-clip-text text-transparent drop-shadow-[0_1px_1px_rgba(255,255,255,0.3)]"
+                            bg-clip-text text-lg text-transparent drop-shadow-[0_1px_1px_rgba(255,255,255,0.3)] sm:text-xl"
             >
               Donut
             </span>
           </button>
 
           {/* Right: user card + logout */}
-          <div className="flex items-center gap-5">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3 lg:gap-5">
             <div
-              className="flex items-center gap-3 rounded-full border border-fuchsia-200/70
-                         bg-white/90 px-4 py-2 shadow-[0_4px_12px_rgba(217,70,239,0.08)]
+              className="flex min-w-0 items-center gap-2 rounded-full border border-fuchsia-200/70
+                         bg-white/90 px-2.5 py-1.5 shadow-[0_4px_12px_rgba(217,70,239,0.08)] sm:gap-3 sm:px-4 sm:py-2
                          transition-all duration-200 hover:shadow-[0_8px_20px_rgba(217,70,239,0.12)]
                          hover:border-fuchsia-300/70"
             >
               <div
-                className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full
+                className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full
                            bg-gradient-to-br from-fuchsia-300 via-pink-200 to-amber-200
-                           text-base font-semibold text-slate-800
+                           text-sm font-semibold text-slate-800 sm:h-10 sm:w-10 sm:text-base
                            shadow-[inset_0_1px_2px_rgba(255,255,255,0.6),0_2px_8px_rgba(217,70,239,0.15)]"
               >
                 {photoUrl ? (
@@ -1132,11 +1161,11 @@ export default function CourseFeedPage() {
                   initials
                 )}
               </div>
-              <div className="leading-tight">
-                <p className="text-sm font-semibold text-slate-800 truncate max-w-[12rem]">
-                  {displayName}
+              <div className="min-w-0 leading-tight">
+                <p className="max-w-[120px] truncate text-xs font-semibold text-slate-800 sm:max-w-[12rem] sm:text-sm">
+                  {compactName}
                 </p>
-                <p className="text-xs text-slate-500 truncate max-w-[12rem]">
+                <p className="hidden max-w-[12rem] truncate text-xs text-slate-500 sm:block">
                   {authUser?.email || authUser?.username || "Welcome back"}
                 </p>
               </div>
@@ -1145,7 +1174,7 @@ export default function CourseFeedPage() {
             <button
               type="button"
               className="group inline-flex items-center gap-2 rounded-2xl
-                        px-4 py-2 text-sm font-semibold text-orange-600
+                        px-2.5 py-1.5 text-xs font-semibold text-orange-600 sm:px-4 sm:py-2 sm:text-sm
                         bg-[linear-gradient(135deg,#FFE7CF_0%,#F1E9FF_100%)]
                         shadow-[0_6px_18px_rgba(17,24,39,.08)]
                         transition-all duration-200 hover:shadow-[0_10px_24px_rgba(217,70,239,.18)] hover:scale-[1.02]
@@ -1172,16 +1201,16 @@ export default function CourseFeedPage() {
                   d="M21 12a1 1 0 0 0-1-1h-7v2h7a1 1 0 0 0 1-1zm-3.707-4.707-1.414 1.414L18.586 11H13v2h5.586l-2.707 2.293 1.414 1.414L22 12l-4.707-4.707z"
                 />
               </svg>
-              Logout
+              <span className="hidden sm:inline">Logout</span>
             </button>
           </div>
         </div>
       </header>
 
       {/* Main layout: left navigation + right feed */}
-      <div className="mx-auto flex w-full max-w-6xl gap-6 px-6 py-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-3 py-3 sm:gap-4 sm:px-4 sm:py-4 lg:flex-row lg:gap-6 lg:px-6 lg:py-8">
         {/* Left column */}
-        <aside className="w-64 flex-shrink-0 rounded-3xl border border-orange-100 bg-white p-4 shadow-lg shadow-orange-100">
+        <aside className="hidden w-64 flex-shrink-0 rounded-3xl border border-orange-100 bg-white p-4 shadow-lg shadow-orange-100 lg:block">
           {/* Course title + subtitle at the top */}
           <div className="mb-4">
             <h1 className="text-base font-bold text-slate-900 truncate">
@@ -1233,21 +1262,13 @@ export default function CourseFeedPage() {
           <div className="space-y-2">
             <LeftItem
               active={leftFilter.type === "all"}
-              onClick={() => {
-                setLeftFilter({ type: "all" });
-                navigate(`/courses/${courseId}`, { replace: true });
-              }}
+              onClick={handleFilterAll}
             >
               <span>All</span>
             </LeftItem>
             <LeftItem
               active={leftFilter.type === "following"}
-              onClick={() => {
-                setLeftFilter({ type: "following" });
-                navigate(`/courses/${courseId}?tab=following`, {
-                  replace: true,
-                });
-              }}
+              onClick={handleFilterFollowing}
             >
               <span>Followed</span>
             </LeftItem>
@@ -1269,15 +1290,7 @@ export default function CourseFeedPage() {
                   <LeftItem
                     key={value}
                     active={active}
-                    onClick={() => {
-                      setLeftFilter({ type: "tag", tag: value });
-                      navigate(
-                        `/courses/${courseId}/hashtags/${encodeURIComponent(
-                          value
-                        )}`,
-                        { replace: true }
-                      );
-                    }}
+                    onClick={() => handleFilterTag(value)}
                   >
                     <span>#{value}</span>
                     {count ? (
@@ -1296,7 +1309,39 @@ export default function CourseFeedPage() {
         </aside>
 
         {/* Right column */}
-        <main className="flex-1 space-y-6 rounded-3xl border border-orange-100 bg-white/90 p-6 shadow-xl shadow-orange-100">
+        <main className="flex-1 space-y-4 rounded-2xl border border-orange-100 bg-white/90 p-4 pb-24 shadow-lg shadow-orange-100/80 sm:space-y-5 sm:p-5 lg:space-y-6 lg:rounded-3xl lg:p-6 lg:pb-6 lg:shadow-xl lg:shadow-orange-100">
+          <div className="space-y-2 lg:hidden">
+            <h1 className="break-words text-base font-bold text-slate-900">
+              {pageTitle}
+            </h1>
+            <p className="break-words text-xs text-slate-500">{pageSubtitle}</p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 lg:hidden">
+            <button
+              type="button"
+              onClick={() => setMobileFilterOpen(true)}
+              className="inline-flex h-9 items-center rounded-full border border-orange-300 bg-white px-4 text-xs font-semibold text-orange-700 transition hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-300"
+              aria-label="Open feed filters"
+            >
+              Filters
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/studenthome")}
+              className="inline-flex h-9 items-center rounded-full border border-orange-300 bg-white px-4 text-xs font-semibold text-orange-700 transition hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-300"
+            >
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={handleRefresh}
+              className="inline-flex h-9 items-center rounded-full border border-fuchsia-300 bg-white px-4 text-xs font-semibold text-fuchsia-700 transition hover:bg-fuchsia-50 focus:outline-none focus:ring-2 focus:ring-fuchsia-300"
+            >
+              Refresh
+            </button>
+          </div>
+
           {courseReadOnly ? (
             <div className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-600">
               {courseEndDate
@@ -1308,7 +1353,7 @@ export default function CourseFeedPage() {
           {feedStatus.error ? <Feedback error={feedStatus.error} /> : null}
 
           {/* Sticky control bar positioned above the first post */}
-          <div className="sticky top-0 z-20 -mx-6 px-6 pt-2">
+          <div className="sticky top-0 z-20 -mx-6 hidden px-6 pt-2 lg:block">
             <div className="flex items-center justify-end gap-3 rounded-b-2xl border-b border-orange-100/60 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/60 py-3">
               <button
                 type="button"
@@ -1355,10 +1400,126 @@ export default function CourseFeedPage() {
         </main>
       </div>
 
+      {mobileFilterOpen ? (
+        <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true" aria-label="Feed filters">
+          <button
+            type="button"
+            className="absolute inset-0 bg-slate-900/40"
+            onClick={() => setMobileFilterOpen(false)}
+            aria-label="Close filters"
+          />
+          <div className="absolute inset-y-0 right-0 w-[86%] max-w-sm overflow-y-auto border-l border-orange-100 bg-white p-4 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-slate-800">Feed Filters</h2>
+              <button
+                type="button"
+                className="rounded-full border border-orange-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600"
+                onClick={() => setMobileFilterOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="mb-4 space-y-1">
+              <p className="text-sm font-semibold text-slate-900">{pageTitle}</p>
+              <p className="text-xs text-slate-500">{pageSubtitle}</p>
+            </div>
+
+            <div className="mb-4">
+              <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Profile
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileFilterOpen(false);
+                  openProfileModal();
+                }}
+                className="flex h-10 w-full items-center justify-between rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200"
+              >
+                <span>View course profile</span>
+                <span className="text-slate-400">↗</span>
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Search
+              </label>
+              <input
+                type="text"
+                placeholder="Search posts"
+                className="h-10 w-full rounded-full border border-orange-200 bg-orange-50 px-4 text-sm text-slate-800 placeholder-slate-400 focus:border-brand focus:outline-none focus:ring-2 focus:ring-orange-100"
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                aria-label="Search posts"
+              />
+            </div>
+
+            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Filter
+            </div>
+            <div className="space-y-2">
+              <LeftItem active={leftFilter.type === "all"} onClick={handleFilterAll}>
+                <span>All</span>
+              </LeftItem>
+              <LeftItem
+                active={leftFilter.type === "following"}
+                onClick={handleFilterFollowing}
+              >
+                <span>Followed</span>
+              </LeftItem>
+            </div>
+
+            <div className="mb-2 mt-5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Community
+            </div>
+            {tagsStatus.loading ? (
+              <p className="text-xs text-slate-400">Load Community...</p>
+            ) : (
+              <div className="space-y-1">
+                {(tags || []).map((t) => {
+                  const value = typeof t === "string" ? t : t.value;
+                  const count = typeof t === "string" ? undefined : t.count;
+                  const active =
+                    leftFilter.type === "tag" && leftFilter.tag === value;
+                  return (
+                    <LeftItem
+                      key={`mobile-${value}`}
+                      active={active}
+                      onClick={() => handleFilterTag(value)}
+                    >
+                      <span>#{value}</span>
+                      {count ? (
+                        <span className="text-[10px] text-slate-400">{count}</span>
+                      ) : null}
+                    </LeftItem>
+                  );
+                })}
+                {(tags || []).length === 0 ? (
+                  <p className="text-xs text-slate-400">No tag</p>
+                ) : null}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
+
+      {!courseReadOnly ? (
+        <button
+          type="button"
+          onClick={openComposer}
+          className="fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] right-4 z-30 inline-flex h-14 items-center justify-center rounded-full bg-gradient-to-r from-orange-500 via-amber-400 to-pink-500 px-5 text-sm font-semibold text-white shadow-[0_14px_28px_-8px_rgba(236,72,153,0.5)] transition hover:scale-[1.02] hover:shadow-[0_18px_30px_-10px_rgba(236,72,153,0.55)] focus:outline-none focus:ring-2 focus:ring-fuchsia-300 lg:hidden"
+          aria-label="Create post"
+        >
+          + Post
+        </button>
+      ) : null}
+
       {/* Composer modal */}
       {showComposer && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/35 p-4">
-          <div className="w-full max-w-2xl rounded-3xl border border-fuchsia-100/70 bg-white/95 p-6 shadow-[0_32px_90px_-32px_rgba(91,33,182,0.45)] backdrop-blur">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/35 p-0 sm:grid sm:place-items-center sm:p-4">
+          <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl border border-fuchsia-100/70 bg-white/95 p-4 shadow-[0_32px_90px_-32px_rgba(91,33,182,0.45)] backdrop-blur sm:max-h-[86vh] sm:max-w-2xl sm:rounded-3xl sm:p-6">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-lg font-semibold text-slate-900">
                 {isEditing ? "Edit Post" : "New Post"}
@@ -1372,7 +1533,7 @@ export default function CourseFeedPage() {
               </button>
             </div>
 
-            <form className="space-y-4" onSubmit={handleSubmit}>
+            <form className="space-y-3 sm:space-y-4" onSubmit={handleSubmit}>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -1382,7 +1543,7 @@ export default function CourseFeedPage() {
                 onChange={handleSelectFiles}
               />
 
-              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 sm:gap-3">
                 <span className="font-semibold text-slate-600">
                   Quick tools:
                 </span>
@@ -1435,7 +1596,7 @@ export default function CourseFeedPage() {
               </div>
 
               {!isEditing && attachments.length > 0 && (
-                <div className="space-y-2 rounded-2xl border border-fuchsia-100 bg-white/85 p-4">
+                <div className="space-y-2 rounded-2xl border border-fuchsia-100 bg-white/85 p-3 sm:p-4">
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-semibold text-slate-600">
                       Attachments added ({attachments.length}/{MAX_ATTACHMENTS})
@@ -1594,7 +1755,7 @@ export default function CourseFeedPage() {
                 />
               )}
 
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-2 pb-1">
                 <button
                   type="button"
                   className="rounded-full border border-orange-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 transition hover:border-slate-300"
@@ -1629,8 +1790,8 @@ export default function CourseFeedPage() {
       />
 
       {profileModal.open ? (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/70 px-4 py-10">
-          <div className="w-full max-w-3xl rounded-3xl border border-orange-100 bg-white p-6 shadow-2xl shadow-orange-200 max-h-[85vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/70 px-0 py-0 sm:items-start sm:px-4 sm:py-10">
+          <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl border border-orange-100 bg-white p-4 shadow-2xl shadow-orange-200 sm:max-h-[85vh] sm:max-w-3xl sm:rounded-3xl sm:p-6">
             <header className="flex flex-wrap items-center justify-between gap-4 border-b border-orange-50 pb-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
