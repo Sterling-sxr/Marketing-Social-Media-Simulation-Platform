@@ -53,6 +53,7 @@ export default function PostDetailPage() {
 
   const isReadOnly = Boolean(courseInfo?.read_only);
   const courseEndDate = courseInfo?.end_date || null;
+  const authorName = authUser?.full_name || authUser?.username || "User";
 
   // —— Owner detection: tolerate different backend field names —— //
   const isOwner = useMemo(() => {
@@ -152,7 +153,7 @@ export default function PostDetailPage() {
   // —— Reuse the Donut header pattern —— //
   const HeaderBar = () => (
     <header className="border-b border-fuchsia-100/60 bg-white/70 backdrop-blur">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 lg:px-6 lg:py-4">
         <button
           type="button"
           onClick={() => navigate("/studenthome")}
@@ -162,25 +163,23 @@ export default function PostDetailPage() {
           <img
             src="/logo.jpg"
             alt="Donut"
-            className="h-10 w-10 sm:h-11 sm:w-11 lg:h-12 lg:w-12 rounded-lg object-cover"
+            className="h-8 w-8 rounded-lg object-cover sm:h-10 sm:w-10 lg:h-12 lg:w-12"
           />
-          <span className="bg-gradient-to-r from-orange-500 via-pink-400 to-purple-500 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-orange-500 via-pink-400 to-purple-500 bg-clip-text text-lg text-transparent sm:text-xl">
             Donut
           </span>
         </button>
 
-        <div className="flex items-center gap-5">
-          <div className="flex items-center gap-3 rounded-full border border-fuchsia-200/70 bg-white/90 px-4 py-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-fuchsia-300 via-pink-200 to-amber-200 text-base font-semibold text-slate-800">
-              {(authUser?.full_name || authUser?.username || "A")
-                .charAt(0)
-                .toUpperCase()}
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3 lg:gap-5">
+          <div className="flex min-w-0 items-center gap-2 rounded-full border border-fuchsia-200/70 bg-white/90 px-2.5 py-1.5 sm:gap-3 sm:px-4 sm:py-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-fuchsia-300 via-pink-200 to-amber-200 text-sm font-semibold text-slate-800 sm:h-10 sm:w-10 sm:text-base">
+              {authorName.charAt(0).toUpperCase()}
             </div>
-            <div className="leading-tight">
-              <p className="text-sm font-semibold text-slate-800">
-                {authUser?.full_name || authUser?.username || "User"}
+            <div className="min-w-0 leading-tight">
+              <p className="max-w-[120px] truncate text-xs font-semibold text-slate-800 sm:max-w-[12rem] sm:text-sm">
+                {authorName}
               </p>
-              <p className="text-xs text-slate-500">
+              <p className="hidden max-w-[12rem] truncate text-xs text-slate-500 sm:block">
                 {authUser?.email || "zxxxxxxx@ad.unsw.edu.au"}
               </p>
             </div>
@@ -189,13 +188,14 @@ export default function PostDetailPage() {
           <button
             type="button"
             onClick={() => navigate("/", { replace: true })}
-            className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-orange-100 to-pink-100 px-4 py-2 text-sm font-semibold text-orange-600"
+            className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-orange-100 to-pink-100 px-2.5 py-1.5 text-xs font-semibold text-orange-600 sm:px-4 sm:py-2 sm:text-sm"
+            aria-label="Logout"
           >
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
               <path d="M13 3a1 1 0 0 1 1 1v4h-2V5H6v14h6v-3h2v4a1 1 0 0 1-1 1H5a2 2 0 0 1 2-2V5a2 2 0 0 1 2-2h8z" />
               <path d="M21 12a1 1 0 0 0-1-1h-7v2h7a1 1 0 0 0 1-1zm-3.707-4.707-1.414 1.414L18.586 11H13v2h5.586l-2.707 2.293 1.414 1.414L22 12l-4.707-4.707z" />
             </svg>
-            Logout
+            <span className="hidden sm:inline">Logout</span>
           </button>
         </div>
       </div>
@@ -207,21 +207,22 @@ export default function PostDetailPage() {
       <HeaderBar />
 
       {/* Main content */}
-      <main className="mx-auto w-full max-w-6xl px-6 py-8 space-y-4">
+      <main className="mx-auto w-full max-w-6xl space-y-4 px-3 py-3 pb-28 sm:px-4 sm:py-4 sm:pb-28 lg:px-6 lg:py-8 lg:pb-8">
         {/* Sticky toolbar: title + right-side actions (Analyze button is conditional) */}
-        <div className="sticky top-24 z-20">
-          <div className="rounded-2xl border border-orange-100 bg-white px-5 py-3 shadow-sm">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="sticky top-[72px] z-20 sm:top-24">
+          <div className="rounded-2xl border border-orange-100 bg-white px-3 py-3 shadow-sm sm:px-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
               <h1 className="text-lg sm:text-xl font-semibold text-slate-900">
                 Post Detail
               </h1>
-              <div className="flex flex-nowrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 {canViewAnalytics && (
                   <button
                     onClick={() =>
                       navigate(`/courses/${courseId}/posts/${postId}/analytics`)
                     }
-                    className="inline-flex h-10 items-center gap-2 rounded-full border-2 bg-white px-5 text-sm font-semibold
+                    className="inline-flex h-9 items-center gap-2 rounded-full border-2 bg-white px-4 text-xs font-semibold
+                               text-sky-700 border-sky-400/80 transition hover:bg-sky-50 hover:shadow-md sm:h-10 sm:px-5 sm:text-sm
                                text-sky-700 border-sky-400/80 transition hover:bg-sky-50 hover:shadow-md"
                     title="View analytics of this post"
                   >
@@ -231,8 +232,10 @@ export default function PostDetailPage() {
 
                 <button
                   onClick={() => navigate(`/courses/${courseId}`)}
-                  className="inline-flex h-10 items-center gap-2 rounded-full border-2 bg-white px-5 text-sm font-semibold
+                  className="inline-flex h-9 items-center gap-2 rounded-full border-2 bg-white px-4 text-xs font-semibold
+                             text-orange-600 border-orange-400/80 transition hover:bg-orange-50 hover:shadow-md sm:h-10 sm:px-5 sm:text-sm
                              text-orange-600 border-orange-400/80 transition hover:bg-orange-50 hover:shadow-md"
+                  aria-label="Back to course"
                 >
                   <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4">
                     <path
@@ -246,8 +249,10 @@ export default function PostDetailPage() {
                 <button
                   onClick={load}
                   disabled={status.loading}
-                  className="inline-flex h-10 items-center gap-2 rounded-full border-2 bg-white px-5 text-sm font-semibold
+                  className="inline-flex h-9 items-center gap-2 rounded-full border-2 bg-white px-4 text-xs font-semibold
+                             text-fuchsia-700 border-fuchsia-400/80 transition hover:bg-fuchsia-50 hover:shadow-md disabled:opacity-70 sm:h-10 sm:px-5 sm:text-sm
                              text-fuchsia-700 border-fuchsia-400/80 transition hover:bg-fuchsia-50 hover:shadow-md disabled:opacity-70"
+                  aria-label="Refresh post detail"
                 >
                   {status.loading ? "Refreshing..." : "Refresh"}
                 </button>
@@ -287,17 +292,17 @@ export default function PostDetailPage() {
               <li className="p-4 text-xs text-slate-500">No comments yet.</li>
             ) : (
               comments.map((c) => (
-                <li key={c.id} className="flex items-start gap-3 px-4 py-3">
+                <li key={c.id} className="flex items-start gap-2 px-3 py-3 sm:gap-3 sm:px-4">
                   <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-orange-100 text-xs font-bold text-brand">
                     {String(c.user?.name || c.user?.display_name || "?")
                       .charAt(0)
                       .toUpperCase()}
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs font-semibold text-slate-800">
+                    <p className="break-words text-xs font-semibold text-slate-800">
                       {c.user?.name || c.user?.display_name || "Unknown"}
                     </p>
-                    <p className="text-sm text-slate-700">{c.content}</p>
+                    <p className="break-words text-sm text-slate-700">{c.content}</p>
                     <p className="text-[11px] text-slate-400">
                       {new Date(c.created_at).toLocaleString("en-US", {
                         hour12: false,
@@ -309,10 +314,7 @@ export default function PostDetailPage() {
             )}
           </ul>
 
-          <form
-            className="mt-2 flex w-full flex-col gap-2"
-            onSubmit={handleSubmitComment}
-          >
+          <form className="mt-2 hidden w-full flex-col gap-2 sm:flex" onSubmit={handleSubmitComment}>
             <div className="flex items-center gap-2">
               <input
                 type="text"
@@ -340,6 +342,33 @@ export default function PostDetailPage() {
           </form>
         </section>
       </main>
+
+      <form
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-orange-100 bg-white/95 px-3 py-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] shadow-[0_-10px_24px_rgba(148,163,184,0.16)] backdrop-blur sm:hidden"
+        onSubmit={handleSubmitComment}
+      >
+        <div className="mx-auto flex w-full max-w-6xl items-center gap-2">
+          <input
+            type="text"
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            placeholder="Write a comment..."
+            className="flex-1 rounded-full border border-orange-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-brand focus:outline-none"
+            aria-label="Write a comment"
+          />
+          <button
+            type="submit"
+            disabled={!commentText.trim() || commentBusy}
+            className="rounded-full border border-orange-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand disabled:opacity-60"
+            aria-label="Send comment"
+          >
+            {commentBusy ? "Sending..." : "Send"}
+          </button>
+        </div>
+        {commentScan.has ? (
+          <ProfanityHint word={commentScan.word} type="comment" className="ml-1 mt-1" />
+        ) : null}
+      </form>
 
       <ConfirmDialog
         open={confirmDeleteOpen}
