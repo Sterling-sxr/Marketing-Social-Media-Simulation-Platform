@@ -57,7 +57,12 @@ from .dashboard_service import (
 from .gmail_service import GmailNotConfiguredError, build_gmail_flow, send_demo_email
 from .media_service import list_recent_assets, store_upload
 from .message_service import create_message, list_recent_messages
-from .notification_service import create_notification, list_notifications, mark_as_read
+from .notification_service import (
+    create_notification,
+    list_notifications,
+    mark_as_read,
+    mark_all_as_read,
+)
 from .password_reset_service import (
     PasswordResetCodeError,
     PasswordResetError,
@@ -96,6 +101,7 @@ __all__ = [
     "create_notification",
     "list_notifications",
     "mark_as_read",
+    "mark_all_as_read",
     "EmailThrottleError",
     "RegistrationError",
     "VerificationCodeError",

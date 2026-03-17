@@ -21,6 +21,7 @@ export default function NotificationsPage() {
     notifications,
     fetchNotifications,
     markNotificationsRead,
+    markAllNotificationsRead,
     notificationStatus,
   } = useApp();
 
@@ -33,12 +34,9 @@ export default function NotificationsPage() {
   }, [fetchNotifications]);
 
   const handleMarkAllRead = useCallback(async () => {
-    const unreadIds = (notifications.items || [])
-      .filter((n) => !n.is_read)
-      .map((n) => n.id);
-    if (unreadIds.length === 0) return;
-    await markNotificationsRead(unreadIds).catch(() => {});
-  }, [notifications.items, markNotificationsRead]);
+    if ((notifications.unread || 0) === 0) return;
+    await markAllNotificationsRead().catch(() => {});
+  }, [notifications.unread, markAllNotificationsRead]);
 
   const title = "Message Notification";
   const subtitle =

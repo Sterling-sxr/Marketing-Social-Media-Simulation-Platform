@@ -326,7 +326,7 @@ export default function AuthenticatedShell({
                       aria-hidden="true"
                       title={`${unread} unread`}
                     >
-                      {unread > 99 ? "99+" : unread}
+                      {unread >= 99 ? "99+" : unread}
                     </span>
                   )}
                 </span>
@@ -399,7 +399,7 @@ export default function AuthenticatedShell({
                         aria-hidden="true"
                         title={`${unread} unread`}
                       >
-                        {unread > 99 ? "99+" : unread}
+                        {unread >= 99 ? "99+" : unread}
                       </span>
                     ) : null}
                   </span>

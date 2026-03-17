@@ -9,7 +9,9 @@ from ..repositories.models import Notification
 from ..utils.serializers import notification_to_dict
 
 
-def list_notifications(*, recipient: str, limit: int = 50) -> tuple[list[Notification], int]:
+def list_notifications(
+    *, recipient: str, limit: int = 50
+) -> tuple[list[Notification], int]:
     """Return notifications for a recipient and the unread count."""
     queryset = Notification.objects.filter(recipient=recipient)
     unread_count = queryset.filter(is_read=False).count()
@@ -22,6 +24,16 @@ def mark_as_read(*, recipient: str, ids: Iterable[int]) -> int:
     if not ids:
         return 0
     return Notification.objects.filter(recipient=recipient, id__in=ids).update(is_read=True)
+
+
+def mark_all_as_read(*, recipient: str) -> int:
+    """
+    Mark all notifications for the given recipient as read.
+
+    Used by the "Mark all read" action in the UI so that the badge
+    count truly drops to zero, not just for the first page of results.
+    """
+    return Notification.objects.filter(recipient=recipient, is_read=False).update(is_read=True)
 
 
 def create_notification(
