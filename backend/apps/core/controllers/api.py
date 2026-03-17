@@ -20,9 +20,11 @@ from ..services import (
     list_recent_messages,
     mark_all_as_read,
     mark_as_read,
-    send_demo_email as send_demo_email_via_gmail,
     store_upload,
     # follow services
+)
+from ..services import (
+    send_demo_email as send_demo_email_via_gmail,
 )
 from ..utils import (
     asset_to_dict,
