@@ -4,7 +4,6 @@ from django.http import HttpRequest, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from ..services import (
-    get_admin_dashboard,
     get_course_dashboard,
     get_course_hashtag_dashboard,
     get_course_student_dashboard,

@@ -61,8 +61,8 @@ from .message_service import create_message, list_recent_messages
 from .notification_service import (
     create_notification,
     list_notifications,
-    mark_as_read,
     mark_all_as_read,
+    mark_as_read,
 )
 from .password_reset_service import (
     PasswordResetCodeError,
