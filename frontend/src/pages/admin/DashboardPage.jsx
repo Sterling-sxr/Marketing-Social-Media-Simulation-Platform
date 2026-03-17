@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
 import { getJson } from "../../lib/api";
@@ -289,16 +289,7 @@ export default function DashboardPage() {
     [authUser]
   );
 
-  useEffect(() => {
-    if (!authCheckComplete) return;
-    if (!authUser) {
-      navigate("/login", { replace: true });
-      return;
-    }
-    if (!isAdmin) {
-      navigate("/courses", { replace: true });
-      return;
-    }
+  const reloadDashboard = useCallback(() => {
     setStatus({ loading: true, error: "" });
     getJson("/api/admin/dashboard/")
       .then((payload) => {
@@ -311,7 +302,20 @@ export default function DashboardPage() {
           error: error.message || "Failed to load dashboard.",
         });
       });
-  }, [authUser, authCheckComplete, isAdmin, navigate]);
+  }, []);
+
+  useEffect(() => {
+    if (!authCheckComplete) return;
+    if (!authUser) {
+      navigate("/login", { replace: true });
+      return;
+    }
+    if (!isAdmin) {
+      navigate("/courses", { replace: true });
+      return;
+    }
+    reloadDashboard();
+  }, [authUser, authCheckComplete, isAdmin, navigate, reloadDashboard]);
 
   if (authCheckComplete && authUser && !isAdmin) {
     return <Navigate to="/courses" replace />;
@@ -430,10 +434,20 @@ export default function DashboardPage() {
       {!status.loading && data ? (
         <>
           {lastUpdated ? (
-            <p className="text-xs text-slate-500">
-              Last updated:{" "}
-              {lastUpdated.toLocaleString("en-US", { hour12: false })}
-            </p>
+            <div className="mt-1 flex items-center justify-between gap-2">
+              <p className="text-xs text-slate-500">
+                Last updated:{" "}
+                {lastUpdated.toLocaleString("en-US", { hour12: false })}
+              </p>
+              <button
+                type="button"
+                className="rounded-full border border-orange-200 bg-white px-3 py-1 text-[11px] font-semibold text-brand transition hover:border-brand disabled:opacity-60"
+                onClick={reloadDashboard}
+                disabled={status.loading}
+              >
+                {status.loading ? "Refreshing..." : "Refresh"}
+              </button>
+            </div>
           ) : null}
 
           {/* =============================== Summary tiles (KPI-inspired) =============================== */}

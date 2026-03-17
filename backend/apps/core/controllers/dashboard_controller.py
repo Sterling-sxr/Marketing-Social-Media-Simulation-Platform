@@ -8,6 +8,7 @@ from ..services import (
     get_course_dashboard,
     get_course_hashtag_dashboard,
     get_course_student_dashboard,
+    refresh_dashboard_snapshot,
 )
 from .course_controller import _ensure_authenticated
 
@@ -22,7 +23,9 @@ def dashboard_summary(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"error": "Method not allowed"}, status=405)
 
     try:
-        data = get_admin_dashboard(user=request.user)
+        # Always refresh the snapshot so totals (e.g. Total Posts)
+        # reflect the latest activity when the dashboard is opened.
+        data = refresh_dashboard_snapshot(user=request.user)
     except PermissionError as exc:
         return JsonResponse({"error": str(exc)}, status=403)
 

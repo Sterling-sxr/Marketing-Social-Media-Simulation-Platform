@@ -53,6 +53,7 @@ from .dashboard_service import (
     get_course_dashboard,
     get_course_hashtag_dashboard,
     get_course_student_dashboard,
+    refresh_dashboard_snapshot,
 )
 from .gmail_service import GmailNotConfiguredError, build_gmail_flow, send_demo_email
 from .media_service import list_recent_assets, store_upload
@@ -154,6 +155,7 @@ __all__ = [
     "search_course_mentions",
     "search_course_hashtags",
     "get_admin_dashboard",
+    "refresh_dashboard_snapshot",
     "get_course_dashboard",
     "get_course_hashtag_dashboard",
     "get_course_student_dashboard",
