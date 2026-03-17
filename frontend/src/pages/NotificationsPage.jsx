@@ -166,8 +166,8 @@ export default function NotificationsPage() {
                     mark as already read
                   </button>
                 ) : (
-                  <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-700">
-                    already read
+                  <span className="inline-flex h-7 items-center rounded-full bg-green-100 px-3 text-[11px] font-semibold text-green-700 whitespace-nowrap">
+                    Read
                   </span>
                 )}
               </div>
