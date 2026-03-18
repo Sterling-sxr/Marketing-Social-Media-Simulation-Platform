@@ -152,7 +152,7 @@ export default function PostDetailPage() {
 
   // —— Reuse the Donut header pattern —— //
   const HeaderBar = () => (
-    <header className="border-b border-fuchsia-100/60 bg-white/70 backdrop-blur">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-fuchsia-100/60 bg-white/95 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 lg:px-6 lg:py-4">
         <button
           type="button"
@@ -207,9 +207,9 @@ export default function PostDetailPage() {
       <HeaderBar />
 
       {/* Main content */}
-      <main className="mx-auto w-full max-w-6xl space-y-4 px-3 py-3 pb-28 sm:px-4 sm:py-4 sm:pb-28 lg:px-6 lg:py-8 lg:pb-8">
+      <main className="mx-auto w-full max-w-6xl space-y-4 px-3 pb-28 pt-[72px] sm:px-4 sm:pb-28 sm:pt-[96px] lg:px-6 lg:pb-8">
         {/* Sticky toolbar: title + right-side actions (Analyze button is conditional) */}
-        <div className="sticky top-[72px] z-20 sm:top-24">
+        <div className="sticky top-[72px] z-20 sm:top-[96px]">
           <div className="rounded-2xl border border-orange-100 bg-white px-3 py-3 shadow-sm sm:px-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
               <h1 className="text-lg sm:text-xl font-semibold text-slate-900">
@@ -298,11 +298,13 @@ export default function PostDetailPage() {
                       .charAt(0)
                       .toUpperCase()}
                   </div>
-                  <div className="flex-1">
+                  <div className="min-w-0 flex-1">
                     <p className="break-words text-xs font-semibold text-slate-800">
                       {c.user?.name || c.user?.display_name || "Unknown"}
                     </p>
-                    <p className="break-words text-sm text-slate-700">{c.content}</p>
+                    <p className="break-words [overflow-wrap:anywhere] text-sm text-slate-700">
+                      {c.content}
+                    </p>
                     <p className="text-[11px] text-slate-400">
                       {new Date(c.created_at).toLocaleString("en-US", {
                         hour12: false,
