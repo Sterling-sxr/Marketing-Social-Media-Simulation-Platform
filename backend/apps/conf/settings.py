@@ -2,10 +2,13 @@ import os
 from pathlib import Path
 
 import dj_database_url
+from dotenv import load_dotenv
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent  # 指向 capstone-project-26t1-9900-f09d-bread-1
+env_path = BASE_DIR / ".env"
+load_dotenv(env_path)
+
 APPS_DIR = BASE_DIR / "apps"
-
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-secret")
 DEBUG = os.environ.get("DJANGO_DEBUG", "0") == "1"
 ALLOWED_HOSTS = [
@@ -59,13 +62,16 @@ TEMPLATES = [
 WSGI_APPLICATION = "apps.conf.wsgi.application"
 ASGI_APPLICATION = "apps.conf.asgi.application"
 
-_default_db_url = os.environ.get("DATABASE_URL")
-if not _default_db_url:
-    _default_db_path = BASE_DIR / "db.sqlite3"
-    _default_db_url = f"sqlite:///{_default_db_path}"
-
 DATABASES = {
-    "default": dj_database_url.parse(_default_db_url, conn_max_age=600, ssl_require=False)
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("PG_DB"),
+        "USER": os.environ.get("PG_USER"),
+        "PASSWORD": os.environ.get("PG_PASSWORD"),
+        "HOST": os.environ.get("PG_HOST"),
+        "PORT": os.environ.get("PG_PORT"),
+        "CONN_MAX_AGE": 600,
+    }
 }
 
 CACHES = {

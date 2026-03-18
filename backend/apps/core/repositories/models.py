@@ -67,6 +67,7 @@ class UserProfile(models.Model):
     influencer_type = models.CharField(max_length=64)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    search_history = models.JSONField(default=list, blank=True)
 
     def __str__(self) -> str:
         return f"Profile<{self.user_id}>"
@@ -456,3 +457,8 @@ class PostAnalyticsSnapshot(models.Model):
 
     def __str__(self) -> str:
         return f"PostAnalyticsSnapshot<{self.post_id}>"
+
+class SearchLog(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    keyword = models.CharField(max_length=128, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)

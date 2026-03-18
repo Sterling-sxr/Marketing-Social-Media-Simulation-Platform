@@ -48,7 +48,7 @@ export default function LoginPage() {
           <span className="text-xl font-semibold text-brand-dark">
             Donut campus social simulation platform
           </span>
-        </div>
+        </div>  
 
         <nav className="flex items-center gap-3">
           {authUser ? (
