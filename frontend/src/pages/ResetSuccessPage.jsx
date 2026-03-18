@@ -27,12 +27,12 @@ export default function ResetSuccessPage() {
       <div
         role="dialog"
         aria-modal="true"
-        className="max-w-md w-full space-y-6 rounded-3xl bg-white/95 p-10 text-center shadow-2xl ring-1 ring-orange-100"
+        className="max-w-md w-full space-y-4 rounded-2xl bg-white/95 p-6 text-center shadow-2xl ring-1 ring-orange-100 sm:space-y-6 sm:rounded-3xl sm:p-10"
       >
-        <h1 className="text-3xl font-semibold text-slate-900">
+        <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl">
           Reset password successful!
         </h1>
-        <p className="text-sm text-slate-600">
+        <p className="text-sm leading-relaxed text-slate-600">
           You successfully reset your password. You will be redirected to the
           login page in{" "}
           <span className="font-semibold text-slate-900">{countdown}</span>{" "}

@@ -22,14 +22,14 @@ export default function ResetEmailPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 text-slate-900 flex flex-col">
       {/* Header (same as HomePage) */}
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5">
+      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-3 py-3 sm:px-6 sm:py-5">
         <div className="flex items-center gap-3">
           <img
             src="/logo.jpg"
             alt="Donut Logo"
-            className="h-8 w-8 object-cover mix-blend-multiply"
+            className="h-7 w-7 object-cover mix-blend-multiply sm:h-8 sm:w-8"
           />
-          <span className="text-xl font-semibold text-brand-dark">
+          <span className="text-sm font-semibold text-brand-dark sm:text-xl">
             Donut campus social simulation platform
           </span>
         </div>
@@ -45,14 +45,14 @@ export default function ResetEmailPage() {
       </header>
 
       {/* Main content: stacked on small screens, split layout on large screens */}
-      <main className="flex-1 mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 sm:gap-10 sm:px-6 lg:flex-row lg:items-center">
+      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-5 px-3 py-4 sm:gap-10 sm:px-6 sm:py-10 lg:flex-row lg:items-center">
         {/* Left copy / hero section */}
-        <section className="order-1 lg:order-none relative flex-1 pt-2 lg:pt-6">
-          <div className="relative z-10 space-y-4 max-w-[560px] -mt-80 sm:-mt-84 lg:-mt-88">
-            <h1 className="text-2xl font-bold sm:text-4xl lg:text-4xl">
+        <section className="order-1 lg:order-none relative flex-1 pt-1 lg:pt-6">
+          <div className="relative z-10 space-y-4 max-w-[560px] lg:-mt-10">
+            <h1 className="text-center text-2xl font-bold sm:text-left sm:text-4xl lg:text-4xl">
               Reset your password
             </h1>
-            <p className="text-slate-600">
+            <p className="text-slate-600 hidden sm:block">
               Enter your school email address and we will send a verification
               code to your email address for you to reset your password in the
               next step.
@@ -84,7 +84,7 @@ export default function ResetEmailPage() {
 
         {/* Right column: email input card */}
         <aside className="order-2 lg:order-none flex-1">
-          <div className="relative w-full max-w-md lg:ml-auto rounded-3xl border border-orange-100 bg-white p-8 shadow-xl shadow-orange-100 text-center">
+          <div className="relative w-full max-w-md lg:ml-auto rounded-2xl border border-orange-100 bg-white p-5 shadow-lg shadow-orange-100 text-center sm:rounded-3xl sm:p-8 sm:shadow-xl">
             <div className="absolute right-0 top-0 h-16 w-16 rounded-bl-3xl bg-gradient-to-b from-brand/10 to-brand/0" />
             <h2 className="mb-6 text-lg font-semibold text-slate-800">
               Reset Your Password
