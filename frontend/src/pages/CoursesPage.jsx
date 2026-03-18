@@ -89,12 +89,36 @@ export default function CoursesPage() {
 
   const enrolledCount = courses.joined.length;
   const availableCount = courses.available.length;
+  const isAdmin = !!authUser?.is_staff || !!authUser?.is_superuser;
 
   return (
     <AuthenticatedShell
       title="Course Center"
       subtitle="Join a course to access the class community"
     >
+      {isAdmin ? (
+        <section className="lg:hidden" aria-label="Admin quick actions">
+          <div className="grid grid-cols-2 divide-x divide-slate-200 rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
+            <button
+              type="button"
+              onClick={() => navigate("/dashboard")}
+              className="inline-flex min-h-[40px] items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-orange-50 hover:text-orange-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60"
+              aria-label="Go to dashboard"
+            >
+              Dashboard
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/courses/manage")}
+              className="inline-flex min-h-[40px] items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-orange-50 hover:text-orange-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60"
+              aria-label="Go to course management"
+            >
+              Manage
+            </button>
+          </div>
+        </section>
+      ) : null}
+
       <section className="space-y-3 sm:space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-base font-semibold text-slate-800 sm:text-lg">

@@ -171,6 +171,7 @@ export default function AuthenticatedShell({
     const linksByTo = new Map(sidebarLinks.map((item) => [item.to, item]));
     const picked = preferred.map((to) => linksByTo.get(to)).filter(Boolean);
     if (picked.length >= 4) return picked.slice(0, 5);
+    // Keep mobile nav capped to 5 primary destinations. Admin shortcuts can live in page-level quick actions.
     return dedupeByTo(sidebarLinks).slice(0, 5);
   }, [mobileNavLinks, sidebarLinks, authUser?.id]);
 
