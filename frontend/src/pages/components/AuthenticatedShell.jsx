@@ -4,10 +4,8 @@ import { useApp } from "../../context/AppContext";
 import {
   Home,
   BookOpen,
-  UserRound,
   Bell,
   FileText,
-  Users,
   BarChart3,
   LayoutDashboard,
   Wrench,
@@ -113,11 +111,6 @@ export default function AuthenticatedShell({
         icon: <BookOpen className="h-5 w-5" />,
       },
       {
-        to: uid ? `/people/${uid}` : "/login",
-        label: "Profile",
-        icon: <UserRound className="h-5 w-5" />,
-      },
-      {
         to: "/notifications",
         label: "Messages",
         icon: <Bell className="h-5 w-5" />,
@@ -126,11 +119,6 @@ export default function AuthenticatedShell({
         to: uid ? `/people/${uid}?tab=posts` : "/login",
         label: "Posts",
         icon: <FileText className="h-5 w-5" />,
-      },
-      {
-        to: uid ? `/people/${uid}/follows?tab=following` : "/login",
-        label: "Followers",
-        icon: <Users className="h-5 w-5" />,
       },
       {
         to: uid ? `/student/analysis` : "/login",
@@ -173,11 +161,11 @@ export default function AuthenticatedShell({
     const uid = authUser?.id;
     const preferred = Array.from(
       new Set([
-      "/studenthome",
-      "/courses",
-      "/notifications",
-      uid ? `/people/${uid}` : "/login",
-      uid ? "/student/analysis" : "/login",
+        "/studenthome",
+        "/courses",
+        "/notifications",
+        uid ? `/people/${uid}?tab=posts` : "/login",
+        uid ? "/student/analysis" : "/login",
       ])
     );
     const linksByTo = new Map(sidebarLinks.map((item) => [item.to, item]));
@@ -215,11 +203,14 @@ export default function AuthenticatedShell({
           {/* Action area on the right */}
           <div className="flex min-w-0 items-center gap-2 sm:gap-3 lg:gap-5">
             {/* User card */}
-            <div
+            <button
+              type="button"
+              onClick={() => navigate("/profile")}
+              aria-label={`Open ${compactName}'s profile`}
               className="flex min-w-0 items-center gap-2 rounded-full border border-fuchsia-200/70
                          bg-white/90 px-2.5 py-1.5 shadow-[0_4px_12px_rgba(217,70,239,0.08)] sm:gap-3 sm:px-4 sm:py-2
                          transition-all duration-200 hover:shadow-[0_8px_20px_rgba(217,70,239,0.12)]
-                         hover:border-fuchsia-300/70"
+                         hover:border-fuchsia-300/70 focus:outline-none focus:ring-2 focus:ring-fuchsia-400/30"
             >
               <div
                 className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full
@@ -246,7 +237,7 @@ export default function AuthenticatedShell({
                   {authUser?.email || authUser?.username || "Welcome back"}
                 </p>
               </div>
-            </div>
+            </button>
 
             {/* Logout button */}
             <button
