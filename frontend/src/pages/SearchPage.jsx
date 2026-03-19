@@ -534,13 +534,13 @@ export default function SearchPage() {
               className="rounded-[1.7rem] border border-brand-100 bg-[linear-gradient(180deg,rgba(255,247,237,0.96)_0%,rgba(255,255,255,0.98)_100%)] px-4 py-4 shadow-sm sm:px-5"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-brand-500 shadow-sm">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-amber-200 bg-amber-50 text-amber-500 shadow-sm">
                   <Flame className="h-5 w-5" aria-hidden="true" />
                 </div>
                 <div className="space-y-1">
                   <h2
                     id="hot-search-heading"
-                    className="text-base font-semibold text-slate-900"
+                    className="text-base font-semibold text-amber-700"
                   >
                     Hot right now
                   </h2>
