@@ -34,18 +34,19 @@ const CATEGORIES = [
 
 const CATEGORY_COLORS = {
   lecture: "bg-blue-50 text-blue-700 border-blue-200",
-  tutorial: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  assignment: "bg-amber-50 text-amber-700 border-amber-200",
-  reading: "bg-purple-50 text-purple-700 border-purple-200",
+  tutorial: "bg-purple-50 text-purple-700 border-purple-200",
+  assignment: "bg-orange-50 text-orange-700 border-orange-200",
+  reading: "bg-green-50 text-green-700 border-green-200",
   exam: "bg-red-50 text-red-700 border-red-200",
   other: "bg-slate-50 text-slate-600 border-slate-200",
 };
 
 function formatBytes(bytes) {
-  if (!bytes || bytes === 0) return "0 B";
-  const units = ["B", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${units[i]}`;
+  if (!bytes) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
 
 function formatDate(iso) {
@@ -100,7 +101,6 @@ function UploadModal({ courseId, onClose, onSuccess }) {
       setStatus({ loading: false, error: "Title is required." });
       return;
     }
-
     setStatus({ loading: true, error: "" });
     try {
       const formData = new FormData();
@@ -111,34 +111,35 @@ function UploadModal({ courseId, onClose, onSuccess }) {
 
       const res = await fetch(`/api/courses/${courseId}/materials/`, {
         method: "POST",
-        body: formData,
         credentials: "include",
+        body: formData,
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Upload failed.");
-      onSuccess(data.material);
+      onSuccess(data);
     } catch (err) {
-      setStatus({ loading: false, error: err.message });
+      setStatus({ loading: false, error: err.message || "Upload failed." });
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className="w-full max-w-lg rounded-[1.8rem] border border-brand-100 bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+      <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-md rounded-t-[2rem] sm:rounded-[2rem] border border-slate-100 bg-white p-6 shadow-2xl">
+        <div className="mb-5 flex items-center justify-between">
           <h2 className="text-base font-semibold text-slate-900">Upload Material</h2>
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+            className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 px-6 py-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
+            <label className="mb-1.5 block text-xs font-semibold text-slate-600">
               Title <span className="text-red-500">*</span>
             </label>
             <input
@@ -146,18 +147,32 @@ function UploadModal({ courseId, onClose, onSuccess }) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Week 1 Lecture Slides"
-              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand/20"
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+              required
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
+            <label className="mb-1.5 block text-xs font-semibold text-slate-600">
+              Description
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Optional description"
+              rows={2}
+              className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold text-slate-600">
               Category
             </label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand/20"
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
             >
               {CATEGORIES.filter((c) => c.value !== "all").map((c) => (
                 <option key={c.value} value={c.value}>
@@ -168,70 +183,51 @@ function UploadModal({ courseId, onClose, onSuccess }) {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
-              Description
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Optional description..."
-              rows={2}
-              className="w-full resize-none rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand/20"
-            />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
+            <label className="mb-1.5 block text-xs font-semibold text-slate-600">
               File <span className="text-red-500">*</span>
             </label>
-            <div
+            <button
+              type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-brand-200 bg-brand-50/40 px-4 py-6 text-center transition hover:border-brand-400 hover:bg-brand-50"
+              className="flex w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-brand-200 bg-brand-50/50 px-4 py-6 text-center transition hover:border-brand-400 hover:bg-brand-50"
             >
+              <Upload className="mb-2 h-6 w-6 text-brand-400" />
               {file ? (
-                <>
-                  <Paperclip className="mb-2 h-6 w-6 text-brand-500" />
-                  <p className="text-sm font-medium text-slate-800">{file.name}</p>
-                  <p className="mt-0.5 text-xs text-slate-500">{formatBytes(file.size)}</p>
-                </>
+                <span className="text-sm font-medium text-slate-700">{file.name}</span>
               ) : (
                 <>
-                  <Upload className="mb-2 h-6 w-6 text-brand-400" />
-                  <p className="text-sm text-slate-600">
-                    Click to select a file
-                  </p>
-                  <p className="mt-1 text-xs text-slate-400">
-                    PDF, Word, PPT, images, ZIP — max 50 MB
-                  </p>
+                  <span className="text-sm font-semibold text-brand-700">Click to choose a file</span>
+                  <span className="text-xs text-slate-400">PDF, DOCX, PPTX, ZIP, images — max 50 MB</span>
                 </>
               )}
-            </div>
+            </button>
             <input
               ref={fileInputRef}
               type="file"
               className="hidden"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
+              accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.png,.jpg,.jpeg,.gif,.webp,.zip,.rar,.7z,.mp4,.mov"
             />
           </div>
 
           {status.error && (
-            <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">
+            <p className="rounded-xl bg-red-50 px-4 py-2 text-sm text-red-600">
               {status.error}
             </p>
           )}
 
-          <div className="flex justify-end gap-3 pt-1">
+          <div className="flex gap-3 pt-1">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+              className="flex-1 rounded-full border border-slate-200 bg-white py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={status.loading}
-              className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2 text-sm font-semibold text-white shadow-brand hover:bg-brand-dark disabled:opacity-60"
+              className="flex flex-1 items-center justify-center gap-2 rounded-full bg-brand py-2.5 text-sm font-semibold text-white shadow-brand transition hover:bg-brand-dark disabled:opacity-60"
             >
               {status.loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -342,9 +338,9 @@ export default function CourseMaterialsPage() {
   const { authUser, authCheckComplete, courses, fetchCourses } = useApp();
 
   const [materials, setMaterials] = useState([]);
-  const [activeCategory, setActiveCategory] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [activeCategory, setActiveCategory] = useState("all");
   const [showUpload, setShowUpload] = useState(false);
   const [courseName, setCourseName] = useState("");
 
@@ -375,17 +371,17 @@ export default function CourseMaterialsPage() {
   const loadMaterials = useCallback(async () => {
     if (!authUser) return;
     setLoading(true);
-    setError("");
     try {
       const params = activeCategory !== "all" ? `?category=${activeCategory}` : "";
       const data = await getJson(`/api/courses/${courseId}/materials/${params}`);
-      setMaterials(data.items || []);
+      setMaterials(Array.isArray(data) ? data : data.materials || []);
+      setError("");
     } catch (err) {
       setError(err.message || "Failed to load materials.");
     } finally {
       setLoading(false);
     }
-  }, [courseId, authUser, activeCategory]);
+  }, [authUser, courseId, activeCategory]);
 
   useEffect(() => {
     loadMaterials();
@@ -454,16 +450,14 @@ export default function CourseMaterialsPage() {
             Back to Feed
           </Link>
 
-          {isTeacherOrAdmin && (
-            <button
-              type="button"
-              onClick={() => setShowUpload(true)}
-              className="inline-flex items-center gap-2 rounded-full bg-brand px-4 py-2 text-sm font-semibold text-white shadow-brand hover:bg-brand-dark"
-            >
-              <Plus className="h-4 w-4" />
-              Upload Material
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => setShowUpload(true)}
+            className="inline-flex items-center gap-2 rounded-full bg-brand px-4 py-2 text-sm font-semibold text-white shadow-brand hover:bg-brand-dark"
+          >
+            <Plus className="h-4 w-4" />
+            Upload Material
+          </button>
         </div>
 
         {/* Category filter tabs */}
@@ -475,8 +469,8 @@ export default function CourseMaterialsPage() {
               onClick={() => setActiveCategory(cat.value)}
               className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition ${
                 activeCategory === cat.value
-                  ? "border-brand bg-brand text-white shadow-brand"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-brand-300 hover:text-brand"
+                  ? "border-brand bg-brand text-white"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-brand-200 hover:text-brand-700"
               }`}
             >
               {cat.label}
@@ -490,18 +484,11 @@ export default function CourseMaterialsPage() {
             <Loader2 className="h-8 w-8 animate-spin text-brand-400" />
           </div>
         ) : error ? (
-          <div className="rounded-[1.6rem] border border-red-100 bg-red-50 px-5 py-8 text-center">
-            <p className="text-sm font-medium text-red-600">{error}</p>
-            <button
-              type="button"
-              onClick={loadMaterials}
-              className="mt-3 rounded-full border border-red-200 px-4 py-1.5 text-sm text-red-600 hover:bg-red-100"
-            >
-              Retry
-            </button>
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {error}
           </div>
         ) : materials.length === 0 ? (
-          <div className="rounded-[1.7rem] border border-dashed border-brand-200 bg-brand-50/60 px-5 py-12 text-center">
+          <div className="rounded-[1.7rem] border border-dashed border-brand-200 bg-brand-50/70 px-5 py-12 text-center">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm">
               <FileText className="h-6 w-6 text-brand-400" />
             </div>
@@ -509,9 +496,11 @@ export default function CourseMaterialsPage() {
               No materials yet
             </h3>
             <p className="mt-2 text-sm text-slate-500">
-              {isTeacherOrAdmin
-                ? "Upload your first material using the button above."
-                : "No materials have been uploaded for this course yet."}
+              {isTeacherOrAdmin ? (
+                "Upload your first material using the button above."
+              ) : (
+                "No materials have been uploaded for this course yet."
+              )}
             </p>
           </div>
         ) : (

@@ -1352,6 +1352,13 @@ export default function CourseFeedPage() {
             >
               Refresh
             </button>
+            {/* Course Materials shortcut — prominent on mobile */}
+            <a
+              href={`/courses/${courseId}/materials`}
+              className="inline-flex h-9 items-center gap-1.5 rounded-full border border-brand-400 bg-brand-50 px-4 text-xs font-semibold text-brand-800 transition hover:bg-brand-100 focus:outline-none focus:ring-2 focus:ring-brand-300"
+            >
+              📂 Materials
+            </a>
           </div>
 
           {courseReadOnly ? (
