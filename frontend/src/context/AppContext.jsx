@@ -39,7 +39,7 @@ const createProfileData = createEmptyProfileData;
 
 const AppContext = createContext(null);
 
-const LAST_NOTIF_PREFIX = "donut:lastNotificationSeen:";
+const LAST_NOTIF_PREFIX = "bread:lastNotificationSeen:";
 
 const PROFILE_ENDPOINT = "/api/profile";
 const COURSE_ENDPOINT = "/api/courses";

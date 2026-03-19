@@ -150,7 +150,7 @@ export default function PostDetailPage() {
     }
   };
 
-  // —— Reuse the Donut header pattern —— //
+  // —— Reuse the Bread header pattern —— //
   const HeaderBar = () => (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-accent-100/60 bg-white/95 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 lg:px-6 lg:py-4">
@@ -162,11 +162,11 @@ export default function PostDetailPage() {
         >
           <img
             src="/logo.jpg"
-            alt="Donut"
+            alt="Bread"
             className="h-8 w-8 rounded-lg object-cover sm:h-10 sm:w-10 lg:h-12 lg:w-12"
           />
           <span className="bg-gradient-to-r from-brand-500 via-accent-400 to-accent-500 bg-clip-text text-lg text-transparent sm:text-xl">
-            Donut
+            Bread
           </span>
         </button>
 

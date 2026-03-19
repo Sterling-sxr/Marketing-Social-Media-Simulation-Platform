@@ -186,7 +186,7 @@ export default function AuthenticatedShell({
       {/* Top navigation bar */}
       <header className="border-b border-brand-100/70 bg-white/80 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 lg:px-6 lg:py-4">
-          {/* Donut brand section */}
+          {/* Bread brand section */}
           <button
             type="button"
             onClick={() => navigate("/studenthome")}
@@ -196,7 +196,7 @@ export default function AuthenticatedShell({
           >
             <img
               src="/logo.jpg"
-              alt="Donut logo"
+              alt="Bread logo"
               className="shrink-0 h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 rounded-lg object-cover
                          transition-transform duration-200 group-hover:scale-105"
             />
@@ -204,7 +204,7 @@ export default function AuthenticatedShell({
               className="bg-[linear-gradient(90deg,#1B596E_0%,#206F88_38%,#1DAF92_100%)]
                             bg-clip-text text-lg text-transparent drop-shadow-[0_1px_1px_rgba(255,255,255,0.3)] sm:text-xl"
             >
-              Donut
+              Bread
             </span>
           </button>
           {/* Action area on the right */}

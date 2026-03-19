@@ -102,7 +102,7 @@ export default function StudentHomePage() {
           </div>
         </>
       ) : (
-        // Default Donut welcome panel
+        // Default Bread welcome panel
         <div className="relative flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-brand-50 via-white to-accent-50 px-4 py-16 shadow-inner">
           {/* Background glow orbs */}
           <div className="absolute top-6 right-6 h-24 w-24 animate-pulse rounded-full bg-gradient-to-br from-brand-200 to-accent-200 opacity-60 blur-3xl" />
@@ -122,7 +122,7 @@ export default function StudentHomePage() {
                     transition-transform duration-500 hover:scale-[1.05]">
       <img
         src="/logo.jpg"
-        alt="Donut Logo"
+        alt="Bread Logo"
         className="w-full h-full object-contain bg-transparent"
       />
     </div>
@@ -137,7 +137,7 @@ export default function StudentHomePage() {
           <p className="text-sm text-slate-600 mb-8 max-w-md">
             Welcome to the{" "}
             <span className="font-semibold text-brand">
-              Donut Learning Community
+              Bread Learning Community
             </span>
             . Manage your courses, update your profile, and stay connected.
           </p>

@@ -59,7 +59,7 @@ export default function CourseManagePage() {
   });
 
   return (
-    <AuthenticatedShell title="Course Management" subtitle="Manage all your Donut courses 🍩">
+    <AuthenticatedShell title="Course Management" subtitle="Manage all your Bread courses 🍩">
       <main className="flex-1 p-8 bg-gradient-to-b from-brand-50 to-white rounded-2xl min-h-[calc(100vh-8rem)]">
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
@@ -69,7 +69,7 @@ export default function CourseManagePage() {
             </div>
             <div>
               <h2 className="text-2xl font-semibold text-gray-800">
-                Donut Courses
+                Bread Courses
               </h2>
               <p className="text-sm text-gray-500 mt-1">
                 Sweet learning for creative minds 🍬

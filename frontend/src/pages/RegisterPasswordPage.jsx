@@ -41,11 +41,11 @@ export default function RegisterPasswordPage() {
         <div className="flex items-center gap-3">
           <img
             src="/logo.jpg"
-            alt="Donut Logo"
+            alt="Bread Logo"
             className="h-7 w-7 object-cover mix-blend-multiply sm:h-8 sm:w-8"
           />
           <span className="text-sm font-semibold text-brand-dark sm:text-xl">
-            Donut campus social simulation platform
+            Bread campus social simulation platform
           </span>
         </div>
         <nav className="flex items-center gap-3">
@@ -181,7 +181,7 @@ export default function RegisterPasswordPage() {
 
       {/* Footer pinned to the bottom */}
       <footer className="py-6 text-center text-xs text-slate-400">
-        © {new Date().getFullYear()} Donut Capstone Team. All rights reserved.
+        © {new Date().getFullYear()} Bread Capstone Team. All rights reserved.
       </footer>
     </div>
   );

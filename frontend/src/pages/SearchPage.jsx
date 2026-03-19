@@ -24,7 +24,7 @@ import { useApp } from "../context/AppContext";
 import AuthenticatedShell from "./components/AuthenticatedShell";
 import { HOT_SEARCHES, MOCK_SEARCH_RESULTS } from "./searchData";
 
-const HISTORY_STORAGE_KEY = "donut:global-search-history";
+const HISTORY_STORAGE_KEY = "bread:global-search-history";
 const MAX_HISTORY_ITEMS = 10;
 
 function readHistory() {
@@ -310,7 +310,7 @@ export default function SearchPage() {
   return (
     <AuthenticatedShell
       title="Global Search"
-      subtitle="Quickly find discussions, course spaces, and trending topics across Donut."
+      subtitle="Quickly find discussions, course spaces, and trending topics across Bread."
     >
       <div className="space-y-6 sm:space-y-7">
         <section
@@ -389,7 +389,7 @@ export default function SearchPage() {
                 </div>
                 <button
                   type="submit"
-                  className="inline-flex min-h-[52px] items-center justify-center rounded-[1.2rem] bg-brand px-5 text-sm font-semibold text-white shadow-brand transition hover:bg-brand-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60 sm:min-h-[60px] sm:px-6"
+                  className="inline-flex min-h-[52px] items-center justify-center rounded-[1.2rem] bg-brand px-5 text-sm font-semibold text-white shadow-brand transition hover:bg-brand-dark focus:outline-none sm:min-h-[60px] sm:px-6"
                 >
                   Search
                 </button>

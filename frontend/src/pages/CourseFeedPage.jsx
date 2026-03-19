@@ -1126,14 +1126,14 @@ export default function CourseFeedPage() {
           >
             <img
               src="/logo.jpg"
-              alt="Donut logo"
+              alt="Bread logo"
               className="shrink-0 h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 rounded-lg object-cover transition-transform duration-200 group-hover:scale-105"
             />
             <span
               className="bg-[linear-gradient(90deg,#1B596E_0%,#206F88_38%,#1DAF92_100%)]
                             bg-clip-text text-lg text-transparent drop-shadow-[0_1px_1px_rgba(255,255,255,0.3)] sm:text-xl"
             >
-              Donut
+              Bread
             </span>
           </button>
 

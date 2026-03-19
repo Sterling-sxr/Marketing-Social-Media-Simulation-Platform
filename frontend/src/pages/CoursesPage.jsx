@@ -197,15 +197,7 @@ export default function CoursesPage() {
           <button
             type="submit"
             disabled={courseStatus.loading}
-            className="w-full rounded-2xl py-3 text-base font-semibold tracking-wide transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60 disabled:cursor-not-allowed disabled:opacity-70"
-            style={{
-              background:
-                "linear-gradient(90deg, #FFE8D6 0%, #FDBA74 35%, #E9D5FF 100%)", // Orange/apricot to lavender glow
-              color: "#7C2D12", // Warm amber text color
-              boxShadow:
-                "0 10px 25px rgba(249,115,22,0.22), 0 8px 20px rgba(192,132,252,0.2)",
-              filter: "brightness(1.06)",
-            }}
+            className="w-full rounded-2xl bg-brand py-3 text-base font-semibold tracking-wide text-white shadow-brand transition-all duration-300 hover:bg-brand-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60 disabled:cursor-not-allowed disabled:opacity-70"
             aria-label="Enroll in course using invitation code"
           >
             {courseStatus.loading ? "Joining..." : "Enroll the course"}

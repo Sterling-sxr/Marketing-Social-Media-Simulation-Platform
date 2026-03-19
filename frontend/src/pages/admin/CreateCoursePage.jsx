@@ -72,7 +72,7 @@ export default function CreateCoursePage() {
               <span className="text-white text-lg">🍩</span>
             </div>
             <h2 className="text-xl font-semibold text-gray-800 ml-3">
-              Create a Donut Course
+              Create a Bread Course
             </h2>
           </div>
 
@@ -177,7 +177,7 @@ export default function CreateCoursePage() {
 
         {/* Subtle footer tip */}
         <p className="mt-6 text-xs text-gray-400">
-          🍩 Donut System · Making learning sweet and fun.
+          🍩 Bread System · Making learning sweet and fun.
         </p>
       </main>
     </AuthenticatedShell>
