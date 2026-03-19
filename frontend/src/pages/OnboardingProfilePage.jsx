@@ -8,10 +8,10 @@ import CircleImage from "./components/CircleImage";
 /* ---------- Unified right-hand form sections ---------- */
 function EditSection({ emoji = "", title, desc, children }) {
   return (
-    <section className="rounded-2xl border border-orange-100 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-6">
+    <section className="rounded-2xl border border-brand-100 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-6">
       <div className="flex items-start justify-between gap-3">
         <h3 className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900 sm:text-base">
-          <span className="grid h-6 w-6 place-items-center rounded-full bg-orange-100 text-sm">
+          <span className="grid h-6 w-6 place-items-center rounded-full bg-brand-100 text-sm">
             {emoji}
           </span>
           {title}
@@ -29,7 +29,7 @@ function EditSection({ emoji = "", title, desc, children }) {
 function FieldBlock({ children, className = "" }) {
   return (
     <div
-      className={`rounded-2xl border border-orange-200 bg-orange-50/30 p-3 ${className}`}
+      className={`rounded-2xl border border-brand-200 bg-brand-50/30 p-3 ${className}`}
     >
       {children}
     </div>
@@ -70,7 +70,7 @@ function FieldText({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         required={required}
-        className="w-full rounded-xl border border-orange-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
+        className="w-full rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
       />
       <Help>Used for mentions and discovery.</Help>
     </FieldBlock>
@@ -84,7 +84,7 @@ function FieldSelect({ label, value, options, onChange, help }) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required
-        className="w-full appearance-none rounded-xl border border-orange-200 bg-white px-3 py-2.5 pr-8 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
+        className="w-full appearance-none rounded-xl border border-brand-200 bg-white px-3 py-2.5 pr-8 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
       >
         <option value="" disabled>
           Please select
@@ -114,7 +114,7 @@ function FieldSlider({ label, value, onChange }) {
           max="10"
           value={value ?? 5}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="w-full accent-orange-500"
+          className="w-full accent-brand-500"
         />
       </div>
       <Help>Drag to adjust (1–10).</Help>
@@ -125,7 +125,7 @@ function FieldInterests({ label, interests, selected, toggleInterest }) {
   return (
     <FieldBlock className="mt-2 md:col-span-2">
       <Label title={label} />
-      <div className="rounded-xl border border-orange-200 bg-white/70 p-3">
+      <div className="rounded-xl border border-brand-200 bg-white/70 p-3">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
           {(interests || []).map((interest) => {
             const active = (selected || []).includes(interest);
@@ -135,7 +135,7 @@ function FieldInterests({ label, interests, selected, toggleInterest }) {
                 className={`cursor-pointer rounded-xl px-3 py-2.5 text-xs font-medium transition sm:py-2 ${
                   active
                     ? "border border-brand bg-white text-brand shadow-sm"
-                    : "border border-transparent bg-white text-slate-600 hover:border-orange-200"
+                    : "border border-transparent bg-white text-slate-600 hover:border-brand-200"
                 }`}
               >
                 <input
@@ -322,7 +322,7 @@ export default function OnboardingProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 text-slate-900 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-brand-100 text-slate-900 flex flex-col">
       {/* Header */}
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-3 py-3 sm:px-6 sm:py-5">
         <div className="flex items-center gap-3">
@@ -378,7 +378,7 @@ export default function OnboardingProfilePage() {
 
         {/* Right form (new layout) */}
         <aside className="order-2 lg:order-none flex-1">
-          <div className="relative w-full max-w-2xl lg:ml-auto rounded-2xl border border-orange-100 bg-white p-4 sm:rounded-3xl sm:p-8 shadow-lg sm:shadow-xl shadow-orange-100">
+          <div className="relative w-full max-w-2xl lg:ml-auto rounded-2xl border border-brand-100 bg-white p-4 sm:rounded-3xl sm:p-8 shadow-lg sm:shadow-xl shadow-brand-100">
             <div className="absolute right-0 top-0 h-16 w-16 rounded-bl-3xl bg-gradient-to-b from-brand/10 to-brand/0" />
 
             {!profileOptions ? (
@@ -545,7 +545,7 @@ export default function OnboardingProfilePage() {
                 <div className="flex items-center justify-end gap-3">
                   <button
                     type="submit"
-                    className="rounded-full bg-gradient-to-r from-brand to-brand-dark px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-orange-200 transition hover:from-brand-dark hover:to-brand disabled:opacity-60"
+                    className="rounded-full bg-gradient-to-r from-brand to-brand-dark px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-brand-200 transition hover:from-brand-dark hover:to-brand disabled:opacity-60"
                     disabled={activeStatus.loading}
                   >
                     {submitButtonLabel}

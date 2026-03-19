@@ -182,9 +182,9 @@ export default function AuthenticatedShell({
   }, [mobileNavLinks, sidebarLinks, authUser?.id]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-fuchsia-50 via-white to-sky-100">
+    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-accent-50">
       {/* Top navigation bar */}
-      <header className="border-b border-fuchsia-100/60 bg-white/70 backdrop-blur">
+      <header className="border-b border-brand-100/70 bg-white/80 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 lg:px-6 lg:py-4">
           {/* Donut brand section */}
           <button
@@ -192,7 +192,7 @@ export default function AuthenticatedShell({
             onClick={() => navigate("/studenthome")}
             aria-label="Return to student home"
             className="group relative flex items-center gap-2.5 text-xl font-bold rounded-lg
-                       leading-none focus:outline-none focus:ring-2 focus:ring-fuchsia-400/30 transition"
+                       leading-none focus:outline-none focus:ring-2 focus:ring-brand/30 transition"
           >
             <img
               src="/logo.jpg"
@@ -201,7 +201,7 @@ export default function AuthenticatedShell({
                          transition-transform duration-200 group-hover:scale-105"
             />
             <span
-              className="bg-[linear-gradient(90deg,#f97316_0%,#fda34b_30%,#e879f9_70%,#c084fc_100%)]
+              className="bg-[linear-gradient(90deg,#1B596E_0%,#206F88_38%,#1DAF92_100%)]
                             bg-clip-text text-lg text-transparent drop-shadow-[0_1px_1px_rgba(255,255,255,0.3)] sm:text-xl"
             >
               Donut
@@ -214,16 +214,16 @@ export default function AuthenticatedShell({
               type="button"
               onClick={() => navigate("/profile")}
               aria-label={`Open ${compactName}'s profile`}
-              className="flex min-w-0 items-center gap-2 rounded-full border border-fuchsia-200/70
-                         bg-white/90 px-2.5 py-1.5 shadow-[0_4px_12px_rgba(217,70,239,0.08)] sm:gap-3 sm:px-4 sm:py-2
-                         transition-all duration-200 hover:shadow-[0_8px_20px_rgba(217,70,239,0.12)]
-                         hover:border-fuchsia-300/70 focus:outline-none focus:ring-2 focus:ring-fuchsia-400/30"
+              className="flex min-w-0 items-center gap-2 rounded-full border border-brand-200/80
+                         bg-white/95 px-2.5 py-1.5 shadow-soft sm:gap-3 sm:px-4 sm:py-2
+                         transition-all duration-200 hover:shadow-brand
+                         hover:border-brand-300 focus:outline-none focus:ring-2 focus:ring-brand/30"
             >
               <div
                 className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full
-                           bg-gradient-to-br from-fuchsia-300 via-pink-200 to-amber-200
+                           bg-gradient-to-br from-brand-300 via-brand-200 to-accent-200
                            text-sm font-semibold text-slate-800 sm:h-10 sm:w-10 sm:text-base
-                           shadow-[inset_0_1px_2px_rgba(255,255,255,0.6),0_2px_8px_rgba(217,70,239,0.15)]
+                           shadow-[inset_0_1px_2px_rgba(255,255,255,0.65),0_2px_8px_rgba(32,111,136,0.16)]
                            transition-transform duration-200 group-hover:scale-[1.05]"
               >
                 {photoUrl ? (
@@ -249,14 +249,11 @@ export default function AuthenticatedShell({
             {/* Logout button */}
             <button
               type="button"
-              className="group inline-flex items-center gap-2 rounded-2xl
-                        px-2.5 py-1.5 text-xs font-semibold text-orange-600 sm:px-4 sm:py-2 sm:text-sm
-                        bg-[linear-gradient(135deg,#FFE7CF_0%,#F1E9FF_100%)]
-                        shadow-[0_6px_18px_rgba(17,24,39,.08)]
-                        transition-all duration-200
-                        hover:shadow-[0_10px_24px_rgba(217,70,239,.18)] hover:scale-[1.02]
-                        active:scale-[0.99]
-                        focus:outline-none focus:ring-2 focus:ring-fuchsia-400/30"
+              className="group inline-flex items-center gap-2 rounded-2xl border border-brand-200 bg-white
+                        px-2.5 py-1.5 text-xs font-semibold text-brand-700 sm:px-4 sm:py-2 sm:text-sm
+                        shadow-soft transition-all duration-200 hover:border-brand-300 hover:bg-brand-50/70
+                        hover:shadow-brand hover:scale-[1.02] active:scale-[0.99]
+                        focus:outline-none focus:ring-2 focus:ring-brand/30"
               onClick={async () => {
                 try {
                   await logout();
@@ -287,7 +284,7 @@ export default function AuthenticatedShell({
 
       {/* Main content region */}
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-3 py-3 sm:gap-4 sm:px-4 sm:py-4 lg:flex-row lg:gap-6 lg:px-6 lg:py-8">
-        <aside className="hidden w-16 flex-shrink-0 flex-col gap-2 rounded-3xl border border-fuchsia-100/70 bg-white/80 p-2 shadow-lg shadow-fuchsia-100/50 lg:flex lg:w-60 lg:p-4">
+        <aside className="hidden w-16 flex-shrink-0 flex-col gap-2 rounded-3xl border border-brand-100/80 bg-white/85 p-2 shadow-soft lg:flex lg:w-60 lg:p-4">
           {sidebarLinks.map((link) => {
             const active = isActiveLink(link.to, location);
             const isMessages = link.to === "/notifications";
@@ -297,10 +294,10 @@ export default function AuthenticatedShell({
                 to={link.to}
                 className={() =>
                   classNames(
-                    "relative inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold transition lg:justify-start lg:gap-3 focus:outline-none focus:ring-2 focus:ring-brand/40",
+                    "group relative inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold transition lg:justify-start lg:gap-3 focus:outline-none focus:ring-2 focus:ring-brand/40",
                     active
-                      ? "bg-gradient-to-r from-brand/10 to-violet-100 text-brand"
-                      : "text-slate-600 hover:bg-fuchsia-50 hover:text-brand"
+                      ? "bg-gradient-to-r from-brand-100 to-accent-50 text-brand-800"
+                      : "text-slate-600 hover:bg-brand-50 hover:text-brand-700"
                   )
                 }
                 end
@@ -312,15 +309,15 @@ export default function AuthenticatedShell({
                   className={classNames(
                     "relative inline-flex items-center justify-center rounded-lg p-1.5",
                     active
-                      ? "bg-gradient-to-r from-orange-100 to-pink-100 text-fuchsia-600 shadow-sm"
-                      : "text-slate-500 group-hover:text-fuchsia-500 group-hover:bg-fuchsia-50"
+                      ? "bg-white text-brand-700 shadow-sm"
+                      : "text-slate-500 group-hover:text-brand-700 group-hover:bg-brand-50"
                   )}
                 >
                   {link.icon}
                   {/* Unread badge (Messages only) */}
                   {isMessages && unread > 0 && (
                     <span
-                      className="absolute -right-1.5 -top-1.5 inline-flex min-w-[18px] items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold leading-5 text-white shadow"
+                      className="absolute -right-1.5 -top-1.5 inline-flex min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold leading-5 text-white shadow"
                       aria-hidden="true"
                       title={`${unread} unread`}
                     >
@@ -337,7 +334,7 @@ export default function AuthenticatedShell({
           })}
         </aside>
 
-        <main className="flex-1 space-y-4 rounded-2xl border border-fuchsia-100/70 bg-white/90 p-4 pb-24 shadow-lg shadow-fuchsia-100/40 sm:space-y-5 sm:p-5 sm:pb-24 lg:space-y-6 lg:rounded-3xl lg:p-6 lg:pb-6 lg:shadow-xl lg:shadow-fuchsia-100/50">
+        <main className="flex-1 space-y-4 rounded-2xl border border-brand-100/80 bg-white/92 p-4 pb-24 shadow-soft sm:space-y-5 sm:p-5 sm:pb-24 lg:space-y-6 lg:rounded-3xl lg:p-6 lg:pb-6 lg:shadow-brand">
           <div className="space-y-1">
             {title ? (
               <h1 className="break-words text-xl font-bold text-slate-900 sm:text-2xl">
@@ -358,7 +355,7 @@ export default function AuthenticatedShell({
 
       {!hideMobileNav ? (
         <nav
-          className="fixed inset-x-0 bottom-0 z-40 border-t border-fuchsia-100/80 bg-white/95 px-2 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] shadow-[0_-8px_24px_rgba(148,163,184,0.16)] backdrop-blur lg:hidden"
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-brand-100/80 bg-white/95 px-2 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] shadow-[0_-8px_24px_rgba(15,23,42,0.10)] backdrop-blur lg:hidden"
           aria-label="Mobile navigation"
         >
           <div className="mx-auto grid w-full max-w-6xl grid-cols-5 gap-1">
@@ -372,10 +369,10 @@ export default function AuthenticatedShell({
                   end
                   className={() =>
                     classNames(
-                      "relative inline-flex min-h-[60px] flex-col items-center justify-center rounded-xl px-1 py-1 text-[11px] font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand/40",
+                      "group relative inline-flex min-h-[60px] flex-col items-center justify-center rounded-xl px-1 py-1 text-[11px] font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand/40",
                       active
-                        ? "bg-gradient-to-r from-brand/10 to-violet-100 text-brand"
-                        : "text-slate-600 hover:bg-fuchsia-50 hover:text-brand"
+                        ? "bg-gradient-to-r from-brand-100 to-accent-50 text-brand-800"
+                        : "text-slate-600 hover:bg-brand-50 hover:text-brand-700"
                     )
                   }
                   aria-label={
@@ -384,16 +381,16 @@ export default function AuthenticatedShell({
                 >
                   <span
                     className={classNames(
-                      "relative inline-flex items-center justify-center rounded-lg p-1.5",
-                      active
-                        ? "bg-gradient-to-r from-orange-100 to-pink-100 text-fuchsia-600 shadow-sm"
-                        : "text-slate-500"
+                    "relative inline-flex items-center justify-center rounded-lg p-1.5",
+                    active
+                        ? "bg-white text-brand-700 shadow-sm"
+                        : "text-slate-500 group-hover:text-brand-700 group-hover:bg-brand-50"
                     )}
                   >
                     {link.icon}
                     {isMessages && unread > 0 ? (
                       <span
-                        className="absolute -right-1.5 -top-1.5 inline-flex min-w-[18px] items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold leading-5 text-white shadow"
+                        className="absolute -right-1.5 -top-1.5 inline-flex min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold leading-5 text-white shadow"
                         aria-hidden="true"
                         title={`${unread} unread`}
                       >

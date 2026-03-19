@@ -46,10 +46,10 @@ export default function NotificationsPage() {
 
   // Consistent "slim pill" button style with mobile-friendly tap target and focus ring
   const SLIM_PILL =
-    "inline-flex h-9 items-center justify-center rounded-full border border-orange-200 bg-white px-4 " +
-    "text-xs font-semibold text-orange-500 leading-none transition whitespace-nowrap " +
-    "hover:border-orange-400 hover:text-orange-600 focus:outline-none focus-visible:ring-2 " +
-    "focus-visible:ring-orange-300 focus-visible:ring-offset-1 sm:h-7 sm:px-3";
+    "inline-flex h-9 items-center justify-center rounded-full border border-brand-200 bg-white px-4 " +
+    "text-xs font-semibold text-brand-500 leading-none transition whitespace-nowrap " +
+    "hover:border-brand-400 hover:text-brand-600 focus:outline-none focus-visible:ring-2 " +
+    "focus-visible:ring-brand-300 focus-visible:ring-offset-1 sm:h-7 sm:px-3";
 
   const renderSubject = useCallback((item) => {
     if (!item) return "";
@@ -97,7 +97,7 @@ export default function NotificationsPage() {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <button
           type="button"
-          className="inline-flex h-10 w-full items-center justify-center rounded-full border border-orange-200 bg-white px-4 text-sm font-semibold text-brand transition hover:border-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60 sm:h-9 sm:w-auto sm:text-xs"
+          className="inline-flex h-10 w-full items-center justify-center rounded-full border border-brand-200 bg-white px-4 text-sm font-semibold text-brand transition hover:border-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60 sm:h-9 sm:w-auto sm:text-xs"
           onClick={handleRefresh}
           disabled={notificationStatus.loading}
           aria-label="Refresh notifications"
@@ -106,7 +106,7 @@ export default function NotificationsPage() {
         </button>
         <button
           type="button"
-          className="inline-flex h-10 w-full items-center justify-center rounded-full border border-orange-200 bg-white px-4 text-sm font-semibold text-brand transition hover:border-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60 sm:h-9 sm:w-auto sm:text-xs"
+          className="inline-flex h-10 w-full items-center justify-center rounded-full border border-brand-200 bg-white px-4 text-sm font-semibold text-brand transition hover:border-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60 sm:h-9 sm:w-auto sm:text-xs"
           onClick={handleMarkAllRead}
           disabled={(notifications.unread || 0) === 0}
           aria-label="Mark all notifications as read"
@@ -123,7 +123,7 @@ export default function NotificationsPage() {
 
       <ul className="space-y-3">
         {(notifications.items || []).length === 0 ? (
-          <li className="rounded-2xl border border-orange-100 bg-white p-4 text-sm text-slate-500">
+          <li className="rounded-2xl border border-brand-100 bg-white p-4 text-sm text-slate-500">
             No notification yet
           </li>
         ) : (
@@ -132,15 +132,15 @@ export default function NotificationsPage() {
               key={item.id}
               className={`rounded-2xl border px-4 py-3 ${
                 item.is_read
-                  ? "border-orange-100 bg-white"
-                  : "border-orange-200 bg-orange-50/70"
+                  ? "border-brand-100 bg-white"
+                  : "border-brand-200 bg-brand-50/70"
               }`}
             >
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   {!item.is_read ? (
                     <span
-                      className="h-2 w-2 rounded-full bg-orange-400"
+                      className="h-2 w-2 rounded-full bg-brand-400"
                       aria-hidden="true"
                     />
                   ) : null}

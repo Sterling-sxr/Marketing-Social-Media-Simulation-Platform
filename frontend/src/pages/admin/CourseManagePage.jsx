@@ -60,11 +60,11 @@ export default function CourseManagePage() {
 
   return (
     <AuthenticatedShell title="Course Management" subtitle="Manage all your Donut courses 🍩">
-      <main className="flex-1 p-8 bg-gradient-to-b from-orange-50 to-white rounded-2xl min-h-[calc(100vh-8rem)]">
+      <main className="flex-1 p-8 bg-gradient-to-b from-brand-50 to-white rounded-2xl min-h-[calc(100vh-8rem)]">
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-pink-400 via-orange-400 to-yellow-300 rounded-full flex items-center justify-center shadow-md animate-pulse">
+            <div className="w-8 h-8 bg-gradient-to-br from-accent-400 via-brand-400 to-yellow-300 rounded-full flex items-center justify-center shadow-md animate-pulse">
               <span className="text-white text-lg font-bold">🍩</span>
             </div>
             <div>
@@ -79,7 +79,7 @@ export default function CourseManagePage() {
 
           <button
             type="button"
-            className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-orange-500 to-pink-500 text-white px-5 py-2 text-sm font-medium shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200"
+            className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-brand-500 to-accent-500 text-white px-5 py-2 text-sm font-medium shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200"
             onClick={() => navigate("/courses/create")}
           >
             <span className="text-lg leading-none">＋</span>
@@ -94,12 +94,12 @@ export default function CourseManagePage() {
             placeholder="🔍 Search by course name, code, or join code..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 w-full rounded-lg border border-orange-200 bg-white px-4 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:border-pink-400 focus:ring-2 focus:ring-pink-200 outline-none transition-all duration-150"
+            className="flex-1 w-full rounded-lg border border-brand-200 bg-white px-4 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:border-accent-400 focus:ring-2 focus:ring-accent-200 outline-none transition-all duration-150"
           />
           <select
             value={termFilter}
             onChange={(e) => setTermFilter(e.target.value)}
-            className="rounded-lg border border-orange-200 bg-white px-4 py-2 text-sm text-gray-700 focus:border-pink-400 focus:ring-2 focus:ring-pink-200 transition-all duration-150"
+            className="rounded-lg border border-brand-200 bg-white px-4 py-2 text-sm text-gray-700 focus:border-accent-400 focus:ring-2 focus:ring-accent-200 transition-all duration-150"
           >
             <option value="All">All Terms</option>
             <option value="2025T1">2025T1</option>
@@ -120,7 +120,7 @@ export default function CourseManagePage() {
         ) : filteredItems.length === 0 ? (
           /* Empty state */
           search.trim() ? (
-            <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl shadow-sm border border-orange-100">
+            <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl shadow-sm border border-brand-100">
               <div className="text-6xl mb-3">🔍</div>
               <p className="text-gray-700 font-medium">No matching courses found</p>
               <p className="text-sm text-gray-400 mt-1">
@@ -128,14 +128,14 @@ export default function CourseManagePage() {
               </p>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl shadow-sm border border-orange-100">
+            <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl shadow-sm border border-brand-100">
               <div className="text-6xl mb-3">🍩</div>
               <p className="text-gray-700 font-medium">No courses created yet</p>
               <p className="text-sm text-gray-400 mt-1">
                 Start by creating your first course
               </p>
               <button
-                className="mt-4 rounded-md bg-gradient-to-r from-orange-500 to-pink-500 text-white px-4 py-2 text-sm font-medium hover:shadow-md hover:scale-105 transition-all"
+                className="mt-4 rounded-md bg-gradient-to-r from-brand-500 to-accent-500 text-white px-4 py-2 text-sm font-medium hover:shadow-md hover:scale-105 transition-all"
                 onClick={() => navigate("/courses/create")}
               >
                 ＋ Create Course
@@ -148,11 +148,11 @@ export default function CourseManagePage() {
             {filteredItems.map((c) => (
               <li
                 key={c.id}
-                className="group rounded-2xl border border-orange-100 bg-white p-6 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
+                className="group rounded-2xl border border-brand-100 bg-white p-6 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
               >
                 <div className="flex flex-col justify-between h-full">
                   <div>
-                    <p className="text-lg font-semibold text-gray-800 group-hover:text-orange-600 transition">
+                    <p className="text-lg font-semibold text-gray-800 group-hover:text-brand-600 transition">
                       {c.course_code} · {c.course_name}
                     </p>
                     <p className="text-xs text-gray-400 mt-2">
@@ -162,21 +162,21 @@ export default function CourseManagePage() {
                   <div className="mt-5 flex flex-wrap items-center gap-2">
                     <button
                       type="button"
-                      className="inline-flex w-44 items-center justify-center gap-2 rounded-md border border-orange-300 bg-white px-4 py-1.5 text-xs font-semibold text-orange-500 hover:bg-orange-500 hover:text-white shadow-sm transition-all duration-150"
+                      className="inline-flex w-44 items-center justify-center gap-2 rounded-md border border-brand-300 bg-white px-4 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-500 hover:text-white shadow-sm transition-all duration-150"
                       onClick={() => navigate(`/courses/${c.id}`)}
                     >
                       Enter Course →
                     </button>
                     <button
                       type="button"
-                      className="inline-flex w-44 items-center justify-center gap-2 rounded-md border border-orange-300 bg-white px-4 py-1.5 text-xs font-semibold text-orange-500 hover:bg-orange-500 hover:text-white shadow-sm transition-all duration-150"
+                      className="inline-flex w-44 items-center justify-center gap-2 rounded-md border border-brand-300 bg-white px-4 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-500 hover:text-white shadow-sm transition-all duration-150"
                       onClick={() => navigate(`/courses/${c.id}/ai-users`)}
                     >
                       Manage AI Users →
                     </button>
                     <button
                       type="button"
-                      className="inline-flex w-44 items-center justify-center gap-2 rounded-md border border-orange-300 bg-white px-4 py-1.5 text-xs font-semibold text-orange-500 hover:bg-orange-500 hover:text-white shadow-sm transition-all duration-150"
+                      className="inline-flex w-44 items-center justify-center gap-2 rounded-md border border-brand-300 bg-white px-4 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-500 hover:text-white shadow-sm transition-all duration-150"
                       onClick={() => {
                         setEditingCourse(c);
                         setEditForm({
@@ -201,7 +201,7 @@ export default function CourseManagePage() {
 
       {editingCourse ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-lg rounded-3xl border border-orange-100 bg-white p-6 shadow-2xl">
+          <div className="w-full max-w-lg rounded-3xl border border-brand-100 bg-white p-6 shadow-2xl">
             <header className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-slate-800">Edit Course</h3>
@@ -211,7 +211,7 @@ export default function CourseManagePage() {
               </div>
               <button
                 type="button"
-                className="rounded-full border border-orange-200 px-3 py-1 text-xs font-semibold text-slate-500 transition hover:border-brand hover:text-brand"
+                className="rounded-full border border-brand-200 px-3 py-1 text-xs font-semibold text-slate-500 transition hover:border-brand hover:text-brand"
                 onClick={() => setEditingCourse(null)}
                 disabled={editStatus.loading}
               >
@@ -268,7 +268,7 @@ export default function CourseManagePage() {
                   type="text"
                   value={editForm.course_code}
                   onChange={(e) => setEditForm((prev) => ({ ...prev, course_code: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-orange-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
+                  className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
                   required
                 />
               </label>
@@ -279,7 +279,7 @@ export default function CourseManagePage() {
                   type="text"
                   value={editForm.course_name}
                   onChange={(e) => setEditForm((prev) => ({ ...prev, course_name: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-orange-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
+                  className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
                   required
                 />
               </label>
@@ -290,7 +290,7 @@ export default function CourseManagePage() {
                   type="text"
                   value={editForm.term}
                   onChange={(e) => setEditForm((prev) => ({ ...prev, term: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-orange-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
+                  className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
                   placeholder="e.g. 2025T1"
                   required
                 />
@@ -303,7 +303,7 @@ export default function CourseManagePage() {
                     type="date"
                     value={editForm.start_date}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, start_date: e.target.value }))}
-                    className="mt-1 w-full rounded-xl border border-orange-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
+                    className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
                     required
                   />
                 </label>
@@ -313,7 +313,7 @@ export default function CourseManagePage() {
                     type="date"
                     value={editForm.end_date}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, end_date: e.target.value }))}
-                    className="mt-1 w-full rounded-xl border border-orange-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
+                    className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
                     required
                   />
                 </label>
@@ -324,7 +324,7 @@ export default function CourseManagePage() {
               <div className="flex items-center justify-end gap-3 pt-2">
                 <button
                   type="button"
-                  className="rounded-full border border-orange-200 px-4 py-2 text-xs font-semibold text-slate-500 transition hover:border-brand hover:text-brand"
+                  className="rounded-full border border-brand-200 px-4 py-2 text-xs font-semibold text-slate-500 transition hover:border-brand hover:text-brand"
                   onClick={() => setEditingCourse(null)}
                   disabled={editStatus.loading}
                 >

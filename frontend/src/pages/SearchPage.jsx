@@ -79,7 +79,7 @@ function highlightText(text, query) {
     return (
       <mark
         key={`${part}-${index}`}
-        className="rounded bg-amber-100 px-0.5 text-inherit"
+        className="rounded bg-accent-100 px-0.5 text-inherit"
       >
         {part}
       </mark>
@@ -162,17 +162,17 @@ function SearchResultCard({ item, query }) {
   return (
     <Link
       to={item.href}
-      className="group block rounded-[1.6rem] border border-orange-100 bg-white px-4 py-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-[0_12px_28px_rgba(249,115,22,0.12)] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60 sm:px-5"
+      className="group block rounded-[1.6rem] border border-brand-100 bg-white px-4 py-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-[0_12px_28px_rgba(249,115,22,0.12)] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60 sm:px-5"
       aria-label={`Open search result ${item.title}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex min-h-[28px] items-center rounded-full bg-orange-50 px-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-orange-700">
+            <span className="inline-flex min-h-[28px] items-center rounded-full bg-brand-50 px-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-700">
               {typeLabel}
             </span>
             {item.rankLabel ? (
-              <span className="inline-flex min-h-[28px] items-center rounded-full bg-fuchsia-50 px-2.5 text-[11px] font-semibold text-fuchsia-700">
+              <span className="inline-flex min-h-[28px] items-center rounded-full bg-accent-50 px-2.5 text-[11px] font-semibold text-accent-700">
                 {item.rankLabel}
               </span>
             ) : null}
@@ -315,7 +315,7 @@ export default function SearchPage() {
       <div className="space-y-6 sm:space-y-7">
         <section
           aria-labelledby="global-search-heading"
-          className="overflow-hidden rounded-[1.8rem] border border-orange-100 bg-[linear-gradient(180deg,rgba(255,250,245,0.98)_0%,rgba(255,255,255,0.98)_100%)] px-4 py-4 shadow-[0_18px_38px_rgba(249,115,22,0.08)] sm:px-5 sm:py-5"
+          className="overflow-hidden rounded-[1.8rem] border border-brand-100 bg-[linear-gradient(180deg,rgba(255,250,245,0.98)_0%,rgba(255,255,255,0.98)_100%)] px-4 py-4 shadow-[0_18px_38px_rgba(249,115,22,0.08)] sm:px-5 sm:py-5"
         >
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -339,7 +339,7 @@ export default function SearchPage() {
               ) : null}
             </div>
 
-            <div className="rounded-[1.7rem] border border-orange-200 bg-white p-2 shadow-[0_12px_30px_rgba(249,115,22,0.10)]">
+            <div className="rounded-[1.7rem] border border-brand-200 bg-white p-2 shadow-[0_12px_30px_rgba(249,115,22,0.10)]">
               <form
                 role="search"
                 aria-label="Global search form"
@@ -354,7 +354,7 @@ export default function SearchPage() {
                 </label>
                 <div className="flex min-h-[56px] flex-1 items-center gap-3 rounded-[1.2rem] px-3 sm:min-h-[60px] sm:px-4">
                   <SearchIcon
-                    className="h-5 w-5 shrink-0 text-orange-500"
+                    className="h-5 w-5 shrink-0 text-brand-500"
                     aria-hidden="true"
                   />
                   <input
@@ -380,7 +380,7 @@ export default function SearchPage() {
                         }
                         inputRef.current?.focus();
                       }}
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-400 transition hover:bg-orange-50 hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-400 transition hover:bg-brand-50 hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60"
                       aria-label="Clear search query"
                     >
                       <X className="h-4 w-4" />
@@ -411,7 +411,7 @@ export default function SearchPage() {
                 <button
                   type="button"
                   onClick={clearHistory}
-                  className="inline-flex min-h-[40px] items-center gap-2 rounded-full border border-orange-200 bg-white px-4 text-xs font-semibold text-slate-600 transition hover:border-orange-300 hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60"
+                  className="inline-flex min-h-[40px] items-center gap-2 rounded-full border border-brand-200 bg-white px-4 text-xs font-semibold text-slate-600 transition hover:border-brand-300 hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                   Clear history
@@ -430,10 +430,10 @@ export default function SearchPage() {
                 ))}
               </div>
             ) : (
-              <div className="rounded-[1.7rem] border border-dashed border-orange-200 bg-orange-50/70 px-5 py-8 text-center sm:px-8">
+              <div className="rounded-[1.7rem] border border-dashed border-brand-200 bg-brand-50/70 px-5 py-8 text-center sm:px-8">
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm">
                   <Sparkles
-                    className="h-5 w-5 text-orange-500"
+                    className="h-5 w-5 text-brand-500"
                     aria-hidden="true"
                   />
                 </div>
@@ -450,7 +450,7 @@ export default function SearchPage() {
                       key={item.id}
                       type="button"
                       onClick={() => commitSearch(item.keyword)}
-                      className="inline-flex min-h-[40px] items-center rounded-full border border-orange-200 bg-white px-4 text-sm font-medium text-slate-700 transition hover:border-orange-300 hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60"
+                      className="inline-flex min-h-[40px] items-center rounded-full border border-brand-200 bg-white px-4 text-sm font-medium text-slate-700 transition hover:border-brand-300 hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60"
                     >
                       {item.keyword}
                     </button>
@@ -463,7 +463,7 @@ export default function SearchPage() {
           <div className="space-y-5">
             <section
               aria-labelledby="search-history-heading"
-              className="rounded-[1.7rem] border border-orange-100 bg-white px-4 py-4 shadow-sm sm:px-5"
+              className="rounded-[1.7rem] border border-brand-100 bg-white px-4 py-4 shadow-sm sm:px-5"
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="space-y-1">
@@ -481,7 +481,7 @@ export default function SearchPage() {
                   <button
                     type="button"
                     onClick={clearHistory}
-                    className="inline-flex min-h-[40px] items-center gap-2 rounded-full border border-orange-200 bg-white px-4 text-xs font-semibold text-slate-600 transition hover:border-orange-300 hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60"
+                    className="inline-flex min-h-[40px] items-center gap-2 rounded-full border border-brand-200 bg-white px-4 text-xs font-semibold text-slate-600 transition hover:border-brand-300 hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                     Clear all
@@ -490,7 +490,7 @@ export default function SearchPage() {
               </div>
 
               {historyItems.length === 0 ? (
-                <div className="mt-5 rounded-[1.4rem] border border-dashed border-orange-200 bg-orange-50/70 px-4 py-6 text-sm leading-6 text-slate-500">
+                <div className="mt-5 rounded-[1.4rem] border border-dashed border-brand-200 bg-brand-50/70 px-4 py-6 text-sm leading-6 text-slate-500">
                   Search once and your recent topics will show up here for fast re-entry.
                 </div>
               ) : (
@@ -500,7 +500,7 @@ export default function SearchPage() {
                 >
                   {historyItems.map((item) => (
                     <li key={item}>
-                      <div className="flex min-h-[52px] items-center gap-2 rounded-2xl border border-orange-100 bg-orange-50/50 p-1">
+                      <div className="flex min-h-[52px] items-center gap-2 rounded-2xl border border-brand-100 bg-brand-50/50 p-1">
                         <button
                           type="button"
                           onClick={() => commitSearch(item)}
@@ -531,10 +531,10 @@ export default function SearchPage() {
 
             <section
               aria-labelledby="hot-search-heading"
-              className="rounded-[1.7rem] border border-orange-100 bg-[linear-gradient(180deg,rgba(255,247,237,0.96)_0%,rgba(255,255,255,0.98)_100%)] px-4 py-4 shadow-sm sm:px-5"
+              className="rounded-[1.7rem] border border-brand-100 bg-[linear-gradient(180deg,rgba(255,247,237,0.96)_0%,rgba(255,255,255,0.98)_100%)] px-4 py-4 shadow-sm sm:px-5"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-orange-500 shadow-sm">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-brand-500 shadow-sm">
                   <Flame className="h-5 w-5" aria-hidden="true" />
                 </div>
                 <div className="space-y-1">
@@ -556,10 +556,10 @@ export default function SearchPage() {
                     <button
                       type="button"
                       onClick={() => commitSearch(item.keyword)}
-                      className="group flex min-h-[64px] w-full items-start gap-3 rounded-[1.2rem] border border-transparent px-3 py-3 text-left transition hover:border-orange-200 hover:bg-white/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60"
+                      className="group flex min-h-[64px] w-full items-start gap-3 rounded-[1.2rem] border border-transparent px-3 py-3 text-left transition hover:border-brand-200 hover:bg-white/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60"
                       aria-label={`Search hot topic ${item.keyword}`}
                     >
-                      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-xs font-bold text-orange-600 shadow-sm">
+                      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-xs font-bold text-brand-600 shadow-sm">
                         {String(index + 1).padStart(2, "0")}
                       </span>
                       <span className="min-w-0 flex-1">

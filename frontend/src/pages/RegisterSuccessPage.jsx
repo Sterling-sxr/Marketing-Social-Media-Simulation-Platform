@@ -27,7 +27,7 @@ export default function RegisterSuccessPage() {
       <div
         role="dialog"
         aria-modal="true"
-        className="max-w-md w-full space-y-4 rounded-2xl bg-white/95 p-6 text-center shadow-2xl ring-1 ring-orange-100 sm:space-y-6 sm:rounded-3xl sm:p-10"
+        className="max-w-md w-full space-y-4 rounded-2xl bg-white/95 p-6 text-center shadow-2xl ring-1 ring-brand-100 sm:space-y-6 sm:rounded-3xl sm:p-10"
       >
         <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl">
           Registration successful!

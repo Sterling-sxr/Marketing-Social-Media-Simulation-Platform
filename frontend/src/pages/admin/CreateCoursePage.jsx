@@ -64,11 +64,11 @@ export default function CreateCoursePage() {
 
   return (
     <AuthenticatedShell title="Create New Course 🍩" subtitle="Only accessible by superusers">
-      <main className="flex flex-col items-center justify-start py-10 px-6 bg-gradient-to-b from-orange-50 to-white rounded-2xl min-h-[calc(100vh-8rem)]">
-        <div className="w-full max-w-lg bg-white rounded-2xl shadow-md border border-orange-100 p-8">
+      <main className="flex flex-col items-center justify-start py-10 px-6 bg-gradient-to-b from-brand-50 to-white rounded-2xl min-h-[calc(100vh-8rem)]">
+        <div className="w-full max-w-lg bg-white rounded-2xl shadow-md border border-brand-100 p-8">
           {/* Header */}
           <div className="flex items-center justify-center mb-6">
-            <div className="w-10 h-10 bg-gradient-to-tr from-pink-400 to-orange-400 rounded-full flex items-center justify-center shadow-md">
+            <div className="w-10 h-10 bg-gradient-to-tr from-accent-400 to-brand-400 rounded-full flex items-center justify-center shadow-md">
               <span className="text-white text-lg">🍩</span>
             </div>
             <h2 className="text-xl font-semibold text-gray-800 ml-3">
@@ -89,7 +89,7 @@ export default function CreateCoursePage() {
                 onChange={(e) => setForm({ ...form, course_code: e.target.value })}
                 placeholder="e.g. COMP9900"
                 required
-                className="w-full rounded-md border border-orange-200 bg-white px-4 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:border-pink-400 focus:ring-2 focus:ring-pink-200 outline-none transition-all"
+                className="w-full rounded-md border border-brand-200 bg-white px-4 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:border-accent-400 focus:ring-2 focus:ring-accent-200 outline-none transition-all"
               />
             </div>
 
@@ -104,7 +104,7 @@ export default function CreateCoursePage() {
                 onChange={(e) => setForm({ ...form, course_name: e.target.value })}
                 placeholder="e.g. Capstone Project"
                 required
-                className="w-full rounded-md border border-orange-200 bg-white px-4 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:border-pink-400 focus:ring-2 focus:ring-pink-200 outline-none transition-all"
+                className="w-full rounded-md border border-brand-200 bg-white px-4 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:border-accent-400 focus:ring-2 focus:ring-accent-200 outline-none transition-all"
               />
             </div>
 
@@ -119,7 +119,7 @@ export default function CreateCoursePage() {
                 onChange={(e) => setForm({ ...form, term: e.target.value })}
                 placeholder="e.g. 2025T3"
                 required
-                className="w-full rounded-md border border-orange-200 bg-white px-4 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:border-pink-400 focus:ring-2 focus:ring-pink-200 outline-none transition-all"
+                className="w-full rounded-md border border-brand-200 bg-white px-4 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:border-accent-400 focus:ring-2 focus:ring-accent-200 outline-none transition-all"
               />
             </div>
 
@@ -133,7 +133,7 @@ export default function CreateCoursePage() {
                 value={form.start_date}
                 onChange={(e) => setForm({ ...form, start_date: e.target.value })}
                 required
-                className="w-full rounded-md border border-orange-200 bg-white px-4 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:border-pink-400 focus:ring-2 focus:ring-pink-200 outline-none transition-all"
+                className="w-full rounded-md border border-brand-200 bg-white px-4 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:border-accent-400 focus:ring-2 focus:ring-accent-200 outline-none transition-all"
               />
             </div>
 
@@ -148,7 +148,7 @@ export default function CreateCoursePage() {
                 min={form.start_date || undefined}
                 onChange={(e) => setForm({ ...form, end_date: e.target.value })}
                 required
-                className="w-full rounded-md border border-orange-200 bg-white px-4 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:border-pink-400 focus:ring-2 focus:ring-pink-200 outline-none transition-all"
+                className="w-full rounded-md border border-brand-200 bg-white px-4 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:border-accent-400 focus:ring-2 focus:ring-accent-200 outline-none transition-all"
               />
             </div>
 
@@ -157,7 +157,7 @@ export default function CreateCoursePage() {
               <button
                 type="submit"
                 disabled={status.loading}
-                className="rounded-md bg-gradient-to-r from-orange-500 to-pink-500 text-white px-5 py-2 text-sm font-medium shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200 disabled:opacity-60"
+                className="rounded-md bg-gradient-to-r from-brand-500 to-accent-500 text-white px-5 py-2 text-sm font-medium shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200 disabled:opacity-60"
               >
                 {status.loading ? "Creating..." : "Create Course"}
               </button>

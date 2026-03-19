@@ -267,7 +267,7 @@ export default function UserProfilePage() {
         <div className="flex items-center justify-between">
           {/* <button
             type="button"
-            className="rounded-full border border-orange-200 px-3 py-1 text-xs font-semibold text-brand transition hover:border-brand"
+            className="rounded-full border border-brand-200 px-3 py-1 text-xs font-semibold text-brand transition hover:border-brand"
             onClick={() => navigate("/courses")}
           >
             ← Back to Courses
@@ -275,7 +275,7 @@ export default function UserProfilePage() {
           {/* {isSelf && (
             <button
               type="button"
-              className="rounded-full border border-orange-200 px-3 py-1 text-xs font-semibold text-brand transition hover:border-brand"
+              className="rounded-full border border-brand-200 px-3 py-1 text-xs font-semibold text-brand transition hover:border-brand"
               onClick={() => navigate("/profile/edit")}
             >
               Edit Profile
@@ -284,7 +284,7 @@ export default function UserProfilePage() {
         </div>
 
         {/* Tabs: Posts / Likes */}
-        <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-orange-50 p-1 text-xs">
+        <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-brand-50 p-1 text-xs">
           <button
             type="button"
             className={`rounded-full px-3 py-1 font-semibold ${
@@ -346,7 +346,7 @@ export default function UserProfilePage() {
       {profile && (
         <div className="mt-4 flex items-center gap-4">
           <div className="relative">
-            <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-orange-100 text-lg font-bold text-brand">
+            <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-brand-100 text-lg font-bold text-brand">
               {profile.profile?.avatar_url ? (
                 <img
                   src={profile.profile.avatar_url}
@@ -448,7 +448,7 @@ export default function UserProfilePage() {
               <div className="mt-3 flex flex-col gap-2 text-xs">
                 <button
                   type="button"
-                  className="inline-flex w-fit items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1 font-semibold text-brand transition hover:border-brand"
+                  className="inline-flex w-fit items-center gap-2 rounded-full border border-brand-200 bg-white px-3 py-1 font-semibold text-brand transition hover:border-brand"
                   disabled={studentCourseStatus.loading || studentCourses.length === 0}
                   onClick={() => setShowCourseModal(true)}
                 >
@@ -470,8 +470,8 @@ export default function UserProfilePage() {
                   type="button"
                   className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold transition ${
                     profile.is_following
-                      ? "border-brand bg-orange-100 text-brand"
-                      : "border-orange-200 text-slate-600 hover:border-brand hover:text-brand"
+                      ? "border-brand bg-brand-100 text-brand"
+                      : "border-brand-200 text-slate-600 hover:border-brand hover:text-brand"
                   }`}
                   disabled={followBusy}
                   onClick={async () => {
@@ -523,12 +523,12 @@ export default function UserProfilePage() {
         </p>
       ) : profile ? (
         <div className="space-y-5">
-          <section className="rounded-3xl border border-orange-100 bg-white p-5 shadow-sm">
+          <section className="rounded-3xl border border-brand-100 bg-white p-5 shadow-sm">
             <h3 className="text-sm font-semibold text-slate-800">
               Account details
             </h3>
             <div className="mt-3 space-y-3">
-              <div className="rounded-2xl border border-orange-50 bg-orange-50/30 px-3 py-2">
+              <div className="rounded-2xl border border-brand-50 bg-brand-50/30 px-3 py-2">
                 <div className="mb-1 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-slate-400">
                   <span>Name</span>
                   {isSelf && (
@@ -551,13 +551,13 @@ export default function UserProfilePage() {
               </div>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border border-orange-50 bg-orange-50/30 px-3 py-2">
+                <div className="rounded-2xl border border-brand-50 bg-brand-50/30 px-3 py-2">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
                     Email
                   </p>
                   <p className="text-sm text-slate-800">{profile.email || "—"}</p>
                 </div>
-                <div className="rounded-2xl border border-orange-50 bg-orange-50/30 px-3 py-2">
+                <div className="rounded-2xl border border-brand-50 bg-brand-50/30 px-3 py-2">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
                     Institution
                   </p>
@@ -573,7 +573,7 @@ export default function UserProfilePage() {
 
       {nameEditing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
-          <div className="w-full max-w-md rounded-3xl border border-orange-100 bg-white p-5 shadow-2xl">
+          <div className="w-full max-w-md rounded-3xl border border-brand-100 bg-white p-5 shadow-2xl">
             <h3 className="text-lg font-semibold text-slate-800">
               Update display name
             </h3>
@@ -585,7 +585,7 @@ export default function UserProfilePage() {
                 type="text"
                 value={nameDraft}
                 onChange={(e) => setNameDraft(e.target.value)}
-                className="w-full rounded-xl border border-orange-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
+                className="w-full rounded-xl border border-brand-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
                 placeholder="Enter your name"
                 autoFocus
               />
@@ -597,7 +597,7 @@ export default function UserProfilePage() {
               <div className="flex flex-wrap items-center gap-3 text-xs">
                 <button
                   type="button"
-                  className="rounded-full border border-orange-200 px-4 py-1.5 font-semibold text-brand transition hover:border-brand disabled:opacity-60"
+                  className="rounded-full border border-brand-200 px-4 py-1.5 font-semibold text-brand transition hover:border-brand disabled:opacity-60"
                   onClick={handleSaveDisplayName}
                   disabled={disableNameSave}
                 >
@@ -624,7 +624,7 @@ export default function UserProfilePage() {
       {showCourseModal ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="max-h-[80vh] w-full max-w-xl overflow-hidden rounded-3xl bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-orange-100 px-5 py-4">
+            <div className="flex items-center justify-between border-b border-brand-100 px-5 py-4">
               <div>
                 <h3 className="text-lg font-semibold text-slate-800">
                   Select a course
@@ -635,7 +635,7 @@ export default function UserProfilePage() {
               </div>
               <button
                 type="button"
-                className="rounded-full border border-orange-200 px-3 py-1 text-xs font-semibold text-slate-500 transition hover:border-brand hover:text-brand"
+                className="rounded-full border border-brand-200 px-3 py-1 text-xs font-semibold text-slate-500 transition hover:border-brand hover:text-brand"
                 onClick={() => setShowCourseModal(false)}
               >
                 Close
@@ -651,12 +651,12 @@ export default function UserProfilePage() {
                   No courses available for analytics.
                 </p>
               ) : (
-                <ul className="divide-y divide-orange-50">
+                <ul className="divide-y divide-brand-50">
                   {studentCourses.map((course) => (
                     <li key={course.id}>
                       <button
                         type="button"
-                        className="flex w-full items-center justify-between px-5 py-4 text-left transition hover:bg-orange-50"
+                        className="flex w-full items-center justify-between px-5 py-4 text-left transition hover:bg-brand-50"
                         onClick={() => {
                           setShowCourseModal(false);
                           navigate(

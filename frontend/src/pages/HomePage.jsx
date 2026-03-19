@@ -38,7 +38,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 text-slate-900 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-brand-100 text-slate-900 flex flex-col">
       {/* Header */}
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-3 py-3 sm:px-6 sm:py-5">
         <div className="flex items-center gap-3">
@@ -100,7 +100,7 @@ export default function HomePage() {
         </section>
 
         <aside className="order-2 lg:order-none flex-1">
-          <div className="relative w-full max-w-md rounded-2xl border border-orange-100 bg-white p-5 text-center shadow-lg shadow-orange-100 sm:rounded-3xl sm:p-8 sm:shadow-xl lg:ml-auto">
+          <div className="relative w-full max-w-md rounded-2xl border border-brand-100 bg-white p-5 text-center shadow-lg shadow-brand-100 sm:rounded-3xl sm:p-8 sm:shadow-xl lg:ml-auto">
             <div className="absolute right-0 top-0 h-16 w-16 rounded-bl-3xl bg-gradient-to-b from-brand/10 to-brand/0" />
 
             <h2 className="mb-6 text-lg font-semibold text-slate-800">Login</h2>
@@ -187,14 +187,14 @@ export default function HomePage() {
                 <div className="space-y-4 text-left">
                   <button
                     type="button"
-                    className="w-full rounded-xl bg-gradient-to-r from-brand to-brand-dark py-3 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition hover:from-brand-dark hover:to-brand"
+                    className="w-full rounded-xl bg-gradient-to-r from-brand to-brand-dark py-3 text-sm font-semibold text-white shadow-lg shadow-brand-200 transition hover:from-brand-dark hover:to-brand"
                     onClick={() => navigate("/courses")}
                   >
                     enter course
                   </button>
                   <button
                     type="button"
-                    className="w-full rounded-xl border border-orange-200 py-3 text-sm font-semibold text-brand transition hover:border-brand hover:text-brand-dark"
+                    className="w-full rounded-xl border border-brand-200 py-3 text-sm font-semibold text-brand transition hover:border-brand hover:text-brand-dark"
                     onClick={handleLogout}
                   >
                     Logout

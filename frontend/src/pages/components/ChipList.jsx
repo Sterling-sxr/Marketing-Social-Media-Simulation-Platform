@@ -7,7 +7,7 @@ export default function ChipList({ items }) {
       {list.map((v) => (
         <span
           key={v}
-          className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-medium text-slate-700 shadow-sm"
+          className="rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-slate-700 shadow-sm"
         >
           {v}
         </span>

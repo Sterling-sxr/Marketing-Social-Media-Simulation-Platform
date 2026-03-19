@@ -26,9 +26,9 @@ function Btn({
     "active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none";
 
   const styles = {
-    primary: "border border-brand bg-orange-100 text-brand hover:bg-orange-200",
+    primary: "border border-brand bg-brand-100 text-brand hover:bg-brand-200",
     secondary:
-      "border border-orange-200 bg-white text-slate-600 hover:border-brand hover:text-brand",
+      "border border-brand-200 bg-white text-slate-600 hover:border-brand hover:text-brand",
     link:
       "border border-transparent bg-transparent text-brand underline decoration-dotted underline-offset-4 " +
       "hover:text-brand/80 hover:decoration-solid",
@@ -85,10 +85,10 @@ function ChangeBadge({ value }) {
 /* ---------------------------- KPI Summary Card ---------------------------- */
 function SummaryCard({ item, value, onClick }) {
   const card =
-    "group rounded-2xl p-6 text-center select-none border border-amber-400 bg-white " +
+    "group rounded-2xl p-6 text-center select-none border border-accent-400 bg-white " +
     "transition-all duration-200 ease-out will-change-transform " +
     "hover:-translate-y-0.5 hover:shadow-md " +
-    "hover:bg-gradient-to-br hover:from-orange-100 hover:to-violet-100";
+    "hover:bg-gradient-to-br hover:from-brand-100 hover:to-accent-100";
 
   const inner = (
     <>
@@ -105,7 +105,7 @@ function SummaryCard({ item, value, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className={`${card} cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-200`}
+      className={`${card} cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-200`}
       aria-label={`${item.label}: ${value ?? 0}`}
     >
       {inner}
@@ -124,7 +124,7 @@ function SummaryCard({ item, value, onClick }) {
 
 function EmptyState({ message }) {
   return (
-    <div className="rounded-2xl border border-dashed border-orange-200 bg-orange-50/70 px-4 py-6 text-sm text-slate-500">
+    <div className="rounded-2xl border border-dashed border-brand-200 bg-brand-50/70 px-4 py-6 text-sm text-slate-500">
       {message}
     </div>
   );
@@ -339,7 +339,7 @@ export default function CourseDashboardPage() {
           </section>
 
           {/* ---------------- Hashtags table (styling polish) ---------------- */}
-          <section className="space-y-4 rounded-3xl border border-orange-100 bg-white p-6 shadow-sm">
+          <section className="space-y-4 rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
             <header className="mb-2">
               <h2 className="text-2xl font-bold text-slate-900">
                 Most Active Topic Hashtags
@@ -352,12 +352,12 @@ export default function CourseDashboardPage() {
             {hashtags.length === 0 ? (
               <EmptyState message="No hashtag analytics available for this course yet." />
             ) : (
-              <div className="overflow-hidden rounded-2xl ring-1 ring-orange-100 shadow-sm">
+              <div className="overflow-hidden rounded-2xl ring-1 ring-brand-100 shadow-sm">
                 <table className="min-w-full text-sm">
                   {/* Sticky header row with a subtle gradient background */}
                   <thead
                     className="sticky top-0 z-10 bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb]
-             border-b border-amber-100 shadow-sm"
+             border-b border-accent-100 shadow-sm"
                   >
                     <tr className="text-left text-[13px] font-semibold uppercase tracking-wider text-slate-900">
                       <th className="px-5 py-3 w-16">Rank</th>
@@ -368,11 +368,11 @@ export default function CourseDashboardPage() {
                       <th className="px-5 py-3 text-right">WoW Change</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-orange-100">
+                  <tbody className="divide-y divide-brand-100">
                     {hashtags.map((item, idx) => (
                       <tr
                         key={item.hashtag}
-                        className="odd:bg-white even:bg-orange-50/30 hover:bg-orange-50/60 transition-colors"
+                        className="odd:bg-white even:bg-brand-50/30 hover:bg-brand-50/60 transition-colors"
                       >
                         <td className="px-5 py-4 font-mono tabular-nums font-bold">
                           <span
@@ -428,7 +428,7 @@ export default function CourseDashboardPage() {
           {/* --------------- Students table (styling polish) --------------- */}
           <section
             id="students-section"
-            className="space-y-4 rounded-3xl border border-orange-100 bg-white p-6 shadow-sm"
+            className="space-y-4 rounded-3xl border border-brand-100 bg-white p-6 shadow-sm"
           >
             <header className="mb-2">
               <h2 className="text-2xl font-bold text-slate-900">
@@ -440,11 +440,11 @@ export default function CourseDashboardPage() {
             {students.length === 0 ? (
               <EmptyState message="No student activity data available for this course yet." />
             ) : (
-              <div className="overflow-hidden rounded-2xl ring-1 ring-orange-100 shadow-sm">
+              <div className="overflow-hidden rounded-2xl ring-1 ring-brand-100 shadow-sm">
                 <table className="min-w-full text-sm">
                   <thead
                     className="sticky top-0 z-10 bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb]
-             border-b border-amber-100 shadow-sm"
+             border-b border-accent-100 shadow-sm"
                   >
                     <tr className="text-left text-[12px] font-semibold uppercase tracking-wider text-slate-600">
                       <th className="px-5 py-3 w-16">Rank</th>
@@ -455,11 +455,11 @@ export default function CourseDashboardPage() {
                       <th className="px-5 py-3 text-right">WoW Change</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-orange-100">
+                  <tbody className="divide-y divide-brand-100">
                     {students.map((item, idx) => (
                       <tr
                         key={item.user_id}
-                        className="odd:bg-white even:bg-orange-50/30 hover:bg-orange-50/60 transition-colors"
+                        className="odd:bg-white even:bg-brand-50/30 hover:bg-brand-50/60 transition-colors"
                       >
                         <td className="px-5 py-4 font-mono tabular-nums font-bold">
                           <span

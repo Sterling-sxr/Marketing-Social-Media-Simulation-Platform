@@ -10,7 +10,7 @@ export default function AuthLayout({ children, title, subtitle, backTo }) {
           <button
             type="button"
             aria-label="Go back"
-            className="absolute left-6 top-6 rounded-full border border-orange-200 bg-white p-2 text-brand transition hover:border-brand"
+            className="focus-ring absolute left-6 top-6 rounded-full border border-brand-200 bg-white p-2 text-brand transition hover:border-brand"
             onClick={() => navigate(backTo ?? -1)}
           >
             <span className="text-lg">←</span>

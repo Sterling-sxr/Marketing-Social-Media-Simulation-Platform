@@ -152,7 +152,7 @@ export default function PostDetailPage() {
 
   // —— Reuse the Donut header pattern —— //
   const HeaderBar = () => (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-fuchsia-100/60 bg-white/95 backdrop-blur">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-accent-100/60 bg-white/95 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 lg:px-6 lg:py-4">
         <button
           type="button"
@@ -165,14 +165,14 @@ export default function PostDetailPage() {
             alt="Donut"
             className="h-8 w-8 rounded-lg object-cover sm:h-10 sm:w-10 lg:h-12 lg:w-12"
           />
-          <span className="bg-gradient-to-r from-orange-500 via-pink-400 to-purple-500 bg-clip-text text-lg text-transparent sm:text-xl">
+          <span className="bg-gradient-to-r from-brand-500 via-accent-400 to-accent-500 bg-clip-text text-lg text-transparent sm:text-xl">
             Donut
           </span>
         </button>
 
         <div className="flex min-w-0 items-center gap-2 sm:gap-3 lg:gap-5">
-          <div className="flex min-w-0 items-center gap-2 rounded-full border border-fuchsia-200/70 bg-white/90 px-2.5 py-1.5 sm:gap-3 sm:px-4 sm:py-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-fuchsia-300 via-pink-200 to-amber-200 text-sm font-semibold text-slate-800 sm:h-10 sm:w-10 sm:text-base">
+          <div className="flex min-w-0 items-center gap-2 rounded-full border border-accent-200/70 bg-white/90 px-2.5 py-1.5 sm:gap-3 sm:px-4 sm:py-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-accent-300 via-accent-200 to-accent-200 text-sm font-semibold text-slate-800 sm:h-10 sm:w-10 sm:text-base">
               {authorName.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0 leading-tight">
@@ -188,7 +188,7 @@ export default function PostDetailPage() {
           <button
             type="button"
             onClick={() => navigate("/", { replace: true })}
-            className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-orange-100 to-pink-100 px-2.5 py-1.5 text-xs font-semibold text-orange-600 sm:px-4 sm:py-2 sm:text-sm"
+            className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-brand-100 to-accent-100 px-2.5 py-1.5 text-xs font-semibold text-brand-600 sm:px-4 sm:py-2 sm:text-sm"
             aria-label="Logout"
           >
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
@@ -203,14 +203,14 @@ export default function PostDetailPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-fuchsia-50 via-white to-sky-100">
+    <div className="min-h-screen bg-gradient-to-br from-accent-50 via-white to-accent-100">
       <HeaderBar />
 
       {/* Main content */}
       <main className="mx-auto w-full max-w-6xl space-y-4 px-3 pb-28 pt-[72px] sm:px-4 sm:pb-28 sm:pt-[96px] lg:px-6 lg:pb-8">
         {/* Sticky toolbar: title + right-side actions (Analyze button is conditional) */}
         <div className="sticky top-[72px] z-20 sm:top-[96px]">
-          <div className="rounded-2xl border border-orange-100 bg-white px-3 py-3 shadow-sm sm:px-5">
+          <div className="rounded-2xl border border-brand-100 bg-white px-3 py-3 shadow-sm sm:px-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
               <h1 className="text-lg sm:text-xl font-semibold text-slate-900">
                 Post Detail
@@ -222,8 +222,8 @@ export default function PostDetailPage() {
                       navigate(`/courses/${courseId}/posts/${postId}/analytics`)
                     }
                     className="inline-flex h-9 items-center gap-2 rounded-full border-2 bg-white px-4 text-xs font-semibold
-                               text-sky-700 border-sky-400/80 transition hover:bg-sky-50 hover:shadow-md sm:h-10 sm:px-5 sm:text-sm
-                               text-sky-700 border-sky-400/80 transition hover:bg-sky-50 hover:shadow-md"
+                               text-accent-700 border-accent-400/80 transition hover:bg-accent-50 hover:shadow-md sm:h-10 sm:px-5 sm:text-sm
+                               text-accent-700 border-accent-400/80 transition hover:bg-accent-50 hover:shadow-md"
                     title="View analytics of this post"
                   >
                     Analyze
@@ -233,8 +233,8 @@ export default function PostDetailPage() {
                 <button
                   onClick={() => navigate(`/courses/${courseId}`)}
                   className="inline-flex h-9 items-center gap-2 rounded-full border-2 bg-white px-4 text-xs font-semibold
-                             text-orange-600 border-orange-400/80 transition hover:bg-orange-50 hover:shadow-md sm:h-10 sm:px-5 sm:text-sm
-                             text-orange-600 border-orange-400/80 transition hover:bg-orange-50 hover:shadow-md"
+                             text-brand-600 border-brand-400/80 transition hover:bg-brand-50 hover:shadow-md sm:h-10 sm:px-5 sm:text-sm
+                             text-brand-600 border-brand-400/80 transition hover:bg-brand-50 hover:shadow-md"
                   aria-label="Back to course"
                 >
                   <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4">
@@ -250,8 +250,8 @@ export default function PostDetailPage() {
                   onClick={load}
                   disabled={status.loading}
                   className="inline-flex h-9 items-center gap-2 rounded-full border-2 bg-white px-4 text-xs font-semibold
-                             text-fuchsia-700 border-fuchsia-400/80 transition hover:bg-fuchsia-50 hover:shadow-md disabled:opacity-70 sm:h-10 sm:px-5 sm:text-sm
-                             text-fuchsia-700 border-fuchsia-400/80 transition hover:bg-fuchsia-50 hover:shadow-md disabled:opacity-70"
+                             text-accent-700 border-accent-400/80 transition hover:bg-accent-50 hover:shadow-md disabled:opacity-70 sm:h-10 sm:px-5 sm:text-sm
+                             text-accent-700 border-accent-400/80 transition hover:bg-accent-50 hover:shadow-md disabled:opacity-70"
                   aria-label="Refresh post detail"
                 >
                   {status.loading ? "Refreshing..." : "Refresh"}
@@ -264,7 +264,7 @@ export default function PostDetailPage() {
         {status.error && <Feedback error={status.error} />}
 
         {isReadOnly && (
-          <div className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-600">
+          <div className="rounded-2xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-600">
             {courseEndDate
               ? `This course ended on ${courseEndDate}. Posts are read-only.`
               : "This course has ended. Posts are read-only."}
@@ -287,13 +287,13 @@ export default function PostDetailPage() {
         {/* Comments */}
         <section className="space-y-3">
           <h3 className="text-sm font-semibold text-slate-700">Comments</h3>
-          <ul className="divide-y divide-orange-50 rounded-2xl border border-orange-100 bg-white">
+          <ul className="divide-y divide-brand-50 rounded-2xl border border-brand-100 bg-white">
             {comments.length === 0 ? (
               <li className="p-4 text-xs text-slate-500">No comments yet.</li>
             ) : (
               comments.map((c) => (
                 <li key={c.id} className="flex items-start gap-2 px-3 py-3 sm:gap-3 sm:px-4">
-                  <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-orange-100 text-xs font-bold text-brand">
+                  <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-brand-100 text-xs font-bold text-brand">
                     {String(c.user?.name || c.user?.display_name || "?")
                       .charAt(0)
                       .toUpperCase()}
@@ -323,12 +323,12 @@ export default function PostDetailPage() {
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
                 placeholder="Write a comment..."
-                className="flex-1 rounded-full border border-orange-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-brand focus:outline-none"
+                className="flex-1 rounded-full border border-brand-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-brand focus:outline-none"
               />
               <button
                 type="submit"
                 disabled={!commentText.trim() || commentBusy}
-                className="rounded-full border border-orange-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand disabled:opacity-60"
+                className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand disabled:opacity-60"
               >
                 {commentBusy ? "Sending..." : "Send"}
               </button>
@@ -346,7 +346,7 @@ export default function PostDetailPage() {
       </main>
 
       <form
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-orange-100 bg-white/95 px-3 py-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] shadow-[0_-10px_24px_rgba(148,163,184,0.16)] backdrop-blur sm:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-brand-100 bg-white/95 px-3 py-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] shadow-[0_-10px_24px_rgba(148,163,184,0.16)] backdrop-blur sm:hidden"
         onSubmit={handleSubmitComment}
       >
         <div className="mx-auto flex w-full max-w-6xl items-center gap-2">
@@ -355,13 +355,13 @@ export default function PostDetailPage() {
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
             placeholder="Write a comment..."
-            className="flex-1 rounded-full border border-orange-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-brand focus:outline-none"
+            className="flex-1 rounded-full border border-brand-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-brand focus:outline-none"
             aria-label="Write a comment"
           />
           <button
             type="submit"
             disabled={!commentText.trim() || commentBusy}
-            className="rounded-full border border-orange-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand disabled:opacity-60"
+            className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand disabled:opacity-60"
             aria-label="Send comment"
           >
             {commentBusy ? "Sending..." : "Send"}

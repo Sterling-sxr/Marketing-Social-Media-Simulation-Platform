@@ -18,8 +18,8 @@ function SummaryCard({ title, value, active, onClick }) {
       onClick={onClick}
       className={`flex-1 rounded-2xl border px-4 py-3 text-left transition ${
         active
-          ? "border-brand bg-orange-50 text-brand shadow-sm"
-          : "border-orange-100 bg-white text-slate-600 hover:border-brand hover:text-brand"
+          ? "border-brand bg-brand-50 text-brand shadow-sm"
+          : "border-brand-100 bg-white text-slate-600 hover:border-brand hover:text-brand"
       }`}
     >
       <p className="text-xs uppercase tracking-wide text-slate-400">{title}</p>
@@ -31,7 +31,7 @@ function SummaryCard({ title, value, active, onClick }) {
 function LineChart({ data }) {
   if (!data || data.length === 0) {
     return (
-      <div className="flex h-44 w-full items-center justify-center rounded-2xl border border-dashed border-orange-200 bg-orange-50 text-sm text-slate-500">
+      <div className="flex h-44 w-full items-center justify-center rounded-2xl border border-dashed border-brand-200 bg-brand-50 text-sm text-slate-500">
         No data available for the selected range.
       </div>
     );
@@ -217,7 +217,7 @@ function RadarChart({ comparison }) {
           <span className="h-2 w-2 rounded-full bg-rose-400" /> Post performance
         </span>
         <span className="inline-flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full bg-amber-400" /> Hashtag average
+          <span className="h-2 w-2 rounded-full bg-accent-400" /> Hashtag average
         </span>
       </div>
     </div>
@@ -230,12 +230,12 @@ function SentimentDistribution({ sentiment }) {
   const percentages = sentiment?.percentages || {};
   const bars = [
     { key: "positive", label: "Positive", bar: "bg-emerald-400" },
-    { key: "neutral", label: "Neutral", bar: "bg-amber-400" },
+    { key: "neutral", label: "Neutral", bar: "bg-accent-400" },
     { key: "negative", label: "Negative", bar: "bg-rose-400" },
   ];
 
   return (
-    <section className="rounded-3xl border border-orange-100 bg-white p-6 shadow-sm">
+    <section className="rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
       <header className="mb-4">
         <h2 className="text-lg font-semibold text-slate-800">
           Student post sentiment distribution
@@ -245,7 +245,7 @@ function SentimentDistribution({ sentiment }) {
         </p>
       </header>
       {total === 0 ? (
-        <p className="rounded-2xl border border-dashed border-orange-200 bg-orange-50 px-4 py-3 text-sm text-slate-600">
+        <p className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-3 text-sm text-slate-600">
           No comments yet. Sentiment breakdown will appear once comments are added.
         </p>
       ) : (
@@ -258,7 +258,7 @@ function SentimentDistribution({ sentiment }) {
                   <span>{item.label}</span>
                   <span>{percent.toFixed(1)}%</span>
                 </div>
-                <div className="h-3 w-full rounded-full bg-orange-50">
+                <div className="h-3 w-full rounded-full bg-brand-50">
                   <div
                     className={`h-full rounded-full transition-all ${item.bar}`}
                     style={{ width: `${Math.min(100, Math.max(0, percent))}%` }}
@@ -378,14 +378,14 @@ export default function PostAnalyticsPage() {
       <div className="flex items-center justify-between">
         <button
           type="button"
-          className="rounded-full border border-orange-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
+          className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
           onClick={() => navigate(-1)}
         >
           ← Back
         </button>
         <button
           type="button"
-          className="rounded-full border border-brand bg-orange-100 px-4 py-2 text-xs font-semibold text-brand transition hover:bg-orange-200"
+          className="rounded-full border border-brand bg-brand-100 px-4 py-2 text-xs font-semibold text-brand transition hover:bg-brand-200"
           onClick={() => navigate(`/courses/${courseId}/posts/${postId}`)}
         >
           View Post
@@ -411,7 +411,7 @@ export default function PostAnalyticsPage() {
             ))}
           </section>
 
-          <section className="rounded-3xl border border-orange-100 bg-white p-6 shadow-sm">
+          <section className="rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
             <header className="flex items-center justify-between pb-4">
               <div>
                 <h2 className="text-lg font-semibold text-slate-800">
@@ -425,7 +425,7 @@ export default function PostAnalyticsPage() {
             <LineChart data={chartSeries} />
           </section>
 
-          <section className="space-y-3 rounded-3xl border border-orange-100 bg-white p-6 shadow-sm">
+          <section className="space-y-3 rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
             <header className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold text-slate-800">
@@ -442,8 +442,8 @@ export default function PostAnalyticsPage() {
                     type="button"
                     className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
                       activeHashtag === item.hashtag
-                        ? "bg-orange-100 text-brand"
-                        : "border border-orange-200 bg-white text-slate-600 hover:border-brand hover:text-brand"
+                        ? "bg-brand-100 text-brand"
+                        : "border border-brand-200 bg-white text-slate-600 hover:border-brand hover:text-brand"
                     }`}
                     onClick={() => setActiveHashtag(item.hashtag)}
                   >
@@ -454,7 +454,7 @@ export default function PostAnalyticsPage() {
             </header>
 
             {hashtagComparisons.length === 0 ? (
-              <p className="rounded-2xl border border-dashed border-orange-200 bg-orange-50 px-4 py-3 text-sm text-slate-600">
+              <p className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-3 text-sm text-slate-600">
                 No hashtags detected in this post.
               </p>
             ) : activeComparison ? (
@@ -463,7 +463,7 @@ export default function PostAnalyticsPage() {
                   {METRICS.map((metric) => (
                     <div
                       key={metric.key}
-                      className="flex items-center justify-between rounded-2xl border border-orange-100 bg-orange-50/60 px-4 py-3"
+                      className="flex items-center justify-between rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-3"
                     >
                       <div>
                         <p className="text-sm font-semibold text-slate-800">

@@ -20,9 +20,9 @@ function RoleBadge({ courseRole, isStaff, isSuperuser }) {
   // Soft gradient capsule badge
   const cls = isTeacher
     ? // Teacher badge: amber/orange gradient
-      "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-800 shadow-sm border border-amber-200 bg-gradient-to-r from-amber-50 via-amber-100 to-orange-50"
+      "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide text-accent-800 shadow-sm border border-accent-200 bg-gradient-to-r from-accent-50 via-accent-100 to-brand-50"
     : // Student badge: pastel purple to peach gradient
-      "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide text-purple-700 shadow-sm border border-purple-200 bg-gradient-to-r from-purple-50 via-pink-50 to-orange-50";
+      "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide text-accent-700 shadow-sm border border-accent-200 bg-gradient-to-r from-accent-50 via-accent-50 to-brand-50";
 
   return <span className={cls}>{text}</span>;
 }
@@ -102,7 +102,7 @@ export default function CoursesPage() {
             <button
               type="button"
               onClick={() => navigate("/dashboard")}
-              className="inline-flex min-h-[40px] items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-orange-50 hover:text-orange-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60"
+              className="inline-flex min-h-[40px] items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-brand-50 hover:text-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60"
               aria-label="Go to dashboard"
             >
               Dashboard
@@ -110,7 +110,7 @@ export default function CoursesPage() {
             <button
               type="button"
               onClick={() => navigate("/courses/manage")}
-              className="inline-flex min-h-[40px] items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-orange-50 hover:text-orange-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60"
+              className="inline-flex min-h-[40px] items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-brand-50 hover:text-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60"
               aria-label="Go to course management"
             >
               Manage
@@ -129,7 +129,7 @@ export default function CoursesPage() {
           </p>
         </div>
         {courses.joined.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-orange-200 bg-orange-50 px-4 py-3 text-sm text-slate-500">
+          <p className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-3 text-sm text-slate-500">
             Not enrolled in any courses yet
           </p>
         ) : (
@@ -138,7 +138,7 @@ export default function CoursesPage() {
               <li key={course.id}>
                 <button
                   type="button"
-                  className="flex min-h-[88px] w-full flex-col items-start gap-3 rounded-2xl border border-orange-100 bg-white px-4 py-3 text-left shadow-sm transition hover:border-brand hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:min-h-[96px] sm:flex-row sm:items-center sm:justify-between"
+                  className="flex min-h-[88px] w-full flex-col items-start gap-3 rounded-2xl border border-brand-100 bg-white px-4 py-3 text-left shadow-sm transition hover:border-brand hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:min-h-[96px] sm:flex-row sm:items-center sm:justify-between"
                   onClick={() => handleEnterCourse(course)}
                   aria-label={`Enter course ${course.course_code} ${course.name}`}
                 >
@@ -148,7 +148,7 @@ export default function CoursesPage() {
                     </p>
                     <p className="text-xs text-slate-400">{course.term}</p>
                     {!course.profile_completed ? (
-                      <p className="mt-1 rounded-lg bg-orange-50 px-2 py-1 text-xs font-medium text-orange-600">
+                      <p className="mt-1 rounded-lg bg-brand-50 px-2 py-1 text-xs font-medium text-brand-600">
                         Complete your course profile to enter
                       </p>
                     ) : null}
@@ -169,7 +169,7 @@ export default function CoursesPage() {
         )}
       </section>
 
-      <section className="space-y-3 rounded-2xl border border-orange-100 bg-orange-50 px-4 py-4 sm:px-5 sm:py-5">
+      <section className="space-y-3 rounded-2xl border border-brand-100 bg-brand-50 px-4 py-4 sm:px-5 sm:py-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-base font-semibold text-slate-800 sm:text-lg">
             Join by Code
@@ -220,7 +220,7 @@ export default function CoursesPage() {
         <button
           type="button"
           onClick={() => setAvailableExpanded((prev) => !prev)}
-          className="flex w-full items-center justify-between rounded-2xl border border-orange-100 bg-white px-4 py-3 text-left transition hover:border-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+          className="flex w-full items-center justify-between rounded-2xl border border-brand-100 bg-white px-4 py-3 text-left transition hover:border-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           aria-expanded={availableExpanded}
           aria-controls="available-courses-list"
         >
@@ -234,7 +234,7 @@ export default function CoursesPage() {
           </span>
           <span
             aria-hidden="true"
-            className={`inline-flex h-7 w-7 items-center justify-center rounded-full bg-orange-50 text-slate-500 transition ${
+            className={`inline-flex h-7 w-7 items-center justify-center rounded-full bg-brand-50 text-slate-500 transition ${
               availableExpanded ? "rotate-180" : ""
             }`}
           >
@@ -244,7 +244,7 @@ export default function CoursesPage() {
           </span>
         </button>
         {courses.available.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-orange-200 bg-orange-50 px-4 py-3 text-sm text-slate-500">
+          <p className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-3 text-sm text-slate-500">
             No more courses available.
           </p>
         ) : availableExpanded ? (
@@ -252,7 +252,7 @@ export default function CoursesPage() {
             {courses.available.map((course) => (
               <li
                 key={course.id}
-                className="rounded-2xl border border-orange-100 bg-white px-4 py-3 shadow-sm"
+                className="rounded-2xl border border-brand-100 bg-white px-4 py-3 shadow-sm"
               >
                 <p className="break-words text-sm font-semibold text-slate-800">
                   {course.course_code} · {course.name}

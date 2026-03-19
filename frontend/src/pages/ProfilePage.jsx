@@ -25,8 +25,8 @@ export default function ProfilePage() {
       backTo="/courses"
     >
       <div className="space-y-6">
-        <header className="flex items-center gap-4 rounded-3xl border border-orange-100 bg-white p-5 shadow-sm">
-          <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-orange-100 text-lg font-bold text-brand">
+        <header className="flex items-center gap-4 rounded-3xl border border-brand-100 bg-white p-5 shadow-sm">
+          <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-brand-100 text-lg font-bold text-brand">
             {(authUser.full_name || authUser.username || authUser.email || "?").charAt(0).toUpperCase()}
           </div>
           <div>
@@ -37,14 +37,14 @@ export default function ProfilePage() {
           </div>
         </header>
 
-        <section className="rounded-3xl border border-orange-100 bg-white p-5 shadow-sm">
+        <section className="rounded-3xl border border-brand-100 bg-white p-5 shadow-sm">
           <h3 className="text-sm font-semibold text-slate-800">Course Personas</h3>
           {courses.joined.length === 0 ? (
-            <p className="mt-3 rounded-2xl border border-dashed border-orange-100 bg-orange-50 px-4 py-3 text-sm text-slate-500">
+            <p className="mt-3 rounded-2xl border border-dashed border-brand-100 bg-brand-50 px-4 py-3 text-sm text-slate-500">
               You have not joined any courses yet.
             </p>
           ) : (
-            <ul className="mt-3 divide-y divide-orange-50 rounded-2xl border border-orange-100 bg-white">
+            <ul className="mt-3 divide-y divide-brand-50 rounded-2xl border border-brand-100 bg-white">
               {courses.joined.map((course) => (
                 <li
                   key={course.id}
@@ -61,14 +61,14 @@ export default function ProfilePage() {
                       className={`rounded-full px-3 py-1 text-xs font-semibold ${
                         course.profile_completed
                           ? "bg-emerald-50 text-emerald-600"
-                          : "bg-orange-50 text-orange-600"
+                          : "bg-brand-50 text-brand-600"
                       }`}
                     >
                       {course.profile_completed ? "Ready" : "Profile required"}
                     </span>
                     <button
                       type="button"
-                      className="rounded-full border border-orange-200 px-3 py-1 text-xs font-semibold text-brand transition hover:border-brand"
+                      className="rounded-full border border-brand-200 px-3 py-1 text-xs font-semibold text-brand transition hover:border-brand"
                       onClick={() =>
                         navigate(
                           course.profile_completed

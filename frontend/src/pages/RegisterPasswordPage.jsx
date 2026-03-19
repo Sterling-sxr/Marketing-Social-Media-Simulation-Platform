@@ -36,7 +36,7 @@ export default function RegisterPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 text-slate-900 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-brand-100 text-slate-900 flex flex-col">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-3 py-3 sm:px-6 sm:py-5">
         <div className="flex items-center gap-3">
           <img
@@ -51,14 +51,14 @@ export default function RegisterPasswordPage() {
         <nav className="flex items-center gap-3">
           <button
             type="button"
-            className="rounded-full border border-orange-200 px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand hover:text-brand-dark sm:px-5 sm:text-sm"
+            className="rounded-full border border-brand-200 px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand hover:text-brand-dark sm:px-5 sm:text-sm"
             onClick={() => navigate("/register/verify")}
           >
             ←
           </button>
           {/* <button
             type="button"
-            className="rounded-full bg-gradient-to-r from-brand to-brand-dark px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition hover:from-brand-dark hover:to-brand"
+            className="rounded-full bg-gradient-to-r from-brand to-brand-dark px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-brand-200 transition hover:from-brand-dark hover:to-brand"
             onClick={() => navigate("/login")}
           >
             Already have an account? Sign in
@@ -104,7 +104,7 @@ export default function RegisterPasswordPage() {
         </section>
 
         <aside className="order-2 lg:order-none flex-1">
-          <div className="relative w-full max-w-md lg:ml-auto rounded-2xl border border-orange-100 bg-white p-5 shadow-lg shadow-orange-100 text-center sm:rounded-3xl sm:p-8 sm:shadow-xl">
+          <div className="relative w-full max-w-md lg:ml-auto rounded-2xl border border-brand-100 bg-white p-5 shadow-lg shadow-brand-100 text-center sm:rounded-3xl sm:p-8 sm:shadow-xl">
             <div className="absolute right-0 top-0 h-16 w-16 rounded-bl-3xl bg-gradient-to-b from-brand/10 to-brand/0" />
 
             <h2 className="mb-6 text-lg font-semibold text-slate-800">

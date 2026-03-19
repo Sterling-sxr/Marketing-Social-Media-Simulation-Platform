@@ -158,12 +158,12 @@ export default function PostCard({
   }, [hasActions, menuOpen]);
 
   return (
-    <article className="rounded-2xl border border-orange-100 bg-white p-4 shadow-sm">
+    <article className="card p-4">
       <header className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           <button
             type="button"
-            className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-orange-100 text-sm font-bold text-brand"
+            className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-brand-100 text-sm font-bold text-brand"
             onClick={() => navigate(`/people/${post.author.id}`)}
             title={post.author.name}
           >
@@ -188,7 +188,7 @@ export default function PostCard({
           <div className="relative" ref={menuRef}>
             <button
               type="button"
-              className="rounded-full border border-orange-200 bg-white px-3 py-1 text-xs font-semibold text-slate-500 transition hover:border-brand hover:text-brand"
+              className="rounded-full border border-brand-200 bg-white px-3 py-1 text-xs font-semibold text-slate-500 transition hover:border-brand hover:text-brand"
               onClick={(e) => {
                 e.stopPropagation();
                 setMenuOpen((prev) => !prev);
@@ -200,11 +200,11 @@ export default function PostCard({
               ...
             </button>
             {menuOpen ? (
-              <div className="absolute right-0 z-10 mt-2 w-36 rounded-xl border border-orange-100 bg-white py-1 shadow-lg">
+              <div className="absolute right-0 z-10 mt-2 w-36 rounded-xl border border-brand-100 bg-white py-1 shadow-lg">
                 {canEdit ? (
                   <button
                     type="button"
-                    className="flex w-full items-center justify-start px-4 py-2 text-xs font-semibold text-slate-600 transition hover:bg-orange-50 hover:text-brand"
+                    className="flex w-full items-center justify-start px-4 py-2 text-xs font-semibold text-slate-600 transition hover:bg-brand-50 hover:text-brand"
                     onClick={(e) => {
                       e.stopPropagation();
                       setMenuOpen(false);
@@ -244,7 +244,7 @@ export default function PostCard({
             return (
               <div
                 key={attachment.attachment_id || attachment.id}
-                className="overflow-hidden rounded-2xl border border-orange-100 bg-orange-50"
+                className="overflow-hidden rounded-2xl border border-brand-100 bg-brand-50"
               >
                 {isImage ? (
                   <img
@@ -281,7 +281,7 @@ export default function PostCard({
             <button
               key={tag}
               type="button"
-              className="rounded-full bg-orange-100 px-3 py-1 font-semibold text-brand transition hover:bg-orange-200"
+              className="rounded-full bg-brand-100 px-3 py-1 font-semibold text-brand transition hover:bg-brand-200"
               onClick={() => navigate(`/courses/${courseId}/hashtags/${encodeURIComponent(tag)}`)}
             >
               #{tag}
@@ -292,7 +292,7 @@ export default function PostCard({
       <div className="mt-3 flex items-center justify-between text-xs font-medium text-slate-500">
         <button
           type="button"
-          className="inline-flex items-center gap-2 rounded-full px-3 py-2 transition hover:bg-orange-50"
+          className="inline-flex items-center gap-2 rounded-full px-3 py-2 transition hover:bg-brand-50"
           onClick={() => navigate(`/courses/${courseId}/posts/${post.id}`)}
         >
           <CommentIcon className="h-4 w-4 text-slate-400" />
@@ -300,7 +300,7 @@ export default function PostCard({
         </button>
         <button
           type="button"
-          className={`inline-flex items-center gap-2 rounded-full px-3 py-2 transition hover:bg-orange-50 ${
+          className={`inline-flex items-center gap-2 rounded-full px-3 py-2 transition hover:bg-brand-50 ${
             post.liked_by_me ? "text-brand" : ""
           } ${disableLike ? "cursor-not-allowed opacity-70" : ""}`}
           onClick={(e) => {

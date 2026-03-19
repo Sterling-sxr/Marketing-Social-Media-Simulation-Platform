@@ -358,7 +358,7 @@ export default function CourseAIUsersPage() {
           : "Manage AI personas for this course"
       }
     >
-      <div className="mt-4 flex flex-wrap items-center gap-3 rounded-3xl border border-orange-100 bg-white px-4 py-3">
+      <div className="mt-4 flex flex-wrap items-center gap-3 rounded-3xl border border-brand-100 bg-white px-4 py-3">
         <div className="flex min-w-[220px] flex-1 flex-col">
           <label className="text-xs font-semibold text-slate-500">Search</label>
           <input
@@ -366,20 +366,20 @@ export default function CourseAIUsersPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search username, display name or city..."
-            className="mt-1 w-full rounded-full border border-orange-200 bg-white px-4 py-2 text-xs text-slate-700 outline-none transition focus:border-brand md:w-64"
+            className="mt-1 w-full rounded-full border border-brand-200 bg-white px-4 py-2 text-xs text-slate-700 outline-none transition focus:border-brand md:w-64"
           />
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
           <button
             type="button"
-            className="rounded-full border border-orange-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
+            className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
             onClick={() => navigate(`/courses/${courseId}`)}
           >
             ← Back to course
           </button>
           <button
             type="button"
-            className="rounded-full border border-brand bg-orange-100 px-4 py-2 text-xs font-semibold text-brand transition hover:bg-orange-200 disabled:opacity-60"
+            className="rounded-full border border-brand bg-brand-100 px-4 py-2 text-xs font-semibold text-brand transition hover:bg-brand-200 disabled:opacity-60"
             onClick={openCreate}
           >
             ＋ Create AI User
@@ -394,7 +394,7 @@ export default function CourseAIUsersPage() {
           </button>
           <button
             type="button"
-            className="rounded-full border border-orange-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand disabled:opacity-60"
+            className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand disabled:opacity-60"
             onClick={() => fileInputRef.current?.click()}
             disabled={importBusy}
           >
@@ -412,7 +412,7 @@ export default function CourseAIUsersPage() {
 
       {status.error ? <Feedback error={status.error} /> : null}
       {importMessage ? (
-        <div className="mb-4 rounded-2xl border border-orange-100 bg-orange-50 px-4 py-3 text-xs text-slate-600 whitespace-pre-line">
+        <div className="mb-4 rounded-2xl border border-brand-100 bg-brand-50 px-4 py-3 text-xs text-slate-600 whitespace-pre-line">
           {importMessage}
         </div>
       ) : null}
@@ -420,18 +420,18 @@ export default function CourseAIUsersPage() {
       {status.loading ? (
         <p className="text-sm text-slate-500">Loading...</p>
       ) : filteredItems.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-orange-200 bg-orange-50 px-4 py-6 text-sm text-slate-500">
+        <p className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-6 text-sm text-slate-500">
           No AI users found yet for this course.
         </p>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-orange-100 bg-white shadow-sm">
-          <table className="min-w-full divide-y divide-orange-50 text-left text-xs text-slate-600">
-            <thead className="bg-orange-50 text-[11px] uppercase tracking-wide text-slate-500">
+        <div className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
+          <table className="min-w-full divide-y divide-brand-50 text-left text-xs text-slate-600">
+            <thead className="bg-brand-50 text-[11px] uppercase tracking-wide text-slate-500">
               <tr>
                 <th className="px-4 py-3">
                   <input
                     type="checkbox"
-                    className="h-3 w-3 rounded border-orange-300 text-brand"
+                    className="h-3 w-3 rounded border-brand-300 text-brand"
                     checked={allVisibleSelected && filteredItems.length > 0}
                     onChange={toggleSelectAllVisible}
                   />
@@ -446,13 +446,13 @@ export default function CourseAIUsersPage() {
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-orange-50">
+            <tbody className="divide-y divide-brand-50">
               {filteredItems.map((item) => (
-                <tr key={item.id} className="hover:bg-orange-50/50">
+                <tr key={item.id} className="hover:bg-brand-50/50">
                   <td className="px-4 py-3">
                     <input
                       type="checkbox"
-                      className="h-3 w-3 rounded border-orange-300 text-brand"
+                      className="h-3 w-3 rounded border-brand-300 text-brand"
                       checked={selectedIds.includes(item.id)}
                       onChange={() => toggleSelect(item.id)}
                     />
@@ -482,7 +482,7 @@ export default function CourseAIUsersPage() {
                     <div className="inline-flex items-center gap-2">
                       <button
                         type="button"
-                        className="rounded-full border border-orange-200 px-3 py-1 text-[11px] font-semibold text-brand transition hover:border-brand"
+                        className="rounded-full border border-brand-200 px-3 py-1 text-[11px] font-semibold text-brand transition hover:border-brand"
                         onClick={() => openEdit(item)}
                       >
                         Edit
@@ -506,7 +506,7 @@ export default function CourseAIUsersPage() {
       {formOpen ? (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
           <form
-            className="max-h-[95vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl shadow-orange-200"
+            className="max-h-[95vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl shadow-brand-200"
             onSubmit={handleFormSubmit}
           >
             <header className="flex items-center justify-between">
@@ -520,7 +520,7 @@ export default function CourseAIUsersPage() {
               </div>
               <button
                 type="button"
-                className="rounded-full border border-orange-200 px-4 py-2 text-xs font-semibold text-slate-500 transition hover:border-orange-300 hover:text-brand"
+                className="rounded-full border border-brand-200 px-4 py-2 text-xs font-semibold text-slate-500 transition hover:border-brand-300 hover:text-brand"
                 onClick={closeForm}
                 disabled={formBusy}
               >
@@ -540,7 +540,7 @@ export default function CourseAIUsersPage() {
                   required
                   value={formData.username}
                   onChange={(e) => handleFormChange("username", e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-orange-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
+                  className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
                   placeholder="Unique username for this course"
                 />
               </div>
@@ -554,7 +554,7 @@ export default function CourseAIUsersPage() {
                   onChange={(e) =>
                     handleFormChange("display_name", e.target.value)
                   }
-                  className="mt-1 w-full rounded-xl border border-orange-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
+                  className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
                   placeholder="Optional display name"
                 />
               </div>
@@ -639,8 +639,8 @@ export default function CourseAIUsersPage() {
                         key={interest}
                         className={`rounded-full border px-3 py-1 text-xs transition ${
                           active
-                            ? "border-brand bg-orange-100 text-brand"
-                            : "border-orange-200 text-slate-500 hover:border-brand hover:text-brand"
+                            ? "border-brand bg-brand-100 text-brand"
+                            : "border-brand-200 text-slate-500 hover:border-brand hover:text-brand"
                         }`}
                         onClick={() => handleInterestToggle(interest)}
                         disabled={formBusy}
@@ -725,7 +725,7 @@ export default function CourseAIUsersPage() {
                 rows={3}
                 value={formData.notes}
                 onChange={(e) => handleFormChange("notes", e.target.value)}
-                className="mt-1 w-full rounded-xl border border-orange-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
+                className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
                 placeholder="Additional notes about this AI persona"
                 disabled={formBusy}
               />
@@ -734,7 +734,7 @@ export default function CourseAIUsersPage() {
             <div className="mt-6 flex items-center justify-end gap-3">
               <button
                 type="button"
-                className="rounded-full border border-orange-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:border-orange-300 hover:text-brand disabled:opacity-60"
+                className="rounded-full border border-brand-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:border-brand-300 hover:text-brand disabled:opacity-60"
                 onClick={closeForm}
                 disabled={formBusy}
               >
@@ -782,7 +782,7 @@ export default function CourseAIUsersPage() {
 
 function Section({ title, children }) {
   return (
-    <section className="mt-6 rounded-2xl border border-orange-100 bg-orange-50/30 p-4">
+    <section className="mt-6 rounded-2xl border border-brand-100 bg-brand-50/30 p-4">
       <h3 className="text-sm font-semibold text-slate-700">{title}</h3>
       <div className="mt-3 space-y-4">{children}</div>
     </section>
@@ -796,7 +796,7 @@ function SelectField({ label, value, onChange, options }) {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded-xl border border-orange-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
+        className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
       >
         <option value="">Please select</option>
         {(options || []).map((option) => (

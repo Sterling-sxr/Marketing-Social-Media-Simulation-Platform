@@ -36,7 +36,7 @@ export default function PeopleFollowsPage() {
       title={title}
       subtitle="Switch to view Following / Followers"
     >
-      <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-orange-50 p-1 text-xs">
+      <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-brand-50 p-1 text-xs">
         <button
           type="button"
           className={`rounded-full px-3 py-1 font-semibold ${
@@ -68,7 +68,7 @@ export default function PeopleFollowsPage() {
       ) : status.error ? (
         <p className="text-sm text-red-600">{status.error}</p>
       ) : items.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-orange-200 bg-orange-50 px-4 py-3 text-sm text-slate-600">
+        <p className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-3 text-sm text-slate-600">
           {tab === "followers" ? "No following yet" : "No follower yet"}
         </p>
       ) : (
@@ -77,7 +77,7 @@ export default function PeopleFollowsPage() {
             <li key={u.id}>
               <button
                 type="button"
-                className="flex w-full items-center justify-between rounded-2xl border border-orange-100 bg-white px-4 py-3 text-left shadow-sm transition hover:border-brand"
+                className="flex w-full items-center justify-between rounded-2xl border border-brand-100 bg-white px-4 py-3 text-left shadow-sm transition hover:border-brand"
                 onClick={() => navigate(`/people/${u.id}`)}
               >
                 <div>

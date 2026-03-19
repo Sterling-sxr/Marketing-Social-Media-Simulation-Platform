@@ -34,10 +34,10 @@ function KPI({ label, value }) {
     <div
       className={[
         "rounded-2xl p-6 text-center select-none",
-        "border-[1px] border-amber-400 bg-white",
+        "border-[1px] border-accent-400 bg-white",
         "transition-colors transition-transform duration-200 ease-out",
-        "hover:border-violet-30",
-        "hover:bg-gradient-to-br hover:from-orange-100 hover:to-violet-100",
+        "hover:border-accent-30",
+        "hover:bg-gradient-to-br hover:from-brand-100 hover:to-accent-100",
       ].join(" ")}
       role="status"
       aria-label={`${label}: ${value}`}
@@ -103,12 +103,12 @@ function HourLineChart({
   };
 
   return (
-    <section className="rounded-3xl border border-amber-100 bg-white p-6 shadow-sm">
-      <h5 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-violet-600">
+    <section className="rounded-3xl border border-accent-100 bg-white p-6 shadow-sm">
+      <h5 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-accent-600">
         {title}
       </h5>
       {!hasData ? (
-        <div className="h-44 grid place-items-center text-base text-slate-600 bg-amber-50 rounded-xl border border-dashed border-amber-200">
+        <div className="h-44 grid place-items-center text-base text-slate-600 bg-accent-50 rounded-xl border border-dashed border-accent-200">
           No data yet.
         </div>
       ) : (
@@ -302,8 +302,8 @@ function BarChart({
   yLabel = "",
   yMax,
   valueFormatter = (v) => v,
-  barColorClass = "fill-orange-400",
-  hoverBarClass = "fill-violet-500",
+  barColorClass = "fill-brand-400",
+  hoverBarClass = "fill-accent-500",
   canvasWidth = 880,
   xTickStep = 1,
   maxLabelLen = 12,
@@ -374,11 +374,11 @@ function BarChart({
   };
 
   return (
-    <section className="rounded-3xl border border-amber-100 bg-white p-6 shadow-sm">
+    <section className="rounded-3xl border border-accent-100 bg-white p-6 shadow-sm">
       <h3 className="mb-3 text-2xl font-semibold text-slate-800">{title}</h3>
 
       {!hasData ? (
-        <div className="h-44 grid place-items-center text-base text-slate-600 bg-amber-50 rounded-xl border border-dashed border-amber-200">
+        <div className="h-44 grid place-items-center text-base text-slate-600 bg-accent-50 rounded-xl border border-dashed border-accent-200">
           No data yet.
         </div>
       ) : (
@@ -526,7 +526,7 @@ function TopPostsList({ posts, onOpenAnalytics }) {
 
   if (!top.length)
     return (
-      <section className="rounded-3xl border border-orange-100 bg-white p-6 shadow-sm">
+      <section className="rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
         <h4 className="text-1xl font-semibold text-slate-800">
           Top 5 Most Engaging Posts
         </h4>
@@ -539,7 +539,7 @@ function TopPostsList({ posts, onOpenAnalytics }) {
   const maxER = engagementRate(top[0]);
 
   return (
-    <section className="rounded-3xl border border-orange-100 bg-white p-6 shadow-sm">
+    <section className="rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
       <header className="mb-3">
         <h5 className="text-xl font-semibold text-slate-800">
           Top 5 Most Engaging Posts
@@ -556,38 +556,38 @@ function TopPostsList({ posts, onOpenAnalytics }) {
             <li
               key={p.id}
               className={[
-                "rounded-2xl border border-amber-100 bg-amber-50/60 p-5",
+                "rounded-2xl border border-accent-100 bg-accent-50/60 p-5",
                 "transition-all duration-200 ease-out",
-                "hover:bg-amber-100 hover:border-amber-300 hover:shadow-sm",
+                "hover:bg-accent-100 hover:border-accent-300 hover:shadow-sm",
               ].join(" ")}
             >
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="truncate  font-semibold text-slate-900 hover:text-violet-700 transition-colors">
+                  <p className="truncate  font-semibold text-slate-900 hover:text-accent-700 transition-colors">
                     {idx + 1}. {p.title || `(Post #${p.id})`}
                   </p>
 
                   <div className="mt-1 flex items-center flex-wrap gap-x-6 gap-y-1 text-base text-slate-700">
                     <span className="inline-flex items-center gap-2">
-                      <Heart size={16} className="text-amber-600" aria-hidden />
+                      <Heart size={16} className="text-accent-600" aria-hidden />
                       {p.likes ?? 0}
                     </span>
                     <span className="inline-flex items-center gap-2">
                       <MessageCircle
                         size={16}
-                        className="text-violet-600"
+                        className="text-accent-600"
                         aria-hidden
                       />
                       {p.comments ?? 0}
                     </span>
                     <span className="inline-flex items-center gap-2">
-                      <Eye size={16} className="text-sky-600" aria-hidden />
+                      <Eye size={16} className="text-accent-600" aria-hidden />
                       {p.views ?? 0}
                     </span>
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 font-semibold text-amber-700">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-accent-300 bg-accent-50 px-2 py-0.5 font-semibold text-accent-700">
                       <BarChart3
                         size={16}
-                        className="text-amber-300"
+                        className="text-accent-300"
                         aria-hidden
                       />
                       <span>ER</span>
@@ -600,8 +600,8 @@ function TopPostsList({ posts, onOpenAnalytics }) {
                   <button
                     className={[
                       "rounded-full border px-4 py-2 text-sm font-semibold",
-                      "border-violet-400/50 text-violet-700",
-                      "hover:bg-violet-500 hover:text-white transition-colors",
+                      "border-accent-400/50 text-accent-700",
+                      "hover:bg-accent-500 hover:text-white transition-colors",
                     ].join(" ")}
                     onClick={() => onOpenAnalytics?.(p)}
                   >
@@ -612,7 +612,7 @@ function TopPostsList({ posts, onOpenAnalytics }) {
 
               <div className="mt-3 h-2.5 w-full rounded-full bg-slate-50 overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-rose-300 via-fuchsia-300 to-indigo-300 transition-all"
+                  className="h-full bg-gradient-to-r from-rose-300 via-accent-300 to-indigo-300 transition-all"
                   style={{
                     width: `${Math.max(
                       6,
@@ -661,7 +661,7 @@ function BestTimeSection({ posts }) {
   const dowLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   return (
-    <section className="rounded-3xl border border-amber-100 bg-white p-6 shadow-sm">
+    <section className="rounded-3xl border border-accent-100 bg-white p-6 shadow-sm">
       <h4 className="text-2xl font-semibold text-slate-800">
         Best Time to Post
       </h4>
@@ -690,7 +690,7 @@ function BestTimeSection({ posts }) {
           height={300}
           canvasWidth={400}
           barColorClass="fill-yellow-300" // Default pale yellow
-          hoverBarClass="fill-amber-300" // Slightly deeper color on hover
+          hoverBarClass="fill-accent-300" // Slightly deeper color on hover
           // Added: extra appearance parameters
           tickFontSize={15}
           labelFontSize={15}

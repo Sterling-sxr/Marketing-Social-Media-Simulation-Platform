@@ -24,23 +24,23 @@ import {
 // Added: floating-button icon
 import { Sparkles } from "lucide-react";
 
-/* ========================= Donut pastel palette (pink · orange · purple) ========================= */
+/* Dashboard chart palette aligned with global brand tokens */
 const DONUT = {
-  peach50: "#FFF1EB",
-  peach100: "#FFE6DA",
-  apricot80: "#FEE8D9",
-  amber80: "#FDECC8",
-  lavender50: "#EDEAFF",
-  lilac300: "#C4B5FD",
-  peach300: "#FDBA94",
-  rose50: "#FDE7F1",
-  rose400: "#FB7185",
-  amber600: "#D97706",
-  pink600: "#DB2777",
+  peach50: "#EEF7F9",
+  peach100: "#DCEFF3",
+  apricot80: "#D3F5EC",
+  amber80: "#A9EADB",
+  lavender50: "#E9F5F8",
+  lilac300: "#78DBC4",
+  peach300: "#62AFC3",
+  rose50: "#FDE8E8",
+  rose400: "#EF4444",
+  amber600: "#0F8D76",
+  pink600: "#206F88",
   slate600: "#475569",
-  grid: "#F7E6DA",
-  border: "#FFE4CC",
-  borderStrong: "#F9C56F",
+  grid: "#DCEFF3",
+  border: "#BDDDE7",
+  borderStrong: "#62AFC3",
 };
 
 /* ========================= Summary tiles ========================= */
@@ -54,7 +54,7 @@ const SUMMARY_TILES = [
 /* ========================= Sentiment colors ========================= */
 const SENTIMENT_TEXT_COLORS = {
   positive: "text-emerald-600",
-  neutral: "text-amber-600",
+  neutral: "text-accent-600",
   negative: "text-rose-600",
 };
 
@@ -63,8 +63,8 @@ function SentimentBar({ label, value }) {
   const pct = Math.min(Math.max(value ?? 0, 0), 100);
   const width = `${pct}%`;
   const SENTIMENT_COLORS = {
-    positive: "bg-pink-500",
-    neutral: "bg-amber-500",
+    positive: "bg-accent-500",
+    neutral: "bg-accent-500",
     negative: "bg-rose-500",
   };
   return (
@@ -133,7 +133,7 @@ function InfoBubble({ text }) {
     >
       <button
         type="button"
-        className="flex h-6 w-6 items-center justify-center rounded-full border border-slate-300 bg-white/80 text-[11px] font-bold text-slate-600 shadow-sm transition hover:bg-slate-50 active:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-200"
+        className="flex h-6 w-6 items-center justify-center rounded-full border border-slate-300 bg-white/80 text-[11px] font-bold text-slate-600 shadow-sm transition hover:bg-slate-50 active:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-200"
         aria-label="More information"
         aria-expanded={open}
         onClick={() => setOpen((prev) => !prev)}
@@ -484,7 +484,7 @@ export default function DashboardPage() {
               </p>
               <button
                 type="button"
-                className="rounded-full border border-orange-200 bg-white px-3 py-1 text-xs font-semibold text-brand transition hover:border-brand disabled:opacity-60"
+                className="rounded-full border border-brand-200 bg-white px-3 py-1 text-xs font-semibold text-brand transition hover:border-brand disabled:opacity-60"
                 onClick={reloadDashboard}
                 disabled={status.loading}
               >
@@ -500,10 +500,10 @@ export default function DashboardPage() {
                 <div
                   className={[
                     "rounded-2xl p-4 text-center select-none sm:p-6",
-                    "border-[1px] border-amber-400 bg-white",
+                    "border-[1px] border-accent-400 bg-white",
                     "transition-colors transition-transform duration-200 ease-out",
                     "hover:-translate-y-[2px]",
-                    "hover:bg-gradient-to-br hover:from-orange-100 hover:to-violet-100 active:bg-orange-50",
+                    "hover:bg-gradient-to-br hover:from-brand-100 hover:to-accent-100 active:bg-brand-50",
                   ].join(" ")}
                   role="status"
                   aria-label={`${tile.label}: ${data?.[tile.key] ?? 0}`}
@@ -521,7 +521,7 @@ export default function DashboardPage() {
                 <button
                   key={tile.key}
                   type="button"
-                  className="text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-200 rounded-2xl"
+                  className="text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-200 rounded-2xl"
                   onClick={() => {
                     if ((data?.courses || []).length === 0) return;
                     setShowCoursesModal(true);
@@ -711,7 +711,7 @@ export default function DashboardPage() {
                     <li key={course.id}>
                       <button
                         type="button"
-                        className="flex w-full items-center justify-between px-4 py-4 text-left text-sm transition hover:bg-orange-50 active:bg-orange-100 sm:px-5"
+                        className="flex w-full items-center justify-between px-4 py-4 text-left text-sm transition hover:bg-brand-50 active:bg-brand-100 sm:px-5"
                         onClick={() => {
                           setShowCoursesModal(false);
                           navigate(`/dashboard/courses/${course.id}`);

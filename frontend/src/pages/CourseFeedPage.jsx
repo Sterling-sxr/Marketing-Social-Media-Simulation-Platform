@@ -1051,8 +1051,8 @@ export default function CourseFeedPage() {
       type="button"
       className={
         active
-          ? `${leftItemBase} bg-orange-100 text-brand`
-          : `${leftItemBase} text-slate-600 hover:bg-orange-50`
+          ? `${leftItemBase} bg-brand-100 text-brand`
+          : `${leftItemBase} text-slate-600 hover:bg-brand-50`
       }
       onClick={onClick}
     >
@@ -1070,13 +1070,13 @@ export default function CourseFeedPage() {
     if (list.length === 0) {
       if (keyword.trim()) {
         return (
-          <div className="rounded-2xl border border-dashed border-orange-200 bg-orange-50 px-4 py-3 text-sm text-slate-600">
+          <div className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-3 text-sm text-slate-600">
             No results for “<span className="font-semibold">{keyword}</span>”.
           </div>
         );
       }
       return (
-        <div className="rounded-2xl border border-dashed border-orange-200 bg-orange-50 px-4 py-3 text-sm text-slate-600">
+        <div className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-3 text-sm text-slate-600">
           {leftFilter.type === "following"
             ? "There is no new activity for the people you follow, or you haven't followed any classmates yet."
             : "There are no posts yet. Be the first to post!"}
@@ -1113,16 +1113,16 @@ export default function CourseFeedPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-fuchsia-50 via-white to-sky-100">
+    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-accent-50">
       {/* Header with logo + user card + logout */}
-      <header className="border-b border-fuchsia-100/60 bg-white/70 backdrop-blur">
+      <header className="border-b border-brand-100/70 bg-white/80 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 lg:px-6 lg:py-4">
           {/* Left: logo */}
           <button
             type="button"
             onClick={() => navigate("/studenthome")}
             aria-label="Return to student home"
-            className="group relative flex items-center gap-2.5 text-xl font-bold rounded-lg focus:outline-none focus:ring-2 focus:ring-fuchsia-400/30 transition"
+            className="group relative flex items-center gap-2.5 text-xl font-bold rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30 transition"
           >
             <img
               src="/logo.jpg"
@@ -1130,7 +1130,7 @@ export default function CourseFeedPage() {
               className="shrink-0 h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 rounded-lg object-cover transition-transform duration-200 group-hover:scale-105"
             />
             <span
-              className="bg-[linear-gradient(90deg,#f97316_0%,#fda34b_30%,#e879f9_70%,#c084fc_100%)]
+              className="bg-[linear-gradient(90deg,#1B596E_0%,#206F88_38%,#1DAF92_100%)]
                             bg-clip-text text-lg text-transparent drop-shadow-[0_1px_1px_rgba(255,255,255,0.3)] sm:text-xl"
             >
               Donut
@@ -1140,16 +1140,15 @@ export default function CourseFeedPage() {
           {/* Right: user card + logout */}
           <div className="flex min-w-0 items-center gap-2 sm:gap-3 lg:gap-5">
             <div
-              className="flex min-w-0 items-center gap-2 rounded-full border border-fuchsia-200/70
-                         bg-white/90 px-2.5 py-1.5 shadow-[0_4px_12px_rgba(217,70,239,0.08)] sm:gap-3 sm:px-4 sm:py-2
-                         transition-all duration-200 hover:shadow-[0_8px_20px_rgba(217,70,239,0.12)]
-                         hover:border-fuchsia-300/70"
+              className="flex min-w-0 items-center gap-2 rounded-full border border-brand-200/80
+                         bg-white/95 px-2.5 py-1.5 shadow-soft sm:gap-3 sm:px-4 sm:py-2
+                         transition-all duration-200 hover:shadow-brand hover:border-brand-300"
             >
               <div
                 className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full
-                           bg-gradient-to-br from-fuchsia-300 via-pink-200 to-amber-200
+                           bg-gradient-to-br from-brand-300 via-brand-200 to-accent-200
                            text-sm font-semibold text-slate-800 sm:h-10 sm:w-10 sm:text-base
-                           shadow-[inset_0_1px_2px_rgba(255,255,255,0.6),0_2px_8px_rgba(217,70,239,0.15)]"
+                           shadow-[inset_0_1px_2px_rgba(255,255,255,0.65),0_2px_8px_rgba(32,111,136,0.16)]"
               >
                 {photoUrl ? (
                   <img
@@ -1173,12 +1172,11 @@ export default function CourseFeedPage() {
 
             <button
               type="button"
-              className="group inline-flex items-center gap-2 rounded-2xl
-                        px-2.5 py-1.5 text-xs font-semibold text-orange-600 sm:px-4 sm:py-2 sm:text-sm
-                        bg-[linear-gradient(135deg,#FFE7CF_0%,#F1E9FF_100%)]
-                        shadow-[0_6px_18px_rgba(17,24,39,.08)]
-                        transition-all duration-200 hover:shadow-[0_10px_24px_rgba(217,70,239,.18)] hover:scale-[1.02]
-                        active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-fuchsia-400/30"
+              className="group inline-flex items-center gap-2 rounded-2xl border border-brand-200 bg-white
+                        px-2.5 py-1.5 text-xs font-semibold text-brand-700 sm:px-4 sm:py-2 sm:text-sm
+                        shadow-soft transition-all duration-200 hover:border-brand-300 hover:bg-brand-50/70
+                        hover:shadow-brand hover:scale-[1.02] active:scale-[0.99]
+                        focus:outline-none focus:ring-2 focus:ring-brand/30"
               onClick={async () => {
                 try {
                   await logout();
@@ -1210,7 +1208,7 @@ export default function CourseFeedPage() {
       {/* Main layout: left navigation + right feed */}
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-3 py-3 sm:gap-4 sm:px-4 sm:py-4 lg:flex-row lg:gap-6 lg:px-6 lg:py-8">
         {/* Left column */}
-        <aside className="hidden w-64 flex-shrink-0 rounded-3xl border border-orange-100 bg-white p-4 shadow-lg shadow-orange-100 lg:block">
+        <aside className="hidden w-64 flex-shrink-0 rounded-3xl border border-brand-100 bg-white p-4 shadow-lg shadow-brand-100 lg:block">
           {/* Course title + subtitle at the top */}
           <div className="mb-4">
             <h1 className="text-base font-bold text-slate-900 truncate">
@@ -1243,12 +1241,12 @@ export default function CourseFeedPage() {
             <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
               Search
             </label>
-            <div className="relative rounded-full p-[2px] bg-gradient-to-r from-orange-400 via-amber-300 to-pink-500">
+            <div className="relative rounded-full p-[2px] bg-gradient-to-r from-brand-400 via-accent-300 to-accent-500">
               <input
                 type="text"
                 placeholder="🔍  Search posts"
                 className="h-10 w-full rounded-full border-2 border-white bg-white px-5 text-sm text-slate-800 placeholder-slate-400 shadow-sm
-                           focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-pink-400 transition-all duration-200"
+                           focus:outline-none focus:ring-2 focus:ring-accent-400 focus:border-accent-400 transition-all duration-200"
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 aria-label="Search posts"
@@ -1309,7 +1307,7 @@ export default function CourseFeedPage() {
         </aside>
 
         {/* Right column */}
-        <main className="flex-1 space-y-4 rounded-2xl border border-orange-100 bg-white/90 p-4 pb-24 shadow-lg shadow-orange-100/80 sm:space-y-5 sm:p-5 lg:space-y-6 lg:rounded-3xl lg:p-6 lg:pb-6 lg:shadow-xl lg:shadow-orange-100">
+        <main className="flex-1 space-y-4 rounded-2xl border border-brand-100 bg-white/90 p-4 pb-24 shadow-lg shadow-brand-100/80 sm:space-y-5 sm:p-5 lg:space-y-6 lg:rounded-3xl lg:p-6 lg:pb-6 lg:shadow-xl lg:shadow-brand-100">
           <div className="space-y-2 lg:hidden">
             <h1 className="break-words text-base font-bold text-slate-900">
               {pageTitle}
@@ -1321,7 +1319,7 @@ export default function CourseFeedPage() {
             <button
               type="button"
               onClick={() => setMobileFilterOpen(true)}
-              className="inline-flex h-9 items-center rounded-full border border-orange-300 bg-white px-4 text-xs font-semibold text-orange-700 transition hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-300"
+              className="inline-flex h-9 items-center rounded-full border border-brand-300 bg-white px-4 text-xs font-semibold text-brand-700 transition hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-300"
               aria-label="Open feed filters"
             >
               Filters
@@ -1329,21 +1327,21 @@ export default function CourseFeedPage() {
             <button
               type="button"
               onClick={() => navigate("/studenthome")}
-              className="inline-flex h-9 items-center rounded-full border border-orange-300 bg-white px-4 text-xs font-semibold text-orange-700 transition hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-300"
+              className="inline-flex h-9 items-center rounded-full border border-brand-300 bg-white px-4 text-xs font-semibold text-brand-700 transition hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-300"
             >
               Back
             </button>
             <button
               type="button"
               onClick={handleRefresh}
-              className="inline-flex h-9 items-center rounded-full border border-fuchsia-300 bg-white px-4 text-xs font-semibold text-fuchsia-700 transition hover:bg-fuchsia-50 focus:outline-none focus:ring-2 focus:ring-fuchsia-300"
+              className="inline-flex h-9 items-center rounded-full border border-accent-300 bg-white px-4 text-xs font-semibold text-accent-700 transition hover:bg-accent-50 focus:outline-none focus:ring-2 focus:ring-accent-300"
             >
               Refresh
             </button>
           </div>
 
           {courseReadOnly ? (
-            <div className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-600">
+            <div className="rounded-2xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-600">
               {courseEndDate
                 ? `This course ended on ${courseEndDate}. Posts are read-only.`
                 : "This course has ended. Posts are read-only."}
@@ -1354,12 +1352,12 @@ export default function CourseFeedPage() {
 
           {/* Sticky control bar positioned above the first post */}
           <div className="sticky top-0 z-20 -mx-6 hidden px-6 pt-2 lg:block">
-            <div className="flex items-center justify-end gap-3 rounded-b-2xl border-b border-orange-100/60 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/60 py-3">
+            <div className="flex items-center justify-end gap-3 rounded-b-2xl border-b border-brand-100/60 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/60 py-3">
               <button
                 type="button"
                 onClick={() => navigate("/studenthome")}
                 className="inline-flex h-10 items-center gap-2 rounded-full border-2 bg-white px-5 text-sm font-semibold
-                 text-orange-600 border-orange-400/80 transition-all duration-200 hover:bg-orange-50 hover:shadow-md"
+                 text-brand-600 border-brand-400/80 transition-all duration-200 hover:bg-brand-50 hover:shadow-md"
               >
                 <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4">
                   <path
@@ -1374,7 +1372,7 @@ export default function CourseFeedPage() {
                 type="button"
                 onClick={handleRefresh}
                 className="inline-flex h-10 items-center gap-2 rounded-full border-2 bg-white px-5 text-sm font-semibold
-                 text-fuchsia-700 border-fuchsia-400/80 transition-all duration-200 hover:bg-fuchsia-50 hover:shadow-md"
+                 text-accent-700 border-accent-400/80 transition-all duration-200 hover:bg-accent-50 hover:shadow-md"
                 title="Refresh"
               >
                 Refresh
@@ -1384,8 +1382,8 @@ export default function CourseFeedPage() {
                 type="button"
                 onClick={openComposer}
                 className={`inline-flex h-10 items-center gap-2 rounded-full px-7 text-sm font-semibold text-white shadow-md
-                  bg-gradient-to-r from-orange-500 via-amber-400 to-pink-500
-                  hover:from-orange-600 hover:via-amber-500 hover:to-fuchsia-500
+                  bg-gradient-to-r from-brand-500 via-accent-400 to-accent-500
+                  hover:from-brand-600 hover:via-accent-500 hover:to-accent-500
                   transition-all duration-200 hover:shadow-[0_8px_24px_-6px_rgba(236,72,153,0.45)] active:scale-[0.97]
                   border-2 border-white/40 ${
                     !showComposer ? "animate-pulse" : ""
@@ -1408,12 +1406,12 @@ export default function CourseFeedPage() {
             onClick={() => setMobileFilterOpen(false)}
             aria-label="Close filters"
           />
-          <div className="absolute inset-y-0 right-0 w-[86%] max-w-sm overflow-y-auto border-l border-orange-100 bg-white p-4 shadow-2xl">
+          <div className="absolute inset-y-0 right-0 w-[86%] max-w-sm overflow-y-auto border-l border-brand-100 bg-white p-4 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-sm font-semibold text-slate-800">Feed Filters</h2>
               <button
                 type="button"
-                className="rounded-full border border-orange-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600"
+                className="rounded-full border border-brand-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600"
                 onClick={() => setMobileFilterOpen(false)}
               >
                 Close
@@ -1449,7 +1447,7 @@ export default function CourseFeedPage() {
               <input
                 type="text"
                 placeholder="Search posts"
-                className="h-10 w-full rounded-full border border-orange-200 bg-orange-50 px-4 text-sm text-slate-800 placeholder-slate-400 focus:border-brand focus:outline-none focus:ring-2 focus:ring-orange-100"
+                className="h-10 w-full rounded-full border border-brand-200 bg-brand-50 px-4 text-sm text-slate-800 placeholder-slate-400 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-100"
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 aria-label="Search posts"
@@ -1509,7 +1507,7 @@ export default function CourseFeedPage() {
         <button
           type="button"
           onClick={openComposer}
-          className="fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] right-4 z-30 inline-flex h-14 items-center justify-center rounded-full bg-gradient-to-r from-orange-500 via-amber-400 to-pink-500 px-5 text-sm font-semibold text-white shadow-[0_14px_28px_-8px_rgba(236,72,153,0.5)] transition hover:scale-[1.02] hover:shadow-[0_18px_30px_-10px_rgba(236,72,153,0.55)] focus:outline-none focus:ring-2 focus:ring-fuchsia-300 lg:hidden"
+          className="fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] right-4 z-30 inline-flex h-14 items-center justify-center rounded-full bg-gradient-to-r from-brand-500 via-accent-400 to-accent-500 px-5 text-sm font-semibold text-white shadow-[0_14px_28px_-8px_rgba(236,72,153,0.5)] transition hover:scale-[1.02] hover:shadow-[0_18px_30px_-10px_rgba(236,72,153,0.55)] focus:outline-none focus:ring-2 focus:ring-accent-300 lg:hidden"
           aria-label="Create post"
         >
           + Post
@@ -1519,14 +1517,14 @@ export default function CourseFeedPage() {
       {/* Composer modal */}
       {showComposer && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/35 p-0 sm:grid sm:place-items-center sm:p-4">
-          <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl border border-fuchsia-100/70 bg-white/95 p-4 shadow-[0_32px_90px_-32px_rgba(91,33,182,0.45)] backdrop-blur sm:max-h-[86vh] sm:max-w-2xl sm:rounded-3xl sm:p-6">
+          <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl border border-accent-100/70 bg-white/95 p-4 shadow-[0_32px_90px_-32px_rgba(91,33,182,0.45)] backdrop-blur sm:max-h-[86vh] sm:max-w-2xl sm:rounded-3xl sm:p-6">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-lg font-semibold text-slate-900">
                 {isEditing ? "Edit Post" : "New Post"}
               </h3>
               <button
                 type="button"
-                className="rounded-full border border-fuchsia-100 bg-white/80 px-3 py-1 text-xs font-semibold text-slate-500 transition hover:bg-fuchsia-50 hover:text-fuchsia-600"
+                className="rounded-full border border-accent-100 bg-white/80 px-3 py-1 text-xs font-semibold text-slate-500 transition hover:bg-accent-50 hover:text-accent-600"
                 onClick={closeComposer}
               >
                 close
@@ -1552,7 +1550,7 @@ export default function CourseFeedPage() {
                     <button
                       key={emoji}
                       type="button"
-                      className="rounded-full border border-fuchsia-100 bg-white/80 px-2 py-1 text-base transition hover:border-fuchsia-300 hover:bg-fuchsia-50 hover:text-fuchsia-600"
+                      className="rounded-full border border-accent-100 bg-white/80 px-2 py-1 text-base transition hover:border-accent-300 hover:bg-accent-50 hover:text-accent-600"
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => handleAddEmoji(emoji)}
                       title={`Insert emoji ${emoji}`}
@@ -1563,7 +1561,7 @@ export default function CourseFeedPage() {
                 </div>
                 <button
                   type="button"
-                  className="rounded-full border border-fuchsia-100 px-3 py-1 font-semibold transition hover:border-fuchsia-300 hover:text-fuchsia-600"
+                  className="rounded-full border border-accent-100 px-3 py-1 font-semibold transition hover:border-accent-300 hover:text-accent-600"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={handleAddMention}
                 >
@@ -1571,7 +1569,7 @@ export default function CourseFeedPage() {
                 </button>
                 <button
                   type="button"
-                  className="rounded-full border border-fuchsia-100 px-3 py-1 font-semibold transition hover:border-fuchsia-300 hover:text-fuchsia-600"
+                  className="rounded-full border border-accent-100 px-3 py-1 font-semibold transition hover:border-accent-300 hover:text-accent-600"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={handleAddHashtag}
                 >
@@ -1581,7 +1579,7 @@ export default function CourseFeedPage() {
                   <>
                     <button
                       type="button"
-                      className="rounded-full border border-fuchsia-100 px-3 py-1 font-semibold transition hover:border-fuchsia-300 hover:text-fuchsia-600 disabled:opacity-60"
+                      className="rounded-full border border-accent-100 px-3 py-1 font-semibold transition hover:border-accent-300 hover:text-accent-600 disabled:opacity-60"
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={handleAttachmentButton}
                       disabled={uploadStatus.loading}
@@ -1596,7 +1594,7 @@ export default function CourseFeedPage() {
               </div>
 
               {!isEditing && attachments.length > 0 && (
-                <div className="space-y-2 rounded-2xl border border-fuchsia-100 bg-white/85 p-3 sm:p-4">
+                <div className="space-y-2 rounded-2xl border border-accent-100 bg-white/85 p-3 sm:p-4">
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-semibold text-slate-600">
                       Attachments added ({attachments.length}/{MAX_ATTACHMENTS})
@@ -1620,7 +1618,7 @@ export default function CourseFeedPage() {
                       return (
                         <div
                           key={a.id}
-                          className="group relative overflow-hidden rounded-2xl border border-fuchsia-100 bg-white shadow-sm"
+                          className="group relative overflow-hidden rounded-2xl border border-accent-100 bg-white shadow-sm"
                         >
                           <button
                             type="button"
@@ -1685,12 +1683,12 @@ export default function CourseFeedPage() {
                 onSelect={handleComposerSelect}
                 onKeyDown={handleComposerKeyDown}
                 onBlur={handleComposerBlur}
-                className="w-full rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-brand focus:bg-white focus:outline-none"
+                className="w-full rounded-2xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-brand focus:bg-white focus:outline-none"
               />
               <ProfanityHint message={profanityMsg} />
 
               {activeTrigger && (
-                <div className="max-h-60 w-full overflow-hidden rounded-2xl border border-orange-100 bg-white shadow-lg shadow-orange-100">
+                <div className="max-h-60 w-full overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-lg shadow-brand-100">
                   {suggestionsState.loading ? (
                     <p className="px-4 py-3 text-xs text-slate-400">
                       Searching...
@@ -1704,7 +1702,7 @@ export default function CourseFeedPage() {
                       No matches yet. Keep typing.
                     </p>
                   ) : (
-                    <ul className="divide-y divide-orange-50">
+                    <ul className="divide-y divide-brand-50">
                       {suggestionsState.items.map((item, index) => {
                         const isActive = index === highlightIndex;
                         const label =
@@ -1724,8 +1722,8 @@ export default function CourseFeedPage() {
                               type="button"
                               className={`flex w-full items-center justify-between px-4 py-2 text-left text-sm transition ${
                                 isActive
-                                  ? "bg-orange-100 text-brand"
-                                  : "text-slate-600 hover:bg-orange-50"
+                                  ? "bg-brand-100 text-brand"
+                                  : "text-slate-600 hover:bg-brand-50"
                               }`}
                               onMouseDown={(ev) => {
                                 ev.preventDefault();
@@ -1758,7 +1756,7 @@ export default function CourseFeedPage() {
               <div className="flex justify-end gap-2 pb-1">
                 <button
                   type="button"
-                  className="rounded-full border border-orange-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 transition hover:border-slate-300"
+                  className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 transition hover:border-slate-300"
                   onClick={closeComposer}
                   disabled={composerStatus.loading}
                 >
@@ -1791,8 +1789,8 @@ export default function CourseFeedPage() {
 
       {profileModal.open ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/70 px-0 py-0 sm:items-start sm:px-4 sm:py-10">
-          <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl border border-orange-100 bg-white p-4 shadow-2xl shadow-orange-200 sm:max-h-[85vh] sm:max-w-3xl sm:rounded-3xl sm:p-6">
-            <header className="flex flex-wrap items-center justify-between gap-4 border-b border-orange-50 pb-4">
+          <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl border border-brand-100 bg-white p-4 shadow-2xl shadow-brand-200 sm:max-h-[85vh] sm:max-w-3xl sm:rounded-3xl sm:p-6">
+            <header className="flex flex-wrap items-center justify-between gap-4 border-b border-brand-50 pb-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                   Course profile
@@ -1896,7 +1894,7 @@ export default function CourseFeedPage() {
                   ].map((section) => (
                     <div
                       key={section.title}
-                      className="rounded-2xl border border-orange-50 bg-orange-50/40 p-4"
+                      className="rounded-2xl border border-brand-50 bg-brand-50/40 p-4"
                     >
                       <h3 className="text-sm font-semibold text-slate-800">
                         {section.title}
@@ -1924,7 +1922,7 @@ export default function CourseFeedPage() {
                   ))}
                 </div>
               ) : (
-                <div className="rounded-2xl border border-dashed border-orange-200 bg-orange-50 px-4 py-5 text-sm text-slate-600">
+                <div className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-5 text-sm text-slate-600">
                   You have not completed this course profile yet. Click{" "}
                   <span className="font-semibold text-brand">
                     Complete profile

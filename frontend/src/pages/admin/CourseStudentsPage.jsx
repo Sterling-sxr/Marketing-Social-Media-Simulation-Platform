@@ -19,9 +19,9 @@ function Btn({
     "focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-brand " +
     "active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none";
   const styles = {
-    primary: "border border-brand bg-orange-100 text-brand hover:bg-orange-200",
+    primary: "border border-brand bg-brand-100 text-brand hover:bg-brand-200",
     secondary:
-      "border border-orange-200 bg-white text-slate-600 hover:border-brand hover:text-brand",
+      "border border-brand-200 bg-white text-slate-600 hover:border-brand hover:text-brand",
     link: "border border-transparent bg-transparent text-brand underline decoration-dotted underline-offset-4 hover:text-brand/80 hover:decoration-solid",
   };
   return (
@@ -38,7 +38,7 @@ function Btn({
 
 function EmptyState({ message }) {
   return (
-    <div className="rounded-2xl border border-dashed border-orange-200 bg-orange-50/70 px-4 py-6 text-sm text-slate-500">
+    <div className="rounded-2xl border border-dashed border-brand-200 bg-brand-50/70 px-4 py-6 text-sm text-slate-500">
       {message}
     </div>
   );
@@ -202,7 +202,7 @@ export default function CourseStudentsPage() {
       ) : null}
 
       {/* Toolbar: search / sort / active-only */}
-      <div className="mt-3 flex flex-wrap items-center gap-2 rounded-3xl border border-orange-100 bg-white p-3">
+      <div className="mt-3 flex flex-wrap items-center gap-2 rounded-3xl border border-brand-100 bg-white p-3">
         <div className="input-shell">
           <input
             className="w-48 bg-transparent text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none"
@@ -212,7 +212,7 @@ export default function CourseStudentsPage() {
           />
         </div>
         <select
-          className="rounded-full border border-orange-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 focus:outline-none"
+          className="rounded-full border border-brand-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 focus:outline-none"
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value)}
         >
@@ -235,9 +235,9 @@ export default function CourseStudentsPage() {
       {rows.length === 0 ? (
         <EmptyState message="No students found." />
       ) : (
-        <div className="mt-3 overflow-hidden rounded-2xl border border-orange-100">
-          <table className="min-w-full divide-y divide-orange-100 text-sm">
-            <thead className="bg-orange-50/60 text-left text-xs uppercase tracking-wide text-slate-500">
+        <div className="mt-3 overflow-hidden rounded-2xl border border-brand-100">
+          <table className="min-w-full divide-y divide-brand-100 text-sm">
+            <thead className="bg-brand-50/60 text-left text-xs uppercase tracking-wide text-slate-500">
               <tr>
                 <th className="px-4 py-3 font-semibold">Student</th>
                 {/* <th className="px-4 py-3 font-semibold">zID</th> */}
@@ -249,7 +249,7 @@ export default function CourseStudentsPage() {
                 <th className="px-4 py-3 font-semibold text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-orange-50 bg-white/80">
+            <tbody className="divide-y divide-brand-50 bg-white/80">
               {rows.map((s) => {
                 const top = s?.sentiment?.top_label;
                 const pct =

@@ -32,7 +32,7 @@ export default function ToastHost() {
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className="pointer-events-auto rounded-xl border border-orange-200 bg-white p-3 shadow-lg"
+          className="pointer-events-auto card p-3"
         >
           <div className="flex items-start justify-between gap-3">
             <button
@@ -54,7 +54,7 @@ export default function ToastHost() {
             </button>
             <button
               type="button"
-              className="rounded-full bg-orange-50 px-2 py-1 text-xs text-slate-500 hover:bg-orange-100"
+              className="focus-ring rounded-full bg-brand-50 px-2 py-1 text-xs text-slate-500 hover:bg-brand-100"
               onClick={() => dismissToast(toast.id)}
             >
               Close
