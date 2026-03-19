@@ -2,6 +2,7 @@ from django.urls import path
 
 from .controllers import (
     ai_analyze,
+    ai_tutor,
     check_auth_status,
     complete_password_reset_view,
     complete_registration_view,
@@ -68,6 +69,7 @@ urlpatterns = [
     path("profile/avatar/", upload_avatar, name="profile-avatar"),
     path("profile/display-name/", update_display_name, name="profile-display-name"),
     path("ai/analyze/", ai_analyze, name="ai-analyze"),
+    path("ai/tutor/", ai_tutor, name="ai-tutor"),
     path("users/<int:user_id>/profile/", profile_detail, name="profile-detail"),
     path("users/<int:user_id>/posts/", user_posts, name="user-posts"),
     path("users/<int:user_id>/posts/analytics/", user_posts_analytics, name="user-posts-analytics"),

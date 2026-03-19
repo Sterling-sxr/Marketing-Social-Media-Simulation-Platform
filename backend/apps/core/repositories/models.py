@@ -212,6 +212,8 @@ class CourseProfile(models.Model):
 
     def __str__(self) -> str:
         return f"CourseProfile<{self.course_id}:{self.user_id}>"
+
+
 class CoursePost(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="posts")
     author = models.ForeignKey(
@@ -456,3 +458,15 @@ class PostAnalyticsSnapshot(models.Model):
 
     def __str__(self) -> str:
         return f"PostAnalyticsSnapshot<{self.post_id}>"
+
+
+class SearchLog(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    keyword = models.CharField(max_length=128, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"SearchLog<{self.user_id}:{self.keyword}>"

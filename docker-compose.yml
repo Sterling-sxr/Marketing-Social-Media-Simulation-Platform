@@ -13,7 +13,7 @@ services:
       - "15432:5432"   # Include this mapping for local debugging
     networks: [app]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $PG_USER -d $PG_DB"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -70,6 +70,11 @@ services:
 
       # PostgreSQL
       DATABASE_URL: postgres://${PG_USER}:${PG_PASSWORD}@postgres:5432/${PG_DB}
+      PG_DB: ${PG_DB}
+      PG_USER: ${PG_USER}
+      PG_PASSWORD: ${PG_PASSWORD}
+      PG_HOST: postgres
+      PG_PORT: "5432"
 
       # Redis
       REDIS_URL: redis://redis:6379

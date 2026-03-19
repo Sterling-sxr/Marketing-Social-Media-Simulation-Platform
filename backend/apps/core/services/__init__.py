@@ -1,4 +1,4 @@
-from .ai_analysis_service import generate_ai_analysis
+from .ai_analysis_service import generate_ai_analysis, generate_tutor_response
 from .ai_user_reaction_service import (
     handle_post_reactions,
     schedule_ai_reactions,
@@ -172,4 +172,5 @@ __all__ = [
     "schedule_ai_reactions",
     "handle_post_reactions",
     "generate_ai_analysis",
+    "generate_tutor_response",
 ]

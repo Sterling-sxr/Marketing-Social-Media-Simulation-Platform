@@ -10,6 +10,7 @@ import {
   BarChart3,
   LayoutDashboard,
   Wrench,
+  BotMessageSquare,
 } from "lucide-react";
 import ToastHost from "../../components/ToastHost"; // Global Toast host
 
@@ -130,6 +131,11 @@ export default function AuthenticatedShell({
         to: uid ? `/student/analysis` : "/login",
         label: "Analysis",
         icon: <BarChart3 className="h-5 w-5" />,
+      },
+      {
+        to: "/ai-tutor",
+        label: "AI Tutor",
+        icon: <BotMessageSquare className="h-5 w-5" />,
       },
     ];
 
