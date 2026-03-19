@@ -31,7 +31,7 @@ import OnboardingProfilePage from "./pages/OnboardingProfilePage";
 import StudentHomePage from "./pages/StudentHomePage";
 import StudentAnalysisPage from "./pages/StudentAnalysisPage";
 import CourseStudentsPage from "./pages/admin/CourseStudentsPage.jsx";
-import GlobalSearchPage from "./pages/GlobalSearchPage";
+import SearchPage from "./pages/SearchPage";
 import AITutorPage from "./pages/AITutorPage";
 
 export default function App() {
@@ -59,7 +59,6 @@ export default function App() {
           <Route path="/reset/success" element={<ResetSuccessPage />} />
           <Route path="/studenthome" element={<StudentHomePage />} />
           <Route path="/student/analysis" element={<StudentAnalysisPage />} />
-          <Route path="/search" element={<GlobalSearchPage />} />
           <Route path="/ai-tutor" element={<AITutorPage />} />
           <Route path="/profile" element={<MyProfileRedirect />} />
           <Route path="/profile/edit" element={<ProfilePage />} />
@@ -76,6 +75,7 @@ export default function App() {
             element={<OnboardingProfilePage />}
           />
           <Route path="/courses" element={<CoursesPage />} />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="/courses/:courseId" element={<CourseFeedPage />} />
           <Route
             path="/courses/:courseId/ai-users"
