@@ -4,6 +4,7 @@ import { useApp } from "../../context/AppContext";
 import {
   Home,
   BookOpen,
+  Search,
   Bell,
   FileText,
   BarChart3,
@@ -111,6 +112,11 @@ export default function AuthenticatedShell({
         icon: <BookOpen className="h-5 w-5" />,
       },
       {
+        to: "/search",
+        label: "Search",
+        icon: <Search className="h-5 w-5" />,
+      },
+      {
         to: "/notifications",
         label: "Messages",
         icon: <Bell className="h-5 w-5" />,
@@ -163,8 +169,8 @@ export default function AuthenticatedShell({
       new Set([
         "/studenthome",
         "/courses",
+        "/search",
         "/notifications",
-        uid ? `/people/${uid}?tab=posts` : "/login",
         uid ? "/student/analysis" : "/login",
       ])
     );
