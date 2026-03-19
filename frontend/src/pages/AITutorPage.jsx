@@ -33,14 +33,14 @@ function AnswerCard({ answer, index }) {
             <BotMessageSquare className="h-4 w-4" />
           </div>
           <span className="text-xs font-semibold uppercase tracking-[0.2em] text-fuchsia-500">
-            AI 教学助手 · 第 {index + 1} 条回答
+            AI Tutor · Answer {index + 1}
           </span>
         </div>
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
           className="rounded-xl p-1.5 text-slate-400 hover:bg-fuchsia-50 hover:text-fuchsia-500 transition"
-          aria-label={expanded ? "收起" : "展开"}
+          aria-label={expanded ? "Collapse" : "Expand"}
         >
           {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </button>
@@ -48,21 +48,21 @@ function AnswerCard({ answer, index }) {
 
       {expanded && (
         <div className="divide-y divide-fuchsia-50 px-5">
-          {/* 直接回答 */}
+          {/* Direct Answer */}
           <section className="py-4">
             <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-orange-500">
-              直接回答
+              Direct Answer
             </p>
             <p className="text-base font-semibold text-slate-900 leading-relaxed">
               {answer.short_answer}
             </p>
           </section>
 
-          {/* 详细解释 */}
+          {/* Detailed Explanation */}
           {answer.detailed_explanation && (
             <section className="py-4">
               <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-fuchsia-500">
-                详细解释
+                Explanation
               </p>
               <p className="text-sm text-slate-700 leading-7 whitespace-pre-wrap">
                 {answer.detailed_explanation}
@@ -70,11 +70,11 @@ function AnswerCard({ answer, index }) {
             </section>
           )}
 
-          {/* 例子 */}
+          {/* Example */}
           {answer.example && (
             <section className="py-4">
               <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-500">
-                例子
+                Example
               </p>
               <div className="rounded-2xl bg-emerald-50/70 border border-emerald-100 px-4 py-3">
                 <p className="text-sm text-emerald-800 leading-6 whitespace-pre-wrap">
@@ -84,11 +84,11 @@ function AnswerCard({ answer, index }) {
             </section>
           )}
 
-          {/* 要点 */}
+          {/* Key Points */}
           {answer.key_points && answer.key_points.length > 0 && (
             <section className="py-4">
               <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-500">
-                关键要点
+                Key Points
               </p>
               <ul className="space-y-2">
                 {answer.key_points.map((point, i) => (
@@ -111,12 +111,12 @@ function AnswerCard({ answer, index }) {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 const SUGGESTED_QUESTIONS = [
-  "什么是机器学习中的过拟合？如何解决？",
-  "请解释一下 Python 中的装饰器是什么",
-  "数据库的第三范式是什么意思？",
-  "HTTP 和 HTTPS 有什么区别？",
-  "什么是面向对象编程中的多态？",
-  "请简单解释一下什么是递归",
+  "What is overfitting in machine learning and how do you prevent it?",
+  "Can you explain what decorators are in Python?",
+  "What does the Third Normal Form (3NF) mean in databases?",
+  "What is the difference between HTTP and HTTPS?",
+  "What is polymorphism in object-oriented programming?",
+  "Can you give a simple explanation of recursion?",
 ];
 
 export default function AITutorPage() {
@@ -181,7 +181,7 @@ export default function AITutorPage() {
           )
         );
       } catch (err) {
-        setError(err.message || "请求失败，请稍后重试。");
+        setError(err.message || "Request failed. Please try again later.");
         setTurns((prev) => prev.slice(0, -1));
       } finally {
         setLoading(false);
@@ -214,8 +214,8 @@ export default function AITutorPage() {
 
   return (
     <AuthenticatedShell
-      title="AI 教学助手"
-      subtitle="向 AI 提问，获得结构化、深度解析的学习辅导。"
+      title="AI Tutor"
+      subtitle="Ask questions and get structured, in-depth explanations to support your learning."
     >
       {/* Hero card */}
       <section className="relative overflow-hidden rounded-[2rem] border border-fuchsia-100 bg-[radial-gradient(circle_at_top_left,rgba(217,70,239,0.18),transparent_40%),linear-gradient(135deg,rgba(255,255,255,0.96),rgba(245,243,255,0.92)_50%,rgba(255,247,237,0.94))] p-5 shadow-[0_16px_40px_rgba(217,70,239,0.10)] sm:p-6">
@@ -227,13 +227,13 @@ export default function AITutorPage() {
           </div>
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-fuchsia-500">
-              智能辅导
+              Intelligent Tutoring
             </p>
             <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">
-              有问题？直接问 AI
+              Got a question? Just ask.
             </h2>
             <p className="mt-1 text-sm text-slate-500">
-              支持多轮对话，每次回答都包含直接答案、详细解释、例子和关键要点。
+              Multi-turn conversations supported. Every answer includes a direct reply, detailed explanation, examples, and key takeaways.
             </p>
           </div>
         </div>
@@ -243,7 +243,7 @@ export default function AITutorPage() {
       {!hasTurns && (
         <section>
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-            试试这些问题
+            Try asking
           </p>
           <div className="flex flex-wrap gap-2">
             {SUGGESTED_QUESTIONS.map((q) => (
@@ -307,7 +307,7 @@ export default function AITutorPage() {
               className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-500 transition hover:border-rose-200 hover:text-rose-500 focus:outline-none"
             >
               <RotateCcw className="h-3 w-3" />
-              清空对话
+              Clear chat
             </button>
           </div>
         )}
@@ -318,7 +318,7 @@ export default function AITutorPage() {
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="输入你的问题… (Enter 发送，Shift+Enter 换行)"
+              placeholder="Type your question… (Enter to send, Shift+Enter for new line)"
               rows={2}
               maxLength={2000}
               disabled={loading}
@@ -334,7 +334,7 @@ export default function AITutorPage() {
             type="submit"
             disabled={!question.trim() || loading}
             className="mb-0.5 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-fuchsia-500 via-pink-400 to-amber-400 text-white shadow-lg shadow-fuchsia-200/70 transition hover:brightness-105 focus:outline-none focus:ring-4 focus:ring-fuchsia-100 disabled:cursor-not-allowed disabled:opacity-50"
-            aria-label="发送"
+            aria-label="Send"
           >
             <Send className="h-5 w-5" />
           </button>

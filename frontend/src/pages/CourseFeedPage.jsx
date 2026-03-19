@@ -1439,19 +1439,29 @@ export default function CourseFeedPage() {
 
             <div className="mb-4">
               <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Profile
+                Quick Links
               </label>
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileFilterOpen(false);
-                  openProfileModal();
-                }}
-                className="flex h-10 w-full items-center justify-between rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200"
-              >
-                <span>View course profile</span>
-                <span className="text-slate-400">↗</span>
-              </button>
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileFilterOpen(false);
+                    openProfileModal();
+                  }}
+                  className="flex h-10 w-full items-center justify-between rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                >
+                  <span>View course profile</span>
+                  <span className="text-slate-400">↗</span>
+                </button>
+                <a
+                  href={`/courses/${courseId}/materials`}
+                  onClick={() => setMobileFilterOpen(false)}
+                  className="flex h-10 w-full items-center justify-between rounded-full border border-brand-200 bg-brand-50 px-4 text-sm font-semibold text-brand-700 shadow-sm transition hover:bg-brand-100 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                >
+                  <span>📂 Course Materials</span>
+                  <span className="text-brand-400">↗</span>
+                </a>
+              </div>
             </div>
 
             <div className="mb-4">

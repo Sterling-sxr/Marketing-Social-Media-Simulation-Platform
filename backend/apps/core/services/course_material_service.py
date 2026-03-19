@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 
@@ -129,7 +130,16 @@ def delete_course_material(user, course_id: int, material_id: int) -> None:
 
 def _serialize(m: CourseMaterial) -> dict:
     try:
-        file_url = m.file.url if m.file else ""
+        if m.file:
+            # Use PUBLIC_MEDIA_URL so the browser can reach the file via Nginx,
+            # instead of the internal MinIO address (http://minio:9000/...).
+            public_base = getattr(settings, "PUBLIC_MEDIA_URL", "").rstrip("/")
+            if public_base:
+                file_url = f"{public_base}/{m.file.name}"
+            else:
+                file_url = m.file.url
+        else:
+            file_url = ""
     except Exception:
         file_url = ""
 

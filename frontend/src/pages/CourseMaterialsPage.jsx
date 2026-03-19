@@ -5,13 +5,18 @@ import AuthenticatedShell from "./components/AuthenticatedShell";
 import { getJson, deleteJson } from "../lib/api";
 import {
   ArrowLeft,
+  Bell,
   BookOpen,
+  BotMessageSquare,
   Download,
+  Eye,
   FileText,
+  Home,
   Loader2,
   MessageSquare,
   Paperclip,
   Plus,
+  Search,
   Trash2,
   Upload,
   X,
@@ -62,6 +67,19 @@ function fileIcon(contentType, originalName) {
   if (["zip", "rar", "7z"].includes(ext)) return "📦";
   if (["mp4", "mov"].includes(ext)) return "🎬";
   return "📎";
+}
+
+/** Returns true for file types the browser can show inline (no download). */
+function isPreviewable(contentType, originalName) {
+  const ext = (originalName || "").split(".").pop().toLowerCase();
+  const previewableExts = ["pdf", "png", "jpg", "jpeg", "gif", "webp", "svg", "mp4", "mov", "webm"];
+  if (previewableExts.includes(ext)) return true;
+  if (!contentType) return false;
+  return (
+    contentType.startsWith("image/") ||
+    contentType === "application/pdf" ||
+    contentType.startsWith("video/")
+  );
 }
 
 function UploadModal({ courseId, onClose, onSuccess }) {
@@ -289,6 +307,17 @@ function MaterialCard({ material, canDelete, onDelete }) {
                 <Trash2 className="h-4 w-4" />
               </button>
             )}
+            {isPreviewable(material.content_type, material.original_name) && (
+              <a
+                href={material.file_url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-slate-400 hover:bg-slate-50"
+              >
+                <Eye className="h-3.5 w-3.5" />
+                Preview
+              </a>
+            )}
             <a
               href={material.file_url}
               target="_blank"
@@ -392,6 +421,19 @@ export default function CourseMaterialsPage() {
     [courseId]
   );
 
+  // Mobile bottom nav always shows the 5 global destinations so users
+  // are never stranded when inside a course-specific page.
+  const globalMobileNav = useMemo(
+    () => [
+      { to: "/studenthome", label: "Home", icon: <Home className="h-5 w-5" /> },
+      { to: "/courses", label: "Courses", icon: <BookOpen className="h-5 w-5" /> },
+      { to: "/search", label: "Search", icon: <Search className="h-5 w-5" /> },
+      { to: "/notifications", label: "Messages", icon: <Bell className="h-5 w-5" /> },
+      { to: "/ai-tutor", label: "AI Tutor", icon: <BotMessageSquare className="h-5 w-5" /> },
+    ],
+    []
+  );
+
   if (!authCheckComplete || !authUser) return null;
 
   return (
@@ -399,6 +441,7 @@ export default function CourseMaterialsPage() {
       title={courseName ? `${courseName} — Materials` : "Course Materials"}
       subtitle="Download lecture slides, assignments, and resources for this course."
       links={courseLinks}
+      mobileNavLinks={globalMobileNav}
     >
       <div className="space-y-5">
         {/* Header row */}

@@ -19,12 +19,19 @@ _RANK_LABELS = {
 
 def _save_search_history(request, query: str) -> None:
     if request.user.is_authenticated:
-        profile, _ = UserProfile.objects.get_or_create(user=request.user)
-        history = profile.search_history or []
-        normalized = [h for h in history if h.lower() != query.lower()]
-        profile.search_history = [query, *normalized][:10]
-        profile.save()
-        SearchLog.objects.create(user=request.user, keyword=query)
+        # Use filter().first() instead of get_or_create to avoid creating a
+        # bare UserProfile (many integer fields have no default, causing
+        # NOT NULL violations on auto-creation).
+        profile = UserProfile.objects.filter(user=request.user).first()
+        if profile is not None:
+            history = profile.search_history or []
+            normalized = [h for h in history if h.lower() != query.lower()]
+            profile.search_history = [query, *normalized][:10]
+            profile.save(update_fields=["search_history"])
+        try:
+            SearchLog.objects.create(user=request.user, keyword=query)
+        except Exception:
+            pass
     else:
         history = request.session.get("search_history", [])
         normalized = [h for h in history if h.lower() != query.lower()]
@@ -41,10 +48,24 @@ def search_posts(request):
     if not query:
         return JsonResponse({"results": []})
 
+    # Split multi-word queries into tokens so that each word is matched
+    # independently (AND logic). This prevents "python tutorial" from requiring
+    # both words to appear adjacent in the content.
+    tokens = [t for t in query.split() if t]
+
+    token_filter = Q()
+    for token in tokens:
+        clean = token.lstrip("#").lower()
+        token_filter &= (
+            Q(content__icontains=token)
+            | Q(hashtags__contains=[clean])
+            | Q(author__username__icontains=token)
+        )
+
     posts_qs = (
         CoursePost.objects.select_related("author", "course")
         .annotate(like_count=Count("likes"))
-        .filter(Q(content__icontains=query))
+        .filter(token_filter)
         .order_by("-like_count", "-created_at")[:50]
     )
 
@@ -112,8 +133,8 @@ def get_search_history(request):
     获取当前用户的搜索历史（字符串数组）。
     """
     if request.user.is_authenticated:
-        profile, _ = UserProfile.objects.get_or_create(user=request.user)
-        history = profile.search_history or []
+        profile = UserProfile.objects.filter(user=request.user).first()
+        history = profile.search_history if profile else []
     else:
         history = request.session.get("search_history", [])
     return JsonResponse(history, safe=False)

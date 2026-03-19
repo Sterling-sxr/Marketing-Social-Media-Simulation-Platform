@@ -177,7 +177,7 @@ export default function AuthenticatedShell({
         "/courses",
         "/search",
         "/notifications",
-        uid ? "/student/analysis" : "/login",
+        "/ai-tutor",
       ])
     );
     const linksByTo = new Map(sidebarLinks.map((item) => [item.to, item]));

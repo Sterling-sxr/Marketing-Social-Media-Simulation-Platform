@@ -154,21 +154,35 @@ export default function PostDetailPage() {
   const HeaderBar = () => (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-accent-100/60 bg-white/95 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 lg:px-6 lg:py-4">
-        <button
-          type="button"
-          onClick={() => navigate("/studenthome")}
-          aria-label="Return to home"
-          className="flex items-center gap-2.5 text-xl font-bold"
-        >
-          <img
-            src="/logo.jpg"
-            alt="Bread"
-            className="h-8 w-8 rounded-lg object-cover sm:h-10 sm:w-10 lg:h-12 lg:w-12"
-          />
-          <span className="bg-gradient-to-r from-brand-500 via-accent-400 to-accent-500 bg-clip-text text-lg text-transparent sm:text-xl">
-            Bread
-          </span>
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Back to course feed button — always visible on mobile */}
+          <button
+            type="button"
+            onClick={() => navigate(`/courses/${courseId}`)}
+            aria-label="Back to course feed"
+            className="flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700 transition hover:bg-brand-100 focus:outline-none focus:ring-2 focus:ring-brand-200"
+          >
+            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M19 12H5M5 12l7-7M5 12l7 7" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span>Back</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate("/studenthome")}
+            aria-label="Return to home"
+            className="hidden items-center gap-2.5 text-xl font-bold sm:flex"
+          >
+            <img
+              src="/logo.jpg"
+              alt="Bread"
+              className="h-8 w-8 rounded-lg object-cover sm:h-10 sm:w-10 lg:h-12 lg:w-12"
+            />
+            <span className="bg-gradient-to-r from-brand-500 via-accent-400 to-accent-500 bg-clip-text text-lg text-transparent sm:text-xl">
+              Bread
+            </span>
+          </button>
+        </div>
 
         <div className="flex min-w-0 items-center gap-2 sm:gap-3 lg:gap-5">
           <div className="flex min-w-0 items-center gap-2 rounded-full border border-accent-200/70 bg-white/90 px-2.5 py-1.5 sm:gap-3 sm:px-4 sm:py-2">
@@ -176,7 +190,7 @@ export default function PostDetailPage() {
               {authorName.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0 leading-tight">
-              <p className="max-w-[120px] truncate text-xs font-semibold text-slate-800 sm:max-w-[12rem] sm:text-sm">
+              <p className="max-w-[100px] truncate text-xs font-semibold text-slate-800 sm:max-w-[12rem] sm:text-sm">
                 {authorName}
               </p>
               <p className="hidden max-w-[12rem] truncate text-xs text-slate-500 sm:block">
