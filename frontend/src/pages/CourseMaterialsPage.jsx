@@ -116,7 +116,8 @@ function UploadModal({ courseId, onClose, onSuccess }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Upload failed.");
-      onSuccess(data);
+      // Backend wraps the new material under {"material": {...}}
+      onSuccess(data.material ?? data);
     } catch (err) {
       setStatus({ loading: false, error: err.message || "Upload failed." });
     }
@@ -374,7 +375,8 @@ export default function CourseMaterialsPage() {
     try {
       const params = activeCategory !== "all" ? `?category=${activeCategory}` : "";
       const data = await getJson(`/api/courses/${courseId}/materials/${params}`);
-      setMaterials(Array.isArray(data) ? data : data.materials || []);
+      // Backend returns {"items": [...]}
+      setMaterials(Array.isArray(data) ? data : data.items ?? data.materials ?? []);
       setError("");
     } catch (err) {
       setError(err.message || "Failed to load materials.");
