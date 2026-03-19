@@ -33,6 +33,10 @@ from .course_controller import (
     list_user_courses_view,
     update_course_view,
 )
+from .course_material_controller import (
+    course_material_detail_view,
+    course_materials_view,
+)
 from .course_post_controller import (
     course_post_analytics,
     course_post_comments,
@@ -122,10 +126,9 @@ __all__ = [
     "dashboard_course_hashtag_detail",
     "dashboard_course_student_detail",
     "ai_analyze",
-<<<<<<< HEAD
     "ai_tutor",
-=======
->>>>>>> backend
+    "course_materials_view",
+    "course_material_detail_view",
     "search_posts",
     "add_search_history",
     "suggested_search",

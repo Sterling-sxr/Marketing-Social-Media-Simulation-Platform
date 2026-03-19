@@ -1,7 +1,6 @@
 import {
   useEffect,
   useId,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -15,6 +14,7 @@ import {
   ArrowRight,
   Clock3,
   Flame,
+  Loader2,
   Search as SearchIcon,
   Sparkles,
   Trash2,
@@ -22,7 +22,8 @@ import {
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import AuthenticatedShell from "./components/AuthenticatedShell";
-import { HOT_SEARCHES, MOCK_SEARCH_RESULTS } from "./searchData";
+import { getJson } from "../lib/api";
+import { HOT_SEARCHES } from "./searchData";
 
 const HISTORY_STORAGE_KEY = "bread:global-search-history";
 const MAX_HISTORY_ITEMS = 10;
@@ -97,61 +98,33 @@ function formatResultTime(value) {
   });
 }
 
-function buildSearchResults(query, courses) {
+function buildCourseResults(query, courses) {
   const normalized = normalizeQuery(query).toLowerCase();
   if (!normalized) return [];
   const tokens = normalized.split(" ").filter(Boolean);
 
-  const dynamicCourseResults = (courses || []).map((course) => ({
-    id: `course-${course.id}`,
-    type: "course",
-    title: `${course.course_code} ${course.name}`.trim(),
-    snippet: course.profile_completed
-      ? "Open the course community and continue browsing discussions."
-      : "Complete your course profile first, then continue into the class feed.",
-    href: course.profile_completed
-      ? `/courses/${course.id}`
-      : `/courses/${course.id}/profile`,
-    courseName: course.term || "Course",
-    authorName: course.role || "Member",
-    createdAt: "",
-    rankLabel: "From your courses",
-    queryTokens: [
-      course.course_code,
-      course.name,
-      course.term,
-      course.role,
-      "course",
-    ],
-  }));
-
-  const allResults = [...dynamicCourseResults, ...MOCK_SEARCH_RESULTS];
-
-  return allResults
-    .map((item) => {
-      const haystack = [
-        item.title,
-        item.snippet,
-        item.courseName,
-        item.authorName,
-        item.rankLabel,
-        ...(item.queryTokens || []),
-      ]
+  return (courses || [])
+    .map((course) => ({
+      id: `course-${course.id}`,
+      type: "course",
+      title: `${course.course_code} ${course.name}`.trim(),
+      snippet: course.profile_completed
+        ? "Open the course community and continue browsing discussions."
+        : "Complete your course profile first, then continue into the class feed.",
+      href: course.profile_completed
+        ? `/courses/${course.id}`
+        : `/courses/${course.id}/profile`,
+      courseName: course.term || "Course",
+      authorName: course.role || "Member",
+      createdAt: "",
+      rankLabel: "From your courses",
+    }))
+    .filter((item) => {
+      const haystack = [item.title, item.courseName, item.authorName, "course"]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
-
-      const matchCount = tokens.reduce(
-        (count, token) => (haystack.includes(token) ? count + 1 : count),
-        0
-      );
-
-      return { ...item, matchCount };
-    })
-    .filter((item) => item.matchCount > 0)
-    .sort((a, b) => {
-      if (b.matchCount !== a.matchCount) return b.matchCount - a.matchCount;
-      return String(a.title).localeCompare(String(b.title));
+      return tokens.some((token) => haystack.includes(token));
     });
 }
 
@@ -219,6 +192,9 @@ export default function SearchPage() {
   const queryFromUrl = searchParams.get("q") || "";
   const [inputValue, setInputValue] = useState(queryFromUrl);
   const [historyItems, setHistoryItems] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [hotSearches, setHotSearches] = useState(HOT_SEARCHES);
 
   useEffect(() => {
     if (!authCheckComplete) return;
@@ -242,11 +218,44 @@ export default function SearchPage() {
     inputRef.current?.focus();
   }, [authCheckComplete, authUser]);
 
+  // Load hot searches from backend; keep static data as fallback
+  useEffect(() => {
+    if (!authUser) return;
+    getJson("/api/search/suggestions/")
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) setHotSearches(data);
+      })
+      .catch(() => {});
+  }, [authUser]);
+
+  // Fetch search results from backend when committed query changes
+  useEffect(() => {
+    if (!queryFromUrl || !authUser) {
+      setSearchResults([]);
+      return;
+    }
+    const controller = new AbortController();
+    setIsSearching(true);
+
+    getJson(`/api/search/?q=${encodeURIComponent(queryFromUrl)}`)
+      .then((data) => {
+        if (controller.signal.aborted) return;
+        const courseResults = buildCourseResults(queryFromUrl, courses.joined);
+        setSearchResults([...courseResults, ...(data.results || [])]);
+      })
+      .catch(() => {
+        if (controller.signal.aborted) return;
+        // Fallback: show only course matches from local context
+        setSearchResults(buildCourseResults(queryFromUrl, courses.joined));
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsSearching(false);
+      });
+
+    return () => controller.abort();
+  }, [queryFromUrl, authUser, courses.joined]);
+
   const hasCommittedQuery = normalizeQuery(queryFromUrl).length > 0;
-  const searchResults = useMemo(
-    () => buildSearchResults(queryFromUrl, courses.joined),
-    [queryFromUrl, courses.joined]
-  );
 
   const updateHistory = (value) => {
     const normalized = normalizeQuery(value);
@@ -331,10 +340,16 @@ export default function SearchPage() {
               {hasCommittedQuery ? (
                 <p
                   aria-live="polite"
-                  className="text-sm font-medium text-slate-500"
+                  className="flex items-center gap-2 text-sm font-medium text-slate-500"
                 >
-                  {searchResults.length} result
-                  {searchResults.length === 1 ? "" : "s"} for "{queryFromUrl}"
+                  {isSearching ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-brand-500" />
+                  ) : (
+                    <>
+                      {searchResults.length} result
+                      {searchResults.length === 1 ? "" : "s"} for &ldquo;{queryFromUrl}&rdquo;
+                    </>
+                  )}
                 </p>
               ) : null}
             </div>
@@ -419,7 +434,11 @@ export default function SearchPage() {
               ) : null}
             </div>
 
-            {searchResults.length > 0 ? (
+            {isSearching ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-brand-400" />
+              </div>
+            ) : searchResults.length > 0 ? (
               <div className="grid gap-3">
                 {searchResults.map((item) => (
                   <SearchResultCard
@@ -445,7 +464,7 @@ export default function SearchPage() {
                   trending community topics below.
                 </p>
                 <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-                  {HOT_SEARCHES.slice(0, 4).map((item) => (
+                  {hotSearches.slice(0, 4).map((item) => (
                     <button
                       key={item.id}
                       type="button"
@@ -551,7 +570,7 @@ export default function SearchPage() {
               </div>
 
               <ol className="mt-5 space-y-2">
-                {HOT_SEARCHES.map((item, index) => (
+                {hotSearches.map((item, index) => (
                   <li key={item.id}>
                     <button
                       type="button"

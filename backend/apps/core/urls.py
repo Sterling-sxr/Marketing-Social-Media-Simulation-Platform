@@ -4,6 +4,8 @@ from .controllers import (
     ai_analyze,
     ai_tutor,
     check_auth_status,
+    course_material_detail_view,
+    course_materials_view,
     complete_password_reset_view,
     complete_registration_view,
     confirm_password_reset_view,
@@ -108,6 +110,12 @@ urlpatterns = [
     path("courses/<int:course_id>/", update_course_view, name="courses-update"),
     path("courses/<int:course_id>/profile/", course_profile_view, name="courses-profile"),
     path("courses/managed/", list_managed_courses_view, name="courses-managed"),
+    path("courses/<int:course_id>/materials/", course_materials_view, name="course-materials"),
+    path(
+        "courses/<int:course_id>/materials/<int:material_id>/",
+        course_material_detail_view,
+        name="course-material-detail",
+    ),
     path("courses/<int:course_id>/posts/", course_posts, name="course-posts"),
     path("courses/<int:course_id>/ai-users/", course_ai_users, name="course-ai-users"),
     path(

@@ -1,57 +1,83 @@
 # apps/core/controllers/search.py
-from django.http import JsonResponse
-from django.db.models import Q, Count
-from apps.core.repositories.models import CoursePost, UserProfile
+import json
+
 from django.contrib.auth import get_user_model
-from django.utils import timezone
+from django.db.models import Count, Q
+from django.http import JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 
-from apps.core.repositories.models import SearchLog
+from apps.core.repositories.models import CoursePost, SearchLog, UserProfile
 
 User = get_user_model()
+
+_RANK_LABELS = {
+    "high": "Trending post",
+    "medium": "Active discussion",
+    "low": "",
+}
+
+
+def _save_search_history(request, query: str) -> None:
+    if request.user.is_authenticated:
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        history = profile.search_history or []
+        normalized = [h for h in history if h.lower() != query.lower()]
+        profile.search_history = [query, *normalized][:10]
+        profile.save()
+        SearchLog.objects.create(user=request.user, keyword=query)
+    else:
+        history = request.session.get("search_history", [])
+        normalized = [h for h in history if h.lower() != query.lower()]
+        request.session["search_history"] = [query, *normalized][:10]
 
 
 @require_GET
 def search_posts(request):
     """
-    搜索帖子内容，返回最新50条匹配结果
+    搜索帖子，返回前端 SearchResultCard 所需的完整字段。
+    响应：{ results: [{id, type, title, snippet, href, courseName, authorName, createdAt, rankLabel}] }
     """
     query = request.GET.get("q", "").strip()
     if not query:
         return JsonResponse({"results": []})
 
-    # 搜索 CoursePost 内容
-    posts_qs = CoursePost.objects.filter(
-        Q(content__icontains=query)
-    ).order_by("-created_at")[:50]
+    posts_qs = (
+        CoursePost.objects.select_related("author", "course")
+        .annotate(like_count=Count("likes"))
+        .filter(Q(content__icontains=query))
+        .order_by("-like_count", "-created_at")[:50]
+    )
 
-    results = [
-        {
-            "id": p.id,
-            "excerpt": p.content[:100],
-            "author_name": p.author.username,
-            "created_at": p.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-        }
-        for p in posts_qs
-    ]
+    results = []
+    for p in posts_qs:
+        content = p.content
+        title = content[:60].rstrip()
+        if len(content) > 60:
+            title += "…"
+        snippet = content[:200].rstrip()
+        if len(content) > 200:
+            snippet += "…"
 
-    # 记录搜索历史
-    if request.user.is_authenticated:
-        profile, _ = UserProfile.objects.get_or_create(user=request.user)
-        history = profile.search_history or []
-        if query not in history:
-            history.insert(0, query)
-        profile.search_history = history[:10]  # 保留最新10条
-        profile.save()
+        if p.like_count >= 5:
+            rank_label = _RANK_LABELS["high"]
+        elif p.like_count >= 2:
+            rank_label = _RANK_LABELS["medium"]
+        else:
+            rank_label = _RANK_LABELS["low"]
 
-        # 同时记录全站搜索日志
-        SearchLog.objects.create(user=request.user, keyword=query)
-    else:
-        # 未登录用户用 session 保存
-        history = request.session.get("search_history", [])
-        if query not in history:
-            history.insert(0, query)
-        request.session["search_history"] = history[:10]
+        results.append({
+            "id": f"post-{p.id}",
+            "type": "post",
+            "title": title,
+            "snippet": snippet,
+            "href": f"/courses/{p.course_id}/posts/{p.id}",
+            "courseName": p.course.name,
+            "authorName": p.author.username,
+            "createdAt": p.created_at.isoformat(),
+            "rankLabel": rank_label,
+        })
+
+    _save_search_history(request, query)
 
     return JsonResponse({"results": results})
 
@@ -59,21 +85,31 @@ def search_posts(request):
 @require_GET
 def suggested_search(request):
     """
-    获取全站热搜关键词
+    返回全站热搜词，格式与前端 HOT_SEARCHES 相同：
+    [{id, keyword, hitCount, blurb}]
+    当数据库中无数据时返回空列表（前端保留静态兜底数据）。
     """
     top_keywords = (
         SearchLog.objects.values("keyword")
-        .annotate(count=Count("keyword"))
-        .order_by("-count")[:10]
+        .annotate(hit_count=Count("keyword"))
+        .order_by("-hit_count")[:10]
     )
-    suggestions = [k["keyword"] for k in top_keywords]
+    suggestions = [
+        {
+            "id": f"hot-{i + 1}",
+            "keyword": k["keyword"],
+            "hitCount": k["hit_count"],
+            "blurb": "",
+        }
+        for i, k in enumerate(top_keywords)
+    ]
     return JsonResponse(suggestions, safe=False)
 
 
 @require_GET
 def get_search_history(request):
     """
-    获取用户搜索历史，优先使用 UserProfile，其次 session
+    获取当前用户的搜索历史（字符串数组）。
     """
     if request.user.is_authenticated:
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
@@ -86,25 +122,16 @@ def get_search_history(request):
 @require_POST
 def add_search_history(request):
     """
-    添加单条搜索历史，适用于前端直接传 keyword
+    手动新增一条搜索历史，接受 JSON body：{"keyword": "..."}
     """
-    keyword = request.POST.get("keyword", "").strip()
+    try:
+        body = json.loads(request.body)
+        keyword = body.get("keyword", "").strip()
+    except (json.JSONDecodeError, AttributeError):
+        keyword = request.POST.get("keyword", "").strip()
+
     if not keyword:
         return JsonResponse({"error": "Missing keyword"}, status=400)
 
-    if request.user.is_authenticated:
-        profile, _ = UserProfile.objects.get_or_create(user=request.user)
-        history = profile.search_history or []
-        if keyword not in history:
-            history.insert(0, keyword)
-        profile.search_history = history[:10]
-        profile.save()
-        # 同时记录全站日志
-        SearchLog.objects.create(user=request.user, keyword=keyword)
-    else:
-        history = request.session.get("search_history", [])
-        if keyword not in history:
-            history.insert(0, keyword)
-        request.session["search_history"] = history[:10]
-
+    _save_search_history(request, keyword)
     return JsonResponse({"success": True, "keyword": keyword})

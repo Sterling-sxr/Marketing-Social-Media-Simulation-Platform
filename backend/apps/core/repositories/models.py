@@ -471,3 +471,42 @@ class SearchLog(models.Model):
     def __str__(self) -> str:
         return f"SearchLog<{self.user_id}:{self.keyword}>"
 
+
+class CourseMaterial(models.Model):
+    CATEGORY_CHOICES = [
+        ("lecture", "Lecture"),
+        ("tutorial", "Tutorial"),
+        ("assignment", "Assignment"),
+        ("reading", "Reading"),
+        ("exam", "Exam"),
+        ("other", "Other"),
+    ]
+
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="materials",
+    )
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default="other")
+    file = models.FileField(upload_to="course_materials/%Y/%m/")
+    original_name = models.CharField(max_length=255)
+    content_type = models.CharField(max_length=128, blank=True)
+    size = models.BigIntegerField(default=0)
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="uploaded_materials",
+    )
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    is_visible = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["-uploaded_at"]
+
+    def __str__(self) -> str:
+        return f"CourseMaterial<{self.course_id}:{self.title}>"
+

@@ -56,6 +56,11 @@ from .dashboard_service import (
     refresh_dashboard_snapshot,
 )
 from .gmail_service import GmailNotConfiguredError, build_gmail_flow, send_demo_email
+from .course_material_service import (
+    delete_course_material,
+    list_course_materials,
+    upload_course_material,
+)
 from .media_service import list_recent_assets, store_upload
 from .message_service import create_message, list_recent_messages
 from .notification_service import (
@@ -95,6 +100,9 @@ __all__ = [
     "GmailNotConfiguredError",
     "build_gmail_flow",
     "send_demo_email",
+    "list_course_materials",
+    "upload_course_material",
+    "delete_course_material",
     "list_recent_assets",
     "store_upload",
     "create_message",

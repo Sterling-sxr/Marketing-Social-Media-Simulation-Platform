@@ -33,6 +33,7 @@ import StudentAnalysisPage from "./pages/StudentAnalysisPage";
 import CourseStudentsPage from "./pages/admin/CourseStudentsPage.jsx";
 import SearchPage from "./pages/SearchPage";
 import AITutorPage from "./pages/AITutorPage";
+import CourseMaterialsPage from "./pages/CourseMaterialsPage";
 
 export default function App() {
   function MyProfileRedirect() {
@@ -77,6 +78,10 @@ export default function App() {
           <Route path="/courses" element={<CoursesPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/courses/:courseId" element={<CourseFeedPage />} />
+          <Route
+            path="/courses/:courseId/materials"
+            element={<CourseMaterialsPage />}
+          />
           <Route
             path="/courses/:courseId/ai-users"
             element={<CourseAIUsersPage />}

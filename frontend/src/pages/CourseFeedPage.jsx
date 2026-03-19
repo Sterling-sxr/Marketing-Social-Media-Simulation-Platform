@@ -1236,6 +1236,20 @@ export default function CourseFeedPage() {
             </div>
           </div>
 
+          {/* Materials shortcut */}
+          <div className="mb-4">
+            <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Resources
+            </label>
+            <a
+              href={`/courses/${courseId}/materials`}
+              className="flex h-10 w-full items-center justify-between rounded-full border border-brand-200 bg-brand-50/60 px-4 text-sm font-semibold text-brand-700 transition hover:bg-brand-100"
+            >
+              <span>📂 Course Materials</span>
+              <span className="text-brand-400">↗</span>
+            </a>
+          </div>
+
           {/* Search field (relocated below the profile section) */}
           <div className="mb-4">
             <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
