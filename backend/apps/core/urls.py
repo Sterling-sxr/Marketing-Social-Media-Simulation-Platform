@@ -50,9 +50,17 @@ from .controllers import (
     user_posts,
     user_posts_analytics,
     verify_registration_code_view,
+    search_posts,
+    add_search_history,
+    suggested_search,
+    get_search_history,
 )
 
 urlpatterns = [
+    path("search/", search_posts, name="search-posts"),
+    path("search/history/", add_search_history, name="add-search-history"),
+    path("search/suggestions/", suggested_search, name="search-suggestions"),
+    path("search/myhot/", get_search_history, name="get-search-history"),
     path("auth/send-code/", send_registration_code, name="auth-send-code"),
     path("auth/verify-code/", verify_registration_code_view, name="auth-verify-code"),
     path("auth/set-password/", complete_registration_view, name="auth-set-password"),

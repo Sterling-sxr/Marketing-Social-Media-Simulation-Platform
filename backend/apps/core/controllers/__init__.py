@@ -63,7 +63,7 @@ from .profile_controller import (
     user_posts,
     user_posts_analytics,
 )
-from .search import (
+from .search import(
     search_posts,
     add_search_history,
     suggested_search,
@@ -122,7 +122,10 @@ __all__ = [
     "dashboard_course_hashtag_detail",
     "dashboard_course_student_detail",
     "ai_analyze",
+<<<<<<< HEAD
     "ai_tutor",
+=======
+>>>>>>> backend
     "search_posts",
     "add_search_history",
     "suggested_search",
