@@ -1,4 +1,5 @@
 """ASGI config for Django with Channels support."""
+
 import os
 
 from channels.auth import AuthMiddlewareStack
@@ -15,8 +16,6 @@ import apps.core.routing  # noqa: E402  pylint: disable=wrong-import-position
 application = ProtocolTypeRouter(
     {
         "http": django_asgi_app,
-        "websocket": AllowedHostsOriginValidator(
-            AuthMiddlewareStack(URLRouter(apps.core.routing.websocket_urlpatterns))
-        ),
+        "websocket": AllowedHostsOriginValidator(AuthMiddlewareStack(URLRouter(apps.core.routing.websocket_urlpatterns))),
     }
 )

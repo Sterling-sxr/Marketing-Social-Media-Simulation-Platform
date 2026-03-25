@@ -104,10 +104,7 @@ def _classify_sentiment(text: str) -> str:
 
 def _summarize_sentiment(counts: dict[str, int]) -> dict[str, Any]:
     total = sum(counts.values())
-    breakdown = {
-        key: round(value * 100 / total, 1) if total else 0.0
-        for key, value in counts.items()
-    }
+    breakdown = {key: round(value * 100 / total, 1) if total else 0.0 for key, value in counts.items()}
     if total:
         top_label = max(breakdown, key=lambda k: (breakdown[k], k))
         top_percent = breakdown.get(top_label, 0.0)
@@ -160,10 +157,7 @@ def _calculate_dashboard_metrics(user) -> dict[str, Any]:
     sentiment_counts = {"positive": 0, "neutral": 0, "negative": 0}
     if total_comments:
         classifier = _get_sentiment_pipeline()
-        comment_texts = list(
-            CoursePostComment.objects.filter(post_id__in=post_ids)
-            .values_list("content", flat=True)
-        )
+        comment_texts = list(CoursePostComment.objects.filter(post_id__in=post_ids).values_list("content", flat=True))
         # Per-item classification to avoid a single failure wiping the batch
         for text in comment_texts:
             try:
@@ -181,10 +175,7 @@ def _calculate_dashboard_metrics(user) -> dict[str, Any]:
 
     total_comment_count = sum(sentiment_counts.values())
     if total_comment_count:
-        sentiment_percentages = {
-            key: round(value * 100 / total_comment_count, 1)
-            for key, value in sentiment_counts.items()
-        }
+        sentiment_percentages = {key: round(value * 100 / total_comment_count, 1) for key, value in sentiment_counts.items()}
     else:
         sentiment_percentages = {key: 0 for key in sentiment_counts}
 
@@ -212,15 +203,11 @@ def _get_post_interactions(
 
     like_counts = {
         item["post_id"]: item["total"]
-        for item in PostLikeRepository.model.objects.filter(post_id__in=post_ids)
-        .values("post_id")
-        .annotate(total=Count("id"))
+        for item in PostLikeRepository.model.objects.filter(post_id__in=post_ids).values("post_id").annotate(total=Count("id"))
     }
     comment_counts = {
         item["post_id"]: item["total"]
-        for item in PostCommentRepository.model.objects.filter(post_id__in=post_ids)
-        .values("post_id")
-        .annotate(total=Count("id"))
+        for item in PostCommentRepository.model.objects.filter(post_id__in=post_ids).values("post_id").annotate(total=Count("id"))
     }
     interactions_per_post: dict[int, int] = {}
     total_interactions = 0
@@ -233,9 +220,7 @@ def _get_post_interactions(
 
 def _collect_course_post_data(course) -> dict[str, Any]:
     posts_qs = PostRepository.model.objects.filter(course_id=course.id)
-    post_records = list(
-        posts_qs.values("id", "author_id", "hashtags", "created_at", "content")
-    )
+    post_records = list(posts_qs.values("id", "author_id", "hashtags", "created_at", "content"))
     post_ids = [record["id"] for record in post_records]
 
     (
@@ -249,19 +234,11 @@ def _collect_course_post_data(course) -> dict[str, Any]:
 
     view_counts = {
         item["post_id"]: item["total"]
-        for item in PostViewRepository.model.objects.filter(post_id__in=post_ids)
-        .values("post_id")
-        .annotate(total=Count("id"))
+        for item in PostViewRepository.model.objects.filter(post_id__in=post_ids).values("post_id").annotate(total=Count("id"))
     }
 
-    comment_records = list(
-        CoursePostComment.objects.filter(post_id__in=post_ids).values(
-            "post_id", "content"
-        )
-    )
-    comment_sentiments: dict[int, dict[str, int]] = {
-        pid: {"positive": 0, "neutral": 0, "negative": 0} for pid in post_ids
-    }
+    comment_records = list(CoursePostComment.objects.filter(post_id__in=post_ids).values("post_id", "content"))
+    comment_sentiments: dict[int, dict[str, int]] = {pid: {"positive": 0, "neutral": 0, "negative": 0} for pid in post_ids}
     if comment_records:
         classifier = _get_sentiment_pipeline()
         chunk_size = 16
@@ -360,9 +337,7 @@ def _calculate_course_metrics_from_data(course, course_data: dict[str, Any]) -> 
             elif previous_week:
                 stats["previous_week_posts"] += 1
             for sentiment_label, count in post_sentiment.items():
-                stats["sentiment_counts"][sentiment_label] = (
-                    stats["sentiment_counts"].get(sentiment_label, 0) + count
-                )
+                stats["sentiment_counts"][sentiment_label] = stats["sentiment_counts"].get(sentiment_label, 0) + count
 
         student = student_stats.setdefault(
             author_id,
@@ -381,9 +356,7 @@ def _calculate_course_metrics_from_data(course, course_data: dict[str, Any]) -> 
         elif previous_week:
             student["previous_week_posts"] += 1
         for sentiment_label, count in post_sentiment.items():
-            student["sentiment_counts"][sentiment_label] = (
-                student["sentiment_counts"].get(sentiment_label, 0) + count
-            )
+            student["sentiment_counts"][sentiment_label] = student["sentiment_counts"].get(sentiment_label, 0) + count
 
     hashtag_list = []
     for tag, stats in hashtag_stats.items():
@@ -401,10 +374,7 @@ def _calculate_course_metrics_from_data(course, course_data: dict[str, Any]) -> 
     hashtag_list = hashtag_list[:10]
 
     User = get_user_model()
-    user_map = {
-        user.id: user
-        for user in User.objects.filter(id__in=student_stats.keys())
-    }
+    user_map = {user.id: user for user in User.objects.filter(id__in=student_stats.keys())}
 
     student_list = []
     for user_id, stats in student_stats.items():
@@ -529,12 +499,7 @@ def _placeholder_student_data(course, student_id: int, student=None) -> dict[str
     if student is None and student_id:
         student = get_user_model().objects.filter(id=student_id).first()
     if student:
-        student_name = (
-            student.get_full_name().strip()
-            or student.username
-            or student.email
-            or f"user-{student_id}"
-        )
+        student_name = student.get_full_name().strip() or student.username or student.email or f"user-{student_id}"
         student_email = student.email or ""
     else:
         student_name = f"user-{student_id}" if student_id else ""
@@ -669,7 +634,7 @@ def refresh_course_hashtag_snapshot(course, hashtag: str, course_data: dict[str,
 def _refresh_course_hashtag_snapshots(course, course_data: dict[str, Any]) -> None:
     hashtags: dict[str, str] = {}
     for record in course_data["post_records"]:
-        for tag in (record.get("hashtags") or []):
+        for tag in record.get("hashtags") or []:
             normalized = _normalize_hashtag(tag)
             if not normalized:
                 continue
@@ -697,11 +662,7 @@ def refresh_course_student_snapshot(course, student_id: int, course_data: dict[s
 
 
 def _refresh_course_student_snapshots(course, course_data: dict[str, Any]) -> None:
-    student_ids = {
-        record.get("author_id")
-        for record in course_data["post_records"]
-        if record.get("author_id")
-    }
+    student_ids = {record.get("author_id") for record in course_data["post_records"] if record.get("author_id")}
     for student_id in student_ids:
         try:
             refresh_course_student_snapshot(course, student_id, course_data)
@@ -828,11 +789,7 @@ def _calculate_course_hashtag_metrics_from_data(
     matched_records: list[tuple[dict[str, Any], str]] = []
     display_hashtag = target
     for record in course_data["post_records"]:
-        tags = [
-            str(tag).strip()
-            for tag in (record.get("hashtags") or [])
-            if str(tag).strip()
-        ]
+        tags = [str(tag).strip() for tag in (record.get("hashtags") or []) if str(tag).strip()]
         for tag in tags:
             if _normalize_hashtag(tag) == normalized_target:
                 matched_records.append((record, tag))
@@ -854,32 +811,20 @@ def _calculate_course_hashtag_metrics_from_data(
 
     sentiment_totals = {"positive": 0, "neutral": 0, "negative": 0}
     for pid in post_ids:
-        for label, count in sentiment_map.get(
-            pid, {"positive": 0, "neutral": 0, "negative": 0}
-        ).items():
+        for label, count in sentiment_map.get(pid, {"positive": 0, "neutral": 0, "negative": 0}).items():
             sentiment_totals[label] = sentiment_totals.get(label, 0) + count
     sentiment_summary = _summarize_sentiment(sentiment_totals)
 
     User = get_user_model()
     author_ids = {record["author_id"] for record, _ in matched_records}
-    user_map = {
-        user.id: user
-        for user in User.objects.filter(id__in=author_ids)
-    }
+    user_map = {user.id: user for user in User.objects.filter(id__in=author_ids)}
 
     top_posts = []
     for record, _tag in matched_records:
         pid = record["id"]
         author_id = record["author_id"]
         user = user_map.get(author_id)
-        name = (
-            user.get_full_name().strip()
-            or user.username
-            or user.email
-            or f"user-{author_id}"
-            if user
-            else f"user-{author_id}"
-        )
+        name = user.get_full_name().strip() or user.username or user.email or f"user-{author_id}" if user else f"user-{author_id}"
         interactions = interactions_per_post.get(pid, 0)
         content = (record.get("content") or "").strip()
         preview = content[:117].rstrip() + "..." if len(content) > 120 else content
@@ -893,11 +838,7 @@ def _calculate_course_hashtag_metrics_from_data(
                 "comments": comment_counts.get(pid, 0),
                 "views": view_counts.get(pid, 0),
                 "interactions": interactions,
-                "created_at": (
-                    record.get("created_at").isoformat()
-                    if hasattr(record.get("created_at"), "isoformat")
-                    else None
-                ),
+                "created_at": (record.get("created_at").isoformat() if hasattr(record.get("created_at"), "isoformat") else None),
             }
         )
     top_posts.sort(
@@ -944,11 +885,7 @@ def _calculate_course_student_metrics_from_data(
     course_data: dict[str, Any],
     student_id: int,
 ) -> dict[str, Any]:
-    student_posts = [
-        record
-        for record in course_data["post_records"]
-        if record.get("author_id") == student_id
-    ]
+    student_posts = [record for record in course_data["post_records"] if record.get("author_id") == student_id]
     post_ids = [record["id"] for record in student_posts]
     like_counts = course_data["like_counts"]
     comment_counts = course_data["comment_counts"]
@@ -963,22 +900,13 @@ def _calculate_course_student_metrics_from_data(
 
     sentiment_totals = {"positive": 0, "neutral": 0, "negative": 0}
     for pid in post_ids:
-        for label, count in sentiment_map.get(
-            pid, {"positive": 0, "neutral": 0, "negative": 0}
-        ).items():
+        for label, count in sentiment_map.get(pid, {"positive": 0, "neutral": 0, "negative": 0}).items():
             sentiment_totals[label] = sentiment_totals.get(label, 0) + count
     sentiment_summary = _summarize_sentiment(sentiment_totals)
 
     User = get_user_model()
     student = User.objects.filter(id=student_id).first()
-    student_name = (
-        student.get_full_name().strip()
-        or student.username
-        or student.email
-        or f"user-{student_id}"
-        if student
-        else f"user-{student_id}"
-    )
+    student_name = student.get_full_name().strip() or student.username or student.email or f"user-{student_id}" if student else f"user-{student_id}"
 
     top_posts = []
     for record in student_posts:
@@ -996,11 +924,7 @@ def _calculate_course_student_metrics_from_data(
                 "comments": comment_counts.get(pid, 0),
                 "views": view_counts.get(pid, 0),
                 "interactions": interactions,
-                "created_at": (
-                    record.get("created_at").isoformat()
-                    if hasattr(record.get("created_at"), "isoformat")
-                    else None
-                ),
+                "created_at": (record.get("created_at").isoformat() if hasattr(record.get("created_at"), "isoformat") else None),
             }
         )
 

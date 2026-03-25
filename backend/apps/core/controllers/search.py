@@ -56,11 +56,7 @@ def search_posts(request):
     token_filter = Q()
     for token in tokens:
         clean = token.lstrip("#").lower()
-        token_filter &= (
-            Q(content__icontains=token)
-            | Q(hashtags__contains=[clean])
-            | Q(author__username__icontains=token)
-        )
+        token_filter &= Q(content__icontains=token) | Q(hashtags__contains=[clean]) | Q(author__username__icontains=token)
 
     posts_qs = (
         CoursePost.objects.select_related("author", "course")
@@ -86,17 +82,19 @@ def search_posts(request):
         else:
             rank_label = _RANK_LABELS["low"]
 
-        results.append({
-            "id": f"post-{p.id}",
-            "type": "post",
-            "title": title,
-            "snippet": snippet,
-            "href": f"/courses/{p.course_id}/posts/{p.id}",
-            "courseName": p.course.name,
-            "authorName": p.author.username,
-            "createdAt": p.created_at.isoformat(),
-            "rankLabel": rank_label,
-        })
+        results.append(
+            {
+                "id": f"post-{p.id}",
+                "type": "post",
+                "title": title,
+                "snippet": snippet,
+                "href": f"/courses/{p.course_id}/posts/{p.id}",
+                "courseName": p.course.name,
+                "authorName": p.author.username,
+                "createdAt": p.created_at.isoformat(),
+                "rankLabel": rank_label,
+            }
+        )
 
     _save_search_history(request, query)
 
@@ -110,11 +108,7 @@ def suggested_search(request):
     [{id, keyword, hitCount, blurb}]
     当数据库中无数据时返回空列表（前端保留静态兜底数据）。
     """
-    top_keywords = (
-        SearchLog.objects.values("keyword")
-        .annotate(hit_count=Count("keyword"))
-        .order_by("-hit_count")[:10]
-    )
+    top_keywords = SearchLog.objects.values("keyword").annotate(hit_count=Count("keyword")).order_by("-hit_count")[:10]
     suggestions = [
         {
             "id": f"hot-{i + 1}",

@@ -1,4 +1,5 @@
 """Services for managing course-level AI users."""
+
 from __future__ import annotations
 
 import csv
@@ -379,9 +380,7 @@ def import_course_ai_users(*, user, course_id: int, file_bytes: bytes) -> dict[s
             if not username:
                 raise ValueError("Username is missing.")
             payload = {key: row.get(key, "") for key in CSV_COLUMNS if key != "username"}
-            existing = CourseAIUserRepository.model.objects.filter(
-                course_id=course.id, username__iexact=username
-            ).first()
+            existing = CourseAIUserRepository.model.objects.filter(course_id=course.id, username__iexact=username).first()
             if existing:
                 update_course_ai_user(
                     user=user,

@@ -153,7 +153,7 @@ def check_auth_status(request: HttpRequest) -> JsonResponse:
     """Check if user is currently authenticated."""
     if not request.user.is_authenticated:
         return JsonResponse({"authenticated": False}, status=200)
-    
+
     profile_required = needs_profile(request.user)
     return JsonResponse(
         {

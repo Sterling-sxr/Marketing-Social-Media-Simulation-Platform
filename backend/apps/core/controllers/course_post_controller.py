@@ -117,11 +117,8 @@ def course_post_comments(request: HttpRequest, course_id: int, post_id: int) -> 
 
     if request.method == "GET":
         from ..repositories import CoursePostComment
-        comments = (
-            CoursePostComment.objects.select_related("user", "post")
-            .filter(post_id=post_id, post__course_id=course_id)
-            .order_by("id")
-        )
+
+        comments = CoursePostComment.objects.select_related("user", "post").filter(post_id=post_id, post__course_id=course_id).order_by("id")
         items = [
             {
                 "id": c.id,
@@ -146,6 +143,7 @@ def course_post_comments(request: HttpRequest, course_id: int, post_id: int) -> 
         if not content:
             return JsonResponse({"error": "Comment content cannot be empty."}, status=400)
         from ..repositories import CoursePost, CoursePostComment
+
         try:
             post = CoursePost.objects.select_related("course").get(id=post_id, course_id=course_id)
         except CoursePost.DoesNotExist:
@@ -159,11 +157,7 @@ def course_post_comments(request: HttpRequest, course_id: int, post_id: int) -> 
         # Create notification to post author (except self-comment)
         if post.author_id != request.user.id:
             try:
-                recipient = (
-                    (post.author.username or "").strip()
-                    or (post.author.email or "").strip()
-                    or str(post.author_id)
-                )
+                recipient = (post.author.username or "").strip() or (post.author.email or "").strip() or str(post.author_id)
                 full_name = (request.user.get_full_name() or "").strip()
                 if full_name:
                     actor_name = full_name

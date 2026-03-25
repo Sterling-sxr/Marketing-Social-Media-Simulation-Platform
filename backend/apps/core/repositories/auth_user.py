@@ -1,4 +1,5 @@
 """Repository helpers around Django's built-in auth_user table."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

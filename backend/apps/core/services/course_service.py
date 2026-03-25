@@ -1,4 +1,5 @@
 """Services for listing and joining courses."""
+
 from __future__ import annotations
 
 import random
@@ -24,29 +25,27 @@ def list_courses_for_user(user) -> dict[str, Any]:
     # Fetch data via repositories
     joined_courses = CourseRepository.get_user_courses(user.id)
     course_ids = [course.id for course in joined_courses]
-    completion_map = (
-        CourseProfileRepository.completed_map_for_user(user.id, course_ids)
-        if course_ids
-        else {}
-    )
+    completion_map = CourseProfileRepository.completed_map_for_user(user.id, course_ids) if course_ids else {}
     available_courses = CourseRepository.get_available_courses(user.id)
-    
+
     # Assemble response objects
     joined = []
     for course in joined_courses:
         role = CourseRepository.get_user_role(course.id, user.id)
-        joined.append({
-            "id": course.id,
-            "name": course.name,
-            "course_code": course.course_code,
-            "term": course.term,
-            "join_code": course.join_code,
-            "role": role or "student",
-            "start_date": course.start_date.isoformat() if getattr(course, "start_date", None) else None,
-            "end_date": course.end_date.isoformat() if getattr(course, "end_date", None) else None,
-            "read_only": bool(course.end_date and timezone.localdate() > course.end_date),
-            "profile_completed": bool(completion_map.get(course.id)),
-        })
+        joined.append(
+            {
+                "id": course.id,
+                "name": course.name,
+                "course_code": course.course_code,
+                "term": course.term,
+                "join_code": course.join_code,
+                "role": role or "student",
+                "start_date": course.start_date.isoformat() if getattr(course, "start_date", None) else None,
+                "end_date": course.end_date.isoformat() if getattr(course, "end_date", None) else None,
+                "read_only": bool(course.end_date and timezone.localdate() > course.end_date),
+                "profile_completed": bool(completion_map.get(course.id)),
+            }
+        )
 
     available = [
         {
@@ -84,11 +83,9 @@ def join_course_by_code(*, user, join_code: str):
     # Reject duplicate memberships
     if CourseRepository.is_user_member(course.id, user.id):
         raise ValueError("You have already joined this course.")
-    
+
     # Create membership via repository
-    membership, _created = CourseMemberRepository.get_or_create_member(
-        course.id, user.id, role="student"
-    )
+    membership, _created = CourseMemberRepository.get_or_create_member(course.id, user.id, role="student")
     return membership
 
 
@@ -142,6 +139,7 @@ def create_course(
             return datetime.fromisoformat(value).date()
         except Exception as exc:
             raise ValueError(f"{label} must follow YYYY-MM-DD format.") from exc
+
     start_dt = _parse_date(start_date, label="start date")
     end_dt = _parse_date(end_date, label="end date")
     if end_dt < start_dt:
@@ -157,7 +155,7 @@ def create_course(
         end_date=end_dt,
         created_by=user,
     )
-    
+
     # Build response payload
     payload = {
         "id": course.id,
@@ -179,10 +177,10 @@ def list_managed_courses(*, user) -> list[dict[str, Any]]:
     # Permission check
     if not (getattr(user, "is_superuser", False) or getattr(user, "is_staff", False)):
         return []
-    
+
     # Fetch courses for this admin
     courses = CourseRepository.get_created_by_user(user.id)
-    
+
     # Format the response
     return [
         {
