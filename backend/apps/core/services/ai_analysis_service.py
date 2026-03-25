@@ -68,10 +68,7 @@ def generate_ai_analysis(*, context: str, payload: dict[str, Any]) -> str:
         messages=[
             {
                 "role": "system",
-                "content": (
-                    "You craft short analytical summaries for dashboards. "
-                    "Respond with plain text; no JSON, no markdown, no emoji."
-                ),
+                "content": ("You craft short analytical summaries for dashboards. Respond with plain text; no JSON, no markdown, no emoji."),
             },
             {"role": "user", "content": prompt},
         ],
@@ -85,8 +82,8 @@ def generate_ai_analysis(*, context: str, payload: dict[str, Any]) -> str:
     return text
 
 
-_TUTOR_SYSTEM_PROMPT = """You are an intelligent tutoring assistant for university students.
-Your goal is to help students genuinely understand concepts, not just receive answers.
+_TUTOR_SYSTEM_PROMPT = """You are an intelligent tutoring assistant for university students. 
+                          Your goal is to help students genuinely understand concepts, not just receive answers.
 
 Always respond in English, regardless of the language the question is asked in.
 Adjust the depth of your explanation to match the complexity of the question:
@@ -103,10 +100,7 @@ Follow these rules strictly:
 7. Do not pretend to reference specific textbooks or internal course materials.
 
 You MUST respond with the following JSON format exactly — no extra text, no markdown code fences, no surrounding whitespace:
-{"short_answer":"1-2 sentence direct answer to the core question",
-"detailed_explanation":"expanded explanation of the reason, principle, or steps",
-"example":"a concrete example, or empty string if not applicable",
-"key_points":["key point 1","key point 2"]}"""
+{"short_answer":"1-2 sentence direct answer to the core question","detailed_explanation":"expanded explanation of the reason, principle, or steps","example":"a concrete example, or empty string if not applicable","key_points":["key point 1","key point 2"]}"""
 
 
 def generate_tutor_response(*, question: str, history: list[dict] | None = None) -> dict[str, Any]:
