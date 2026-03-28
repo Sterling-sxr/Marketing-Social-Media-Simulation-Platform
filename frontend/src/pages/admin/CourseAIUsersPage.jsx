@@ -403,73 +403,124 @@ export default function CourseAIUsersPage() {
 
   const applySuggestionToForm = (suggestion) => {
     const pickOption = (value, options) => {
-      if (!value || !Array.isArray(options) || options.length === 0) {
+      if (
+        value === undefined ||
+        value === null ||
+        !Array.isArray(options) ||
+        options.length === 0
+      ) {
         return "";
       }
-      if (options.includes(value)) return value;
-      const lower = String(value).toLowerCase();
+      const normalizedValue = String(value).trim();
+      if (!normalizedValue) return "";
+      if (options.includes(normalizedValue)) return normalizedValue;
+      const lower = normalizedValue.toLowerCase();
+      const exactMatch = options.find((opt) => opt.toLowerCase() === lower);
+      if (exactMatch) return exactMatch;
       const keywordMatch = options.find((opt) =>
         opt.toLowerCase().includes(lower)
       );
       return keywordMatch || "";
+    };
+    const getFirstValue = (obj, keys, fallback = "") => {
+      for (const key of keys) {
+        const value = obj?.[key];
+        if (
+          value !== undefined &&
+          value !== null &&
+          String(value).trim() !== ""
+        ) {
+          return value;
+        }
+      }
+      return fallback;
+    };
+    const normalizeScale = (value, fallback = 5) => {
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric)) return fallback;
+      if (numeric < 1) return 1;
+      if (numeric > 10) return 10;
+      return Math.round(numeric);
+    };
+    const normalizeInterests = (value, options) => {
+      if (!Array.isArray(options) || options.length === 0) return [];
+      const rawItems = Array.isArray(value)
+        ? value
+        : String(value || "")
+            .replace(/;/g, ",")
+            .split(",");
+      const mapped = rawItems
+        .map((item) => pickOption(item, options))
+        .filter(Boolean);
+      return Array.from(new Set(mapped));
     };
 
     // Map suggestion into existing AI user form structure.
     // This keeps the actual create/patch logic unchanged.
     setFormData({
       ...INITIAL_FORM,
-      username: suggestion.username || "",
-      display_name: suggestion.display_name || "",
-      gender: pickOption(suggestion.gender, profileOptions?.genders),
-      city: pickOption(suggestion.city, profileOptions?.cities),
-      age_group: pickOption(suggestion.age_group, profileOptions?.age_groups),
+      username: String(suggestion?.username || "").trim(),
+      display_name: String(suggestion?.display_name || "").trim(),
+      gender: pickOption(
+        getFirstValue(suggestion, ["gender"]),
+        profileOptions?.genders
+      ),
+      city: pickOption(
+        getFirstValue(suggestion, ["city"]),
+        profileOptions?.cities
+      ),
+      age_group: pickOption(
+        getFirstValue(suggestion, ["age_group"]),
+        profileOptions?.age_groups
+      ),
       education_level: pickOption(
-        suggestion.education_level,
+        getFirstValue(suggestion, ["education_level"]),
         profileOptions?.education_levels
       ),
       income_level: pickOption(
-        suggestion.income_level,
+        getFirstValue(suggestion, ["income_level"]),
         profileOptions?.income_levels
       ),
-      social_value: suggestion.social_value ?? 5,
-      sociability: suggestion.sociability ?? 5,
-      openness: suggestion.openness ?? 5,
+      social_value: normalizeScale(suggestion?.social_value, 5),
+      sociability: normalizeScale(suggestion?.sociability, 5),
+      openness: normalizeScale(suggestion?.openness, 5),
       content_preference: pickOption(
-        suggestion.content_preference,
+        getFirstValue(suggestion, ["content_preference", "preferred_content"]),
         profileOptions?.content_preference
       ),
-      interests: Array.isArray(suggestion.interests)
-        ? [...suggestion.interests]
-        : [],
+      interests: normalizeInterests(
+        getFirstValue(suggestion, ["interests"], []),
+        profileOptions?.interests
+      ),
       shopping_frequency: pickOption(
-        suggestion.shopping_frequency,
+        getFirstValue(suggestion, ["shopping_frequency"]),
         profileOptions?.shopping_frequency
       ),
       buying_behavior: pickOption(
-        suggestion.buying_behavior,
+        getFirstValue(suggestion, ["buying_behavior", "buying_behaviour"]),
         profileOptions?.buying_behavior
       ),
       decision_factor: pickOption(
-        suggestion.decision_factor,
+        getFirstValue(suggestion, ["decision_factor", "decision_factors"]),
         profileOptions?.decision_factors
       ),
       shopping_preference: pickOption(
-        suggestion.shopping_preference,
+        getFirstValue(suggestion, ["shopping_preference"]),
         profileOptions?.shopping_preference
       ),
       digital_time: pickOption(
-        suggestion.digital_time,
+        getFirstValue(suggestion, ["digital_time", "activity_level"]),
         profileOptions?.digital_time
       ),
       interaction_style: pickOption(
-        suggestion.interaction_style,
+        getFirstValue(suggestion, ["interaction_style"]),
         profileOptions?.interaction_style
       ),
       influencer_type: pickOption(
-        suggestion.influencer_type,
+        getFirstValue(suggestion, ["influencer_type"]),
         profileOptions?.influencer_type
       ),
-      notes: suggestion.notes || "",
+      notes: String(suggestion?.notes || "").trim(),
     });
     setAiFlowOpen(false);
     setFormError("");
@@ -504,6 +555,14 @@ export default function CourseAIUsersPage() {
           : "Manage AI personas for this course"
       }
     >
+      <input
+        type="file"
+        accept=".csv"
+        ref={fileInputRef}
+        className="hidden"
+        onChange={handleImport}
+      />
+
       {hasPersonas ? (
         <div className="mt-4 space-y-3 rounded-3xl border border-brand-100 bg-white px-4 py-3">
           {/* Search row */}
@@ -555,13 +614,6 @@ export default function CourseAIUsersPage() {
             >
               {importBusy ? "Importing CSV…" : "Import CSV"}
             </button>
-            <input
-              type="file"
-              accept=".csv"
-              ref={fileInputRef}
-              className="hidden"
-              onChange={handleImport}
-            />
             <button
               type="button"
               className="rounded-full border border-brand-200 bg-white px-3 py-2 text-[11px] font-semibold text-brand transition hover:border-brand"
