@@ -564,9 +564,9 @@ export default function CourseAIUsersPage() {
       />
 
       {hasPersonas ? (
-        <div className="mt-4 space-y-3 rounded-3xl border border-brand-100 bg-white px-4 py-3">
+        <div className="mt-4 min-w-0 space-y-3 rounded-3xl border border-brand-100 bg-white px-4 py-3">
           {/* Search row */}
-          <div className="flex min-w-[220px] flex-1 flex-col">
+          <div className="flex min-w-0 w-full flex-col sm:max-w-xs">
             <label className="text-xs font-semibold text-slate-500">
               Search students & personas
             </label>
@@ -575,29 +575,29 @@ export default function CourseAIUsersPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by username, display name or city…"
-              className="mt-1 w-full rounded-full border border-brand-200 bg-white px-4 py-2 text-xs text-slate-700 outline-none transition focus:border-brand md:w-64"
+              className="mt-1 w-full min-w-0 rounded-full border border-brand-200 bg-white px-4 py-2 text-xs text-slate-700 outline-none transition focus:border-brand sm:w-64"
             />
           </div>
 
           {/* Main actions row */}
-          <div className="flex flex-wrap items-center justify-start gap-2">
+          <div className="flex flex-wrap items-stretch justify-start gap-2 sm:items-center">
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 rounded-full border border-brand bg-brand px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-brand/90 disabled:opacity-60"
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-brand bg-brand px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-brand/90 disabled:opacity-60 sm:w-auto"
               onClick={openAiFlow}
             >
               <span className="text-[13px]">✨ Generate with AI</span>
             </button>
             <button
               type="button"
-              className="rounded-full border border-brand-200 bg-white px-3 py-2 text-[11px] font-semibold text-brand transition hover:border-brand disabled:opacity-60"
+              className="w-full rounded-full border border-brand-200 bg-white px-3 py-2 text-[11px] font-semibold text-brand transition hover:border-brand disabled:opacity-60 sm:w-auto"
               onClick={handleUseTemplate}
             >
               Start from template
             </button>
             <button
               type="button"
-              className="rounded-full border border-brand-200 bg-white px-3 py-2 text-[11px] font-semibold text-brand transition hover:border-brand disabled:opacity-60"
+              className="w-full rounded-full border border-brand-200 bg-white px-3 py-2 text-[11px] font-semibold text-brand transition hover:border-brand disabled:opacity-60 sm:w-auto"
               onClick={openCreate}
             >
               Create manually
@@ -605,10 +605,10 @@ export default function CourseAIUsersPage() {
           </div>
 
           {/* Secondary actions row */}
-          <div className="flex flex-wrap items-center justify-start gap-2">
+          <div className="flex flex-wrap items-stretch justify-start gap-2 sm:items-center">
             <button
               type="button"
-              className="rounded-full border border-brand-200 bg-white px-3 py-2 text-[11px] font-semibold text-brand transition hover:border-brand disabled:opacity-60"
+              className="w-full rounded-full border border-brand-200 bg-white px-3 py-2 text-[11px] font-semibold text-brand transition hover:border-brand disabled:opacity-60 sm:w-auto"
               onClick={() => fileInputRef.current?.click()}
               disabled={importBusy}
             >
@@ -616,14 +616,14 @@ export default function CourseAIUsersPage() {
             </button>
             <button
               type="button"
-              className="rounded-full border border-brand-200 bg-white px-3 py-2 text-[11px] font-semibold text-brand transition hover:border-brand"
+              className="w-full rounded-full border border-brand-200 bg-white px-3 py-2 text-[11px] font-semibold text-brand transition hover:border-brand sm:w-auto"
               onClick={() => navigate(`/courses/${courseId}`)}
             >
               Back to course
             </button>
             <button
               type="button"
-              className="rounded-full border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-semibold text-red-500 transition hover:border-red-300 disabled:opacity-60"
+              className="w-full rounded-full border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-semibold text-red-500 transition hover:border-red-300 disabled:opacity-60 sm:w-auto"
               onClick={handleBulkDeleteClick}
               disabled={selectedIds.length === 0 || bulkBusy}
             >
@@ -696,8 +696,9 @@ export default function CourseAIUsersPage() {
           No personas match your current search. Try adjusting your keywords.
         </p>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
-          <table className="min-w-full divide-y divide-brand-50 text-left text-xs text-slate-600">
+        <div className="rounded-2xl border border-brand-100 bg-white shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="min-w-[900px] w-full divide-y divide-brand-50 text-left text-xs text-slate-600">
             <thead className="bg-brand-50 text-[11px] uppercase tracking-wide text-slate-500">
               <tr>
                 <th className="px-4 py-3">
@@ -771,17 +772,18 @@ export default function CourseAIUsersPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         </div>
       )}
 
       {formOpen ? (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
+        <div className="fixed inset-0 z-40 overflow-y-auto bg-black/40 px-4 py-4 sm:flex sm:items-center sm:justify-center sm:px-6">
           <form
-            className="max-h-[95vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl shadow-brand-200"
+            className="mx-auto min-h-fit w-full max-w-3xl rounded-3xl bg-white p-4 pb-[calc(env(safe-area-inset-bottom)+6rem)] shadow-2xl shadow-brand-200 sm:max-h-[92vh] sm:overflow-y-auto sm:p-6 sm:pb-6"
             onSubmit={handleFormSubmit}
           >
-            <header className="flex items-center justify-between">
+            <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">
                   {formData.id ? "Edit AI User" : "Create AI User"}
@@ -1003,10 +1005,10 @@ export default function CourseAIUsersPage() {
               />
             </div>
 
-            <div className="mt-6 flex items-center justify-end gap-3">
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">
               <button
                 type="button"
-                className="rounded-full border border-brand-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:border-brand-300 hover:text-brand disabled:opacity-60"
+                className="w-full rounded-full border border-brand-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:border-brand-300 hover:text-brand disabled:opacity-60 sm:w-auto"
                 onClick={closeForm}
                 disabled={formBusy}
               >
@@ -1014,7 +1016,7 @@ export default function CourseAIUsersPage() {
               </button>
               <button
                 type="submit"
-                className="rounded-full border border-brand bg-brand px-4 py-2 text-xs font-semibold text-white transition hover:bg-brand/90 disabled:opacity-60"
+                className="w-full rounded-full border border-brand bg-brand px-4 py-2 text-xs font-semibold text-white transition hover:bg-brand/90 disabled:opacity-60 sm:w-auto"
                 disabled={formBusy}
               >
                 {formBusy ? "Saving..." : "Save"}
@@ -1026,8 +1028,8 @@ export default function CourseAIUsersPage() {
 
       {/* AI-assisted creation modal (first skeleton; suggestions currently mocked) */}
       {aiFlowOpen ? (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
-          <div className="max-h-[95vh] w-full max-w-4xl overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl shadow-brand-200">
+        <div className="fixed inset-0 z-40 overflow-y-auto bg-black/40 px-4 py-4 sm:flex sm:items-center sm:justify-center sm:px-6">
+          <div className="mx-auto min-h-fit w-full max-w-4xl rounded-3xl bg-white p-4 pb-[calc(env(safe-area-inset-bottom)+6rem)] shadow-2xl shadow-brand-200 sm:max-h-[92vh] sm:overflow-y-auto sm:p-6 sm:pb-6">
             <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">

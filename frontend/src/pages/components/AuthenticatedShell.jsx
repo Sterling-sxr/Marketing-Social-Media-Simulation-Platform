@@ -197,7 +197,7 @@ export default function AuthenticatedShell({
             type="button"
             onClick={() => navigate("/studenthome")}
             aria-label="Return to student home"
-            className="group relative flex items-center gap-2.5 text-xl font-bold rounded-lg
+            className="group relative flex min-w-0 items-center gap-2.5 rounded-lg text-xl font-bold
                        leading-none focus:outline-none focus:ring-2 focus:ring-brand/30 transition"
           >
             <img
@@ -340,7 +340,7 @@ export default function AuthenticatedShell({
           })}
         </aside>
 
-        <main className="flex-1 space-y-4 rounded-2xl border border-brand-100/80 bg-white/92 p-4 pb-24 shadow-soft sm:space-y-5 sm:p-5 sm:pb-24 lg:space-y-6 lg:rounded-3xl lg:p-6 lg:pb-6 lg:shadow-brand">
+        <main className="min-w-0 flex-1 space-y-4 rounded-2xl border border-brand-100/80 bg-white/92 p-4 pb-24 shadow-soft sm:space-y-5 sm:p-5 sm:pb-24 lg:space-y-6 lg:rounded-3xl lg:p-6 lg:pb-6 lg:shadow-brand">
           <div className="space-y-1">
             {title ? (
               <h1 className="break-words text-xl font-bold text-slate-900 sm:text-2xl">
