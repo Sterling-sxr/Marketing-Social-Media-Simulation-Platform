@@ -4,6 +4,7 @@ from __future__ import annotations
 import csv
 import io
 import secrets
+from collections.abc import MutableSet
 from typing import Any, Iterable
 
 from django.contrib.auth import get_user_model
@@ -205,6 +206,52 @@ def _payload_to_data(payload: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
+def normalize_ai_user_payload(
+    payload: dict[str, Any],
+    *,
+    require_username: bool = True,
+) -> dict[str, Any]:
+    username = (payload.get("username") or "").strip()
+    if require_username and not username:
+        raise ValueError("Username is required.")
+    data = _payload_to_data(payload)
+    return {
+        "username": username,
+        **data,
+    }
+
+
+def ensure_ai_user_username_available(
+    *,
+    course_id: int,
+    username: str,
+    seen_usernames: MutableSet[str] | None = None,
+) -> str:
+    normalized = slugify(username or "") or "ai-user"
+    candidate = normalized
+    counter = 1
+    lowered_seen = seen_usernames if seen_usernames is not None else set()
+    while CourseAIUserRepository.exists_username(course_id=course_id, username=candidate) or candidate.lower() in lowered_seen:
+        counter += 1
+        candidate = f"{normalized}-{counter}"
+    lowered_seen.add(candidate.lower())
+    return candidate
+
+
+def serialize_ai_user_draft(payload: dict[str, Any], *, warnings: list[str] | None = None) -> dict[str, Any]:
+    normalized = normalize_ai_user_payload(payload, require_username=True)
+    return {
+        **normalized,
+        "warnings": list(warnings or []),
+    }
+
+
+def ensure_can_manage_course_ai_users(*, user, course_id: int):
+    course = _get_course(course_id)
+    _ensure_can_manage(user, course)
+    return course
+
+
 def _serialize(ai_user: CourseAIUser) -> dict[str, Any]:
     identity = getattr(ai_user, "identity", None)
     system_user = identity.user if identity else None
@@ -268,21 +315,18 @@ def list_course_ai_users(*, user, course_id: int, keyword: str | None = None) ->
 
 @transaction.atomic
 def create_course_ai_user(*, user, course_id: int, payload: dict[str, Any]) -> dict[str, Any]:
-    course = _get_course(course_id)
-    _ensure_can_manage(user, course)
+    course = ensure_can_manage_course_ai_users(user=user, course_id=course_id)
 
-    username = (payload.get("username") or "").strip()
-    if not username:
-        raise ValueError("Username is required.")
+    normalized_payload = normalize_ai_user_payload(payload, require_username=True)
+    username = normalized_payload["username"]
     if CourseAIUserRepository.exists_username(course_id=course.id, username=username):
         raise ValueError("An AI user with the same username already exists in this course.")
 
-    data = _payload_to_data(payload)
     ai_user = CourseAIUserRepository.create(
         course=course,
         created_by=user if getattr(user, "id", None) else None,
         username=username,
-        **data,
+        **{key: value for key, value in normalized_payload.items() if key != "username"},
     )
     _ensure_identity(ai_user, course)
     refreshed = CourseAIUserRepository.get_for_course(course.id, ai_user.id) or ai_user
@@ -291,15 +335,16 @@ def create_course_ai_user(*, user, course_id: int, payload: dict[str, Any]) -> d
 
 @transaction.atomic
 def update_course_ai_user(*, user, course_id: int, ai_user_id: int, payload: dict[str, Any]) -> dict[str, Any]:
-    course = _get_course(course_id)
-    _ensure_can_manage(user, course)
+    course = ensure_can_manage_course_ai_users(user=user, course_id=course_id)
     ai_user = CourseAIUserRepository.get_for_course(course.id, ai_user_id)
     if not ai_user:
         raise CourseAINotFoundError("AI user not found.")
 
-    username = (payload.get("username") or ai_user.username).strip()
-    if not username:
-        raise ValueError("Username is required.")
+    normalized_payload = normalize_ai_user_payload(
+        {"username": payload.get("username") or ai_user.username, **payload},
+        require_username=True,
+    )
+    username = normalized_payload["username"]
     if CourseAIUserRepository.exists_username(
         course_id=course.id,
         username=username,
@@ -307,11 +352,12 @@ def update_course_ai_user(*, user, course_id: int, ai_user_id: int, payload: dic
     ):
         raise ValueError("An AI user with the same username already exists in this course.")
 
-    data = _payload_to_data(payload)
-    for field, value in data.items():
+    for field, value in normalized_payload.items():
+        if field == "username":
+            continue
         setattr(ai_user, field, value)
     ai_user.username = username
-    ai_user.save(update_fields=[*data.keys(), "username", "updated_at"])
+    ai_user.save(update_fields=[*(key for key in normalized_payload.keys() if key != "username"), "username", "updated_at"])
     _update_identity(ai_user, course)
     refreshed = CourseAIUserRepository.get_for_course(course.id, ai_user.id) or ai_user
     return _serialize(refreshed)
@@ -423,6 +469,10 @@ __all__ = [
     "delete_course_ai_user",
     "import_course_ai_users",
     "ensure_ai_user_identity",
+    "ensure_ai_user_username_available",
+    "ensure_can_manage_course_ai_users",
+    "normalize_ai_user_payload",
+    "serialize_ai_user_draft",
     "CourseAINotFoundError",
     "CSV_COLUMNS",
 ]
