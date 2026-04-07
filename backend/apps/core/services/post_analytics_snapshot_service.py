@@ -1,4 +1,5 @@
 """Background refresh tasks for post analytics snapshots."""
+
 from __future__ import annotations
 
 import logging
@@ -51,10 +52,7 @@ def _calculate_post_snapshot(post: CoursePost, *, days: int = 7) -> PostAnalytic
 
     total_comments = sum(sentiment_counts.values())
     if total_comments:
-        sentiment_percentages = {
-            key: round(value * 100 / total_comments, 1)
-            for key, value in sentiment_counts.items()
-        }
+        sentiment_percentages = {key: round(value * 100 / total_comments, 1) for key, value in sentiment_counts.items()}
     else:
         sentiment_percentages = {key: 0.0 for key in sentiment_counts}
 
@@ -82,11 +80,7 @@ def refresh_post_snapshot(post: CoursePost, *, days: int = 7) -> None:
 
 
 def refresh_all_post_snapshots(*, days: int = 7) -> None:
-    posts = (
-        CoursePost.objects.select_related("course")
-        .all()
-        .order_by("-created_at")
-    )
+    posts = CoursePost.objects.select_related("course").all().order_by("-created_at")
     posts = list(posts)
     total = len(posts)
     if total == 0:
@@ -124,9 +118,7 @@ def start_post_analytics_scheduler() -> None:
     global _scheduler_started
     if _scheduler_started:
         return
-    interval = int(
-        getattr(settings, "POST_ANALYTICS_REFRESH_INTERVAL", 3600)
-    )
+    interval = int(getattr(settings, "POST_ANALYTICS_REFRESH_INTERVAL", 3600))
     _logger.info("Starting post analytics scheduler (interval=%s seconds)", interval)
     refresh_all_post_snapshots_async(delay_seconds=5)
 

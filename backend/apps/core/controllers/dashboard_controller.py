@@ -49,9 +49,7 @@ def dashboard_course_detail(request: HttpRequest, course_id: int) -> JsonRespons
 
 
 @csrf_exempt
-def dashboard_course_hashtag_detail(
-    request: HttpRequest, course_id: int, hashtag: str
-) -> JsonResponse:
+def dashboard_course_hashtag_detail(request: HttpRequest, course_id: int, hashtag: str) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
         return auth_error
@@ -74,9 +72,7 @@ def dashboard_course_hashtag_detail(
 
 
 @csrf_exempt
-def dashboard_course_student_detail(
-    request: HttpRequest, course_id: int, student_id: int
-) -> JsonResponse:
+def dashboard_course_student_detail(request: HttpRequest, course_id: int, student_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
         return auth_error

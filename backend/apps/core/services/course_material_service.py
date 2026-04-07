@@ -6,16 +6,30 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 
-from ..repositories.models import CourseMaterial, CourseMember, Course
+from ..repositories.models import Course, CourseMaterial, CourseMember
 
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
 
 ALLOWED_EXTENSIONS = {
-    ".pdf", ".doc", ".docx", ".ppt", ".pptx",
-    ".xls", ".xlsx", ".txt", ".md",
-    ".png", ".jpg", ".jpeg", ".gif", ".webp",
-    ".zip", ".rar", ".7z",
-    ".mp4", ".mov",
+    ".pdf",
+    ".doc",
+    ".docx",
+    ".ppt",
+    ".pptx",
+    ".xls",
+    ".xlsx",
+    ".txt",
+    ".md",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".webp",
+    ".zip",
+    ".rar",
+    ".7z",
+    ".mp4",
+    ".mov",
 }
 
 CATEGORY_CHOICES = {"lecture", "tutorial", "assignment", "reading", "exam", "other"}
@@ -35,9 +49,7 @@ def _is_course_member(user, course_id: int) -> bool:
 def _is_teacher_or_admin(user, course_id: int) -> bool:
     if getattr(user, "is_superuser", False) or getattr(user, "is_staff", False):
         return True
-    return CourseMember.objects.filter(
-        course_id=course_id, user=user, role="teacher"
-    ).exists()
+    return CourseMember.objects.filter(course_id=course_id, user=user, role="teacher").exists()
 
 
 def list_course_materials(user, course_id: int, category: str | None = None) -> list[dict]:
@@ -45,9 +57,7 @@ def list_course_materials(user, course_id: int, category: str | None = None) -> 
         if not (getattr(user, "is_superuser", False) or getattr(user, "is_staff", False)):
             raise PermissionError("You are not a member of this course.")
 
-    qs = CourseMaterial.objects.filter(
-        course_id=course_id, is_visible=True
-    ).select_related("uploaded_by")
+    qs = CourseMaterial.objects.filter(course_id=course_id, is_visible=True).select_related("uploaded_by")
 
     if category and category in CATEGORY_CHOICES:
         qs = qs.filter(category=category)
@@ -75,17 +85,12 @@ def upload_course_material(
 
     # Validate file size
     if uploaded_file.size > MAX_FILE_SIZE:
-        raise ValidationError(
-            f"File size exceeds the 50 MB limit ({uploaded_file.size // (1024 * 1024)} MB)."
-        )
+        raise ValidationError(f"File size exceeds the 50 MB limit ({uploaded_file.size // (1024 * 1024)} MB).")
 
     # Validate extension
     _, ext = os.path.splitext(uploaded_file.name or "")
     if ext.lower() not in ALLOWED_EXTENSIONS:
-        raise ValidationError(
-            f"File type '{ext}' is not allowed. "
-            f"Allowed: {', '.join(sorted(ALLOWED_EXTENSIONS))}"
-        )
+        raise ValidationError(f"File type '{ext}' is not allowed. Allowed: {', '.join(sorted(ALLOWED_EXTENSIONS))}")
 
     # Validate category
     if category not in CATEGORY_CHOICES:
@@ -145,11 +150,7 @@ def _serialize(m: CourseMaterial) -> dict:
 
     uploader_name = ""
     if m.uploaded_by:
-        uploader_name = (
-            getattr(m.uploaded_by, "username", "")
-            or getattr(m.uploaded_by, "email", "")
-            or str(m.uploaded_by_id)
-        )
+        uploader_name = getattr(m.uploaded_by, "username", "") or getattr(m.uploaded_by, "email", "") or str(m.uploaded_by_id)
 
     return {
         "id": m.pk,

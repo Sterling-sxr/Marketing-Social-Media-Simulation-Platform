@@ -80,9 +80,7 @@ class Course(models.Model):
     join_code = models.CharField(max_length=16, unique=True)
     start_date = models.DateField()
     end_date = models.DateField()
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL
-    )
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -460,6 +458,7 @@ class PostAnalyticsSnapshot(models.Model):
     def __str__(self) -> str:
         return f"PostAnalyticsSnapshot<{self.post_id}>"
 
+
 class SearchLog(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
     keyword = models.CharField(max_length=128, db_index=True)
@@ -509,4 +508,3 @@ class CourseMaterial(models.Model):
 
     def __str__(self) -> str:
         return f"CourseMaterial<{self.course_id}:{self.title}>"
-

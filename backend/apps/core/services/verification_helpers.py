@@ -1,4 +1,5 @@
 """Shared helpers for email verification flows."""
+
 from __future__ import annotations
 
 import random

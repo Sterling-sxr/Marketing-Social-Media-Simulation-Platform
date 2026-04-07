@@ -32,7 +32,7 @@ export default function DigitInput({ digits, onChange, onSubmit }) {
         <input
           key={index}
           ref={(node) => (refs.current[index] = node)}
-          className="h-14 rounded-2xl border border-brand-200 bg-brand-50 text-center text-2xl font-semibold text-slate-700 shadow-sm transition focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100"
+          className="field-input h-14 text-center text-2xl font-semibold"
           inputMode="numeric"
           maxLength={1}
           value={digit}

@@ -190,21 +190,21 @@ export default function AuthenticatedShell({
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-accent-50">
       {/* Top navigation bar */}
-      <header className="border-b border-brand-100/70 bg-white/80 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-brand-100/70 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/60">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 lg:px-6 lg:py-4">
           {/* Bread brand section */}
           <button
             type="button"
             onClick={() => navigate("/studenthome")}
             aria-label="Return to student home"
-            className="group relative flex items-center gap-2.5 text-xl font-bold rounded-lg
+            className="group relative flex min-w-0 items-center gap-2.5 rounded-lg text-xl font-bold
                        leading-none focus:outline-none focus:ring-2 focus:ring-brand/30 transition"
           >
             <img
               src="/logo.jpg"
               alt="Bread logo"
-              className="shrink-0 h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 rounded-lg object-cover
-                         transition-transform duration-200 group-hover:scale-105"
+              className="shrink-0 h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 rounded-xl object-cover
+                         ring-1 ring-brand-100 shadow-sm transition-transform duration-200 group-hover:scale-105"
             />
             <span
               className="bg-[linear-gradient(90deg,#1B596E_0%,#206F88_38%,#1DAF92_100%)]
@@ -290,7 +290,12 @@ export default function AuthenticatedShell({
 
       {/* Main content region */}
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-3 py-3 sm:gap-4 sm:px-4 sm:py-4 lg:flex-row lg:gap-6 lg:px-6 lg:py-8">
-        <aside className="hidden w-16 flex-shrink-0 flex-col gap-2 rounded-3xl border border-brand-100/80 bg-white/85 p-2 shadow-soft lg:flex lg:w-60 lg:p-4">
+        <aside className="hidden w-16 flex-shrink-0 flex-col gap-2 rounded-3xl border border-brand-100/80 bg-white/75 p-2 shadow-soft backdrop-blur lg:flex lg:w-60 lg:p-4">
+          <div className="hidden lg:block px-2 pb-1">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              Navigation
+            </p>
+          </div>
           {sidebarLinks.map((link) => {
             const active = isActiveLink(link.to, location);
             const isMessages = link.to === "/notifications";
@@ -302,7 +307,7 @@ export default function AuthenticatedShell({
                   classNames(
                     "group relative inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold transition lg:justify-start lg:gap-3 focus:outline-none focus:ring-2 focus:ring-brand/40",
                     active
-                      ? "bg-gradient-to-r from-brand-100 to-accent-50 text-brand-800"
+                      ? "bg-gradient-to-r from-brand-100 to-accent-50 text-brand-800 shadow-sm"
                       : "text-slate-600 hover:bg-brand-50 hover:text-brand-700"
                   )
                 }
@@ -340,7 +345,7 @@ export default function AuthenticatedShell({
           })}
         </aside>
 
-        <main className="flex-1 space-y-4 rounded-2xl border border-brand-100/80 bg-white/92 p-4 pb-24 shadow-soft sm:space-y-5 sm:p-5 sm:pb-24 lg:space-y-6 lg:rounded-3xl lg:p-6 lg:pb-6 lg:shadow-brand">
+        <main className="min-w-0 flex-1 space-y-4 rounded-2xl border border-brand-100/80 bg-white/78 p-4 pb-24 shadow-soft backdrop-blur sm:space-y-5 sm:p-5 sm:pb-24 lg:space-y-6 lg:rounded-3xl lg:p-6 lg:pb-6 lg:shadow-brand">
           <div className="space-y-1">
             {title ? (
               <h1 className="break-words text-xl font-bold text-slate-900 sm:text-2xl">
@@ -361,7 +366,7 @@ export default function AuthenticatedShell({
 
       {!hideMobileNav ? (
         <nav
-          className="fixed inset-x-0 bottom-0 z-40 border-t border-brand-100/80 bg-white/95 px-2 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] shadow-[0_-8px_24px_rgba(15,23,42,0.10)] backdrop-blur lg:hidden"
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-brand-100/80 bg-white/80 px-2 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] shadow-[0_-10px_30px_rgba(15,23,42,0.12)] backdrop-blur lg:hidden"
           aria-label="Mobile navigation"
         >
           <div className="mx-auto grid w-full max-w-6xl grid-cols-5 gap-1">
