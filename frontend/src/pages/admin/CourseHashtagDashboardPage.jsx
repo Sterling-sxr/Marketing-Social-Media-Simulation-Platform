@@ -14,7 +14,7 @@ const SUMMARY_TILES = [
 
 const SENTIMENT_COLORS = {
   positive: "bg-emerald-500",
-  neutral: "bg-amber-500",
+  neutral: "bg-accent-500",
   negative: "bg-rose-500",
 };
 
@@ -26,7 +26,7 @@ function SentimentBar({ label, value }) {
         <span className="capitalize">{label}</span>
         <span>{pct.toFixed(1)}%</span>
       </div>
-      <div className="h-3 rounded-full bg-orange-100">
+      <div className="h-3 rounded-full bg-brand-100">
         <div
           className={`h-full rounded-full ${SENTIMENT_COLORS[label]} transition-all`}
           style={{ width: `${pct}%` }}
@@ -38,7 +38,7 @@ function SentimentBar({ label, value }) {
 
 function SummaryCard({ item, value }) {
   return (
-    <div className="rounded-3xl border border-orange-100 bg-white p-4 shadow-sm">
+    <div className="rounded-3xl border border-brand-100 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-400">
         <span>{item.label}</span>
         <span>{item.icon}</span>
@@ -121,14 +121,14 @@ export default function CourseHashtagDashboardPage() {
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
-          className="rounded-full border border-orange-200 bg-white px-3 py-2 text-xs font-semibold text-brand transition hover:border-brand"
+          className="rounded-full border border-brand-200 bg-white px-3 py-2 text-xs font-semibold text-brand transition hover:border-brand"
           onClick={() => navigate(-1)}
         >
           ← Back
         </button>
         <button
           type="button"
-          className="rounded-full border border-orange-200 bg-white px-3 py-2 text-xs font-semibold text-slate-500 transition hover:border-brand hover:text-brand"
+          className="rounded-full border border-brand-200 bg-white px-3 py-2 text-xs font-semibold text-slate-500 transition hover:border-brand hover:text-brand"
           onClick={() => navigate(`/dashboard/courses/${courseId}`)}
         >
           Course Dashboard
@@ -136,7 +136,7 @@ export default function CourseHashtagDashboardPage() {
         {courseMeta ? (
           <button
             type="button"
-            className="rounded-full border border-brand bg-orange-100 px-3 py-2 text-xs font-semibold text-brand transition hover:bg-orange-200"
+            className="rounded-full border border-brand bg-brand-100 px-3 py-2 text-xs font-semibold text-brand transition hover:bg-brand-200"
             onClick={() => navigate(`/courses/${courseMeta.id}`)}
           >
             Open Course
@@ -163,7 +163,7 @@ export default function CourseHashtagDashboardPage() {
             ))}
           </section>
 
-          <section className="rounded-3xl border border-orange-100 bg-white p-6 shadow-sm">
+          <section className="rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-slate-800">
               Student post sentiment distribution
             </h2>
@@ -177,7 +177,7 @@ export default function CourseHashtagDashboardPage() {
             </div>
           </section>
 
-          <section className="space-y-4 rounded-3xl border border-orange-100 bg-white p-6 shadow-sm">
+          <section className="space-y-4 rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
             <header className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-slate-800">
@@ -190,13 +190,13 @@ export default function CourseHashtagDashboardPage() {
             </header>
 
             {topPosts.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-orange-200 bg-orange-50/80 px-4 py-6 text-sm text-slate-500">
+              <div className="rounded-2xl border border-dashed border-brand-200 bg-brand-50/80 px-4 py-6 text-sm text-slate-500">
                 No posts found for this hashtag.
               </div>
             ) : (
-              <div className="overflow-hidden rounded-2xl border border-orange-100">
-                <table className="min-w-full divide-y divide-orange-100 text-sm">
-                  <thead className="bg-orange-50/60 text-left text-xs uppercase tracking-wide text-slate-500">
+              <div className="overflow-hidden rounded-2xl border border-brand-100">
+                <table className="min-w-full divide-y divide-brand-100 text-sm">
+                  <thead className="bg-brand-50/60 text-left text-xs uppercase tracking-wide text-slate-500">
                     <tr>
                       <th className="px-4 py-3 font-semibold">Post</th>
                       <th className="px-4 py-3 font-semibold">Author</th>
@@ -208,7 +208,7 @@ export default function CourseHashtagDashboardPage() {
                       <th className="px-4 py-3 font-semibold text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-orange-50 bg-white/80">
+                  <tbody className="divide-y divide-brand-50 bg-white/80">
                     {topPosts.map((post) => (
                       <tr key={post.post_id}>
                         <td className="px-4 py-3 text-slate-700">
@@ -227,7 +227,7 @@ export default function CourseHashtagDashboardPage() {
                         <td className="px-4 py-3 text-right">
                           <button
                             type="button"
-                            className="rounded-full border border-brand bg-orange-100 px-3 py-1 text-xs font-semibold text-brand transition hover:bg-orange-200"
+                            className="rounded-full border border-brand bg-brand-100 px-3 py-1 text-xs font-semibold text-brand transition hover:bg-brand-200"
                             onClick={() =>
                               navigate(`/courses/${courseId}/posts/${post.post_id}`)
                             }

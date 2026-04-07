@@ -1,4 +1,4 @@
-from .ai_analysis_service import generate_ai_analysis
+from .ai_analysis_service import generate_ai_analysis, generate_tutor_response
 from .ai_user_reaction_service import (
     handle_post_reactions,
     schedule_ai_reactions,
@@ -53,11 +53,22 @@ from .dashboard_service import (
     get_course_dashboard,
     get_course_hashtag_dashboard,
     get_course_student_dashboard,
+    refresh_dashboard_snapshot,
 )
 from .gmail_service import GmailNotConfiguredError, build_gmail_flow, send_demo_email
+from .course_material_service import (
+    delete_course_material,
+    list_course_materials,
+    upload_course_material,
+)
 from .media_service import list_recent_assets, store_upload
 from .message_service import create_message, list_recent_messages
-from .notification_service import create_notification, list_notifications, mark_as_read
+from .notification_service import (
+    create_notification,
+    list_notifications,
+    mark_all_as_read,
+    mark_as_read,
+)
 from .password_reset_service import (
     PasswordResetCodeError,
     PasswordResetError,
@@ -89,6 +100,9 @@ __all__ = [
     "GmailNotConfiguredError",
     "build_gmail_flow",
     "send_demo_email",
+    "list_course_materials",
+    "upload_course_material",
+    "delete_course_material",
     "list_recent_assets",
     "store_upload",
     "create_message",
@@ -96,6 +110,7 @@ __all__ = [
     "create_notification",
     "list_notifications",
     "mark_as_read",
+    "mark_all_as_read",
     "EmailThrottleError",
     "RegistrationError",
     "VerificationCodeError",
@@ -148,6 +163,7 @@ __all__ = [
     "search_course_mentions",
     "search_course_hashtags",
     "get_admin_dashboard",
+    "refresh_dashboard_snapshot",
     "get_course_dashboard",
     "get_course_hashtag_dashboard",
     "get_course_student_dashboard",
@@ -164,4 +180,5 @@ __all__ = [
     "schedule_ai_reactions",
     "handle_post_reactions",
     "generate_ai_analysis",
+    "generate_tutor_response",
 ]

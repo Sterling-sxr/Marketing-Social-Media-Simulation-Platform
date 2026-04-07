@@ -18,6 +18,7 @@ from ..services import (
     list_notifications,
     list_recent_assets,
     list_recent_messages,
+    mark_all_as_read,
     mark_as_read,
     store_upload,
     # follow services
@@ -121,10 +122,14 @@ def notifications_endpoint(request: HttpRequest) -> JsonResponse:
             return JsonResponse({"error": "Invalid JSON"}, status=400)
 
         ids = payload.get("ids") or []
-        if not isinstance(ids, list):
-            return JsonResponse({"error": "`ids` must be a list."}, status=400)
+        mark_all_flag = bool(payload.get("all"))
 
-        updated = mark_as_read(recipient=user, ids=ids)
+        if mark_all_flag:
+            updated = mark_all_as_read(recipient=user)
+        else:
+            if not isinstance(ids, list):
+                return JsonResponse({"error": "`ids` must be a list."}, status=400)
+            updated = mark_as_read(recipient=user, ids=ids)
         return JsonResponse({"updated": updated})
 
     return JsonResponse({"error": "Method not allowed"}, status=405)

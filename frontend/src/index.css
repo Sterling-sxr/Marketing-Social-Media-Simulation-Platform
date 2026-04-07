@@ -1,40 +1,83 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --bg: #f3f9fb;
+    --surface: #ffffff;
+    --surface-soft: #f7fcfd;
+    --text: #0f172a;
+    --text-muted: #475569;
+    --primary: #206f88;
+    --primary-strong: #1b596e;
+    --accent: #1daf92;
+    --danger: #dc2626;
+    --ring: rgba(32, 111, 136, 0.24);
+  }
+
   html {
-    @apply bg-orange-50 text-slate-900 font-display;
+    @apply bg-brand-50 text-slate-900 font-display;
+  }
+
+  body {
+    @apply bg-brand-50 text-slate-900 font-body antialiased;
   }
 }
 
 @layer components {
+  .focus-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2;
+  }
+
+  .panel {
+    @apply rounded-3xl border border-brand-100 bg-white/90 shadow-soft;
+  }
+
+  .card {
+    @apply rounded-2xl border border-brand-100 bg-white shadow-sm;
+  }
+
+  .muted-text {
+    @apply text-slate-500;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-full bg-gradient-to-r from-brand to-brand-dark px-6 py-3 text-sm font-semibold text-white shadow-brand transition hover:from-brand-dark hover:to-brand disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-full border border-brand-200 bg-white px-6 py-3 text-sm font-semibold text-brand-700 transition hover:border-brand hover:text-brand disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
   .auth-page {
-    @apply min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-100 via-white to-orange-50 p-6;
+    @apply min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-100 via-white to-accent-50 p-6;
   }
 
   .auth-card {
-    @apply relative w-full max-w-xl rounded-3xl bg-white/90 p-8 shadow-2xl ring-1 ring-orange-100 backdrop-blur;
+    @apply relative w-full max-w-xl rounded-3xl border border-brand-100 bg-white/90 p-8 shadow-soft ring-1 ring-brand-100 backdrop-blur;
   }
 
   .nav-pill {
-    @apply inline-flex items-center gap-2 rounded-full bg-orange-500 px-6 py-3 text-white font-semibold shadow-lg shadow-orange-200 transition hover:bg-orange-600;
+    @apply btn-primary gap-2;
   }
 
   .input-shell {
-    @apply flex items-center gap-3 rounded-2xl border border-orange-200 bg-orange-50/60 px-4 py-3 transition focus-within:border-orange-400 focus-within:ring-2 focus-within:ring-orange-100;
+    @apply flex items-center gap-3 rounded-2xl border border-brand-200 bg-brand-50/60 px-4 py-3 transition focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100;
   }
 
   .brand-button {
-    @apply inline-flex justify-center rounded-full bg-gradient-to-r from-brand to-brand-dark px-6 py-3 font-semibold text-white shadow-lg shadow-orange-200 transition hover:from-brand-dark hover:to-brand;
+    @apply btn-primary;
   }
 
   .secondary-button {
-    @apply inline-flex justify-center rounded-full border border-orange-200 px-6 py-3 font-semibold text-brand transition hover:border-brand hover:text-brand-dark;
+    @apply btn-secondary;
   }
 
   .chip {
-    @apply inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-brand hover:text-brand;
+    @apply inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-brand hover:text-brand;
   }
 
   .chip.active {

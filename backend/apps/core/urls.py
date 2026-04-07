@@ -2,7 +2,10 @@ from django.urls import path
 
 from .controllers import (
     ai_analyze,
+    ai_tutor,
     check_auth_status,
+    course_material_detail_view,
+    course_materials_view,
     complete_password_reset_view,
     complete_registration_view,
     confirm_password_reset_view,
@@ -49,9 +52,17 @@ from .controllers import (
     user_posts,
     user_posts_analytics,
     verify_registration_code_view,
+    search_posts,
+    add_search_history,
+    suggested_search,
+    get_search_history,
 )
 
 urlpatterns = [
+    path("search/", search_posts, name="search-posts"),
+    path("search/history/", add_search_history, name="add-search-history"),
+    path("search/suggestions/", suggested_search, name="search-suggestions"),
+    path("search/myhot/", get_search_history, name="get-search-history"),
     path("auth/send-code/", send_registration_code, name="auth-send-code"),
     path("auth/verify-code/", verify_registration_code_view, name="auth-verify-code"),
     path("auth/set-password/", complete_registration_view, name="auth-set-password"),
@@ -68,6 +79,7 @@ urlpatterns = [
     path("profile/avatar/", upload_avatar, name="profile-avatar"),
     path("profile/display-name/", update_display_name, name="profile-display-name"),
     path("ai/analyze/", ai_analyze, name="ai-analyze"),
+    path("ai/tutor/", ai_tutor, name="ai-tutor"),
     path("users/<int:user_id>/profile/", profile_detail, name="profile-detail"),
     path("users/<int:user_id>/posts/", user_posts, name="user-posts"),
     path("users/<int:user_id>/posts/analytics/", user_posts_analytics, name="user-posts-analytics"),
@@ -98,6 +110,12 @@ urlpatterns = [
     path("courses/<int:course_id>/", update_course_view, name="courses-update"),
     path("courses/<int:course_id>/profile/", course_profile_view, name="courses-profile"),
     path("courses/managed/", list_managed_courses_view, name="courses-managed"),
+    path("courses/<int:course_id>/materials/", course_materials_view, name="course-materials"),
+    path(
+        "courses/<int:course_id>/materials/<int:material_id>/",
+        course_material_detail_view,
+        name="course-material-detail",
+    ),
     path("courses/<int:course_id>/posts/", course_posts, name="course-posts"),
     path("courses/<int:course_id>/ai-users/", course_ai_users, name="course-ai-users"),
     path(

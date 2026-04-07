@@ -39,7 +39,7 @@ export default function StudentHomePage() {
           {/* User information */}
           <div className="mb-6 flex items-center gap-3">
             <div className="grid h-10 w-10 place-items-center rounded-full 
-                            bg-gradient-to-br from-fuchsia-300 via-pink-200 to-amber-200 
+                            bg-gradient-to-br from-accent-300 via-accent-200 to-accent-200 
                             text-white font-bold shadow-md">
               {avatarText}
             </div>
@@ -102,28 +102,27 @@ export default function StudentHomePage() {
           </div>
         </>
       ) : (
-        // Default Donut welcome panel
-        <div className="relative flex flex-col items-center justify-center text-center py-16 px-4 rounded-2xl 
-                        bg-gradient-to-br from-fuchsia-50 via-white to-amber-50 shadow-inner">
+        // Default Bread welcome panel
+        <div className="relative flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-brand-50 via-white to-accent-50 px-4 py-16 shadow-inner">
           {/* Background glow orbs */}
-          <div className="absolute top-6 right-6 w-24 h-24 rounded-full bg-gradient-to-br from-pink-200 to-amber-200 blur-3xl opacity-60 animate-pulse" />
-          <div className="absolute bottom-10 left-8 w-20 h-20 rounded-full bg-gradient-to-br from-fuchsia-200 to-orange-200 blur-2xl opacity-40" />
+          <div className="absolute top-6 right-6 h-24 w-24 animate-pulse rounded-full bg-gradient-to-br from-brand-200 to-accent-200 opacity-60 blur-3xl" />
+          <div className="absolute bottom-10 left-8 h-20 w-20 rounded-full bg-gradient-to-br from-brand-200 to-accent-200 opacity-40 blur-2xl" />
 
 <div className="relative mb-6 animate-float">
   <div className="absolute inset-0 flex items-center justify-center">
     <div className="w-18 h-18 rounded-full border-[4px] 
                     border-t-transparent border-r-transparent
-                    border-b-pink-300 border-l-amber-300
+                    border-b-accent-300 border-l-accent-300
                     animate-spin-slow opacity-80 blur-[0.3px]" />
   </div>
 
   <div className="relative flex items-center justify-center">
     <div className="w-14 h-14 rounded-full overflow-hidden 
-                    shadow-[0_4px_12px_rgba(249,115,22,0.15)]
+                    shadow-[0_4px_12px_rgba(32,111,136,0.16)]
                     transition-transform duration-500 hover:scale-[1.05]">
       <img
         src="/logo.jpg"
-        alt="Donut Logo"
+        alt="Bread Logo"
         className="w-full h-full object-contain bg-transparent"
       />
     </div>
@@ -138,7 +137,7 @@ export default function StudentHomePage() {
           <p className="text-sm text-slate-600 mb-8 max-w-md">
             Welcome to the{" "}
             <span className="font-semibold text-brand">
-              Donut Learning Community
+              Bread Learning Community
             </span>
             . Manage your courses, update your profile, and stay connected.
           </p>
@@ -174,10 +173,10 @@ export default function StudentHomePage() {
 function CardRow({ title, desc, actionLabel, onAction }) {
   return (
     <div
-      className="rounded-2xl border border-fuchsia-100/70 
-                 bg-[linear-gradient(135deg,rgba(255,245,248,0.9)_0%,rgba(255,237,220,0.9)_100%)]
-                 p-5 shadow-[0_4px_12px_rgba(217,70,239,0.06)]
-                 hover:shadow-[0_8px_20px_rgba(249,115,22,0.12)]
+      className="rounded-2xl border border-brand-100/80
+                 bg-[linear-gradient(135deg,rgba(246,252,253,0.95)_0%,rgba(239,249,250,0.95)_100%)]
+                 p-5 shadow-soft
+                 hover:shadow-brand
                  hover:-translate-y-0.5 transition-all backdrop-blur-sm"
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -189,10 +188,8 @@ function CardRow({ title, desc, actionLabel, onAction }) {
           <button
             type="button"
             onClick={onAction}
-            className="px-3 py-1 text-xs font-semibold 
-                       text-fuchsia-700 border border-fuchsia-200/70 
-                       rounded-full bg-white/70 
-                       hover:bg-gradient-to-r hover:from-amber-200 hover:to-fuchsia-200 
+            className="rounded-full border border-brand-200/80 bg-white/70 px-3 py-1 text-xs font-semibold
+                       text-brand-700 hover:bg-gradient-to-r hover:from-brand-100 hover:to-accent-100
                        hover:text-slate-900 transition-all duration-200
                        shadow-sm hover:shadow-md"
           >

@@ -67,6 +67,7 @@ class UserProfile(models.Model):
     influencer_type = models.CharField(max_length=64)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    search_history = models.JSONField(default=list, blank=True)
 
     def __str__(self) -> str:
         return f"Profile<{self.user_id}>"
@@ -212,6 +213,8 @@ class CourseProfile(models.Model):
 
     def __str__(self) -> str:
         return f"CourseProfile<{self.course_id}:{self.user_id}>"
+
+
 class CoursePost(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="posts")
     author = models.ForeignKey(
@@ -456,3 +459,54 @@ class PostAnalyticsSnapshot(models.Model):
 
     def __str__(self) -> str:
         return f"PostAnalyticsSnapshot<{self.post_id}>"
+
+class SearchLog(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    keyword = models.CharField(max_length=128, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"SearchLog<{self.user_id}:{self.keyword}>"
+
+
+class CourseMaterial(models.Model):
+    CATEGORY_CHOICES = [
+        ("lecture", "Lecture"),
+        ("tutorial", "Tutorial"),
+        ("assignment", "Assignment"),
+        ("reading", "Reading"),
+        ("exam", "Exam"),
+        ("other", "Other"),
+    ]
+
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="materials",
+    )
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default="other")
+    file = models.FileField(upload_to="course_materials/%Y/%m/")
+    original_name = models.CharField(max_length=255)
+    content_type = models.CharField(max_length=128, blank=True)
+    size = models.BigIntegerField(default=0)
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="uploaded_materials",
+    )
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    is_visible = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["-uploaded_at"]
+
+    def __str__(self) -> str:
+        return f"CourseMaterial<{self.course_id}:{self.title}>"
+

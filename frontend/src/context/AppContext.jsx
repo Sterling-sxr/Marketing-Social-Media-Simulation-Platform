@@ -39,7 +39,7 @@ const createProfileData = createEmptyProfileData;
 
 const AppContext = createContext(null);
 
-const LAST_NOTIF_PREFIX = "donut:lastNotificationSeen:";
+const LAST_NOTIF_PREFIX = "bread:lastNotificationSeen:";
 
 const PROFILE_ENDPOINT = "/api/profile";
 const COURSE_ENDPOINT = "/api/courses";
@@ -836,7 +836,7 @@ export function AppProvider({ children }) {
           `/api/messages/notifications/?user=${encodeURIComponent(identifier)}`,
           { ids }
         );
-        // Optimistically update unread count
+        // Optimistically update unread count for the provided ids only
         setNotifications((prev) => {
           const nextItems = prev.items.map((n) =>
             ids.includes(n.id) ? { ...n, is_read: true } : n
@@ -856,6 +856,32 @@ export function AppProvider({ children }) {
     },
     [authUser]
   );
+
+  const markAllNotificationsRead = useCallback(async () => {
+    try {
+      const identifier =
+        (authUser?.username || "").trim() ||
+        (authUser?.email || "").trim() ||
+        String(authUser?.id || "");
+      const data = await patchJson(
+        `/api/messages/notifications/?user=${encodeURIComponent(identifier)}`,
+        { all: true }
+      );
+      // Optimistically mark everything as read in local state
+      setNotifications((prev) => {
+        const nextItems = prev.items.map((n) => ({ ...n, is_read: true }));
+        return { items: nextItems, unread: 0 };
+      });
+      return data;
+    } catch (error) {
+      setNotificationStatus({
+        loading: false,
+        message: "",
+        error: error.message,
+      });
+      throw error;
+    }
+  }, [authUser]);
 
   useEffect(() => {
     // Setup websocket for real-time notifications
@@ -985,6 +1011,7 @@ export function AppProvider({ children }) {
     notificationStatus,
     fetchNotifications,
     markNotificationsRead,
+    markAllNotificationsRead,
     toasts,
     pushToast,
     dismissToast,

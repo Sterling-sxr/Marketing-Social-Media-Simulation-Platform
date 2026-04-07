@@ -87,4 +87,81 @@ def generate_ai_analysis(*, context: str, payload: dict[str, Any]) -> str:
     return text
 
 
-__all__ = ["generate_ai_analysis"]
+_TUTOR_SYSTEM_PROMPT = """You are an intelligent tutoring assistant for university students. Your goal is to help students genuinely understand concepts, not just receive answers.
+
+Always respond in English, regardless of the language the question is asked in.
+Adjust the depth of your explanation to match the complexity of the question:
+- For basic questions, use an introductory approach.
+- For advanced questions, provide a more systematic analysis.
+
+Follow these rules strictly:
+1. Lead with a direct answer.
+2. Use clear, plain language for abstract concepts.
+3. Structure your response with logical steps or points where applicable.
+4. Include a brief, concrete example when helpful.
+5. If the question has multiple cases or interpretations, address each one.
+6. If you are unsure, say so clearly — never fabricate information.
+7. Do not pretend to reference specific textbooks or internal course materials.
+
+You MUST respond with the following JSON format exactly — no extra text, no markdown code fences, no surrounding whitespace:
+{"short_answer":"1-2 sentence direct answer to the core question","detailed_explanation":"expanded explanation of the reason, principle, or steps","example":"a concrete example, or empty string if not applicable","key_points":["key point 1","key point 2"]}"""
+
+
+def generate_tutor_response(*, question: str, history: list[dict] | None = None) -> dict[str, Any]:
+    """
+    Teaching-assistant endpoint.
+
+    Args:
+        question: The student's current question.
+        history:  Optional list of prior turns, each {"role": "user"|"assistant", "content": str}.
+
+    Returns:
+        Parsed dict with keys: short_answer, detailed_explanation, example, key_points.
+    """
+    client = _get_client()
+    if client is None:
+        raise RuntimeError("DeepSeek client is unavailable.")
+
+    model_name = getattr(settings, "DEEPSEEK_MODEL_NAME", "deepseek-chat")
+
+    messages: list[dict[str, str]] = [{"role": "system", "content": _TUTOR_SYSTEM_PROMPT}]
+
+    for turn in (history or []):
+        role = turn.get("role", "")
+        content = turn.get("content", "")
+        if role in ("user", "assistant") and content:
+            messages.append({"role": role, "content": content})
+
+    messages.append({"role": "user", "content": f"Student question:\n{question}"})
+
+    response = client.chat.completions.create(
+        model=model_name,
+        messages=messages,
+        stream=False,
+    )
+
+    raw = (response.choices[0].message.content or "").strip()
+    if not raw:
+        raise RuntimeError("DeepSeek returned an empty response.")
+
+    # Strip markdown code fences if model adds them
+    if raw.startswith("```"):
+        raw = raw.split("```")[1]
+        if raw.startswith("json"):
+            raw = raw[4:]
+        raw = raw.strip()
+
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        raise RuntimeError(f"DeepSeek returned non-JSON content: {raw[:200]}")
+
+    return {
+        "short_answer": str(data.get("short_answer", "")),
+        "detailed_explanation": str(data.get("detailed_explanation", "")),
+        "example": str(data.get("example", "")),
+        "key_points": [str(p) for p in data.get("key_points", []) if p],
+    }
+
+
+__all__ = ["generate_ai_analysis", "generate_tutor_response"]

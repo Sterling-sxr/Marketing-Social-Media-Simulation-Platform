@@ -7,11 +7,11 @@ export default function ProfileSection({
 }) {
   return (
     <section
-      className={`rounded-3xl border border-orange-100 bg-white p-6 shadow-sm ring-1 ring-orange-50/70 ${className}`}
+      className={`panel p-6 ring-1 ring-brand-50/70 ${className}`}
     >
       <header className="mb-4 flex items-center gap-3">
         {icon ? (
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-orange-50 text-lg shadow-sm">
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-50 text-lg shadow-sm">
             {icon}
           </span>
         ) : null}

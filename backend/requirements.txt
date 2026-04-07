@@ -18,3 +18,4 @@ sentencepiece>=0.1.99
 tiktoken>=0.5.0
 wsaccel>=0.6.4
 openai>=1.30.0
+dotenv

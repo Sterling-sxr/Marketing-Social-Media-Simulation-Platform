@@ -4,38 +4,53 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Primary brand palette: energetic orange
+        // Primary brand palette: deep-sea blue
         brand: {
-          DEFAULT: "#F97316", // orange-500
-          dark:    "#EA580C", // orange-600
-          light:   "#FDBA74", // orange-300
+          50: "#EEF7F9",
+          100: "#DCEFF3",
+          200: "#BDDDE7",
+          300: "#94C8D8",
+          400: "#62AFC3",
+          500: "#338FA9",
+          600: "#206F88",
+          700: "#1B596E",
+          800: "#194B5C",
+          900: "#183F4D",
+          DEFAULT: "#206F88",
+          dark: "#1B596E",
+          light: "#94C8D8",
         },
-        // Accent palette: amber / sunrise yellow
+        // Accent palette: clear teal
         accent: {
-          DEFAULT: "#F59E0B", // amber-500
-          dark:    "#D97706", // amber-600
-          light:   "#FDE68A", // amber-200
+          50: "#ECFBF7",
+          100: "#D3F5EC",
+          200: "#A9EADB",
+          300: "#78DBC4",
+          400: "#44C9AC",
+          500: "#1DAF92",
+          600: "#0F8D76",
+          700: "#127263",
+          800: "#145C51",
+          900: "#154C44",
+          DEFAULT: "#1DAF92",
+          dark: "#127263",
+          light: "#A9EADB",
         },
       },
-      // Soft neon-style shadows in the orange/yellow family
       boxShadow: {
-        brand: "0 10px 30px rgba(249,115,22,.18)",     // Orange glow
-        amber: "0 10px 30px rgba(245,158,11,.16)",     // Amber glow
-        soft:  "0 6px 20px rgba(17,24,39,.06)",        // General-purpose soft shadow
-      },
-      ringColor: {
-        brand: "#F97316",
-        accent: "#F59E0B",
+        brand: "0 14px 34px rgba(32,111,136,.18)",
+        accent: "0 14px 34px rgba(29,175,146,.16)",
+        soft: "0 8px 24px rgba(15,23,42,.08)",
       },
       fontFamily: {
-        display: ["'Inter'", "ui-sans-serif", "system-ui"],
+        display: ["'Sora'", "ui-sans-serif", "system-ui"],
+        body: ["'Manrope'", "ui-sans-serif", "system-ui"],
       },
       keyframes: {
         float: {
           "0%,100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-10px)" },
         },
-        // Larger float with subtle horizontal drift
         floatBig: {
           "0%,100%": { transform: "translate(0, 0)" },
           "25%": { transform: "translate(8px, -20px)" },
@@ -48,10 +63,6 @@ export default {
         floatFast: "float 3s ease-in-out infinite",
         floatBig: "floatBig 5s ease-in-out infinite",
         floatBigFast: "floatBig 3.5s ease-in-out infinite",
-      },
-      // Convenience gradient slots (for buttons/blocks)
-      gradientColorStops: {
-        // Tailwind already includes these; this just documents the recommended combo: from-brand to-accent
       },
     },
   },

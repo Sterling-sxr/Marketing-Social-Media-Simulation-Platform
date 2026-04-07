@@ -38,17 +38,17 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 text-slate-900 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-brand-100 text-slate-900 flex flex-col">
       {/* Header */}
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5">
+      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-3 py-3 sm:px-6 sm:py-5">
         <div className="flex items-center gap-3">
           <img
             src="/logo.jpg"
-            alt="Donut Logo"
-            className="h-8 w-8 object-cover mix-blend-multiply"
+            alt="Bread Logo"
+            className="h-7 w-7 object-cover mix-blend-multiply sm:h-8 sm:w-8"
           />
-          <span className="text-xl font-semibold text-brand-dark">
-            Donut campus social simulation platform
+          <span className="text-sm font-semibold text-brand-dark sm:text-xl">
+            Bread campus social simulation platform
           </span>
         </div>
 
@@ -61,12 +61,20 @@ export default function HomePage() {
         </nav>
       </header>
 
-      <main className="flex-1 mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 sm:gap-10 sm:px-6 lg:flex-row lg:items-center">
-        <section className="order-1 lg:order-none relative flex-1 md:min-h-[460px] lg:min-h-[520px] pt-2 lg:pt-6">
-          <div className="relative z-10 space-y-6 max-w-[520px] -mt-4 sm:-mt-6 lg:-mt-10">
+      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-5 px-3 py-4 sm:gap-10 sm:px-6 sm:py-10 lg:flex-row lg:items-center">
+        <section className="order-1 lg:order-none relative flex-1 md:min-h-[460px] lg:min-h-[520px] pt-1 lg:pt-6">
+          <div className="relative z-10 max-w-[520px] space-y-4 sm:space-y-6 lg:-mt-10">
             <h1 className="text-2xl font-bold sm:text-4xl lg:text-4xl">
               Join us and explore a new campus social platform
             </h1>
+          </div>
+
+          <div className="absolute inset-0 pointer-events-none z-0 md:hidden">
+            <CircleImage
+              src="/logo.jpg"
+              alt="circle-mobile"
+              className="absolute right-2 top-2 h-20 w-20 opacity-40"
+            />
           </div>
 
           <div className="absolute inset-0 hidden md:block pointer-events-none z-0">
@@ -92,7 +100,7 @@ export default function HomePage() {
         </section>
 
         <aside className="order-2 lg:order-none flex-1">
-          <div className="relative w-full max-w-md lg:ml-auto rounded-3xl border border-orange-100 bg-white p-8 shadow-xl shadow-orange-100 text-center">
+          <div className="relative w-full max-w-md rounded-2xl border border-brand-100 bg-white p-5 text-center shadow-lg shadow-brand-100 sm:rounded-3xl sm:p-8 sm:shadow-xl lg:ml-auto">
             <div className="absolute right-0 top-0 h-16 w-16 rounded-bl-3xl bg-gradient-to-b from-brand/10 to-brand/0" />
 
             <h2 className="mb-6 text-lg font-semibold text-slate-800">Login</h2>
@@ -162,7 +170,7 @@ export default function HomePage() {
                   >
                     Forget Password?
                   </button>
-                  <p className="mt-2">
+                  <p className="mt-2 break-words">
                     Not have an account?
                     <button
                       type="button"
@@ -179,14 +187,14 @@ export default function HomePage() {
                 <div className="space-y-4 text-left">
                   <button
                     type="button"
-                    className="w-full rounded-xl bg-gradient-to-r from-brand to-brand-dark py-3 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition hover:from-brand-dark hover:to-brand"
+                    className="w-full rounded-xl bg-gradient-to-r from-brand to-brand-dark py-3 text-sm font-semibold text-white shadow-lg shadow-brand-200 transition hover:from-brand-dark hover:to-brand"
                     onClick={() => navigate("/courses")}
                   >
                     enter course
                   </button>
                   <button
                     type="button"
-                    className="w-full rounded-xl border border-orange-200 py-3 text-sm font-semibold text-brand transition hover:border-brand hover:text-brand-dark"
+                    className="w-full rounded-xl border border-brand-200 py-3 text-sm font-semibold text-brand transition hover:border-brand hover:text-brand-dark"
                     onClick={handleLogout}
                   >
                     Logout
@@ -200,7 +208,7 @@ export default function HomePage() {
 
       {/* Footer pinned to the bottom */}
       <footer className="py-6 text-center text-xs text-slate-400">
-        © {new Date().getFullYear()} Donut Capstone Team. All rights reserved.
+        © {new Date().getFullYear()} Bread Capstone Team. All rights reserved.
       </footer>
     </div>
   );

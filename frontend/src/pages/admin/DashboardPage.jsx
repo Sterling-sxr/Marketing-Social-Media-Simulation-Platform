@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
 import { getJson } from "../../lib/api";
@@ -24,23 +24,23 @@ import {
 // Added: floating-button icon
 import { Sparkles } from "lucide-react";
 
-/* ========================= Donut pastel palette (pink · orange · purple) ========================= */
+/* Dashboard chart palette aligned with global brand tokens */
 const DONUT = {
-  peach50: "#FFF1EB",
-  peach100: "#FFE6DA",
-  apricot80: "#FEE8D9",
-  amber80: "#FDECC8",
-  lavender50: "#EDEAFF",
-  lilac300: "#C4B5FD",
-  peach300: "#FDBA94",
-  rose50: "#FDE7F1",
-  rose400: "#FB7185",
-  amber600: "#D97706",
-  pink600: "#DB2777",
+  peach50: "#EEF7F9",
+  peach100: "#DCEFF3",
+  apricot80: "#D3F5EC",
+  amber80: "#A9EADB",
+  lavender50: "#E9F5F8",
+  lilac300: "#78DBC4",
+  peach300: "#62AFC3",
+  rose50: "#FDE8E8",
+  rose400: "#EF4444",
+  amber600: "#0F8D76",
+  pink600: "#206F88",
   slate600: "#475569",
-  grid: "#F7E6DA",
-  border: "#FFE4CC",
-  borderStrong: "#F9C56F",
+  grid: "#DCEFF3",
+  border: "#BDDDE7",
+  borderStrong: "#62AFC3",
 };
 
 /* ========================= Summary tiles ========================= */
@@ -54,7 +54,7 @@ const SUMMARY_TILES = [
 /* ========================= Sentiment colors ========================= */
 const SENTIMENT_TEXT_COLORS = {
   positive: "text-emerald-600",
-  neutral: "text-amber-600",
+  neutral: "text-accent-600",
   negative: "text-rose-600",
 };
 
@@ -63,8 +63,8 @@ function SentimentBar({ label, value }) {
   const pct = Math.min(Math.max(value ?? 0, 0), 100);
   const width = `${pct}%`;
   const SENTIMENT_COLORS = {
-    positive: "bg-pink-500",
-    neutral: "bg-amber-500",
+    positive: "bg-accent-500",
+    neutral: "bg-accent-500",
     negative: "bg-rose-500",
   };
   return (
@@ -113,17 +113,42 @@ function CompareTooltip({ active, payload, label }) {
 
 /* ========================= Circular info badge component (new) ========================= */
 function InfoBubble({ text }) {
+  const [open, setOpen] = useState(false);
+  const wrapperRef = useRef(null);
+
+  useEffect(() => {
+    const onPointerDown = (event) => {
+      if (!wrapperRef.current?.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, []);
+
   return (
-    <div className="group relative inline-flex ml-2 align-middle">
+    <div
+      ref={wrapperRef}
+      className="group relative ml-2 inline-flex align-middle"
+    >
       <button
         type="button"
-        className="flex h-5 w-5 items-center justify-center rounded-full border border-slate-300 bg-white/80 text-[11px] font-bold text-slate-600 shadow-sm transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-200"
+        className="flex h-6 w-6 items-center justify-center rounded-full border border-slate-300 bg-white/80 text-[11px] font-bold text-slate-600 shadow-sm transition hover:bg-slate-50 active:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-200"
         aria-label="More information"
+        aria-expanded={open}
+        onClick={() => setOpen((prev) => !prev)}
       >
         ?
       </button>
 
-      <div className="pointer-events-none absolute left-1/2 z-30 mt-2 w-64 -translate-x-1/2 rounded-xl bg-slate-900/95 px-3 py-2 text-xs text-slate-50 shadow-lg opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
+      <div
+        className={[
+          "absolute left-1/2 z-30 mt-2 w-56 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl bg-slate-900/95 px-3 py-2 text-xs leading-5 text-slate-50 shadow-lg transition-opacity duration-150 sm:w-64",
+          open
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0 group-hover:opacity-100 group-focus-within:opacity-100",
+        ].join(" ")}
+      >
         {text}
       </div>
     </div>
@@ -283,22 +308,18 @@ export default function DashboardPage() {
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [sparkSummary, setSparkSummary] = useState("");
   const [sparkStatus, setSparkStatus] = useState({ loading: false, error: "" });
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia("(max-width: 639px)").matches
+      : false
+  );
 
   const isAdmin = useMemo(
     () => Boolean(authUser && (authUser.is_superuser || authUser.is_staff)),
     [authUser]
   );
 
-  useEffect(() => {
-    if (!authCheckComplete) return;
-    if (!authUser) {
-      navigate("/login", { replace: true });
-      return;
-    }
-    if (!isAdmin) {
-      navigate("/courses", { replace: true });
-      return;
-    }
+  const reloadDashboard = useCallback(() => {
     setStatus({ loading: true, error: "" });
     getJson("/api/admin/dashboard/")
       .then((payload) => {
@@ -311,7 +332,20 @@ export default function DashboardPage() {
           error: error.message || "Failed to load dashboard.",
         });
       });
-  }, [authUser, authCheckComplete, isAdmin, navigate]);
+  }, []);
+
+  useEffect(() => {
+    if (!authCheckComplete) return;
+    if (!authUser) {
+      navigate("/login", { replace: true });
+      return;
+    }
+    if (!isAdmin) {
+      navigate("/courses", { replace: true });
+      return;
+    }
+    reloadDashboard();
+  }, [authUser, authCheckComplete, isAdmin, navigate, reloadDashboard]);
 
   if (authCheckComplete && authUser && !isAdmin) {
     return <Navigate to="/courses" replace />;
@@ -413,10 +447,23 @@ export default function DashboardPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const media = window.matchMedia("(max-width: 639px)");
+    const onChange = (e) => setIsMobile(e.matches);
+    setIsMobile(media.matches);
+    media.addEventListener("change", onChange);
+    return () => media.removeEventListener("change", onChange);
+  }, []);
+
+  const barChartWidth = Math.max(compareData.length * 88, 560);
+  const radarWidth = isMobile ? 560 : 720;
+  const radarHeight = isMobile ? 340 : 420;
+
   return (
     <AuthenticatedShell
       title={
-        <span className="text-[35px] md:text-[45px] leading-tight font-extrabold tracking-tight">
+        <span className="text-2xl leading-tight font-extrabold tracking-tight sm:text-3xl md:text-[45px]">
           Dashboard
         </span>
       }
@@ -428,12 +475,22 @@ export default function DashboardPage() {
       ) : null}
 
       {!status.loading && data ? (
-        <>
+        <div className="pb-24 sm:pb-8">
           {lastUpdated ? (
-            <p className="text-xs text-slate-500">
-              Last updated:{" "}
-              {lastUpdated.toLocaleString("en-US", { hour12: false })}
-            </p>
+            <div className="mt-1 flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs text-slate-500">
+                Last updated:{" "}
+                {lastUpdated.toLocaleString("en-US", { hour12: false })}
+              </p>
+              <button
+                type="button"
+                className="rounded-full border border-brand-200 bg-white px-3 py-1 text-xs font-semibold text-brand transition hover:border-brand disabled:opacity-60"
+                onClick={reloadDashboard}
+                disabled={status.loading}
+              >
+                {status.loading ? "Refreshing..." : "Refresh"}
+              </button>
+            </div>
           ) : null}
 
           {/* =============================== Summary tiles (KPI-inspired) =============================== */}
@@ -442,19 +499,19 @@ export default function DashboardPage() {
               const Card = (
                 <div
                   className={[
-                    "rounded-2xl p-6 text-center select-none",
-                    "border-[1px] border-amber-400 bg-white",
+                    "rounded-2xl p-4 text-center select-none sm:p-6",
+                    "border-[1px] border-accent-400 bg-white",
                     "transition-colors transition-transform duration-200 ease-out",
-                    "hover:translate-y-[-2px]",
-                    "hover:bg-gradient-to-br hover:from-orange-100 hover:to-violet-100",
+                    "hover:-translate-y-[2px]",
+                    "hover:bg-gradient-to-br hover:from-brand-100 hover:to-accent-100 active:bg-brand-50",
                   ].join(" ")}
                   role="status"
                   aria-label={`${tile.label}: ${data?.[tile.key] ?? 0}`}
                 >
-                  <div className="text-base text-slate-600 hover:text-white transition-colors">
+                  <div className="text-sm text-slate-600 transition-colors sm:text-base hover:text-white">
                     {tile.label}
                   </div>
-                  <div className="mt-1 text-3xl font-extrabold text-slate-900 hover:text-white transition-colors">
+                  <div className="mt-1 text-2xl font-extrabold text-slate-900 transition-colors sm:text-3xl hover:text-white">
                     {data?.[tile.key] ?? 0}
                   </div>
                 </div>
@@ -464,7 +521,7 @@ export default function DashboardPage() {
                 <button
                   key={tile.key}
                   type="button"
-                  className="text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-200 rounded-2xl"
+                  className="text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-200 rounded-2xl"
                   onClick={() => {
                     if ((data?.courses || []).length === 0) return;
                     setShowCoursesModal(true);
@@ -486,15 +543,15 @@ export default function DashboardPage() {
               background: "#FFFFFF",
             }}
           >
-            <div className="p-6">
-              <h2 className="text-2xl font-semibold text-slate-800">
+            <div className="p-4 sm:p-6">
+              <h2 className="text-lg font-semibold text-slate-800 sm:text-2xl">
                 Sentiment Analysis
               </h2>
               <p className="text-xs text-slate-500">
                 Student post sentiment distribution
               </p>
 
-              <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-3">
+              <div className="mt-4 grid grid-cols-1 gap-4 sm:mt-6 sm:gap-6 sm:grid-cols-3">
                 {[
                   { key: "positive", label: "Positive", value: sPos },
                   { key: "neutral", label: "Neutral", value: sNeu },
@@ -502,17 +559,17 @@ export default function DashboardPage() {
                 ].map((item) => (
                   <div
                     key={item.key}
-                    className="flex flex-col items-center justify-center rounded-2xl py-8"
+                    className="flex min-h-32 flex-col items-center justify-center rounded-2xl py-5 sm:min-h-36 sm:py-8"
                     style={{ background: "rgba(255, 241, 235, 0.9)" }}
                   >
                     <div
-                      className={`text-5xl font-extrabold tracking-tight ${
+                      className={`text-3xl font-extrabold tracking-tight sm:text-5xl ${
                         SENTIMENT_TEXT_COLORS[item.key]
                       }`}
                     >
                       {item.value}%
                     </div>
-                    <div className="mt-2 text-base font-medium text-slate-600">
+                    <div className="mt-2 text-sm font-medium text-slate-600 sm:text-base">
                       {item.label}
                     </div>
                   </div>
@@ -529,8 +586,8 @@ export default function DashboardPage() {
               background: "linear-gradient(135deg, #FFF1EB 0%, #FFFFFF 100%)",
             }}
           >
-            <div className="p-6">
-              <h2 className="flex items-center text-2xl font-semibold text-slate-800">
+            <div className="p-4 sm:p-6">
+              <h2 className="flex items-center text-lg font-semibold text-slate-800 sm:text-2xl">
                 Course Comparison Analysis
                 <InfoBubble text="This bar chart compares how many posts and total interactions each course has. Taller bars indicate more activity and engagement in that course." />
               </h2>
@@ -543,66 +600,84 @@ export default function DashboardPage() {
                   No course data available.
                 </p>
               ) : (
-                <div className="mt-4 h-[380px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={compareData}
-                      margin={{ top: 10, right: 20, bottom: 28, left: 0 }}
-                      barCategoryGap={18}
-                    >
-                      <CartesianGrid
-                        strokeDasharray="3 3"
-                        stroke={DONUT.grid}
-                      />
-                      <XAxis
-                        dataKey="name"
-                        tick={{ fill: DONUT.slate600, fontSize: 13 }}
-                        interval={0}
-                        angle={0}
-                        tickMargin={12}
-                      />
-                      <YAxis
-                        domain={yDomain}
-                        tick={{ fill: DONUT.slate600, fontSize: 13 }}
-                      />
-                      <Tooltip content={<CompareTooltip />} />
-                      <Bar
-                        dataKey="posts"
-                        name="Posts"
-                        fill={DONUT.lilac300}
-                        radius={[8, 8, 0, 0]}
-                      />
-                      <Bar
-                        dataKey="interactions"
-                        name="Interactions"
-                        fill={DONUT.peach300}
-                        radius={[8, 8, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
+                <div className="mt-4 w-full overflow-x-auto">
+                  <div
+                    className="h-[320px] min-w-[560px] sm:h-[380px]"
+                    style={{ width: `${barChartWidth}px` }}
+                  >
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={compareData}
+                        margin={{
+                          top: 10,
+                          right: isMobile ? 8 : 20,
+                          bottom: isMobile ? 48 : 28,
+                          left: 0,
+                        }}
+                        barCategoryGap={isMobile ? 12 : 18}
+                      >
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          stroke={DONUT.grid}
+                        />
+                        <XAxis
+                          dataKey="name"
+                          tick={{
+                            fill: DONUT.slate600,
+                            fontSize: isMobile ? 11 : 13,
+                          }}
+                          interval={0}
+                          angle={0}
+                          tickMargin={isMobile ? 10 : 12}
+                        />
+                        <YAxis
+                          domain={yDomain}
+                          tick={{
+                            fill: DONUT.slate600,
+                            fontSize: isMobile ? 11 : 13,
+                          }}
+                        />
+                        <Tooltip content={<CompareTooltip />} />
+                        <Bar
+                          dataKey="posts"
+                          name="Posts"
+                          fill={DONUT.lilac300}
+                          radius={[8, 8, 0, 0]}
+                        />
+                        <Bar
+                          dataKey="interactions"
+                          name="Interactions"
+                          fill={DONUT.peach300}
+                          radius={[8, 8, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
               )}
             </div>
           </section>
-        </>
+        </div>
       ) : null}
 
       {/* ============================ Courses modal ============================ */}
       {showCoursesModal ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ backgroundColor: "transparent" }}
+          className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/35 p-0 sm:items-center sm:p-4"
+          onClick={() => setShowCoursesModal(false)}
+          role="presentation"
         >
           <div
-            className="max-h-[80vh] w-full max-w-xl overflow-hidden rounded-3xl bg-white shadow-2xl"
+            className="flex max-h-[90vh] w-full flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:max-h-[80vh] sm:max-w-xl sm:rounded-3xl"
             style={{ border: `1px solid ${DONUT.border}` }}
+            onClick={(e) => e.stopPropagation()}
           >
             <div
-              className="flex items-center justify-between border-b px-5 py-4"
+              className="sticky top-0 z-10 flex items-center justify-between border-b px-4 py-3 sm:px-5 sm:py-4"
               style={{ borderColor: DONUT.border, background: DONUT.peach50 }}
             >
               <div>
-                <h3 className="text-xl font-semibold text-slate-800">
+                <h3 className="text-lg font-semibold text-slate-800 sm:text-xl">
                   Courses
                 </h3>
                 <p className="text-xs text-slate-500">
@@ -614,25 +689,15 @@ export default function DashboardPage() {
                 aria-label="Close"
                 title="Close"
                 onClick={() => setShowCoursesModal(false)}
-                className="rounded-full p-2 text-xl font-bold text-rose-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-200 transition"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-rose-300 bg-rose-100 text-xl font-bold text-rose-700 transition hover:bg-rose-300 hover:text-white focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-200"
                 style={{
-                  background: "#FEE2E2", // Pale red base
-                  border: "1px solid #FCA5A5", // Red border
                   lineHeight: "1",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#FCA5A5"; // Darker red on hover
-                  e.currentTarget.style.color = "white";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "#FEE2E2";
-                  e.currentTarget.style.color = "#B91C1C";
                 }}
               >
                 ×
               </button>
             </div>
-            <div className="max-h-[60vh] overflow-y-auto">
+            <div className="min-h-0 flex-1 overflow-y-auto">
               {(data?.courses || []).length === 0 ? (
                 <p className="px-5 py-4 text-sm text-slate-500">
                   No courses available.
@@ -646,28 +711,21 @@ export default function DashboardPage() {
                     <li key={course.id}>
                       <button
                         type="button"
-                        className="flex w-full items-center justify-between px-5 py-4 text-left transition"
-                        style={{ background: "white" }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = DONUT.peach50;
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = "white";
-                        }}
+                        className="flex w-full items-center justify-between px-4 py-4 text-left text-sm transition hover:bg-brand-50 active:bg-brand-100 sm:px-5"
                         onClick={() => {
                           setShowCoursesModal(false);
                           navigate(`/dashboard/courses/${course.id}`);
                         }}
                       >
-                        <div>
-                          <p className="text-[15px] font-semibold text-slate-800">
+                        <div className="min-w-0 pr-3">
+                          <p className="truncate text-sm font-semibold text-slate-800 sm:text-[15px]">
                             {course.course_code} · {course.name}
                           </p>
                           <p className="text-xs text-slate-500">
                             {course.term}
                           </p>
                         </div>
-                        <div className="text-right text-xs text-slate-500">
+                        <div className="shrink-0 text-right text-xs text-slate-500">
                           <p>Total posts: {course.total_posts}</p>
                           <p>Interactions: {course.total_interactions}</p>
                         </div>
@@ -686,8 +744,8 @@ export default function DashboardPage() {
         className="rounded-3xl shadow-sm mt-4"
         style={{ border: `1px solid ${DONUT.border}`, background: "#FFFFFF" }}
       >
-        <div className="p-6">
-          <h2 className="flex items-center text-2xl font-semibold text-slate-800">
+        <div className="p-4 sm:p-6">
+          <h2 className="flex items-center text-lg font-semibold text-slate-800 sm:text-2xl">
             Course Comparison Radar
             <InfoBubble text="This radar chart normalizes each course on four dimensions: total posts, total interactions, interactions per post, and posts per student. Larger area suggests stronger overall engagement." />
           </h2>
@@ -753,19 +811,22 @@ export default function DashboardPage() {
 
               return (
                 <div className="w-full overflow-x-auto">
-                  <div className="h-[440px] w-[720px] mx-auto">
+                  <div
+                    className="mx-auto h-[360px] min-w-[560px] sm:h-[440px]"
+                    style={{ width: `${radarWidth}px` }}
+                  >
                     <RadarChart
                       cx="50%"
                       cy="50%"
-                      outerRadius="72%"
-                      width={720}
-                      height={420}
+                      outerRadius={isMobile ? "66%" : "72%"}
+                      width={radarWidth}
+                      height={radarHeight}
                       data={radarData}
                     >
                       <PolarGrid stroke={DONUT.grid} />
                       <PolarAngleAxis
                         dataKey="metric"
-                        tick={{ fill: "#64748b", fontSize: 13 }}
+                        tick={{ fill: "#64748b", fontSize: isMobile ? 11 : 13 }}
                       />
                       <PolarRadiusAxis
                         angle={30}
@@ -788,13 +849,18 @@ export default function DashboardPage() {
                           />
                         );
                       })}
-                      <Legend wrapperStyle={{ fontSize: 12 }} />
+                      <Legend
+                        wrapperStyle={{
+                          fontSize: isMobile ? 10 : 12,
+                          whiteSpace: "normal",
+                        }}
+                      />
                       <RadarTooltip
                         contentStyle={{
                           backgroundColor: "white",
                           borderRadius: 10,
                           border: `1px solid ${DONUT.border}`,
-                          fontSize: 12,
+                          fontSize: isMobile ? 11 : 12,
                         }}
                         formatter={(val, _seriesName, ctx) => {
                           const metric = ctx?.payload?.metric;
@@ -831,7 +897,7 @@ export default function DashboardPage() {
         title="Spark Summary"
         onClick={() => setShowSummaryModal(true)}
         className={[
-          "fixed z-40 right-6 bottom-6 h-14 w-14 rounded-full",
+          "fixed z-40 bottom-4 right-4 h-12 w-12 rounded-full sm:bottom-6 sm:right-6 sm:h-14 sm:w-14",
           "shadow-lg transition-all focus:outline-none focus-visible:ring-4",
           "flex items-center justify-center",
         ].join(" ")}
@@ -841,24 +907,29 @@ export default function DashboardPage() {
           border: `1px solid ${DONUT.borderStrong}`,
         }}
       >
-        <Sparkles className="h-6 w-6 text-slate-800" aria-hidden="true" />
+        <Sparkles
+          className="h-5 w-5 text-slate-800 sm:h-6 sm:w-6"
+          aria-hidden="true"
+        />
       </button>
 
       {/* ============ Summary modal ============ */}
       {showSummaryModal ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ backgroundColor: "transparent" }}
+          className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/35 p-0 sm:items-center sm:p-4"
+          onClick={() => setShowSummaryModal(false)}
+          role="presentation"
         >
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="spark-summary-title"
-            className="max-h-[80vh] w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-2xl"
+            className="flex max-h-[90vh] w-full flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:max-h-[80vh] sm:max-w-2xl sm:rounded-3xl"
             style={{ border: `1px solid ${DONUT.border}` }}
+            onClick={(e) => e.stopPropagation()}
           >
             <div
-              className="flex items-center justify-between border-b px-5 py-4"
+              className="sticky top-0 z-10 flex items-center justify-between border-b px-4 py-3 sm:px-5 sm:py-4"
               style={{
                 borderColor: DONUT.border,
                 background: "linear-gradient(135deg, #FFE6DA 0%, #EDEAFF 100%)",
@@ -867,7 +938,7 @@ export default function DashboardPage() {
               <div>
                 <h3
                   id="spark-summary-title"
-                  className="text-xl font-semibold text-slate-800"
+                  className="text-lg font-semibold text-slate-800 sm:text-xl"
                 >
                   Spark Summary
                 </h3>
@@ -880,29 +951,19 @@ export default function DashboardPage() {
                 aria-label="Close"
                 title="Close"
                 onClick={() => setShowSummaryModal(false)}
-                className="rounded-full p-2 text-xl font-bold text-rose-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-200 transition"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-rose-300 bg-rose-100 text-xl font-bold text-rose-700 transition hover:bg-rose-300 hover:text-white focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-200"
                 style={{
-                  background: "#FEE2E2",
-                  border: "1px solid #FCA5A5",
                   lineHeight: "1",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#FCA5A5";
-                  e.currentTarget.style.color = "white";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "#FEE2E2";
-                  e.currentTarget.style.color = "#B91C1C";
                 }}
               >
                 ×
               </button>
             </div>
 
-            <div className="max-h-[60vh] overflow-y-auto">
-              <div className="px-5 py-4">
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <div className="px-4 py-4 sm:px-5">
                 <div
-                  className="whitespace-pre-wrap text-[15px] leading-7 text-slate-800"
+                  className="whitespace-pre-wrap rounded-xl px-3 py-3 text-sm leading-6 text-slate-800 sm:text-[15px] sm:leading-7"
                   style={{
                     background: "#FFFFFF",
                     border: `1px solid ${DONUT.peach100}`,
@@ -919,7 +980,7 @@ export default function DashboardPage() {
                   </p>
                 ) : null}
 
-                <div className="mt-4 flex items-center gap-2">
+                <div className="mt-4 flex flex-col items-start gap-2 sm:flex-row sm:items-center">
                   <button
                     type="button"
                     className="rounded-xl px-3 py-2 text-xs font-semibold transition"

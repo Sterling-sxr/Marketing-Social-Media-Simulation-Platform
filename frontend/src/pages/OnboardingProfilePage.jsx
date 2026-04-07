@@ -8,28 +8,28 @@ import CircleImage from "./components/CircleImage";
 /* ---------- Unified right-hand form sections ---------- */
 function EditSection({ emoji = "", title, desc, children }) {
   return (
-    <section className="rounded-3xl border border-orange-100 bg-white p-6 shadow-sm">
+    <section className="rounded-2xl border border-brand-100 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-6">
       <div className="flex items-start justify-between gap-3">
-        <h3 className="inline-flex items-center gap-2 text-base font-semibold text-slate-900">
-          <span className="grid h-6 w-6 place-items-center rounded-full bg-orange-100 text-sm">
+        <h3 className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900 sm:text-base">
+          <span className="grid h-6 w-6 place-items-center rounded-full bg-brand-100 text-sm">
             {emoji}
           </span>
           {title}
         </h3>
         {desc ? (
-          <p className="max-w-[420px] text-right text-xs text-slate-500">
+          <p className="max-w-[420px] text-left text-xs text-slate-500 sm:text-right">
             {desc}
           </p>
         ) : null}
       </div>
-      {children}
+      <div className="mt-3 sm:mt-4">{children}</div>
     </section>
   );
 }
 function FieldBlock({ children, className = "" }) {
   return (
     <div
-      className={`rounded-2xl border border-orange-200 bg-orange-50/30 p-3 ${className}`}
+      className={`rounded-2xl border border-brand-200 bg-brand-50/30 p-3 ${className}`}
     >
       {children}
     </div>
@@ -70,7 +70,7 @@ function FieldText({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         required={required}
-        className="w-full rounded-xl border border-orange-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
+        className="w-full rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
       />
       <Help>Used for mentions and discovery.</Help>
     </FieldBlock>
@@ -84,7 +84,7 @@ function FieldSelect({ label, value, options, onChange, help }) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required
-        className="w-full appearance-none rounded-xl border border-orange-200 bg-white px-3 py-2 pr-8 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
+        className="w-full appearance-none rounded-xl border border-brand-200 bg-white px-3 py-2.5 pr-8 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
       >
         <option value="" disabled>
           Please select
@@ -114,7 +114,7 @@ function FieldSlider({ label, value, onChange }) {
           max="10"
           value={value ?? 5}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="w-full accent-orange-500"
+          className="w-full accent-brand-500"
         />
       </div>
       <Help>Drag to adjust (1–10).</Help>
@@ -125,17 +125,17 @@ function FieldInterests({ label, interests, selected, toggleInterest }) {
   return (
     <FieldBlock className="mt-2 md:col-span-2">
       <Label title={label} />
-      <div className="rounded-xl border border-orange-200 bg-white/70 p-3">
+      <div className="rounded-xl border border-brand-200 bg-white/70 p-3">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
           {(interests || []).map((interest) => {
             const active = (selected || []).includes(interest);
             return (
               <label
                 key={interest}
-                className={`cursor-pointer rounded-xl px-3 py-2 text-xs font-medium transition ${
+                className={`cursor-pointer rounded-xl px-3 py-2.5 text-xs font-medium transition sm:py-2 ${
                   active
                     ? "border border-brand bg-white text-brand shadow-sm"
-                    : "border border-transparent bg-white text-slate-600 hover:border-orange-200"
+                    : "border border-transparent bg-white text-slate-600 hover:border-brand-200"
                 }`}
               >
                 <input
@@ -322,29 +322,29 @@ export default function OnboardingProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 text-slate-900 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-brand-100 text-slate-900 flex flex-col">
       {/* Header */}
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5">
+      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-3 py-3 sm:px-6 sm:py-5">
         <div className="flex items-center gap-3">
           <img
             src="/logo.jpg"
-            alt="Donut Logo"
-            className="h-8 w-8 rounded-md object-cover mix-blend-multiply"
+            alt="Bread Logo"
+            className="h-7 w-7 rounded-md object-cover mix-blend-multiply sm:h-8 sm:w-8"
           />
-          <span className="text-xl font-semibold text-brand-dark">
-            Donut campus social simulation platform
+          <span className="text-sm font-semibold text-brand-dark sm:text-xl">
+            Bread campus social simulation platform
           </span>
         </div>
         <div />
       </header>
 
       {/* Layout: static left copy + segmented form on the right */}
-      <main className="flex-1 mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 sm:gap-10 sm:px-6 lg:flex-row lg:items-start">
+      <main className="flex-1 mx-auto flex w-full max-w-6xl flex-col gap-5 px-3 py-4 sm:gap-10 sm:px-6 sm:py-10 lg:flex-row lg:items-start">
         {/* Left copy / decoration — unchanged */}
-        <section className="order-1 lg:order-none relative flex-1 md:min-h-[460px] lg:min-h-[520px] pt-2 lg:pt-6">
-          <div className="relative z-10 space-y-4 max-w-[560px]">
-            <h1 className="text-3xl font-bold sm:text-4xl">{heroTitle}</h1>
-            <p className="text-slate-600">
+        <section className="order-1 lg:order-none relative flex-1 md:min-h-[460px] lg:min-h-[520px] pt-1 lg:pt-6">
+          <div className="relative z-10 space-y-3 sm:space-y-4 max-w-[560px]">
+            <h1 className="text-2xl font-bold break-words sm:text-4xl">{heroTitle}</h1>
+            <p className="text-sm break-words text-slate-600 sm:text-base">
               {isCourseMode && courseLabel ? (
                 <span className="block text-sm font-semibold text-slate-500">
                   {courseLabel}
@@ -378,19 +378,19 @@ export default function OnboardingProfilePage() {
 
         {/* Right form (new layout) */}
         <aside className="order-2 lg:order-none flex-1">
-          <div className="relative w-full max-w-2xl lg:ml-auto rounded-3xl border border-orange-100 bg-white p-6 sm:p-8 shadow-xl shadow-orange-100">
+          <div className="relative w-full max-w-2xl lg:ml-auto rounded-2xl border border-brand-100 bg-white p-4 sm:rounded-3xl sm:p-8 shadow-lg sm:shadow-xl shadow-brand-100">
             <div className="absolute right-0 top-0 h-16 w-16 rounded-bl-3xl bg-gradient-to-b from-brand/10 to-brand/0" />
 
             {!profileOptions ? (
               <p className="text-sm text-slate-500">Loading your profile…</p>
             ) : (
-              <form className="space-y-6" onSubmit={handleSubmit}>
+              <form className="space-y-5 sm:space-y-6" onSubmit={handleSubmit}>
                 {/* Demographic */}
                 <EditSection
                   title="Demographic"
                   desc="Prompts are on the left; options are on the right."
                 >
-                  <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
                     {!isCourseMode && (
                       <FieldText
                         label="Username"
@@ -441,7 +441,7 @@ export default function OnboardingProfilePage() {
                   title="Psychographic"
                   desc="Your attitudes and preferences."
                 >
-                  <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
                     <FieldSlider
                       label="Social Value"
                       value={formData.social_value}
@@ -480,7 +480,7 @@ export default function OnboardingProfilePage() {
                   title="Behavioural / Shopping Habits"
                   desc="How you shop and decide."
                 >
-                  <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
                     <FieldSelect
                       label="Shopping Frequency"
                       value={formData.shopping_frequency}
@@ -517,7 +517,7 @@ export default function OnboardingProfilePage() {
                   title="Digital / Social Media"
                   desc="Online time and interaction style."
                 >
-                  <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
                     <FieldSelect
                       label="Social Media Usage"
                       value={formData.digital_time}
@@ -545,7 +545,7 @@ export default function OnboardingProfilePage() {
                 <div className="flex items-center justify-end gap-3">
                   <button
                     type="submit"
-                    className="rounded-full bg-gradient-to-r from-brand to-brand-dark px-5 py-2 text-sm font-semibold text-white shadow-md shadow-orange-200 transition hover:from-brand-dark hover:to-brand disabled:opacity-60"
+                    className="rounded-full bg-gradient-to-r from-brand to-brand-dark px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-brand-200 transition hover:from-brand-dark hover:to-brand disabled:opacity-60"
                     disabled={activeStatus.loading}
                   >
                     {submitButtonLabel}
@@ -563,7 +563,7 @@ export default function OnboardingProfilePage() {
       </main>
 
       <footer className="py-6 text-center text-xs text-slate-400">
-        © {new Date().getFullYear()} Donut Capstone Team. All rights reserved.
+        © {new Date().getFullYear()} Bread Capstone Team. All rights reserved.
       </footer>
     </div>
   );
