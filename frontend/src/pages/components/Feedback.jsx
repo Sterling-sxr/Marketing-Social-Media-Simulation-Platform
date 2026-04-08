@@ -1,4 +1,4 @@
-export default function Feedback({ message, error, devCode }) {
+export default function Feedback({ message, error }) {
   if (error) {
     return (
       <div className="alert alert-danger">

@@ -153,17 +153,6 @@ function SentimentCell({ sentiment }) {
       ? `${topPercent.toFixed(1)}%`
       : topPercent ?? "";
 
-  const breakdownText = ["positive", "neutral", "negative"]
-    .map((label) => {
-      const value = breakdown[label] ?? 0;
-      const formatted =
-        typeof value === "number"
-          ? `${value.toFixed(1)}%`
-          : `${Number(value || 0).toFixed(1)}%`;
-      return `${capitalize(label)} ${formatted}`;
-    })
-    .join(" · ");
-
   if (!hasComments) {
     return <div className="text-xs text-slate-400">No comments yet</div>;
   }

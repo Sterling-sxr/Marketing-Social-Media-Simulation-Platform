@@ -172,7 +172,6 @@ export default function AuthenticatedShell({
     if (mobileNavLinks && mobileNavLinks.length) {
       return dedupeByTo(mobileNavLinks).slice(0, 5);
     }
-    const uid = authUser?.id;
     const preferred = Array.from(
       new Set([
         "/studenthome",

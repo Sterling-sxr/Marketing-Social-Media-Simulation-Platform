@@ -784,7 +784,7 @@ export default function CreateCoursePage() {
                       createdCourse?.name ||
                       "simulation";
                     const safe = `${code}-${name}`
-                      .replaceAll(/[^\w\-]+/g, "_")
+                      .replaceAll(/[^\w-]+/g, "_")
                       .slice(0, 64);
                     downloadText(
                       `${safe}-ai_users.csv`,

@@ -3,21 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import AuthenticatedShell from "./components/AuthenticatedShell";
 import { useApp } from "../context/AppContext";
 import {
-  Home,
-  Bell,
-  UserRound,
-  Users,
-  FileText,
-  BookOpen,
-  Wrench,
-  LayoutDashboard,
   Heart,
   MessageCircle,
   Eye,
   BarChart3,
-  Calendar,
-  Clock,
-  Hash,
   Download,
   Copy,
   Lightbulb,

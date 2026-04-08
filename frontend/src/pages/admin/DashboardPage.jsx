@@ -58,34 +58,6 @@ const SENTIMENT_TEXT_COLORS = {
   negative: "text-rose-600",
 };
 
-// Kept for potential progress-bar fallback
-function SentimentBar({ label, value }) {
-  const pct = Math.min(Math.max(value ?? 0, 0), 100);
-  const width = `${pct}%`;
-  const SENTIMENT_COLORS = {
-    positive: "bg-accent-500",
-    neutral: "bg-accent-500",
-    negative: "bg-rose-500",
-  };
-  return (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
-        <span className="capitalize">{label}</span>
-        <span>{pct.toFixed(1)}%</span>
-      </div>
-      <div
-        className="h-3 rounded-full"
-        style={{ backgroundColor: DONUT.peach50 }}
-      >
-        <div
-          className={`h-full rounded-full ${SENTIMENT_COLORS[label]} transition-all`}
-          style={{ width }}
-        />
-      </div>
-    </div>
-  );
-}
-
 // Custom tooltip (course name + two lines of data)
 function CompareTooltip({ active, payload, label }) {
   if (!active || !payload || payload.length === 0) return null;

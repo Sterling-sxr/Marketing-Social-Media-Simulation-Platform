@@ -19,7 +19,7 @@ export default function UserProfilePage() {
 
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
-  const [postTab, setPostTab] = useState(showLikesOnly ? "likes" : "posts");
+  const [postTab] = useState(showLikesOnly ? "likes" : "posts");
   const [status, setStatus] = useState({ loading: true, error: "" });
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [followBusy, setFollowBusy] = useState(false);
