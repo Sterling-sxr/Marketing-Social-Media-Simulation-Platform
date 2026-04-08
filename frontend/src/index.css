@@ -139,3 +139,29 @@
     @apply border-transparent bg-gradient-to-r from-brand to-brand-dark text-white shadow-sm;
   }
 }
+
+/* Student analysis (and similar): hide app chrome when printing */
+@media print {
+  .at-print-student-analysis > header,
+  .at-print-student-analysis > div > aside,
+  .at-print-student-analysis nav[aria-label="Mobile navigation"] {
+    display: none !important;
+  }
+
+  .at-print-student-analysis {
+    background: #fff !important;
+  }
+
+  .at-print-student-analysis > div.mx-auto {
+    display: block !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  .at-print-student-analysis > div > main {
+    max-width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #fff !important;
+  }
+}

@@ -1,9 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { Download } from "lucide-react";
 import { getJson } from "../lib/api";
 import { useApp } from "../context/AppContext";
 import AuthenticatedShell from "./components/AuthenticatedShell";
 import Feedback from "./components/Feedback";
+
+function downloadJsonFile(filename, data) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: "application/json;charset=utf-8",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 const METRICS = [
   { key: "likes", label: "Likes" },
@@ -281,7 +294,7 @@ export default function PostAnalyticsPage() {
   const courseId = Number(courseIdParam);
   const postId = Number(postIdParam);
   const navigate = useNavigate();
-  const { authUser, authCheckComplete } = useApp();
+  const { authUser, authCheckComplete, pushToast } = useApp();
 
   const [analytics, setAnalytics] = useState(null);
   const [status, setStatus] = useState({ loading: true, error: "" });
@@ -375,21 +388,42 @@ export default function PostAnalyticsPage() {
 
   return (
     <AuthenticatedShell title={pageTitle} subtitle={pageSubtitle}>
-      <div className="flex items-center justify-between">
-        <button
-          type="button"
-          className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
-          onClick={() => navigate(-1)}
-        >
-          ← Back
-        </button>
-        <button
-          type="button"
-          className="rounded-full border border-brand bg-brand-100 px-4 py-2 text-xs font-semibold text-brand transition hover:bg-brand-200"
-          onClick={() => navigate(`/courses/${courseId}/posts/${postId}`)}
-        >
-          View Post
-        </button>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
+            onClick={() => navigate(-1)}
+          >
+            ← Back
+          </button>
+          <button
+            type="button"
+            className="rounded-full border border-brand bg-brand-100 px-4 py-2 text-xs font-semibold text-brand transition hover:bg-brand-200"
+            onClick={() => navigate(`/courses/${courseId}/posts/${postId}`)}
+          >
+            View Post
+          </button>
+        </div>
+        {analytics ? (
+          <button
+            type="button"
+            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-brand hover:text-brand"
+            onClick={() => {
+              downloadJsonFile(
+                `post-${postId}-analytics.json`,
+                analytics
+              );
+              pushToast?.({
+                title: "Download started",
+                message: "JSON snapshot saved from the data already on this page.",
+              });
+            }}
+          >
+            <Download className="h-3.5 w-3.5" aria-hidden />
+            Export JSON
+          </button>
+        ) : null}
       </div>
 
       {status.error ? <Feedback error={status.error} /> : null}

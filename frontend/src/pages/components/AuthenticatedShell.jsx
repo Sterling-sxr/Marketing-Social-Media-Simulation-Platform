@@ -58,6 +58,8 @@ export default function AuthenticatedShell({
   mobileNavLinks,
   hideMobileNav = false,
   showNotifications = false, // Pages that need auto-polling pass true
+  /** When true, @media print hides chrome so the page can print main content only. */
+  printFriendlyChrome = false,
 }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -188,7 +190,12 @@ export default function AuthenticatedShell({
   }, [mobileNavLinks, sidebarLinks, authUser?.id]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-accent-50">
+    <div
+      className={classNames(
+        "min-h-screen bg-gradient-to-br from-brand-50 via-white to-accent-50",
+        printFriendlyChrome && "at-print-student-analysis"
+      )}
+    >
       {/* Top navigation bar */}
       <header className="sticky top-0 z-40 border-b border-brand-100/70 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/60">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 lg:px-6 lg:py-4">
