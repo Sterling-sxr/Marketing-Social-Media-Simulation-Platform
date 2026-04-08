@@ -17,6 +17,7 @@ export default defineConfig({
       'react-dom': path.resolve(localNodeModules, 'react-dom'),
       'react-dom/client': path.resolve(localNodeModules, 'react-dom', 'client'),
       'react-router-dom': path.resolve(localNodeModules, 'react-router-dom'),
+      'lucide-react': path.resolve(localNodeModules, 'lucide-react'),
     },
   },
   test: {

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import AuthenticatedShell from "../components/AuthenticatedShell";
 import Feedback from "../components/Feedback";
 import ConfirmDialog from "../components/ConfirmDialog";
+import AIPersonaCreationModal from "./components/AIPersonaCreationModal";
 import {
   deleteJson,
   getJson,
@@ -57,6 +58,8 @@ export default function CourseAIUsersPage() {
   const [selectedIds, setSelectedIds] = useState([]);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [creationMode, setCreationMode] = useState(null);
+  const [creationMessage, setCreationMessage] = useState("");
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -127,6 +130,21 @@ export default function CourseAIUsersPage() {
     setFormData({ ...INITIAL_FORM, interests: [] });
   };
 
+  const openGuidedCreate = () => {
+    setCreationMessage("");
+    setCreationMode("guided");
+  };
+
+  const openGenerateCreate = () => {
+    setCreationMessage("");
+    setCreationMode("generate");
+  };
+
+  const openAdvancedCreate = () => {
+    setCreationMessage("");
+    openCreate();
+  };
+
   const openEdit = (item) => {
     setFormError("");
     setFormBusy(false);
@@ -159,6 +177,10 @@ export default function CourseAIUsersPage() {
   const closeForm = () => {
     setFormOpen(false);
     resetForm();
+  };
+
+  const closeCreationFlow = () => {
+    setCreationMode(null);
   };
 
   const handleFormChange = (field, value) => {
@@ -224,6 +246,9 @@ export default function CourseAIUsersPage() {
         await postJson(`/api/courses/${courseId}/ai-users/`, payload);
       }
       await load();
+      setCreationMessage(
+        formData.id ? "AI user updated successfully." : "AI user created successfully."
+      );
       closeForm();
     } catch (error) {
       setFormError(error.message || "Failed to save AI user.");
@@ -349,6 +374,16 @@ export default function CourseAIUsersPage() {
 
   const interestOptions = profileOptions?.interests || [];
 
+  const handleCreationCommitted = async (result) => {
+    await load();
+    const createdCount = Number(result?.created || 0);
+    const errors = result?.errors || [];
+    const summary = `Created ${createdCount} AI personas.`;
+    setCreationMessage(
+      errors.length ? `${summary}\n${errors.join("\n")}` : summary
+    );
+  };
+
   return (
     <AuthenticatedShell
       title="AI Users"
@@ -380,9 +415,23 @@ export default function CourseAIUsersPage() {
           <button
             type="button"
             className="rounded-full border border-brand bg-brand-100 px-4 py-2 text-xs font-semibold text-brand transition hover:bg-brand-200 disabled:opacity-60"
-            onClick={openCreate}
+            onClick={openGuidedCreate}
           >
-            ＋ Create AI User
+            Create with Guide
+          </button>
+          <button
+            type="button"
+            className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
+            onClick={openGenerateCreate}
+          >
+            Generate with AI
+          </button>
+          <button
+            type="button"
+            className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
+            onClick={openAdvancedCreate}
+          >
+            Advanced Create
           </button>
           <button
             type="button"
@@ -411,6 +460,11 @@ export default function CourseAIUsersPage() {
       </div>
 
       {status.error ? <Feedback error={status.error} /> : null}
+      {creationMessage ? (
+        <div className="mb-4 rounded-2xl border border-brand-100 bg-brand-50 px-4 py-3 text-xs text-slate-600 whitespace-pre-line">
+          {creationMessage}
+        </div>
+      ) : null}
       {importMessage ? (
         <div className="mb-4 rounded-2xl border border-brand-100 bg-brand-50 px-4 py-3 text-xs text-slate-600 whitespace-pre-line">
           {importMessage}
@@ -751,6 +805,14 @@ export default function CourseAIUsersPage() {
           </form>
         </div>
       ) : null}
+
+      <AIPersonaCreationModal
+        mode={creationMode}
+        courseId={courseId}
+        profileOptions={profileOptions}
+        onClose={closeCreationFlow}
+        onCommitted={handleCreationCommitted}
+      />
 
       <ConfirmDialog
         open={deleteState.open}
