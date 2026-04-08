@@ -130,14 +130,9 @@ export default function CourseAIUsersPage() {
     setFormData({ ...INITIAL_FORM, interests: [] });
   };
 
-  const openGuidedCreate = () => {
+  const openSmartGenerate = () => {
     setCreationMessage("");
-    setCreationMode("guided");
-  };
-
-  const openGenerateCreate = () => {
-    setCreationMessage("");
-    setCreationMode("generate");
+    setCreationMode("smart");
   };
 
   const openAdvancedCreate = () => {
@@ -408,23 +403,16 @@ export default function CourseAIUsersPage() {
           <button
             type="button"
             className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
-            onClick={() => navigate(`/courses/${courseId}`)}
+            onClick={() => navigate("/courses")}
           >
-            ← Back to course
+            ← Back
           </button>
           <button
             type="button"
-            className="rounded-full border border-brand bg-brand-100 px-4 py-2 text-xs font-semibold text-brand transition hover:bg-brand-200 disabled:opacity-60"
-            onClick={openGuidedCreate}
+            className="rounded-full border border-brand bg-brand px-4 py-2 text-xs font-semibold text-white transition hover:bg-brand/90 disabled:opacity-60"
+            onClick={openSmartGenerate}
           >
-            Create with Guide
-          </button>
-          <button
-            type="button"
-            className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
-            onClick={openGenerateCreate}
-          >
-            Generate with AI
+            Smart Generate
           </button>
           <button
             type="button"

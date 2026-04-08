@@ -2,31 +2,92 @@ import { useEffect, useMemo, useState } from "react";
 import Feedback from "../../components/Feedback";
 import { postJson } from "../../../lib/api";
 
-const GUIDED_TEMPLATE_OPTIONS = [
-  { value: "undergraduate-heavy", label: "Undergraduate-heavy cohort" },
-  { value: "mixed-interests", label: "Mixed interests cohort" },
-  { value: "marketing-audience", label: "Marketing audience cohort" },
-  { value: "creator-community", label: "Creator community cohort" },
+const GOAL_CARDS = [
+  {
+    value: "broad_audience",
+    label: "Explore Broad Audience",
+    description: "Maximize audience coverage so students can test what attracts different people.",
+  },
+  {
+    value: "theme",
+    label: "Focus on a Theme",
+    description: "Generate a tighter audience around one interest area with controlled variation.",
+  },
+  {
+    value: "conversion_style",
+    label: "Focus on Conversion Style",
+    description: "Center personas around different purchase decision drivers for marketing experiments.",
+  },
+  {
+    value: "engagement_style",
+    label: "Focus on Engagement Style",
+    description: "Bias the set toward different content preferences and likely interaction responses.",
+  },
 ];
 
-const EMPTY_GUIDED_FORM = {
-  template_id: "mixed-interests",
-  count: 3,
-  audience_theme: "",
-  age_mix: [],
-  interest_mix: [],
-  digital_time: "",
-  content_preference: "",
-};
+const COVERAGE_OPTIONS = [
+  { value: "wide", label: "Wide" },
+  { value: "balanced", label: "Balanced" },
+  { value: "tight", label: "Tight" },
+];
 
-const EMPTY_GENERATE_FORM = {
-  count: 5,
-  template_id: "",
-  scenario_prompt: "",
-  age_mix: [],
-  interest_mix: [],
-  digital_time: "",
-  content_preference: "",
+const ACTIVITY_OPTIONS = [
+  { value: "low", label: "Low activity" },
+  { value: "mixed", label: "Mixed activity" },
+  { value: "high", label: "High activity" },
+];
+
+const INTEREST_LEAN_OPTIONS = [
+  { value: "mixed", label: "Mixed" },
+  { value: "tech", label: "Tech" },
+  { value: "lifestyle", label: "Lifestyle" },
+];
+
+const THEME_CARD_OPTIONS = [
+  { value: "tech_gaming", label: "Tech & Gaming" },
+  { value: "fashion_shopping", label: "Fashion & Shopping" },
+  { value: "travel_food", label: "Travel & Food" },
+  { value: "arts_culture", label: "Arts & Culture" },
+  { value: "social_issues", label: "Social Issues" },
+  { value: "creator_trend", label: "Creator / Trend" },
+];
+
+const DECISION_DRIVER_OPTIONS = [
+  { value: "Price", label: "Price" },
+  { value: "Quality/durability", label: "Quality / durability" },
+  { value: "Brand image", label: "Brand image" },
+  { value: "Eco-friendly", label: "Eco-friendly" },
+  { value: "Convenience", label: "Convenience" },
+];
+
+const CONTENT_PREFERENCE_OPTIONS = [
+  { value: "Funny short posts/memes", label: "Funny short posts / memes" },
+  { value: "Pictures or videos", label: "Pictures or videos" },
+  { value: "Thoughtful opinions", label: "Thoughtful opinions" },
+  { value: "Detailed reviews or long posts", label: "Detailed reviews or long posts" },
+];
+
+const INTERACTION_INTENSITY_OPTIONS = [
+  { value: "low", label: "Low" },
+  { value: "mixed", label: "Balanced" },
+  { value: "high", label: "High" },
+];
+
+const EMPTY_SMART_FORM = {
+  goal: "broad_audience",
+  count: 8,
+  coverage: "balanced",
+  activity_level: "mixed",
+  interest_lean: "mixed",
+  theme_card: "",
+  tightness: "balanced",
+  decision_driver: "Price",
+  content_preference_bias: "Pictures or videos",
+  interaction_intensity: "mixed",
+  gender: "",
+  age_group: "",
+  education_level: "",
+  income_level: "",
 };
 
 function createDraftId(item, index) {
@@ -37,167 +98,306 @@ function normalizeDrafts(items = []) {
   return items.map((item, index) => ({
     ...item,
     _draftId: createDraftId(item, index),
-    removed: false,
-    dirty: false,
   }));
 }
 
 function stripDraftMeta(item) {
-  const { _draftId, removed, dirty, warnings, ...cleaned } = item;
+  const { _draftId, warnings, ...cleaned } = item;
   return cleaned;
+}
+
+function summarizeList(values) {
+  if (!values.length) return "a varied audience mix";
+  if (values.length === 1) return values[0];
+  if (values.length === 2) return `${values[0]} and ${values[1]}`;
+  return `${values.slice(0, 2).join(", ")}, and ${values[2]}`;
+}
+
+function countValues(items, getter) {
+  const counts = new Map();
+  items.forEach((item) => {
+    getter(item)
+      .filter(Boolean)
+      .forEach((value) => counts.set(value, (counts.get(value) || 0) + 1));
+  });
+  return Array.from(counts.entries()).sort((left, right) => right[1] - left[1]);
+}
+
+function getGoalLabel(goal) {
+  return GOAL_CARDS.find((card) => card.value === goal)?.label || "Smart Generate";
+}
+
+function buildCoverageSummary(drafts, smartProfile, smartForm) {
+  const interests = countValues(drafts, (item) => item.interests || []);
+  const interactions = countValues(drafts, (item) => [item.interaction_style || ""]);
+  const content = countValues(drafts, (item) => [item.content_preference || ""]);
+  const decisions = countValues(drafts, (item) => [item.decision_factor || ""]);
+  const activityMix = countValues(drafts, (item) => [item.digital_time || ""]);
+  const goal = smartProfile?.goal || smartForm.goal;
+  const goalLabel = smartProfile?.goal_label || getGoalLabel(goal);
+
+  if (goal === "theme") {
+    const themeLabel =
+      smartProfile?.theme_label ||
+      THEME_CARD_OPTIONS.find((option) => option.value === smartForm.theme_card)?.label ||
+      "selected theme";
+    return {
+      signal: goalLabel,
+      summaryText: `This preview keeps ${drafts.length} personas centered on ${themeLabel} while preserving smaller differences in activity, content preference, and purchase behavior.`,
+      groups: [
+        {
+          title: "Theme interests",
+          value: interests.slice(0, 4).map(([label]) => label).join(" / ") || themeLabel,
+        },
+        {
+          title: "Content preferences",
+          value: content.slice(0, 4).map(([label]) => label).join(" / ") || "Theme-aligned content",
+        },
+        {
+          title: "Interaction tendencies",
+          value: interactions.slice(0, 4).map(([label]) => label).join(" / ") || "Mixed interactions",
+        },
+        {
+          title: "Decision drivers",
+          value: decisions.slice(0, 4).map(([label]) => label).join(" / ") || "Mixed decision factors",
+        },
+      ],
+    };
+  }
+
+  if (goal === "conversion_style") {
+    const focus =
+      smartProfile?.decision_driver || smartForm.decision_driver || "conversion drivers";
+    return {
+      signal: goalLabel,
+      summaryText: `This preview organizes ${drafts.length} personas around ${focus} and nearby decision patterns so students can test what content moves different buyers.`,
+      groups: [
+        {
+          title: "Decision drivers",
+          value: decisions.slice(0, 4).map(([label]) => label).join(" / ") || focus,
+        },
+        {
+          title: "Buying behavior",
+          value: countValues(drafts, (item) => [item.buying_behavior || ""])
+            .slice(0, 4)
+            .map(([label]) => label)
+            .join(" / ") || "Mixed buying styles",
+        },
+        {
+          title: "Content preferences",
+          value: content.slice(0, 4).map(([label]) => label).join(" / ") || "Mixed content types",
+        },
+        {
+          title: "Activity mix",
+          value: activityMix.slice(0, 4).map(([label]) => label).join(" / ") || "Mixed activity",
+        },
+      ],
+    };
+  }
+
+  if (goal === "engagement_style") {
+    const focus =
+      smartProfile?.content_preference_bias ||
+      smartForm.content_preference_bias ||
+      "engagement styles";
+    return {
+      signal: goalLabel,
+      summaryText: `This preview biases ${drafts.length} personas toward ${focus} and pairs that preference with different response intensities so students can compare likely engagement reactions.`,
+      groups: [
+        {
+          title: "Content preferences",
+          value: content.slice(0, 4).map(([label]) => label).join(" / ") || focus,
+        },
+        {
+          title: "Interaction tendencies",
+          value: interactions.slice(0, 4).map(([label]) => label).join(" / ") || "Mixed interactions",
+        },
+        {
+          title: "Activity mix",
+          value: activityMix.slice(0, 4).map(([label]) => label).join(" / ") || "Mixed activity",
+        },
+        {
+          title: "Top interests",
+          value: interests.slice(0, 4).map(([label]) => label).join(" / ") || "Mixed interests",
+        },
+      ],
+    };
+  }
+
+  return {
+    signal: goalLabel,
+    summaryText: `This preview contains ${drafts.length} rule-generated personas covering ${summarizeList(
+      interests.slice(0, 3).map(([label]) => label)
+    )}, so students can test which posts attract which audience pockets.`,
+    groups: [
+      {
+        title: "Interest coverage",
+        value: interests.slice(0, 4).map(([label]) => label).join(" / ") || "Mixed interests",
+      },
+      {
+        title: "Interaction tendencies",
+        value: interactions.slice(0, 4).map(([label]) => label).join(" / ") || "Mixed interactions",
+      },
+      {
+        title: "Content preferences",
+        value: content.slice(0, 4).map(([label]) => label).join(" / ") || "Mixed content types",
+      },
+      {
+        title: "Decision drivers",
+        value: decisions.slice(0, 4).map(([label]) => label).join(" / ") || "Mixed decision factors",
+      },
+    ],
+  };
+}
+
+function pickRepresentativeDrafts(drafts, smartProfile, smartForm) {
+  const goal = smartProfile?.goal || smartForm.goal;
+  const seen = new Set();
+  const items = [];
+
+  drafts.forEach((draft) => {
+    let key = [draft.interests?.[0] || "", draft.content_preference || "", draft.interaction_style || ""].join("|");
+    if (goal === "theme") {
+      key = [draft.content_preference || "", draft.interaction_style || "", draft.age_group || ""].join("|");
+    } else if (goal === "conversion_style") {
+      key = [draft.decision_factor || "", draft.buying_behavior || "", draft.content_preference || ""].join("|");
+    } else if (goal === "engagement_style") {
+      key = [draft.content_preference || "", draft.interaction_style || "", draft.digital_time || ""].join("|");
+    }
+    if (seen.has(key)) return;
+    seen.add(key);
+    items.push(draft);
+  });
+
+  return items.slice(0, 5);
 }
 
 export default function AIPersonaCreationModal({
   mode,
   courseId,
-  profileOptions,
   onClose,
   onCommitted,
+  profileOptions = {},
 }) {
+  const isOpen = Boolean(mode);
   const [step, setStep] = useState("input");
-  const [guidedForm, setGuidedForm] = useState(EMPTY_GUIDED_FORM);
-  const [generateForm, setGenerateForm] = useState(EMPTY_GENERATE_FORM);
+  const [smartForm, setSmartForm] = useState(EMPTY_SMART_FORM);
   const [drafts, setDrafts] = useState([]);
   const [warnings, setWarnings] = useState([]);
   const [error, setError] = useState("");
   const [previewBusy, setPreviewBusy] = useState(false);
   const [commitBusy, setCommitBusy] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [smartProfile, setSmartProfile] = useState(null);
 
   useEffect(() => {
-    if (!mode) return;
+    if (!isOpen) return;
     setStep("input");
-    setGuidedForm(EMPTY_GUIDED_FORM);
-    setGenerateForm(EMPTY_GENERATE_FORM);
+    setSmartForm(EMPTY_SMART_FORM);
     setDrafts([]);
     setWarnings([]);
     setError("");
     setPreviewBusy(false);
     setCommitBusy(false);
-  }, [mode]);
+    setShowAll(false);
+    setShowAdvanced(false);
+    setSmartProfile(null);
+  }, [isOpen]);
 
-  const isGuided = mode === "guided";
-  const title = isGuided ? "Create AI Users with Guide" : "Generate AI Users with AI";
-  const previewButtonLabel = previewBusy
-    ? "Loading preview..."
-    : "Preview personas";
-  const visibleDrafts = useMemo(
-    () => drafts.filter((item) => !item.removed),
-    [drafts]
+  const coverage = useMemo(
+    () => buildCoverageSummary(drafts, smartProfile, smartForm),
+    [drafts, smartProfile, smartForm]
   );
+  const representativeDrafts = useMemo(
+    () => pickRepresentativeDrafts(drafts, smartProfile, smartForm),
+    [drafts, smartProfile, smartForm]
+  );
+  const activeThemeLabel =
+    smartProfile?.theme_label ||
+    THEME_CARD_OPTIONS.find((option) => option.value === smartForm.theme_card)?.label ||
+    "";
 
-  if (!mode) return null;
+  if (!isOpen) return null;
 
-  const updateGuided = (field, value) => {
-    setGuidedForm((prev) => ({ ...prev, [field]: value }));
+  const updateField = (field, value) => {
+    setSmartForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const updateGenerate = (field, value) => {
-    setGenerateForm((prev) => ({ ...prev, [field]: value }));
+  const setGoal = (goal) => {
+    setSmartForm((prev) => ({
+      ...prev,
+      goal,
+      coverage: goal === "broad_audience" ? prev.coverage : "balanced",
+      interest_lean: goal === "broad_audience" ? prev.interest_lean : "mixed",
+      theme_card: goal === "theme" ? prev.theme_card : "",
+      tightness: goal === "broad_audience" ? prev.tightness : "balanced",
+      decision_driver: goal === "conversion_style" ? prev.decision_driver : "Price",
+      content_preference_bias:
+        goal === "engagement_style" ? prev.content_preference_bias : "Pictures or videos",
+      interaction_intensity: goal === "engagement_style" ? prev.interaction_intensity : "mixed",
+    }));
   };
 
-  const activeForm = isGuided ? guidedForm : generateForm;
-
-  const handleMultiSelectToggle = (formSetter, field, option) => {
-    formSetter((prev) => {
-      const current = prev[field] || [];
-      const next = current.includes(option)
-        ? current.filter((item) => item !== option)
-        : [...current, option];
-      return { ...prev, [field]: next };
-    });
-  };
-
-  const buildPreviewPayload = () => {
-    if (isGuided) {
-      return {
-        template_id: guidedForm.template_id,
-        count: Number(guidedForm.count),
-        audience_theme: guidedForm.audience_theme.trim(),
-        age_mix: guidedForm.age_mix,
-        interest_mix: guidedForm.interest_mix,
-        digital_time: guidedForm.digital_time,
-        content_preference: guidedForm.content_preference,
-      };
-    }
-    const constraints = {};
-    if (generateForm.age_mix.length) constraints.age_mix = generateForm.age_mix;
-    if (generateForm.interest_mix.length) {
-      constraints.interest_mix = generateForm.interest_mix;
-    }
-    if (generateForm.digital_time) constraints.digital_time = generateForm.digital_time;
-    if (generateForm.content_preference) {
-      constraints.content_preference = generateForm.content_preference;
-    }
-    return {
-      count: Number(generateForm.count),
-      template_id: generateForm.template_id,
-      scenario_prompt: generateForm.scenario_prompt.trim(),
-      constraints,
+  const buildPayload = () => {
+    const payload = {
+      goal: smartForm.goal,
+      count: Number(smartForm.count),
+      activity_level: smartForm.activity_level,
     };
+
+    if (smartForm.goal === "broad_audience") {
+      payload.coverage = smartForm.coverage;
+      payload.interest_lean = smartForm.interest_lean;
+    }
+
+    if (smartForm.goal === "theme") {
+      payload.theme_card = smartForm.theme_card;
+      payload.tightness = smartForm.tightness;
+    }
+
+    if (smartForm.goal === "conversion_style") {
+      payload.decision_driver = smartForm.decision_driver;
+      payload.tightness = smartForm.tightness;
+    }
+
+    if (smartForm.goal === "engagement_style") {
+      payload.content_preference_bias = smartForm.content_preference_bias;
+      payload.interaction_intensity = smartForm.interaction_intensity;
+    }
+
+    ["gender", "age_group", "education_level", "income_level"].forEach((field) => {
+      if (smartForm[field]) {
+        payload[field] = smartForm[field];
+      }
+    });
+
+    return payload;
   };
 
   const runPreview = async () => {
     setPreviewBusy(true);
     setError("");
     try {
-      const endpoint = isGuided
-        ? `/api/courses/${courseId}/ai-users/guided-preview/`
-        : `/api/courses/${courseId}/ai-users/generate-preview/`;
-      const data = await postJson(endpoint, buildPreviewPayload());
+      const data = await postJson(`/api/courses/${courseId}/ai-users/guided-preview/`, buildPayload());
       setDrafts(normalizeDrafts(data.items || []));
       setWarnings(data.warnings || []);
+      setSmartProfile(data.smart_profile || null);
+      setShowAll(false);
       setStep("preview");
     } catch (err) {
-      if (!isGuided && err?.status === 503) {
-        setError("AI persona generation is currently unavailable. Please try again later or use Guided creation.");
-      } else {
-        setError(err.message || "Failed to load persona preview.");
-      }
+      setError(err.message || "Failed to load persona preview.");
     } finally {
       setPreviewBusy(false);
     }
-  };
-
-  const updateDraft = (draftId, field, value) => {
-    setDrafts((prev) =>
-      prev.map((item) =>
-        item._draftId === draftId ? { ...item, [field]: value, dirty: true } : item
-      )
-    );
-  };
-
-  const toggleDraftInterest = (draftId, option) => {
-    setDrafts((prev) =>
-      prev.map((item) => {
-        if (item._draftId !== draftId) return item;
-        const interests = item.interests || [];
-        const next = interests.includes(option)
-          ? interests.filter((entry) => entry !== option)
-          : [...interests, option];
-        return { ...item, interests: next, dirty: true };
-      })
-    );
-  };
-
-  const toggleDraftRemoved = (draftId) => {
-    setDrafts((prev) =>
-      prev.map((item) =>
-        item._draftId === draftId
-          ? { ...item, removed: !item.removed, dirty: true }
-          : item
-      )
-    );
   };
 
   const handleCommit = async () => {
     setCommitBusy(true);
     setError("");
     try {
-      const endpoint = isGuided
-        ? `/api/courses/${courseId}/ai-users/guided-commit/`
-        : `/api/courses/${courseId}/ai-users/generate-commit/`;
-      const data = await postJson(endpoint, {
-        items: visibleDrafts.map(stripDraftMeta),
+      const data = await postJson(`/api/courses/${courseId}/ai-users/guided-commit/`, {
+        items: drafts.map(stripDraftMeta),
       });
       await onCommitted?.(data);
       onClose();
@@ -213,11 +413,9 @@ export default function AIPersonaCreationModal({
       <div className="max-h-[95vh] w-full max-w-5xl overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl shadow-brand-200">
         <header className="flex items-center justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+            <h2 className="text-lg font-semibold text-slate-900">Smart Generate</h2>
             <p className="text-xs text-slate-500">
-              {isGuided
-                ? "Use a template and lightweight inputs to build reviewable persona drafts."
-                : "Use structured inputs plus an optional scenario prompt to generate reviewable drafts."}
+              Choose a teaching goal first, then steer the audience mix with a few high-level controls.
             </p>
           </div>
           <button
@@ -241,25 +439,164 @@ export default function AIPersonaCreationModal({
 
         {step === "input" ? (
           <section className="mt-6 space-y-5">
-            {isGuided ? (
-              <GuidedInputForm
-                form={guidedForm}
-                options={profileOptions}
-                onChange={updateGuided}
-                onToggle={(field, option) =>
-                  handleMultiSelectToggle(setGuidedForm, field, option)
-                }
+            <div className="rounded-3xl border border-brand-100 bg-gradient-to-br from-brand-50 via-white to-brand-50/30 p-5">
+              <h3 className="text-xl font-semibold text-slate-900">
+                Pick the kind of classroom experiment you want to run
+              </h3>
+              <p className="mt-2 text-sm text-slate-600">
+                Smart Generate keeps the persona schema fixed, then composes a batch from goal-driven rules instead of external AI prompts.
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                Generation Goal
+              </p>
+              <div className="mt-3 grid gap-3 md:grid-cols-2">
+                {GOAL_CARDS.map((card) => (
+                  <button
+                    key={card.value}
+                    type="button"
+                    aria-pressed={smartForm.goal === card.value}
+                    onClick={() => setGoal(card.value)}
+                    className={`rounded-3xl border p-4 text-left transition ${
+                      smartForm.goal === card.value
+                        ? "border-brand bg-brand-50 shadow-sm"
+                        : "border-brand-100 bg-white hover:border-brand-300"
+                    }`}
+                  >
+                    <p className="text-sm font-semibold text-slate-900">{card.label}</p>
+                    <p className="mt-2 text-xs leading-5 text-slate-600">{card.description}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <NumberField
+                label="Number of users"
+                value={smartForm.count}
+                onChange={(value) => updateField("count", value)}
               />
-            ) : (
-              <GenerateInputForm
-                form={generateForm}
-                options={profileOptions}
-                onChange={updateGenerate}
-                onToggle={(field, option) =>
-                  handleMultiSelectToggle(setGenerateForm, field, option)
-                }
+              <SelectField
+                label="Activity level"
+                value={smartForm.activity_level}
+                onChange={(value) => updateField("activity_level", value)}
+                options={ACTIVITY_OPTIONS}
               />
-            )}
+              {smartForm.goal === "broad_audience" ? (
+                <>
+                  <SelectField
+                    label="Coverage"
+                    value={smartForm.coverage}
+                    onChange={(value) => updateField("coverage", value)}
+                    options={COVERAGE_OPTIONS}
+                  />
+                  <SelectField
+                    label="Interest lean"
+                    value={smartForm.interest_lean}
+                    onChange={(value) => updateField("interest_lean", value)}
+                    options={INTEREST_LEAN_OPTIONS}
+                  />
+                </>
+              ) : null}
+              {smartForm.goal === "theme" ? (
+                <>
+                  <SelectField
+                    label="Theme card"
+                    value={smartForm.theme_card}
+                    onChange={(value) => updateField("theme_card", value)}
+                    options={THEME_CARD_OPTIONS}
+                  />
+                  <SelectField
+                    label="Audience tightness"
+                    value={smartForm.tightness}
+                    onChange={(value) => updateField("tightness", value)}
+                    options={COVERAGE_OPTIONS}
+                  />
+                </>
+              ) : null}
+              {smartForm.goal === "conversion_style" ? (
+                <>
+                  <SelectField
+                    label="Decision driver"
+                    value={smartForm.decision_driver}
+                    onChange={(value) => updateField("decision_driver", value)}
+                    options={DECISION_DRIVER_OPTIONS}
+                  />
+                  <SelectField
+                    label="Audience tightness"
+                    value={smartForm.tightness}
+                    onChange={(value) => updateField("tightness", value)}
+                    options={COVERAGE_OPTIONS}
+                  />
+                </>
+              ) : null}
+              {smartForm.goal === "engagement_style" ? (
+                <>
+                  <SelectField
+                    label="Content preference bias"
+                    value={smartForm.content_preference_bias}
+                    onChange={(value) => updateField("content_preference_bias", value)}
+                    options={CONTENT_PREFERENCE_OPTIONS}
+                  />
+                  <SelectField
+                    label="Interaction intensity"
+                    value={smartForm.interaction_intensity}
+                    onChange={(value) => updateField("interaction_intensity", value)}
+                    options={INTERACTION_INTENSITY_OPTIONS}
+                  />
+                </>
+              ) : null}
+            </div>
+
+            <div className="rounded-2xl border border-brand-100 bg-white p-4">
+              <button
+                type="button"
+                className="flex w-full items-center justify-between text-left"
+                onClick={() => setShowAdvanced((prev) => !prev)}
+              >
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-900">Advanced</h3>
+                  <p className="text-xs text-slate-500">
+                    Optionally constrain a few demographic fields without dropping into full persona editing.
+                  </p>
+                </div>
+                <span className="text-sm font-semibold text-brand">{showAdvanced ? "Hide" : "Show"}</span>
+              </button>
+              {showAdvanced ? (
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <SelectField
+                    label="Gender"
+                    value={smartForm.gender}
+                    onChange={(value) => updateField("gender", value)}
+                    options={(profileOptions.genders || []).map((value) => ({ value, label: value }))}
+                    placeholder="Any gender"
+                  />
+                  <SelectField
+                    label="Age group"
+                    value={smartForm.age_group}
+                    onChange={(value) => updateField("age_group", value)}
+                    options={(profileOptions.age_groups || []).map((value) => ({ value, label: value }))}
+                    placeholder="Any age group"
+                  />
+                  <SelectField
+                    label="Education level"
+                    value={smartForm.education_level}
+                    onChange={(value) => updateField("education_level", value)}
+                    options={(profileOptions.education_levels || []).map((value) => ({ value, label: value }))}
+                    placeholder="Any education level"
+                  />
+                  <SelectField
+                    label="Income level"
+                    value={smartForm.income_level}
+                    onChange={(value) => updateField("income_level", value)}
+                    options={(profileOptions.income_levels || []).map((value) => ({ value, label: value }))}
+                    placeholder="Any income level"
+                  />
+                </div>
+              ) : null}
+            </div>
 
             <div className="flex items-center justify-end gap-3">
               <button
@@ -276,66 +613,108 @@ export default function AIPersonaCreationModal({
                 onClick={runPreview}
                 disabled={previewBusy}
               >
-                {previewButtonLabel}
+                {previewBusy ? "Generating preview..." : "Generate Preview"}
               </button>
             </div>
           </section>
         ) : (
           <section className="mt-6 space-y-5">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h3 className="text-sm font-semibold text-slate-800">
-                  Persona Preview
-                </h3>
-                <p className="text-xs text-slate-500">
-                  Lightly edit common fields, remove drafts you do not want to commit, or go back for deeper changes.
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                {!isGuided ? (
-                  <button
-                    type="button"
-                    className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
-                    onClick={runPreview}
-                    disabled={previewBusy || commitBusy}
-                  >
-                    Regenerate
-                  </button>
+            <div className="rounded-3xl border border-brand-100 bg-gradient-to-br from-brand-50 via-white to-brand-50/30 p-5">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brand">
+                    {coverage.signal}
+                  </p>
+                  <h3 className="mt-2 text-xl font-semibold text-slate-900">
+                    Audience coverage snapshot
+                  </h3>
+                  <p className="mt-2 text-sm text-slate-600">{coverage.summaryText}</p>
+                </div>
+                {activeThemeLabel ? (
+                  <div className="rounded-2xl border border-brand-100 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">
+                    {activeThemeLabel}
+                  </div>
                 ) : null}
-                <button
-                  type="button"
-                  className="rounded-full border border-brand-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:border-brand-300 hover:text-brand"
-                  onClick={() => setStep("input")}
-                  disabled={previewBusy || commitBusy}
-                >
-                  Back
-                </button>
-                <button
-                  type="button"
-                  className="rounded-full border border-brand bg-brand px-4 py-2 text-xs font-semibold text-white transition hover:bg-brand/90 disabled:opacity-60"
-                  onClick={handleCommit}
-                  disabled={commitBusy || !visibleDrafts.length}
-                >
-                  {commitBusy ? "Committing..." : "Commit personas"}
-                </button>
               </div>
             </div>
 
-            <p className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-3 text-xs text-slate-600">
-              Need deeper edits? Go back and use Advanced Create after closing this flow.
-            </p>
-
-            <div className="grid gap-4">
-              {drafts.map((draft) => (
-                <DraftCard
-                  key={draft._draftId}
-                  draft={draft}
-                  options={profileOptions}
-                  onChange={updateDraft}
-                  onToggleInterest={toggleDraftInterest}
-                  onToggleRemoved={toggleDraftRemoved}
-                />
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              {coverage.groups.map((group) => (
+                <div
+                  key={group.title}
+                  className="rounded-2xl border border-brand-100 bg-white p-4 shadow-sm"
+                >
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                    {group.title}
+                  </p>
+                  <p className="mt-2 text-sm font-medium leading-6 text-slate-700">
+                    {group.value}
+                  </p>
+                </div>
               ))}
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold text-slate-900">
+                Representative audience archetypes
+              </h3>
+              <div className="mt-3 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {representativeDrafts.map((draft) => (
+                  <AudienceArchetypeCard key={draft._draftId} draft={draft} />
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-brand-100 bg-white p-4">
+              <button
+                type="button"
+                className="flex w-full items-center justify-between text-left"
+                onClick={() => setShowAll((prev) => !prev)}
+              >
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-900">
+                    {showAll ? `Hide all ${drafts.length} personas` : `View all ${drafts.length} personas`}
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Expand to inspect the full generated set before you commit it.
+                  </p>
+                </div>
+                <span className="text-sm font-semibold text-brand">{showAll ? "Hide" : "Show"}</span>
+              </button>
+              {showAll ? (
+                <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                  {drafts.map((draft) => (
+                    <CompactDraftCard key={draft._draftId} draft={draft} />
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="flex items-center justify-end gap-3">
+              <button
+                type="button"
+                className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
+                onClick={runPreview}
+                disabled={previewBusy || commitBusy}
+              >
+                Regenerate
+              </button>
+              <button
+                type="button"
+                className="rounded-full border border-brand-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:border-brand-300 hover:text-brand"
+                onClick={() => setStep("input")}
+                disabled={previewBusy || commitBusy}
+              >
+                Adjust settings
+              </button>
+              <button
+                type="button"
+                className="rounded-full border border-brand bg-brand px-4 py-2 text-xs font-semibold text-white transition hover:bg-brand/90 disabled:opacity-60"
+                onClick={handleCommit}
+                disabled={commitBusy || !drafts.length}
+              >
+                {commitBusy ? "Creating users..." : "Create Users"}
+              </button>
             </div>
           </section>
         )}
@@ -344,211 +723,51 @@ export default function AIPersonaCreationModal({
   );
 }
 
-function GuidedInputForm({ form, options, onChange, onToggle }) {
+function AudienceArchetypeCard({ draft }) {
   return (
-    <>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <SelectField
-          label="Template"
-          value={form.template_id}
-          onChange={(value) => onChange("template_id", value)}
-          options={GUIDED_TEMPLATE_OPTIONS}
-          placeholder="Select template"
-        />
-        <NumberField
-          label="Count"
-          value={form.count}
-          onChange={(value) => onChange("count", value)}
-        />
-        <TextField
-          label="Audience theme"
-          value={form.audience_theme}
-          onChange={(value) => onChange("audience_theme", value)}
-          placeholder="Optional cohort or scenario label"
-        />
-        <SelectField
-          label="Digital time"
-          value={form.digital_time}
-          onChange={(value) => onChange("digital_time", value)}
-          options={options?.digital_time || []}
-        />
-        <SelectField
-          label="Content preference"
-          value={form.content_preference}
-          onChange={(value) => onChange("content_preference", value)}
-          options={options?.content_preference || []}
-        />
+    <article className="rounded-2xl border border-brand-100 bg-white p-4 shadow-sm">
+      <h4 className="text-sm font-semibold text-slate-900">
+        {draft.display_name || draft.username}
+      </h4>
+      <p className="text-[11px] text-slate-500">@{draft.username}</p>
+      <p className="mt-3 text-sm text-slate-700">{draft.notes || "Rule-generated audience sample."}</p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        {[draft.age_group, draft.content_preference, draft.interaction_style]
+          .filter(Boolean)
+          .map((value) => (
+            <span
+              key={value}
+              className="rounded-full border border-brand-100 bg-brand-50/60 px-3 py-1 text-[11px] text-slate-600"
+            >
+              {value}
+            </span>
+          ))}
+        {(draft.interests || []).slice(0, 2).map((interest) => (
+          <span
+            key={interest}
+            className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] text-slate-600"
+          >
+            {interest}
+          </span>
+        ))}
       </div>
-      <ChipGroup
-        label="Age mix"
-        helper="Optional. Pick one or more age groups to bias the guided preview."
-        selected={form.age_mix}
-        options={options?.age_groups || []}
-        onToggle={(option) => onToggle("age_mix", option)}
-      />
-      <ChipGroup
-        label="Interest mix"
-        helper="Optional. Pick one or more interests to emphasize."
-        selected={form.interest_mix}
-        options={options?.interests || []}
-        onToggle={(option) => onToggle("interest_mix", option)}
-      />
-    </>
-  );
-}
-
-function GenerateInputForm({ form, options, onChange, onToggle }) {
-  return (
-    <>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <NumberField
-          label="Count"
-          value={form.count}
-          onChange={(value) => onChange("count", value)}
-        />
-        <SelectField
-          label="Template seed"
-          value={form.template_id}
-          onChange={(value) => onChange("template_id", value)}
-          options={[{ value: "", label: "No template seed" }, ...GUIDED_TEMPLATE_OPTIONS]}
-          placeholder="No template seed"
-        />
-        <SelectField
-          label="Digital time"
-          value={form.digital_time}
-          onChange={(value) => onChange("digital_time", value)}
-          options={options?.digital_time || []}
-        />
-        <SelectField
-          label="Content preference"
-          value={form.content_preference}
-          onChange={(value) => onChange("content_preference", value)}
-          options={options?.content_preference || []}
-        />
-      </div>
-      <label className="block text-xs font-semibold text-slate-600">
-        Scenario description
-        <textarea
-          rows={3}
-          value={form.scenario_prompt}
-          onChange={(e) => onChange("scenario_prompt", e.target.value)}
-          className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
-          placeholder="Optional short description to guide the generated cohort"
-        />
-      </label>
-      <ChipGroup
-        label="Age mix"
-        helper="Optional. Use these as soft hints for the AI generation prompt."
-        selected={form.age_mix}
-        options={options?.age_groups || []}
-        onToggle={(option) => onToggle("age_mix", option)}
-      />
-      <ChipGroup
-        label="Interest mix"
-        helper="Optional. Use these as soft hints for the AI generation prompt."
-        selected={form.interest_mix}
-        options={options?.interests || []}
-        onToggle={(option) => onToggle("interest_mix", option)}
-      />
-    </>
-  );
-}
-
-function DraftCard({ draft, options, onChange, onToggleInterest, onToggleRemoved }) {
-  return (
-    <article
-      data-testid="persona-draft-card"
-      className={`rounded-2xl border p-4 shadow-sm ${
-        draft.removed
-          ? "border-slate-200 bg-slate-50 opacity-70"
-          : "border-brand-100 bg-white"
-      }`}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h4 className="text-sm font-semibold text-slate-900">{draft.username}</h4>
-          <p className="text-[11px] text-slate-500">
-            {draft.removed ? "Removed from commit" : "Ready to commit"}
-          </p>
-        </div>
-        <button
-          type="button"
-          className="rounded-full border border-brand-200 px-3 py-1 text-[11px] font-semibold text-brand transition hover:border-brand"
-          onClick={() => onToggleRemoved(draft._draftId)}
-        >
-          {draft.removed ? "Restore to commit" : "Remove from commit"}
-        </button>
-      </div>
-
-      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <TextField
-          label="Display name"
-          value={draft.display_name || ""}
-          onChange={(value) => onChange(draft._draftId, "display_name", value)}
-          disabled={draft.removed}
-        />
-        <SelectField
-          label="Age group"
-          value={draft.age_group || ""}
-          onChange={(value) => onChange(draft._draftId, "age_group", value)}
-          options={options?.age_groups || []}
-          disabled={draft.removed}
-        />
-        <SelectField
-          label="Content preference"
-          value={draft.content_preference || ""}
-          onChange={(value) =>
-            onChange(draft._draftId, "content_preference", value)
-          }
-          options={options?.content_preference || []}
-          disabled={draft.removed}
-        />
-        <SelectField
-          label="Digital time"
-          value={draft.digital_time || ""}
-          onChange={(value) => onChange(draft._draftId, "digital_time", value)}
-          options={options?.digital_time || []}
-          disabled={draft.removed}
-        />
-      </div>
-
-      <div className="mt-4">
-        <ChipGroup
-          label="Interests"
-          selected={draft.interests || []}
-          options={options?.interests || []}
-          onToggle={(option) => onToggleInterest(draft._draftId, option)}
-          disabled={draft.removed}
-        />
-      </div>
-
-      <label className="mt-4 block text-xs font-semibold text-slate-600">
-        Notes
-        <textarea
-          rows={2}
-          value={draft.notes || ""}
-          onChange={(e) => onChange(draft._draftId, "notes", e.target.value)}
-          className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
-          disabled={draft.removed}
-        />
-      </label>
     </article>
   );
 }
 
-function TextField({ label, value, onChange, placeholder, disabled = false }) {
+function CompactDraftCard({ draft }) {
   return (
-    <label className="block text-xs font-semibold text-slate-600">
-      {label}
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
-        placeholder={placeholder}
-        disabled={disabled}
-      />
-    </label>
+    <article className="rounded-2xl border border-brand-100 bg-brand-50/40 p-4">
+      <h4 className="text-sm font-semibold text-slate-900">
+        {draft.display_name || draft.username}
+      </h4>
+      <p className="text-[11px] text-slate-500">@{draft.username}</p>
+      <p className="mt-3 text-xs leading-5 text-slate-600">
+        {[draft.content_preference, draft.interaction_style, draft.decision_factor]
+          .filter(Boolean)
+          .join(" • ")}
+      </p>
+    </article>
   );
 }
 
@@ -561,7 +780,7 @@ function NumberField({ label, value, onChange }) {
         min="1"
         max="100"
         value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
+        onChange={(event) => onChange(Number(event.target.value))}
         className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
       />
     </label>
@@ -574,64 +793,22 @@ function SelectField({
   onChange,
   options,
   placeholder = "Please select",
-  disabled = false,
 }) {
-  const normalizedOptions = (options || []).map((option) =>
-    typeof option === "string" ? { value: option, label: option } : option
-  );
-
   return (
     <label className="block text-xs font-semibold text-slate-600">
       {label}
       <select
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(event) => onChange(event.target.value)}
         className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
-        disabled={disabled}
       >
         <option value="">{placeholder}</option>
-        {normalizedOptions.map((option) => (
+        {options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
           </option>
         ))}
       </select>
     </label>
-  );
-}
-
-function ChipGroup({
-  label,
-  helper,
-  selected,
-  options,
-  onToggle,
-  disabled = false,
-}) {
-  return (
-    <div>
-      <p className="text-xs font-semibold text-slate-600">{label}</p>
-      {helper ? <p className="text-[11px] text-slate-400">{helper}</p> : null}
-      <div className="mt-2 flex flex-wrap gap-2">
-        {(options || []).map((option) => {
-          const active = selected?.includes(option);
-          return (
-            <button
-              type="button"
-              key={option}
-              className={`rounded-full border px-3 py-1 text-xs transition ${
-                active
-                  ? "border-brand bg-brand-100 text-brand"
-                  : "border-brand-200 text-slate-500 hover:border-brand hover:text-brand"
-              }`}
-              onClick={() => onToggle(option)}
-              disabled={disabled}
-            >
-              {option}
-            </button>
-          );
-        })}
-      </div>
-    </div>
   );
 }

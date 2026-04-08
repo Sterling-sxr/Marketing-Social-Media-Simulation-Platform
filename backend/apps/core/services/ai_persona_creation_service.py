@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import logging
+import random
 from typing import Any
 
 from django.conf import settings
@@ -27,6 +28,181 @@ logger = logging.getLogger(__name__)
 
 MAX_PERSONA_PREVIEW_COUNT = 100
 _client_cache: OpenAI | None = None  # type: ignore[assignment]
+
+SMART_GENERATE_MODES = {"broad_coverage", "focused_theme"}
+SMART_GENERATE_GOALS = {"broad_audience", "theme", "conversion_style", "engagement_style"}
+SMART_GOAL_LABELS = {
+    "broad_audience": "Explore Broad Audience",
+    "theme": "Focus on a Theme",
+    "conversion_style": "Focus on Conversion Style",
+    "engagement_style": "Focus on Engagement Style",
+}
+SMART_COVERAGE_OPTIONS = {"wide", "balanced", "tight"}
+SMART_ACTIVITY_OPTIONS = {"low", "mixed", "high"}
+SMART_INTEREST_LEANS = {"mixed", "tech", "lifestyle"}
+SMART_THEME_CARDS: dict[str, dict[str, Any]] = {
+    "tech_gaming": {
+        "label": "Tech & Gaming",
+        "interests": ["Technology & Gaming", "Outdoor & Nature", "Travel & Food"],
+        "influencer_types": ["Tech & Gaming", "Entertainment", "Business & Finance"],
+        "content_preferences": ["Pictures or videos", "Funny short posts/memes"],
+        "decision_factors": ["Convenience", "Quality/durability"],
+        "buying_behavior": ["Switcher", "Brand loyal"],
+    },
+    "fashion_shopping": {
+        "label": "Fashion & Shopping",
+        "interests": ["Fashion & Shopping", "Arts & Culture", "Travel & Food"],
+        "influencer_types": ["Fashion & Beauty", "Entertainment", "Eco & Ethical Lifestyle"],
+        "content_preferences": ["Pictures or videos", "Detailed reviews or long posts"],
+        "decision_factors": ["Brand image", "Price"],
+        "buying_behavior": ["Brand loyal", "Switcher"],
+    },
+    "travel_food": {
+        "label": "Travel & Food",
+        "interests": ["Travel & Food", "Outdoor & Nature", "Arts & Culture"],
+        "influencer_types": ["Travel & Food", "Entertainment", "Eco & Ethical Lifestyle"],
+        "content_preferences": ["Pictures or videos", "Thoughtful opinions"],
+        "decision_factors": ["Convenience", "Quality/durability"],
+        "buying_behavior": ["Switcher", "Brand loyal"],
+    },
+    "arts_culture": {
+        "label": "Arts & Culture",
+        "interests": ["Arts & Culture", "Travel & Food", "Politics & Social Issues"],
+        "influencer_types": ["Entertainment", "Eco & Ethical Lifestyle", "Travel & Food"],
+        "content_preferences": ["Thoughtful opinions", "Detailed reviews or long posts"],
+        "decision_factors": ["Quality/durability", "Brand image"],
+        "buying_behavior": ["Brand loyal", "Switcher"],
+    },
+    "social_issues": {
+        "label": "Social Issues",
+        "interests": ["Politics & Social Issues", "Arts & Culture", "Outdoor & Nature"],
+        "influencer_types": ["Eco & Ethical Lifestyle", "Business & Finance", "Entertainment"],
+        "content_preferences": ["Thoughtful opinions", "Detailed reviews or long posts"],
+        "decision_factors": ["Eco-friendly", "Quality/durability"],
+        "buying_behavior": ["Switcher", "Brand loyal"],
+    },
+    "creator_trend": {
+        "label": "Creator / Trend",
+        "interests": ["Technology & Gaming", "Fashion & Shopping", "Travel & Food"],
+        "influencer_types": ["Entertainment", "Fashion & Beauty", "Tech & Gaming"],
+        "content_preferences": ["Funny short posts/memes", "Pictures or videos"],
+        "decision_factors": ["Brand image", "Convenience"],
+        "buying_behavior": ["Switcher", "Brand loyal"],
+    },
+}
+
+SMART_DECISION_DRIVER_RULES: dict[str, dict[str, Any]] = {
+    "Price": {
+        "interests": ["Fashion & Shopping", "Family & Home Life", "Technology & Gaming"],
+        "content_preferences": ["Detailed reviews or long posts", "Funny short posts/memes"],
+        "influencer_types": ["Fashion & Beauty", "Tech & Gaming", "Entertainment"],
+        "buying_behavior": ["Price-sensitive", "Switcher"],
+    },
+    "Quality/durability": {
+        "interests": ["Technology & Gaming", "Outdoor & Nature", "Family & Home Life"],
+        "content_preferences": ["Detailed reviews or long posts", "Thoughtful opinions"],
+        "influencer_types": ["Tech & Gaming", "Business & Finance", "Eco & Ethical Lifestyle"],
+        "buying_behavior": ["Brand loyal", "Switcher"],
+    },
+    "Brand image": {
+        "interests": ["Fashion & Shopping", "Arts & Culture", "Travel & Food"],
+        "content_preferences": ["Pictures or videos", "Funny short posts/memes"],
+        "influencer_types": ["Fashion & Beauty", "Entertainment", "Travel & Food"],
+        "buying_behavior": ["Brand loyal", "Switcher"],
+    },
+    "Eco-friendly": {
+        "interests": ["Politics & Social Issues", "Outdoor & Nature", "Arts & Culture"],
+        "content_preferences": ["Thoughtful opinions", "Detailed reviews or long posts"],
+        "influencer_types": ["Eco & Ethical Lifestyle", "Business & Finance", "Travel & Food"],
+        "buying_behavior": ["Switcher", "Brand loyal"],
+    },
+    "Convenience": {
+        "interests": ["Technology & Gaming", "Travel & Food", "Fashion & Shopping"],
+        "content_preferences": ["Pictures or videos", "Funny short posts/memes"],
+        "influencer_types": ["Entertainment", "Tech & Gaming", "Travel & Food"],
+        "buying_behavior": ["Switcher", "Price-sensitive"],
+    },
+}
+
+SMART_CONTENT_BIAS_RULES: dict[str, dict[str, Any]] = {
+    "Funny short posts/memes": {
+        "interests": ["Technology & Gaming", "Fashion & Shopping", "Travel & Food"],
+        "decision_factors": ["Convenience", "Price"],
+        "influencer_types": ["Entertainment", "Tech & Gaming", "Fashion & Beauty"],
+        "interaction_style": ["Like/react to posts", "Share posts with friends"],
+    },
+    "Pictures or videos": {
+        "interests": ["Travel & Food", "Fashion & Shopping", "Technology & Gaming"],
+        "decision_factors": ["Convenience", "Brand image"],
+        "influencer_types": ["Travel & Food", "Entertainment", "Fashion & Beauty"],
+        "interaction_style": ["Like/react to posts", "Comment on posts"],
+    },
+    "Thoughtful opinions": {
+        "interests": ["Politics & Social Issues", "Arts & Culture", "Outdoor & Nature"],
+        "decision_factors": ["Eco-friendly", "Quality/durability"],
+        "influencer_types": ["Eco & Ethical Lifestyle", "Business & Finance", "Entertainment"],
+        "interaction_style": ["Comment on posts", "Share posts with friends"],
+    },
+    "Detailed reviews or long posts": {
+        "interests": ["Technology & Gaming", "Travel & Food", "Family & Home Life"],
+        "decision_factors": ["Quality/durability", "Price"],
+        "influencer_types": ["Business & Finance", "Tech & Gaming", "Travel & Food"],
+        "interaction_style": ["Comment on posts", "Mostly just scroll/watch"],
+    },
+}
+
+SMART_INTEREST_LEAN_RULES: dict[str, dict[str, Any]] = {
+    "mixed": {
+        "interests": list(PROFILE_OPTIONS["interests"]),
+        "content_preferences": ["Pictures or videos", "Thoughtful opinions"],
+        "influencer_types": ["Entertainment", "Travel & Food", "Tech & Gaming"],
+    },
+    "tech": {
+        "interests": ["Technology & Gaming", "Outdoor & Nature", "Politics & Social Issues"],
+        "content_preferences": ["Pictures or videos", "Funny short posts/memes"],
+        "influencer_types": ["Tech & Gaming", "Business & Finance", "Entertainment"],
+    },
+    "lifestyle": {
+        "interests": ["Travel & Food", "Fashion & Shopping", "Arts & Culture", "Family & Home Life"],
+        "content_preferences": ["Pictures or videos", "Thoughtful opinions", "Detailed reviews or long posts"],
+        "influencer_types": ["Travel & Food", "Fashion & Beauty", "Eco & Ethical Lifestyle"],
+    },
+}
+
+SMART_ACTIVITY_RULES: dict[str, dict[str, Any]] = {
+    "low": {
+        "digital_time": ["About once a week or less", "A few times a week", "About once a day"],
+        "interaction_style": ["Mostly just scroll/watch", "Like/react to posts"],
+        "score_seed": {"social_value": 4, "sociability": 3, "openness": 5},
+    },
+    "mixed": {
+        "digital_time": ["About once a day", "Several times a day", "A few times a week"],
+        "interaction_style": ["Like/react to posts", "Comment on posts", "Mostly just scroll/watch"],
+        "score_seed": {"social_value": 5, "sociability": 5, "openness": 6},
+    },
+    "high": {
+        "digital_time": ["Almost constantly", "Several times a day", "About once a day"],
+        "interaction_style": ["Comment on posts", "Share posts with friends", "Like/react to posts"],
+        "score_seed": {"social_value": 7, "sociability": 8, "openness": 7},
+    },
+}
+
+SMART_COVERAGE_RULES: dict[str, dict[str, Any]] = {
+    "wide": {"unique_interest_target": 4, "unique_interaction_target": 3, "variance": 2},
+    "balanced": {"unique_interest_target": 3, "unique_interaction_target": 2, "variance": 1},
+    "tight": {"unique_interest_target": 2, "unique_interaction_target": 2, "variance": 1},
+}
+
+INTEREST_DISPLAY_ROOTS = {
+    "Technology & Gaming": "Tech Explorer",
+    "Travel & Food": "Taste Traveler",
+    "Arts & Culture": "Creative Observer",
+    "Fashion & Shopping": "Style Watcher",
+    "Politics & Social Issues": "Issue Follower",
+    "Outdoor & Nature": "Outdoor Drifter",
+    "Fitness & Sports": "Active Fan",
+    "Family & Home Life": "Home Planner",
+}
 
 GUIDED_TEMPLATES: dict[str, dict[str, Any]] = {
     "undergraduate-heavy": {
@@ -200,7 +376,312 @@ def _normalize_preview_items(*, course_id: int, raw_items: list[dict[str, Any]],
     }
 
 
+def _is_smart_generate_payload(payload: dict[str, Any]) -> bool:
+    goal = (payload.get("goal") or "").strip()
+    mode = (payload.get("mode") or "").strip()
+    template_id = (payload.get("template_id") or "").strip()
+    return goal in SMART_GENERATE_GOALS or mode in SMART_GENERATE_MODES or (not goal and not mode and not template_id)
+
+
+def _get_profile_value(payload: dict[str, Any], field: str, key: str) -> str:
+    value = (payload.get(field) or "").strip()
+    if value and value not in PROFILE_OPTIONS[key]:
+        raise ValueError(f"Field `{field}` must be one of the supported profile options.")
+    return value
+
+
+def _build_demographic_pools(payload: dict[str, Any]) -> dict[str, list[str]]:
+    gender = _get_profile_value(payload, "gender", "genders")
+    age_group = _get_profile_value(payload, "age_group", "age_groups")
+    education_level = _get_profile_value(payload, "education_level", "education_levels")
+    income_level = _get_profile_value(payload, "income_level", "income_levels")
+    return {
+        "gender_pool": [gender] if gender else list(PROFILE_OPTIONS["genders"]),
+        "age_pool": [age_group] if age_group else list(PROFILE_OPTIONS["age_groups"]),
+        "education_pool": [education_level] if education_level else list(PROFILE_OPTIONS["education_levels"]),
+        "income_pool": [income_level] if income_level else list(PROFILE_OPTIONS["income_levels"]),
+    }
+
+
+def _merge_pool(preferred: list[str], fallback_key: str) -> list[str]:
+    return list(dict.fromkeys([value for value in preferred if value] + list(PROFILE_OPTIONS[fallback_key])))
+
+
+def _goal_from_legacy_mode(mode: str) -> str | None:
+    if mode == "broad_coverage":
+        return "broad_audience"
+    if mode == "focused_theme":
+        return "theme"
+    return None
+
+
+def _build_smart_generation_profile(payload: dict[str, Any]) -> dict[str, Any]:
+    legacy_mode = (payload.get("mode") or "").strip()
+    goal = (payload.get("goal") or "").strip() or _goal_from_legacy_mode(legacy_mode) or "broad_audience"
+    if goal not in SMART_GENERATE_GOALS:
+        raise ValueError(f"Unknown goal: {goal}")
+    count = _validate_count(payload.get("count"))
+    activity_level = (payload.get("activity_level") or "").strip() or "mixed"
+    if activity_level not in SMART_ACTIVITY_OPTIONS:
+        raise ValueError("Field `activity_level` must be one of: low, mixed, high.")
+    demographics = _build_demographic_pools(payload)
+    activity_rule = SMART_ACTIVITY_RULES[activity_level]
+
+    profile: dict[str, Any] = {
+        "goal": goal,
+        "goal_label": SMART_GOAL_LABELS[goal],
+        "count": count,
+        "activity_level": activity_level,
+        "activity_rule": activity_rule,
+        "coverage_rule": SMART_COVERAGE_RULES["balanced"],
+        "interest_pool": list(PROFILE_OPTIONS["interests"]),
+        "influencer_pool": list(PROFILE_OPTIONS["influencer_type"]),
+        "content_pool": list(PROFILE_OPTIONS["content_preference"]),
+        "decision_pool": list(PROFILE_OPTIONS["decision_factors"]),
+        "buying_pool": list(PROFILE_OPTIONS["buying_behavior"]),
+        "interaction_pool": list(activity_rule["interaction_style"]),
+        "theme_card": "",
+        "theme_label": "",
+        "interest_lean": "",
+        "coverage": "",
+        "tightness": "",
+        "decision_driver": "",
+        "content_preference_bias": "",
+        "interaction_intensity": "",
+        **demographics,
+    }
+
+    if goal == "broad_audience":
+        coverage = (payload.get("coverage") or "").strip() or "balanced"
+        if coverage not in SMART_COVERAGE_OPTIONS:
+            raise ValueError("Field `coverage` must be one of: wide, balanced, tight.")
+        interest_lean = (payload.get("interest_lean") or "").strip() or "mixed"
+        if interest_lean not in SMART_INTEREST_LEANS:
+            raise ValueError("Field `interest_lean` must be one of: mixed, tech, lifestyle.")
+        lean_rule = SMART_INTEREST_LEAN_RULES[interest_lean]
+        profile.update(
+            {
+                "coverage": coverage,
+                "interest_lean": interest_lean,
+                "coverage_rule": SMART_COVERAGE_RULES[coverage],
+                "interest_pool": _merge_pool(list(lean_rule["interests"]), "interests"),
+                "influencer_pool": _merge_pool(list(lean_rule["influencer_types"]), "influencer_type"),
+                "content_pool": _merge_pool(list(lean_rule["content_preferences"]), "content_preference"),
+            }
+        )
+        return profile
+
+    if goal == "theme":
+        theme_card = (payload.get("theme_card") or "").strip()
+        if not theme_card:
+            raise ValueError("Field `theme_card` is required for theme goal.")
+        if theme_card not in SMART_THEME_CARDS:
+            raise ValueError(f"Unknown theme_card: {theme_card}")
+        tightness = (payload.get("tightness") or payload.get("coverage") or "").strip() or "balanced"
+        if tightness not in SMART_COVERAGE_OPTIONS:
+            raise ValueError("Field `tightness` must be one of: wide, balanced, tight.")
+        theme_rule = SMART_THEME_CARDS[theme_card]
+        profile.update(
+            {
+                "theme_card": theme_card,
+                "theme_label": theme_rule["label"],
+                "tightness": tightness,
+                "coverage_rule": SMART_COVERAGE_RULES[tightness],
+                "interest_pool": _merge_pool(list(theme_rule["interests"]), "interests"),
+                "influencer_pool": _merge_pool(list(theme_rule["influencer_types"]), "influencer_type"),
+                "content_pool": _merge_pool(list(theme_rule["content_preferences"]), "content_preference"),
+                "decision_pool": _merge_pool(list(theme_rule["decision_factors"]), "decision_factors"),
+                "buying_pool": _merge_pool(list(theme_rule["buying_behavior"]), "buying_behavior"),
+            }
+        )
+        return profile
+
+    if goal == "conversion_style":
+        decision_driver = (payload.get("decision_driver") or "").strip() or "Price"
+        if decision_driver not in PROFILE_OPTIONS["decision_factors"]:
+            raise ValueError("Field `decision_driver` must be one of the supported decision factors.")
+        tightness = (payload.get("tightness") or "").strip() or "balanced"
+        if tightness not in SMART_COVERAGE_OPTIONS:
+            raise ValueError("Field `tightness` must be one of: wide, balanced, tight.")
+        rule = SMART_DECISION_DRIVER_RULES[decision_driver]
+        profile.update(
+            {
+                "decision_driver": decision_driver,
+                "tightness": tightness,
+                "coverage_rule": SMART_COVERAGE_RULES[tightness],
+                "interest_pool": _merge_pool(list(rule["interests"]), "interests"),
+                "influencer_pool": _merge_pool(list(rule["influencer_types"]), "influencer_type"),
+                "content_pool": _merge_pool(list(rule["content_preferences"]), "content_preference"),
+                "decision_pool": [decision_driver] + [value for value in PROFILE_OPTIONS["decision_factors"] if value != decision_driver],
+                "buying_pool": _merge_pool(list(rule["buying_behavior"]), "buying_behavior"),
+            }
+        )
+        return profile
+
+    content_preference_bias = (payload.get("content_preference_bias") or "").strip() or "Pictures or videos"
+    if content_preference_bias not in PROFILE_OPTIONS["content_preference"]:
+        raise ValueError(
+            "Field `content_preference_bias` must be one of the supported content preference values."
+        )
+    interaction_intensity = (payload.get("interaction_intensity") or "").strip() or "mixed"
+    if interaction_intensity not in SMART_ACTIVITY_OPTIONS:
+        raise ValueError("Field `interaction_intensity` must be one of: low, mixed, high.")
+    content_rule = SMART_CONTENT_BIAS_RULES[content_preference_bias]
+    profile.update(
+        {
+            "content_preference_bias": content_preference_bias,
+            "interaction_intensity": interaction_intensity,
+            "coverage_rule": SMART_COVERAGE_RULES["balanced"],
+            "interest_pool": _merge_pool(list(content_rule["interests"]), "interests"),
+            "influencer_pool": _merge_pool(list(content_rule["influencer_types"]), "influencer_type"),
+            "content_pool": [content_preference_bias]
+            + [value for value in PROFILE_OPTIONS["content_preference"] if value != content_preference_bias],
+            "decision_pool": _merge_pool(list(content_rule["decision_factors"]), "decision_factors"),
+            "interaction_pool": list(
+                dict.fromkeys(content_rule["interaction_style"] + SMART_ACTIVITY_RULES[interaction_intensity]["interaction_style"])
+            ),
+        }
+    )
+    return profile
+
+
+def _build_interest_sequence(profile: dict[str, Any]) -> list[str]:
+    interest_pool = list(profile["interest_pool"])
+    unique_target = min(profile["coverage_rule"]["unique_interest_target"], len(interest_pool))
+    if unique_target <= 0:
+        return list(PROFILE_OPTIONS["interests"])
+    if profile["goal"] == "theme":
+        base = interest_pool[:unique_target]
+    else:
+        base = interest_pool[:]
+        random.shuffle(base)
+        base = base[:unique_target]
+    return base or list(PROFILE_OPTIONS["interests"])
+
+
+def _choose_with_cycle(values: list[str], index: int, offset: int = 0) -> str:
+    if not values:
+        return ""
+    return values[(index + offset) % len(values)]
+
+
+def _compute_score(base: int, variance: int, index: int, shift: int = 0) -> int:
+    raw = base + ((index + shift) % (variance * 2 + 1)) - variance
+    return max(1, min(10, raw))
+
+
+def _compose_smart_drafts(*, profile: dict[str, Any], course_id: int) -> list[dict[str, Any]]:
+    seen_usernames: set[str] = set()
+    used_signatures: set[tuple[str, str, str]] = set()
+    interest_sequence = _build_interest_sequence(profile)
+    interaction_pool = list(profile["interaction_pool"])
+    if profile["goal"] == "broad_audience" and profile["coverage"] == "wide":
+        interaction_pool = list(dict.fromkeys(interaction_pool + ["Mostly just scroll/watch"]))
+
+    drafts: list[dict[str, Any]] = []
+    for index in range(profile["count"]):
+        primary_interest = _choose_with_cycle(interest_sequence, index)
+        secondary_interest = _choose_with_cycle(profile["interest_pool"], index, offset=1)
+        interests = [primary_interest] if primary_interest == secondary_interest else [primary_interest, secondary_interest]
+
+        content_preference = _choose_with_cycle(profile["content_pool"], index)
+        interaction_style = _choose_with_cycle(
+            interaction_pool,
+            index,
+            offset=index % max(1, profile["coverage_rule"]["unique_interaction_target"]),
+        )
+        signature = (primary_interest, interaction_style, content_preference)
+        if signature in used_signatures:
+            interaction_style = _choose_with_cycle(interaction_pool, index, offset=2)
+            signature = (primary_interest, interaction_style, content_preference)
+        used_signatures.add(signature)
+
+        display_root = INTEREST_DISPLAY_ROOTS.get(primary_interest, profile["goal_label"])
+        username = ensure_ai_user_username_available(
+            course_id=course_id,
+            username=slugify(f"{display_root}-{index + 1}") or f"persona-{index + 1}",
+            seen_usernames=seen_usernames,
+        )
+        score_seed = profile["activity_rule"]["score_seed"]
+        variance = profile["coverage_rule"]["variance"]
+        notes_parts = [f"Smart generate goal: {profile['goal_label']}", f"Activity: {profile['activity_level']}"]
+        if profile["coverage"]:
+            notes_parts.append(f"Coverage: {profile['coverage']}")
+        if profile["interest_lean"]:
+            notes_parts.append(f"Interest lean: {profile['interest_lean']}")
+        if profile["theme_label"]:
+            notes_parts.append(f"Theme: {profile['theme_label']}")
+        if profile["tightness"]:
+            notes_parts.append(f"Tightness: {profile['tightness']}")
+        if profile["decision_driver"]:
+            notes_parts.append(f"Decision driver: {profile['decision_driver']}")
+        if profile["content_preference_bias"]:
+            notes_parts.append(f"Content bias: {profile['content_preference_bias']}")
+        if profile["interaction_intensity"]:
+            notes_parts.append(f"Interaction intensity: {profile['interaction_intensity']}")
+        notes = " | ".join(notes_parts)
+
+        drafts.append(
+            {
+                "username": username,
+                "display_name": f"{display_root} {index + 1}",
+                "gender": _choose_with_cycle(profile["gender_pool"], index),
+                "city": _choose_with_cycle(PROFILE_OPTIONS["cities"], index, offset=variance),
+                "age_group": _choose_with_cycle(profile["age_pool"], index),
+                "education_level": _choose_with_cycle(profile["education_pool"], index),
+                "income_level": _choose_with_cycle(profile["income_pool"], index, offset=1),
+                "social_value": _compute_score(score_seed["social_value"], variance, index),
+                "sociability": _compute_score(score_seed["sociability"], variance, index, shift=1),
+                "openness": _compute_score(score_seed["openness"], variance, index, shift=2),
+                "content_preference": content_preference,
+                "interests": interests,
+                "shopping_frequency": _choose_with_cycle(PROFILE_OPTIONS["shopping_frequency"], index),
+                "buying_behavior": _choose_with_cycle(profile["buying_pool"], index),
+                "decision_factor": _choose_with_cycle(profile["decision_pool"], index),
+                "shopping_preference": _choose_with_cycle(PROFILE_OPTIONS["shopping_preference"], index),
+                "digital_time": _choose_with_cycle(profile["activity_rule"]["digital_time"], index),
+                "interaction_style": interaction_style,
+                "influencer_type": _choose_with_cycle(profile["influencer_pool"], index),
+                "notes": notes,
+            }
+        )
+    return drafts
+
+
+def _preview_smart_generated_personas(*, user, course_id: int, payload: dict[str, Any]) -> dict[str, Any]:
+    ensure_can_manage_course_ai_users(user=user, course_id=course_id)
+    profile = _build_smart_generation_profile(payload)
+    drafts = _compose_smart_drafts(profile=profile, course_id=course_id)
+    normalized = _normalize_preview_items(course_id=course_id, raw_items=drafts)
+    warnings = list(normalized["warnings"])
+    warnings.append(f"{profile['goal_label']} preview generated with rule-based persona composition.")
+    return {
+        "items": normalized["items"],
+        "count": len(normalized["items"]),
+        "warnings": warnings,
+        "limits": {"max_count": MAX_PERSONA_PREVIEW_COUNT, "mode": "guided"},
+        "smart_profile": {
+            "goal": profile["goal"],
+            "goal_label": profile["goal_label"],
+            "mode": "focused_theme" if profile["goal"] == "theme" else "broad_coverage",
+            "coverage": profile["coverage"],
+            "activity_level": profile["activity_level"],
+            "interest_lean": profile["interest_lean"],
+            "theme_card": profile["theme_card"],
+            "theme_label": profile["theme_label"],
+            "tightness": profile["tightness"],
+            "decision_driver": profile["decision_driver"],
+            "content_preference_bias": profile["content_preference_bias"],
+            "interaction_intensity": profile["interaction_intensity"],
+            "profile_label": profile["goal_label"],
+        },
+    }
+
+
 def preview_guided_personas(*, user, course_id: int, payload: dict[str, Any]) -> dict[str, Any]:
+    if _is_smart_generate_payload(payload):
+        return _preview_smart_generated_personas(user=user, course_id=course_id, payload=payload)
+
     ensure_can_manage_course_ai_users(user=user, course_id=course_id)
     template_id = (payload.get("template_id") or "").strip()
     if not template_id:

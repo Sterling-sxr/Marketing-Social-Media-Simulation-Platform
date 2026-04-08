@@ -148,3 +148,30 @@ def test_generate_preview_skips_invalid_ai_drafts_and_surfaces_warnings(monkeypa
     assert result["count"] == 1
     assert result["items"][0]["username"] == "valid-one"
     assert any("bad-one" in warning for warning in result["warnings"])
+
+
+@pytest.mark.django_db
+def test_guided_preview_supports_smart_generate_goal_payload():
+    user = get_user_model().objects.create_user(
+        username="teacher10",
+        email="teacher10@example.com",
+        password="password123",
+    )
+    course = _make_course(creator=user)
+
+    result = preview_guided_personas(
+        user=user,
+        course_id=course.id,
+        payload={
+            "goal": "broad_audience",
+            "count": 3,
+            "coverage": "wide",
+            "activity_level": "high",
+            "interest_lean": "tech",
+        },
+    )
+
+    assert result["count"] == 3
+    assert result["smart_profile"]["goal"] == "broad_audience"
+    assert result["smart_profile"]["goal_label"] == "Explore Broad Audience"
+    assert any("Explore Broad Audience" in warning for warning in result["warnings"])
