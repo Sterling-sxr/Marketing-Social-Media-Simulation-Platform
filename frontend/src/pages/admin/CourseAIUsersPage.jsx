@@ -57,6 +57,7 @@ export default function CourseAIUsersPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [formBusy, setFormBusy] = useState(false);
   const [formError, setFormError] = useState("");
+  const [formPresetLabel, setFormPresetLabel] = useState("");
   const [formData, setFormData] = useState(INITIAL_FORM);
   // CSV import
   const [importBusy, setImportBusy] = useState(false);
@@ -140,10 +141,12 @@ export default function CourseAIUsersPage() {
     setFormData({ ...INITIAL_FORM, interests: [] });
     setFormError("");
     setFormBusy(false);
+    setFormPresetLabel("");
   };
 
   const openCreate = () => {
     resetForm();
+    setFormPresetLabel("Manual: blank persona");
     setFormOpen(true);
     setFormData({ ...INITIAL_FORM, interests: [] });
   };
@@ -151,6 +154,7 @@ export default function CourseAIUsersPage() {
   const openEdit = (item) => {
     setFormError("");
     setFormBusy(false);
+    setFormPresetLabel("");
     setFormData({
       id: item.id,
       username: item.username || "",
@@ -531,10 +535,18 @@ export default function CourseAIUsersPage() {
   const handleUseTemplate = () => {
     // Simple, non-AI template: give educators a quick starting point.
     resetForm();
-    setFormData((prev) => ({
-      ...prev,
+    setFormPresetLabel("Template applied: Typical active student");
+    setFormData(() => ({
+      ...INITIAL_FORM,
+      interests: [],
       username: "",
-      display_name: "Typical active student",
+      display_name: "Typical active student (template)",
+      social_value: 8,
+      sociability: 8,
+      openness: 7,
+      digital_time: "Several times a day",
+      interaction_style: "Comment on posts",
+      influencer_type: "Fashion & Beauty",
       notes:
         "Template persona: an engaged student who participates regularly, checks the platform a few times a day, and is curious about new content.",
     }));
@@ -780,14 +792,21 @@ export default function CourseAIUsersPage() {
       {formOpen ? (
         <div className="fixed inset-0 z-40 overflow-y-auto bg-black/40 px-4 py-4 sm:flex sm:items-center sm:justify-center sm:px-6">
           <form
-            className="mx-auto min-h-fit w-full max-w-3xl rounded-3xl bg-white p-4 pb-[calc(env(safe-area-inset-bottom)+6rem)] shadow-2xl shadow-brand-200 sm:max-h-[92vh] sm:overflow-y-auto sm:p-6 sm:pb-6"
+            className="mx-auto min-h-fit w-full max-w-3xl rounded-3xl bg-white p-4 shadow-2xl shadow-brand-200 h-[92vh] overflow-hidden flex flex-col sm:p-6"
             onSubmit={handleFormSubmit}
           >
             <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-slate-900">
-                  {formData.id ? "Edit AI User" : "Create AI User"}
-                </h2>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-lg font-semibold text-slate-900">
+                    {formData.id ? "Edit AI User" : "Create AI User"}
+                  </h2>
+                  {formPresetLabel ? (
+                    <span className="rounded-full border border-brand-200 bg-brand-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700">
+                      {formPresetLabel}
+                    </span>
+                  ) : null}
+                </div>
                 <p className="text-xs text-slate-500">
                   Fill in the persona profile for this course.
                 </p>
@@ -802,37 +821,38 @@ export default function CourseAIUsersPage() {
               </button>
             </header>
 
-            {formError ? <Feedback error={formError} /> : null}
+            <div className="mt-3 flex-1 min-h-0 overflow-y-auto pr-1">
+              {formError ? <Feedback error={formError} /> : null}
 
-            <section className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-slate-600">
-                  Username<span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.username}
-                  onChange={(e) => handleFormChange("username", e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
-                  placeholder="Unique username for this course"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-slate-600">
-                  Display name
-                </label>
-                <input
-                  type="text"
-                  value={formData.display_name}
-                  onChange={(e) =>
-                    handleFormChange("display_name", e.target.value)
-                  }
-                  className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
-                  placeholder="Optional display name"
-                />
-              </div>
-            </section>
+              <section className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-600">
+                    Username<span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.username}
+                    onChange={(e) => handleFormChange("username", e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
+                    placeholder="Unique username for this course"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-600">
+                    Display name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.display_name}
+                    onChange={(e) =>
+                      handleFormChange("display_name", e.target.value)
+                    }
+                    className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
+                    placeholder="Optional display name"
+                  />
+                </div>
+              </section>
 
             <Section title="Demographic">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -1005,22 +1025,26 @@ export default function CourseAIUsersPage() {
               />
             </div>
 
-            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">
-              <button
-                type="button"
-                className="w-full rounded-full border border-brand-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:border-brand-300 hover:text-brand disabled:opacity-60 sm:w-auto"
-                onClick={closeForm}
-                disabled={formBusy}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="w-full rounded-full border border-brand bg-brand px-4 py-2 text-xs font-semibold text-white transition hover:bg-brand/90 disabled:opacity-60 sm:w-auto"
-                disabled={formBusy}
-              >
-                {formBusy ? "Saving..." : "Save"}
-              </button>
+            </div>
+
+            <div className="mt-4 border-t border-brand-100 bg-white/95 pt-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">
+                <button
+                  type="button"
+                  className="w-full rounded-full border border-brand-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:border-brand-300 hover:text-brand disabled:opacity-60 sm:w-auto"
+                  onClick={closeForm}
+                  disabled={formBusy}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="w-full rounded-full border border-brand bg-brand px-4 py-2 text-xs font-semibold text-white transition hover:bg-brand/90 disabled:opacity-60 sm:w-auto"
+                  disabled={formBusy}
+                >
+                  {formBusy ? "Saving..." : "Save"}
+                </button>
+              </div>
             </div>
           </form>
         </div>
@@ -1029,7 +1053,7 @@ export default function CourseAIUsersPage() {
       {/* AI-assisted creation modal (first skeleton; suggestions currently mocked) */}
       {aiFlowOpen ? (
         <div className="fixed inset-0 z-40 overflow-y-auto bg-black/40 px-4 py-4 sm:flex sm:items-center sm:justify-center sm:px-6">
-          <div className="mx-auto min-h-fit w-full max-w-4xl rounded-3xl bg-white p-4 pb-[calc(env(safe-area-inset-bottom)+6rem)] shadow-2xl shadow-brand-200 sm:max-h-[92vh] sm:overflow-y-auto sm:p-6 sm:pb-6">
+          <div className="mx-auto min-h-fit w-full max-w-4xl rounded-3xl bg-white p-4 pb-[calc(env(safe-area-inset-bottom)+6rem)] shadow-2xl shadow-brand-200 max-h-[92vh] overflow-y-auto sm:p-6 sm:pb-6">
             <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">
