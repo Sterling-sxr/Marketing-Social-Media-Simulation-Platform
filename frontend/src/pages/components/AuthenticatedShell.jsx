@@ -128,9 +128,9 @@ export default function AuthenticatedShell({
         icon: <FileText className="h-5 w-5" />,
       },
       {
-        to: uid ? `/student/analysis` : "/login",
-        label: "Analysis",
-        icon: <BarChart3 className="h-5 w-5" />,
+        to: uid ? `/student/analytics` : "/login",
+        label: "Analytics",
+        icon: <LayoutDashboard className="h-5 w-5" />,
       },
       {
         to: "/ai-tutor",

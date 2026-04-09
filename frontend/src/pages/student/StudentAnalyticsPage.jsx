@@ -1,0 +1,359 @@
+import AuthenticatedShell from "../components/AuthenticatedShell";
+
+// ======================= Mock analytics data (MVP) =======================
+// NOTE: All data is mocked on the frontend for demo purposes only.
+// Structure:
+// {
+//   summary: { totalPosts, totalLikes, totalComments, totalShares },
+//   topPosts: [...],
+//   audienceInsights: { targetAudience, strongestEngagedAudience, matchLevel, breakdown: [...] },
+//   suggestions: [...]
+// }
+const mockAnalytics = {
+  summary: {
+    totalPosts: 18,
+    totalLikes: 342,
+    totalComments: 97,
+    totalShares: 54,
+  },
+  topPosts: [
+    {
+      id: 1,
+      content:
+        "Explaining gradient descent with a bread-slicing analogy. Short, visual and practical.",
+      createdAt: "2025-09-10T10:15:00Z",
+      likes: 120,
+      comments: 34,
+      shares: 18,
+      engagementScore: 9.2,
+    },
+    {
+      id: 2,
+      content:
+        "Reflection on our first group project using AI tools to coordinate tasks and brainstorm.",
+      createdAt: "2025-09-08T09:32:00Z",
+      likes: 86,
+      comments: 28,
+      shares: 12,
+      engagementScore: 8.4,
+    },
+    {
+      id: 3,
+      content:
+        "Three things I changed in my posts that instantly improved comments from classmates.",
+      createdAt: "2025-09-04T14:40:00Z",
+      likes: 64,
+      comments: 19,
+      shares: 9,
+      engagementScore: 7.6,
+    },
+  ],
+  audienceInsights: {
+    targetAudience: "First– and second–year CS students interested in AI",
+    strongestEngagedAudience:
+      "AI‑curious undergrads who prefer concise, example‑driven posts",
+    matchLevel: "High",
+    breakdown: [
+      { persona: "AI Explorer", percentage: 42 },
+      { persona: "Time‑poor Student", percentage: 27 },
+      { persona: "Theory Lover", percentage: 18 },
+      { persona: "Career Planner", percentage: 13 },
+    ],
+  },
+  suggestions: [
+    {
+      id: "short-form",
+      title: "Keep posts short and skimmable",
+      detail:
+        "Your highest‑engagement posts are under 150 words and use bullet points. Turn long explanations into short, scannable sections.",
+      focus: "Format",
+    },
+    {
+      id: "examples",
+      title: "Anchor concepts in concrete examples",
+      detail:
+        "Posts that open with a simple example or story get around 1.8× more comments from AI Explorer and Time‑poor personas.",
+      focus: "Content structure",
+    },
+    {
+      id: "call-to-action",
+      title: "Finish with a clear question",
+      detail:
+        "Ending with a question like “What would you try next?” consistently increases comment rate for your audience personas.",
+      focus: "Engagement",
+    },
+    {
+      id: "persona-match",
+      title: "Post more content for AI Explorers",
+      detail:
+        "Most engagement comes from the AI Explorer persona. Share more small experiments, tool comparisons and practical AI tips.",
+      focus: "Audience",
+    },
+  ],
+};
+
+// =============================== Helpers =================================
+function formatDate(isoString) {
+  if (!isoString) return "—";
+  const date = new Date(isoString);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+// ============================= UI components =============================
+function SummaryCard({ label, value }) {
+  return (
+    <div className="rounded-2xl border border-brand-100 bg-white px-4 py-5 shadow-soft transition hover:-translate-y-0.5 hover:shadow-brand">
+      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+        {label}
+      </p>
+      <p className="mt-2 text-2xl font-extrabold text-slate-900">{value}</p>
+    </div>
+  );
+}
+
+function TopPostsSection({ posts }) {
+  return (
+    <section className="rounded-3xl border border-brand-100 bg-white p-6 shadow-soft">
+      <header className="mb-4">
+        <h2 className="text-lg font-semibold text-slate-900">
+          Top Performing Posts
+        </h2>
+        <p className="text-xs text-slate-500">
+          Posts with the highest combination of likes, comments and shares.
+        </p>
+      </header>
+      <div className="space-y-5">
+        {posts.map((post) => (
+          <article
+            key={post.id}
+            className="flex flex-col gap-3 rounded-2xl border border-brand-100/80 bg-gradient-to-r from-brand-50/80 via-white to-accent-50/80 p-5 md:p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-brand"
+          >
+            {/* 第一层：内容摘要（视觉主角） */}
+            <div className="space-y-1.5 border-l-2 border-brand-200/70 pl-3">
+              <p className="text-sm font-semibold text-slate-900 line-clamp-3">
+                {post.content}
+              </p>
+              {/* 第二层：发布时间 */}
+              <p className="text-xs text-slate-500">
+                Posted on {formatDate(post.createdAt)}
+              </p>
+            </div>
+
+            {/* 第三层：轻量 inline metrics（likes / comments / shares） */}
+            <div className="mt-1 flex flex-wrap items-end gap-x-6 gap-y-2 text-xs text-slate-500 sm:text-[13px]">
+              <div className="flex flex-col">
+                <span className="flex items-center gap-1">
+                  <span className="text-sm" aria-hidden>
+                    👍
+                  </span>
+                  <span className="text-sm font-semibold text-slate-900">
+                    {post.likes}
+                  </span>
+                </span>
+                <span className="mt-0.5 text-[11px] uppercase tracking-wide">
+                  Likes
+                </span>
+              </div>
+              <div className="flex flex-col">
+                <span className="flex items-center gap-1">
+                  <span className="text-sm" aria-hidden>
+                    💬
+                  </span>
+                  <span className="text-sm font-semibold text-slate-900">
+                    {post.comments}
+                  </span>
+                </span>
+                <span className="mt-0.5 text-[11px] uppercase tracking-wide">
+                  Comments
+                </span>
+              </div>
+              <div className="flex flex-col">
+                <span className="flex items-center gap-1">
+                  <span className="text-sm" aria-hidden>
+                    🔁
+                  </span>
+                  <span className="text-sm font-semibold text-slate-900">
+                    {post.shares}
+                  </span>
+                </span>
+                <span className="mt-0.5 text-[11px] uppercase tracking-wide">
+                  Shares
+                </span>
+              </div>
+            </div>
+
+            {/* 第四层：Engagement score 作为主要指标高亮展示 */}
+            <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-brand-200 bg-gradient-to-r from-brand-100/90 via-accent-50/90 to-emerald-50/90 px-4 py-2">
+              <span className="text-lg" aria-hidden>
+                🔥
+              </span>
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-700">
+                Score
+              </span>
+              <span className="text-2xl font-black leading-none text-brand-900">
+                {post.engagementScore.toFixed(1)}
+              </span>
+              <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                Engagement
+              </span>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function AudienceInsightsSection({ insights }) {
+  const totalPercent = insights.breakdown.reduce(
+    (sum, item) => sum + item.percentage,
+    0
+  );
+
+  return (
+    <section className="rounded-3xl border border-brand-100 bg-white p-6 shadow-soft">
+      <header className="mb-4">
+        <h2 className="text-lg font-semibold text-slate-900">
+          Audience Insights
+        </h2>
+        <p className="text-xs text-slate-500">
+          AI audience / persona groups that are most engaged with your content.
+        </p>
+      </header>
+
+      <div className="grid gap-6 md:grid-cols-[1.1fr_minmax(0,1fr)]">
+        <div className="space-y-3">
+          <div className="rounded-2xl border border-brand-50 bg-brand-50/80 px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-700">
+              Target audience
+            </p>
+            <p className="mt-1 text-sm text-slate-900">
+              {insights.targetAudience}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-accent-50 bg-accent-50/80 px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-accent-700">
+              Strongest engaged audience
+            </p>
+            <p className="mt-1 text-sm text-slate-900">
+              {insights.strongestEngagedAudience}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-emerald-50 bg-emerald-50/80 px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
+              Match level
+            </p>
+            <p className="mt-1 text-sm font-semibold text-slate-900">
+              {insights.matchLevel}
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            Audience breakdown
+          </p>
+          <div className="space-y-2">
+            {insights.breakdown.map((item) => {
+              const widthPercent =
+                totalPercent > 0
+                  ? Math.max(6, (item.percentage / totalPercent) * 100)
+                  : 0;
+              return (
+                <div
+                  key={item.persona}
+                  className="space-y-1 rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-2"
+                >
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold text-slate-800">
+                      {item.persona}
+                    </span>
+                    <span className="font-semibold text-brand-700">
+                      {item.percentage}%
+                    </span>
+                  </div>
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-white">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-brand-300 via-accent-300 to-emerald-300"
+                      style={{ width: `${widthPercent}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function StrategySuggestionsSection({ suggestions }) {
+  return (
+    <section className="rounded-3xl border border-brand-100 bg-white p-6 shadow-soft">
+      <header className="mb-4">
+        <h2 className="text-lg font-semibold text-slate-900">
+          Strategy Suggestions
+        </h2>
+        <p className="text-xs text-slate-500">
+          Content optimisation ideas based on how your audience currently
+          responds to different posts.
+        </p>
+      </header>
+      <div className="grid gap-3 md:grid-cols-2">
+        {suggestions.map((item) => (
+          <article
+            key={item.id}
+            className="flex flex-col justify-between rounded-2xl border border-brand-100/80 bg-gradient-to-br from-white via-brand-50/70 to-accent-50/70 p-4"
+          >
+            <div className="space-y-1.5">
+              <p className="text-xs font-semibold uppercase tracking-wide text-brand-700">
+                {item.focus}
+              </p>
+              <h3 className="text-sm font-semibold text-slate-900">
+                {item.title}
+              </h3>
+              <p className="text-xs leading-relaxed text-slate-600">
+                {item.detail}
+              </p>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ============================= Page component ============================
+export default function StudentAnalyticsPage() {
+  const { summary, topPosts, audienceInsights, suggestions } = mockAnalytics;
+
+  return (
+    <AuthenticatedShell
+      title="My Analytics"
+      subtitle="Understand how your posts perform and improve your engagement strategy."
+    >
+      {/* 1. Summary cards */}
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <SummaryCard label="Total Posts" value={summary.totalPosts} />
+        <SummaryCard label="Total Likes" value={summary.totalLikes} />
+        <SummaryCard label="Total Comments" value={summary.totalComments} />
+        <SummaryCard label="Total Shares" value={summary.totalShares} />
+      </section>
+
+      {/* 2 & 3. Top posts + audience insights */}
+      <section className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+        <TopPostsSection posts={topPosts} />
+        <AudienceInsightsSection insights={audienceInsights} />
+      </section>
+
+      {/* 4. Strategy suggestions */}
+      <StrategySuggestionsSection suggestions={suggestions} />
+    </AuthenticatedShell>
+  );
+}
