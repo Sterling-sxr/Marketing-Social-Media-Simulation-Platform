@@ -119,7 +119,7 @@ function LineChart({ data }) {
         />
       ))}
       {data.map((item, idx) => {
-        const [x, y] = points[idx];
+        const [x] = points[idx];
         return (
           <text
             key={`label-${item.date}`}
@@ -289,17 +289,125 @@ function SentimentDistribution({ sentiment }) {
   );
 }
 
+function formatRate(value) {
+  const num = Number(value ?? 0);
+  if (!Number.isFinite(num)) return "0.0%";
+  return `${(num * 100).toFixed(1)}%`;
+}
+
+function CoverageBanner({ coverage, overlapping }) {
+  if (!coverage) return null;
+  return (
+    <div className="rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-3 text-xs text-slate-600">
+      <p>
+        Audience size: <span className="font-semibold text-slate-800">{coverage.total_audience ?? 0}</span>
+        {" · "}
+        Missing profile data: <span className="font-semibold text-slate-800">{coverage.missing_profile_count ?? 0}</span>
+        {" · "}
+        Unattributed interactions: <span className="font-semibold text-slate-800">{coverage.missing_actor_identity_count ?? 0}</span>
+      </p>
+      <p className="mt-1">
+        {overlapping
+          ? "Interest buckets overlap, so the segment totals can exceed the total audience."
+          : "This lens assigns each student to at most one bucket."}
+      </p>
+    </div>
+  );
+}
+
+function SegmentMetricsTable({ segments }) {
+  if (!segments?.length) {
+    return (
+      <p className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-3 text-sm text-slate-600">
+        No segment data available for this post yet.
+      </p>
+    );
+  }
+  return (
+    <div className="overflow-hidden rounded-2xl ring-1 ring-brand-100 shadow-sm">
+      <table className="min-w-full text-sm">
+        <thead className="bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] border-b border-accent-100">
+          <tr className="text-left text-[12px] font-semibold uppercase tracking-wider text-slate-700">
+            <th className="px-4 py-3">Segment</th>
+            <th className="px-4 py-3">Audience</th>
+            <th className="px-4 py-3">Engaged</th>
+            <th className="px-4 py-3">Views</th>
+            <th className="px-4 py-3">Likes</th>
+            <th className="px-4 py-3">Comments</th>
+            <th className="px-4 py-3 text-right">Engagement</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-brand-100">
+          {segments.map((segment) => (
+            <tr key={segment.key} className="odd:bg-white even:bg-brand-50/30">
+              <td className="px-4 py-3 font-semibold text-slate-800">{segment.label}</td>
+              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.audience_count}</td>
+              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.engaged_user_count}</td>
+              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.metrics?.views ?? 0}</td>
+              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.metrics?.likes ?? 0}</td>
+              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.metrics?.comments ?? 0}</td>
+              <td className="px-4 py-3 text-right font-semibold text-brand">{formatRate(segment.metrics?.engagement_rate)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function ComparisonMatrix({ comparison }) {
+  if (!comparison?.segments?.length) return null;
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-slate-600">{comparison.summary_text}</p>
+      <div className="overflow-hidden rounded-2xl ring-1 ring-brand-100 shadow-sm">
+        <table className="min-w-full text-sm">
+          <thead className="bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] border-b border-accent-100">
+            <tr className="text-left text-[12px] font-semibold uppercase tracking-wider text-slate-700">
+              <th className="px-4 py-3">Segment</th>
+              <th className="px-4 py-3">This Post</th>
+              <th className="px-4 py-3">Compare Post</th>
+              <th className="px-4 py-3 text-right">Delta</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-brand-100">
+            {comparison.segments.map((segment) => (
+              <tr key={segment.key} className="odd:bg-white even:bg-brand-50/30">
+                <td className="px-4 py-3 font-semibold text-slate-800">{segment.label}</td>
+                <td className="px-4 py-3 text-slate-700">{formatRate(segment.post_metrics?.engagement_rate)}</td>
+                <td className="px-4 py-3 text-slate-700">{formatRate(segment.compare_metrics?.engagement_rate)}</td>
+                <td className={`px-4 py-3 text-right font-semibold ${segment.delta_engagement_rate >= 0 ? "text-emerald-700" : "text-rose-600"}`}>
+                  {segment.delta_engagement_rate >= 0 ? "+" : ""}
+                  {formatRate(segment.delta_engagement_rate)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 export default function PostAnalyticsPage() {
   const { courseId: courseIdParam, postId: postIdParam } = useParams();
   const courseId = Number(courseIdParam);
   const postId = Number(postIdParam);
   const navigate = useNavigate();
   const { authUser, authCheckComplete, pushToast } = useApp();
+  const isAdmin = Boolean(authUser && (authUser.is_staff || authUser.is_superuser));
 
   const [analytics, setAnalytics] = useState(null);
   const [status, setStatus] = useState({ loading: true, error: "" });
   const [activeMetric, setActiveMetric] = useState("likes");
   const [activeHashtag, setActiveHashtag] = useState(null);
+  const [selectedLens, setSelectedLens] = useState("interests");
+  const [comparePostId, setComparePostId] = useState("");
+  const [segmentation, setSegmentation] = useState(null);
+  const [segmentationStatus, setSegmentationStatus] = useState({
+    loading: false,
+    error: "",
+  });
 
   useEffect(() => {
     if (!authCheckComplete) return;
@@ -339,6 +447,33 @@ export default function PostAnalyticsPage() {
       setActiveHashtag(list[0].hashtag);
     }
   }, [analytics, activeHashtag]);
+
+  useEffect(() => {
+    if (!authCheckComplete || !authUser || !isAdmin) return;
+    setSegmentationStatus({ loading: true, error: "" });
+    const params = new URLSearchParams({ lens: selectedLens });
+    if (comparePostId) {
+      params.set("compare_post_id", comparePostId);
+    }
+    getJson(`/api/admin/courses/${courseId}/posts/${postId}/segmentation?${params.toString()}`)
+      .then((payload) => {
+        const next = payload.segmentation || null;
+        setSegmentation(next);
+        const options = next?.compare_options || [];
+        const compareExists = options.some((item) => String(item.post_id) === String(comparePostId));
+        if (!compareExists) {
+          setComparePostId(options[0]?.post_id ? String(options[0].post_id) : "");
+        }
+        setSegmentationStatus({ loading: false, error: "" });
+      })
+      .catch((error) => {
+        setSegmentation(null);
+        setSegmentationStatus({
+          loading: false,
+          error: error.message || "Failed to load audience segmentation.",
+        });
+      });
+  }, [authCheckComplete, authUser, comparePostId, courseId, isAdmin, postId, selectedLens]);
 
   const summaryCards = useMemo(() => {
     if (!analytics) return [];
@@ -527,6 +662,94 @@ export default function PostAnalyticsPage() {
           </section>
 
           <SentimentDistribution sentiment={sentimentData} />
+
+          {isAdmin ? (
+            <section className="space-y-4 rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
+              <header className="space-y-3">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-800">Audience Segments</h2>
+                  <p className="text-xs text-slate-500">
+                    Understand which persona-derived audience buckets interacted with this post.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {(segmentation?.available_lenses || []).map((lens) => (
+                    <button
+                      key={lens.key}
+                      type="button"
+                      className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                        selectedLens === lens.key
+                          ? "bg-brand-100 text-brand"
+                          : "border border-brand-200 bg-white text-slate-600 hover:border-brand hover:text-brand"
+                      }`}
+                      onClick={() => setSelectedLens(lens.key)}
+                    >
+                      {lens.label}
+                    </button>
+                  ))}
+                </div>
+              </header>
+
+              {segmentationStatus.error ? <Feedback error={segmentationStatus.error} /> : null}
+              {segmentationStatus.loading ? (
+                <p className="text-sm text-slate-500">Loading audience segmentation...</p>
+              ) : segmentation ? (
+                <>
+                  <CoverageBanner
+                    coverage={segmentation.coverage}
+                    overlapping={segmentation.lens_meta?.overlapping}
+                  />
+                  <div className="rounded-2xl border border-brand-100 bg-brand-50/60 p-4">
+                    <p className="text-sm text-slate-700">
+                      {segmentation.insights?.summary_text || "No insight summary available yet."}
+                    </p>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2 text-sm">
+                      <div className="rounded-2xl bg-white px-4 py-3">
+                        <p className="text-slate-500">Top-performing segment</p>
+                        <p className="mt-1 font-semibold text-slate-800">
+                          {segmentation.insights?.top_segment?.label || "—"}
+                        </p>
+                      </div>
+                      <div className="rounded-2xl bg-white px-4 py-3">
+                        <p className="text-slate-500">Under-engaged segment</p>
+                        <p className="mt-1 font-semibold text-slate-800">
+                          {segmentation.insights?.under_engaged_segment?.label || "—"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <SegmentMetricsTable segments={segmentation.segments} />
+
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <h3 className="text-base font-semibold text-slate-800">Compare with another post</h3>
+                        <p className="text-xs text-slate-500">
+                          Compare this post against another post from the same course under the same segment lens.
+                        </p>
+                      </div>
+                      <select
+                        value={comparePostId}
+                        onChange={(event) => setComparePostId(event.target.value)}
+                        className="rounded-full border border-brand-200 bg-white px-4 py-2 text-sm text-slate-700"
+                      >
+                        <option value="">No comparison</option>
+                        {(segmentation.compare_options || []).map((item) => (
+                          <option key={item.post_id} value={item.post_id}>
+                            {item.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {segmentation.insights?.comparison_summary_text ? (
+                      <p className="text-sm text-slate-600">{segmentation.insights.comparison_summary_text}</p>
+                    ) : null}
+                    <ComparisonMatrix comparison={segmentation.comparison} />
+                  </div>
+                </>
+              ) : null}
+            </section>
+          ) : null}
         </>
       ) : null}
     </AuthenticatedShell>
