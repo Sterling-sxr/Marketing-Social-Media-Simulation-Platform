@@ -7,11 +7,9 @@ import time
 from datetime import timedelta
 from typing import Any
 
-import torch
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.utils import timezone
-from transformers import AutoModelForSequenceClassification, AutoTokenizer, pipeline
 
 from ..repositories import (
     CourseMemberRepository,
@@ -36,6 +34,10 @@ _refreshing_users: set[int] = set()
 _refresh_users_lock = threading.Lock()
 
 
+def _local_sentiment_enabled() -> bool:
+    return os.environ.get("ENABLE_LOCAL_SENTIMENT", "0") == "1"
+
+
 def _ensure_admin(user) -> None:
     if not (getattr(user, "is_superuser", False) or getattr(user, "is_staff", False)):
         raise PermissionError("Only administrators can access the dashboard.")
@@ -47,7 +49,12 @@ def _is_admin(user) -> bool:
 
 def _get_sentiment_pipeline():
     global _sentiment_pipeline
+    if not _local_sentiment_enabled():
+        return None
     if _sentiment_pipeline is None:
+        import torch
+        from transformers import AutoModelForSequenceClassification, AutoTokenizer, pipeline
+
         model_name = "cardiffnlp/twitter-xlm-roberta-base-sentiment"
         tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
         model = AutoModelForSequenceClassification.from_pretrained(
@@ -95,6 +102,8 @@ def _extract_sentiment_label(result: Any) -> str:
 
 def _classify_sentiment(text: str) -> str:
     classifier = _get_sentiment_pipeline()
+    if classifier is None:
+        return "neutral"
     try:
         result = classifier(text[:512] or "")[0]
     except Exception:
@@ -157,21 +166,24 @@ def _calculate_dashboard_metrics(user) -> dict[str, Any]:
     sentiment_counts = {"positive": 0, "neutral": 0, "negative": 0}
     if total_comments:
         classifier = _get_sentiment_pipeline()
-        comment_texts = list(CoursePostComment.objects.filter(post_id__in=post_ids).values_list("content", flat=True))
-        # Per-item classification to avoid a single failure wiping the batch
-        for text in comment_texts:
-            try:
-                result = classifier([text[:512] or ""])[0]
-                label = (result.get("label") or "").lower()
-            except Exception:
-                label = "neutral"
+        if classifier is None:
+            sentiment_counts["neutral"] = total_comments
+        else:
+            comment_texts = list(CoursePostComment.objects.filter(post_id__in=post_ids).values_list("content", flat=True))
+            # Per-item classification to avoid a single failure wiping the batch
+            for text in comment_texts:
+                try:
+                    result = classifier([text[:512] or ""])[0]
+                    label = (result.get("label") or "").lower()
+                except Exception:
+                    label = "neutral"
 
-            if "positive" in label:
-                sentiment_counts["positive"] += 1
-            elif "negative" in label:
-                sentiment_counts["negative"] += 1
-            else:
-                sentiment_counts["neutral"] += 1
+                if "positive" in label:
+                    sentiment_counts["positive"] += 1
+                elif "negative" in label:
+                    sentiment_counts["negative"] += 1
+                else:
+                    sentiment_counts["neutral"] += 1
 
     total_comment_count = sum(sentiment_counts.values())
     if total_comment_count:
@@ -241,22 +253,31 @@ def _collect_course_post_data(course) -> dict[str, Any]:
     comment_sentiments: dict[int, dict[str, int]] = {pid: {"positive": 0, "neutral": 0, "negative": 0} for pid in post_ids}
     if comment_records:
         classifier = _get_sentiment_pipeline()
-        chunk_size = 16
-        for chunk_start in range(0, len(comment_records), chunk_size):
-            chunk = comment_records[chunk_start : chunk_start + chunk_size]
-            texts = [(record.get("content") or "")[:512] for record in chunk]
-            try:
-                results = classifier(texts)
-            except Exception:
-                results = [None] * len(chunk)
-            for record, result in zip(chunk, results):
-                label = _normalize_sentiment_label(_extract_sentiment_label(result))
+        if classifier is None:
+            for record in comment_records:
                 post_id = record["post_id"]
                 post_stats = comment_sentiments.setdefault(
                     post_id,
                     {"positive": 0, "neutral": 0, "negative": 0},
                 )
-                post_stats[label] = post_stats.get(label, 0) + 1
+                post_stats["neutral"] = post_stats.get("neutral", 0) + 1
+        else:
+            chunk_size = 16
+            for chunk_start in range(0, len(comment_records), chunk_size):
+                chunk = comment_records[chunk_start : chunk_start + chunk_size]
+                texts = [(record.get("content") or "")[:512] for record in chunk]
+                try:
+                    results = classifier(texts)
+                except Exception:
+                    results = [None] * len(chunk)
+                for record, result in zip(chunk, results):
+                    label = _normalize_sentiment_label(_extract_sentiment_label(result))
+                    post_id = record["post_id"]
+                    post_stats = comment_sentiments.setdefault(
+                        post_id,
+                        {"positive": 0, "neutral": 0, "negative": 0},
+                    )
+                    post_stats[label] = post_stats.get(label, 0) + 1
 
     total_likes = sum(like_counts.values())
     total_comments = sum(comment_counts.values())
