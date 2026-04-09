@@ -55,6 +55,13 @@ function downloadText(filename, text, mime = "text/plain;charset=utf-8") {
   setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
+function isIsoDate(value) {
+  if (typeof value !== "string") return false;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const d = new Date(value);
+  return !Number.isNaN(d.getTime());
+}
+
 export default function CreateCoursePage() {
   const navigate = useNavigate();
   const { authUser, authCheckComplete, profileOptions, fetchProfileOptions } =
@@ -151,6 +158,15 @@ export default function CreateCoursePage() {
       setStatus({
         loading: false,
         error: "Please provide both the start and end date.",
+        message: "",
+      });
+      return;
+    }
+
+    if (!isIsoDate(form.start_date) || !isIsoDate(form.end_date)) {
+      setStatus({
+        loading: false,
+        error: "Please enter dates in English format: YYYY-MM-DD.",
         message: "",
       });
       return;
@@ -442,7 +458,7 @@ export default function CreateCoursePage() {
               <label className="field-label">
                 Start date
                 <input
-                  type="date"
+                  type="text"
                   value={form.start_date}
                   onChange={(e) =>
                     setForm((prev) => ({
@@ -450,6 +466,9 @@ export default function CreateCoursePage() {
                       start_date: e.target.value,
                     }))
                   }
+                  placeholder="YYYY-MM-DD"
+                  inputMode="numeric"
+                  pattern="\\d{4}-\\d{2}-\\d{2}"
                   className="field-input"
                   required
                 />
@@ -457,12 +476,14 @@ export default function CreateCoursePage() {
               <label className="field-label">
                 End date
                 <input
-                  type="date"
+                  type="text"
                   value={form.end_date}
-                  min={form.start_date || undefined}
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, end_date: e.target.value }))
                   }
+                  placeholder="YYYY-MM-DD"
+                  inputMode="numeric"
+                  pattern="\\d{4}-\\d{2}-\\d{2}"
                   className="field-input"
                   required
                 />
