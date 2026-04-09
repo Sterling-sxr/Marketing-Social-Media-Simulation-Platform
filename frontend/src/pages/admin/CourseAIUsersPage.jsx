@@ -479,10 +479,11 @@ export default function CourseAIUsersPage() {
         </p>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
-          <table className="min-w-full divide-y divide-brand-50 text-left text-xs text-slate-600">
-            <thead className="bg-brand-50 text-[11px] uppercase tracking-wide text-slate-500">
+          <div className="max-h-[70vh] overflow-x-auto overflow-y-auto">
+            <table className="min-w-full divide-y divide-brand-50 text-left text-xs text-slate-600">
+              <thead className="bg-brand-50 text-[11px] uppercase tracking-wide text-slate-500">
               <tr>
-                <th className="px-4 py-3">
+                <th className="sticky top-0 z-10 bg-brand-50 px-4 py-3">
                   <input
                     type="checkbox"
                     className="h-3 w-3 rounded border-brand-300 text-brand"
@@ -490,70 +491,71 @@ export default function CourseAIUsersPage() {
                     onChange={toggleSelectAllVisible}
                   />
                 </th>
-                <th className="px-4 py-3">Username</th>
-                <th className="px-4 py-3">Display name</th>
-                <th className="px-4 py-3">City</th>
-                <th className="px-4 py-3">Gender</th>
-                <th className="px-4 py-3 text-center">Social Value</th>
-                <th className="px-4 py-3 text-center">Sociability</th>
-                <th className="px-4 py-3 text-center">Openness</th>
-                <th className="px-4 py-3 text-right">Actions</th>
+                <th className="sticky top-0 z-10 bg-brand-50 px-4 py-3">Username</th>
+                <th className="sticky top-0 z-10 bg-brand-50 px-4 py-3">Display name</th>
+                <th className="sticky top-0 z-10 bg-brand-50 px-4 py-3">City</th>
+                <th className="sticky top-0 z-10 bg-brand-50 px-4 py-3">Gender</th>
+                <th className="sticky top-0 z-10 bg-brand-50 px-4 py-3 text-center">Social Value</th>
+                <th className="sticky top-0 z-10 bg-brand-50 px-4 py-3 text-center">Sociability</th>
+                <th className="sticky top-0 z-10 bg-brand-50 px-4 py-3 text-center">Openness</th>
+                <th className="sticky top-0 z-10 bg-brand-50 px-4 py-3 text-right">Actions</th>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-brand-50">
-              {filteredItems.map((item) => (
-                <tr key={item.id} className="hover:bg-brand-50/50">
-                  <td className="px-4 py-3">
-                    <input
-                      type="checkbox"
-                      className="h-3 w-3 rounded border-brand-300 text-brand"
-                      checked={selectedIds.includes(item.id)}
-                      onChange={() => toggleSelect(item.id)}
-                    />
-                  </td>
-                  <td className="px-4 py-3 font-semibold text-slate-800">
-                    {item.username}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">
-                    {item.display_name || "—"}
-                  </td>
-                  <td className="px-4 py-3 text-slate-500">
-                    {item.city || "—"}
-                  </td>
-                  <td className="px-4 py-3 text-slate-500">
-                    {item.gender || "—"}
-                  </td>
-                  <td className="px-4 py-3 text-center text-slate-600">
-                    {item.social_value ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 text-center text-slate-600">
-                    {item.sociability ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 text-center text-slate-600">
-                    {item.openness ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="inline-flex items-center gap-2">
-                      <button
-                        type="button"
-                        className="rounded-full border border-brand-200 px-3 py-1 text-[11px] font-semibold text-brand transition hover:border-brand"
-                        onClick={() => openEdit(item)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-[11px] font-semibold text-red-500 transition hover:border-red-300"
-                        onClick={() => handleDelete(item)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-brand-50">
+                {filteredItems.map((item) => (
+                  <tr key={item.id} className="hover:bg-brand-50/50">
+                    <td className="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        className="h-3 w-3 rounded border-brand-300 text-brand"
+                        checked={selectedIds.includes(item.id)}
+                        onChange={() => toggleSelect(item.id)}
+                      />
+                    </td>
+                    <td className="px-4 py-3 font-semibold text-slate-800">
+                      {item.username}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {item.display_name || "—"}
+                    </td>
+                    <td className="px-4 py-3 text-slate-500">
+                      {item.city || "—"}
+                    </td>
+                    <td className="px-4 py-3 text-slate-500">
+                      {item.gender || "—"}
+                    </td>
+                    <td className="px-4 py-3 text-center text-slate-600">
+                      {item.social_value ?? "—"}
+                    </td>
+                    <td className="px-4 py-3 text-center text-slate-600">
+                      {item.sociability ?? "—"}
+                    </td>
+                    <td className="px-4 py-3 text-center text-slate-600">
+                      {item.openness ?? "—"}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="inline-flex items-center gap-2">
+                        <button
+                          type="button"
+                          className="rounded-full border border-brand-200 px-3 py-1 text-[11px] font-semibold text-brand transition hover:border-brand"
+                          onClick={() => openEdit(item)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-[11px] font-semibold text-red-500 transition hover:border-red-300"
+                          onClick={() => handleDelete(item)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

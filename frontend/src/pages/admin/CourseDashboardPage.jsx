@@ -162,32 +162,34 @@ function SegmentBreakdownTable({ segments }) {
   }
   return (
     <div className="overflow-hidden rounded-2xl ring-1 ring-brand-100 shadow-sm">
-      <table className="min-w-full text-sm">
-        <thead className="bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] border-b border-accent-100">
-          <tr className="text-left text-[12px] font-semibold uppercase tracking-wider text-slate-700">
-            <th className="px-4 py-3">Segment</th>
-            <th className="px-4 py-3">Audience</th>
-            <th className="px-4 py-3">Engaged</th>
-            <th className="px-4 py-3">Views</th>
-            <th className="px-4 py-3">Likes</th>
-            <th className="px-4 py-3">Comments</th>
-            <th className="px-4 py-3 text-right">Engagement</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-brand-100">
-          {segments.map((segment) => (
-            <tr key={segment.key} className="odd:bg-white even:bg-brand-50/30">
-              <td className="px-4 py-3 font-semibold text-slate-800">{segment.label}</td>
-              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.audience_count}</td>
-              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.engaged_user_count}</td>
-              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.metrics?.views ?? 0}</td>
-              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.metrics?.likes ?? 0}</td>
-              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.metrics?.comments ?? 0}</td>
-              <td className="px-4 py-3 text-right font-semibold text-brand">{formatRate(segment.metrics?.engagement_rate)}</td>
+      <div className="max-h-[70vh] overflow-x-auto overflow-y-auto">
+        <table className="min-w-full text-sm">
+          <thead className="bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] border-b border-accent-100">
+            <tr className="text-left text-[12px] font-semibold uppercase tracking-wider text-slate-700">
+              <th className="sticky top-0 z-10 bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] px-4 py-3">Segment</th>
+              <th className="sticky top-0 z-10 bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] px-4 py-3">Audience</th>
+              <th className="sticky top-0 z-10 bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] px-4 py-3">Engaged</th>
+              <th className="sticky top-0 z-10 bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] px-4 py-3">Views</th>
+              <th className="sticky top-0 z-10 bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] px-4 py-3">Likes</th>
+              <th className="sticky top-0 z-10 bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] px-4 py-3">Comments</th>
+              <th className="sticky top-0 z-10 bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] px-4 py-3 text-right">Engagement</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-brand-100">
+            {segments.map((segment) => (
+              <tr key={segment.key} className="odd:bg-white even:bg-brand-50/30">
+                <td className="px-4 py-3 font-semibold text-slate-800">{segment.label}</td>
+                <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.audience_count}</td>
+                <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.engaged_user_count}</td>
+                <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.metrics?.views ?? 0}</td>
+                <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.metrics?.likes ?? 0}</td>
+                <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.metrics?.comments ?? 0}</td>
+                <td className="px-4 py-3 text-right font-semibold text-brand">{formatRate(segment.metrics?.engagement_rate)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -526,70 +528,72 @@ export default function CourseDashboardPage() {
               <EmptyState message="No student activity data available for this course yet." />
             ) : (
               <div className="overflow-hidden rounded-2xl ring-1 ring-brand-100 shadow-sm">
-                <table className="min-w-full text-sm">
-                  <thead
-                    className="sticky top-0 z-10 bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb]
+                <div className="max-h-[70vh] overflow-x-auto overflow-y-auto">
+                  <table className="min-w-full text-sm">
+                    <thead
+                      className="bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb]
              border-b border-accent-100 shadow-sm"
-                  >
-                    <tr className="text-left text-[12px] font-semibold uppercase tracking-wider text-slate-600">
-                      <th className="px-5 py-3 w-16">Rank</th>
-                      <th className="px-5 py-3">Name</th>
-                      <th className="px-5 py-3">Posts</th>
-                      <th className="px-5 py-3">Total Interactions</th>
-                      <th className="px-5 py-3">Sentiment</th>
-                      <th className="px-5 py-3 text-right">WoW Change</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-brand-100">
-                    {students.map((item, idx) => (
-                      <tr
-                        key={item.user_id}
-                        className="odd:bg-white even:bg-brand-50/30 hover:bg-brand-50/60 transition-colors"
-                      >
-                        <td className="px-5 py-4 font-mono tabular-nums font-bold">
-                          <span
-                            className={
-                              idx === 0
-                                ? "text-[#0e050c]" // Rank 1: light amber
-                                : idx === 1
-                                ? "text-[#120811]" // Rank 2: medium amber
-                                : idx === 2
-                                ? "text-[#161315]" // Rank 3: deep amber
-                                : "text-slate-400" // Others: gray
-                            }
-                          >
-                            {`No.${idx + 1}`}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4 font-semibold">
-                          <Btn
-                            variant="link"
-                            onClick={() =>
-                              navigate(
-                                `/dashboard/courses/${courseId}/students/${item.user_id}`
-                              )
-                            }
-                            className="px-0 py-0"
-                          >
-                            {item.name}
-                          </Btn>
-                        </td>
-                        <td className="px-5 py-4 text-slate-700 font-mono tabular-nums">
-                          {item.posts_total}
-                        </td>
-                        <td className="px-5 py-4 text-slate-700 font-mono tabular-nums">
-                          {item.interactions_total}
-                        </td>
-                        <td className="px-5 py-4 text-slate-700">
-                          <SentimentCell sentiment={item.sentiment} />
-                        </td>
-                        <td className="px-5 py-4 text-right">
-                          <ChangeBadge value={item.change_percent} />
-                        </td>
+                    >
+                      <tr className="text-left text-[12px] font-semibold uppercase tracking-wider text-slate-600">
+                        <th className="sticky top-0 z-10 w-16 bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] px-5 py-3">Rank</th>
+                        <th className="sticky top-0 z-10 bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] px-5 py-3">Name</th>
+                        <th className="sticky top-0 z-10 bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] px-5 py-3">Posts</th>
+                        <th className="sticky top-0 z-10 bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] px-5 py-3">Total Interactions</th>
+                        <th className="sticky top-0 z-10 bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] px-5 py-3">Sentiment</th>
+                        <th className="sticky top-0 z-10 bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] px-5 py-3 text-right">WoW Change</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-brand-100">
+                      {students.map((item, idx) => (
+                        <tr
+                          key={item.user_id}
+                          className="odd:bg-white even:bg-brand-50/30 hover:bg-brand-50/60 transition-colors"
+                        >
+                          <td className="px-5 py-4 font-mono tabular-nums font-bold">
+                            <span
+                              className={
+                                idx === 0
+                                  ? "text-[#0e050c]"
+                                  : idx === 1
+                                  ? "text-[#120811]"
+                                  : idx === 2
+                                  ? "text-[#161315]"
+                                  : "text-slate-400"
+                              }
+                            >
+                              {`No.${idx + 1}`}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4 font-semibold">
+                            <Btn
+                              variant="link"
+                              onClick={() =>
+                                navigate(
+                                  `/dashboard/courses/${courseId}/students/${item.user_id}`
+                                )
+                              }
+                              className="px-0 py-0"
+                            >
+                              {item.name}
+                            </Btn>
+                          </td>
+                          <td className="px-5 py-4 text-slate-700 font-mono tabular-nums">
+                            {item.posts_total}
+                          </td>
+                          <td className="px-5 py-4 text-slate-700 font-mono tabular-nums">
+                            {item.interactions_total}
+                          </td>
+                          <td className="px-5 py-4 text-slate-700">
+                            <SentimentCell sentiment={item.sentiment} />
+                          </td>
+                          <td className="px-5 py-4 text-right">
+                            <ChangeBadge value={item.change_percent} />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </section>
@@ -609,73 +613,75 @@ export default function CourseDashboardPage() {
               <EmptyState message="No hashtag analytics available for this course yet." />
             ) : (
               <div className="overflow-hidden rounded-2xl ring-1 ring-brand-100 shadow-sm">
-                <table className="min-w-full text-sm">
-                  <thead
-                    className="sticky top-0 z-10 bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb]
+                <div className="max-h-[70vh] overflow-x-auto overflow-y-auto">
+                  <table className="min-w-full text-sm">
+                    <thead
+                      className="bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb]
              border-b border-accent-100 shadow-sm"
-                  >
-                    <tr className="text-left text-[13px] font-semibold uppercase tracking-wider text-slate-900">
-                      <th className="px-5 py-3 w-16">Rank</th>
-                      <th className="px-5 py-3">Hashtag</th>
-                      <th className="px-5 py-3">Total Posts</th>
-                      <th className="px-5 py-3">Total Interactions</th>
-                      <th className="px-5 py-3">Sentiment</th>
-                      <th className="px-5 py-3 text-right">WoW Change</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-brand-100">
-                    {hashtags.map((item, idx) => (
-                      <tr
-                        key={item.hashtag}
-                        className="odd:bg-white even:bg-brand-50/30 hover:bg-brand-50/60 transition-colors"
-                      >
-                        <td className="px-5 py-4 font-mono tabular-nums font-bold">
-                          <span
-                            className={
-                              idx === 0
-                                ? "text-[#0e050c]"
-                                : idx === 1
-                                ? "text-[#120811]"
-                                : idx === 2
-                                ? "text-[#161315]"
-                                : "text-slate-400"
-                            }
-                          >
-                            {`No.${idx + 1}`}
-                          </span>
-                        </td>
-
-                        <td className="px-5 py-4 font-semibold">
-                          <Btn
-                            variant="link"
-                            onClick={() =>
-                              navigate(
-                                `/dashboard/courses/${courseId}/hashtags/${encodeURIComponent(
-                                  item.hashtag
-                                )}`
-                              )
-                            }
-                            className="px-0 py-0"
-                          >
-                            #{item.hashtag}
-                          </Btn>
-                        </td>
-                        <td className="px-5 py-4 text-slate-700 font-mono tabular-nums">
-                          {item.total_posts}
-                        </td>
-                        <td className="px-5 py-4 text-slate-700 font-mono tabular-nums">
-                          {item.total_interactions}
-                        </td>
-                        <td className="px-5 py-4 text-slate-700">
-                          <SentimentCell sentiment={item.sentiment} />
-                        </td>
-                        <td className="px-5 py-4 text-right">
-                          <ChangeBadge value={item.change_percent} />
-                        </td>
+                    >
+                      <tr className="text-left text-[13px] font-semibold uppercase tracking-wider text-slate-900">
+                        <th className="sticky top-0 z-10 w-16 bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] px-5 py-3">Rank</th>
+                        <th className="sticky top-0 z-10 bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] px-5 py-3">Hashtag</th>
+                        <th className="sticky top-0 z-10 bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] px-5 py-3">Total Posts</th>
+                        <th className="sticky top-0 z-10 bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] px-5 py-3">Total Interactions</th>
+                        <th className="sticky top-0 z-10 bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] px-5 py-3">Sentiment</th>
+                        <th className="sticky top-0 z-10 bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] px-5 py-3 text-right">WoW Change</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-brand-100">
+                      {hashtags.map((item, idx) => (
+                        <tr
+                          key={item.hashtag}
+                          className="odd:bg-white even:bg-brand-50/30 hover:bg-brand-50/60 transition-colors"
+                        >
+                          <td className="px-5 py-4 font-mono tabular-nums font-bold">
+                            <span
+                              className={
+                                idx === 0
+                                  ? "text-[#0e050c]"
+                                  : idx === 1
+                                  ? "text-[#120811]"
+                                  : idx === 2
+                                  ? "text-[#161315]"
+                                  : "text-slate-400"
+                              }
+                            >
+                              {`No.${idx + 1}`}
+                            </span>
+                          </td>
+
+                          <td className="px-5 py-4 font-semibold">
+                            <Btn
+                              variant="link"
+                              onClick={() =>
+                                navigate(
+                                  `/dashboard/courses/${courseId}/hashtags/${encodeURIComponent(
+                                    item.hashtag
+                                  )}`
+                                )
+                              }
+                              className="px-0 py-0"
+                            >
+                              #{item.hashtag}
+                            </Btn>
+                          </td>
+                          <td className="px-5 py-4 text-slate-700 font-mono tabular-nums">
+                            {item.total_posts}
+                          </td>
+                          <td className="px-5 py-4 text-slate-700 font-mono tabular-nums">
+                            {item.total_interactions}
+                          </td>
+                          <td className="px-5 py-4 text-slate-700">
+                            <SentimentCell sentiment={item.sentiment} />
+                          </td>
+                          <td className="px-5 py-4 text-right">
+                            <ChangeBadge value={item.change_percent} />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </section>
