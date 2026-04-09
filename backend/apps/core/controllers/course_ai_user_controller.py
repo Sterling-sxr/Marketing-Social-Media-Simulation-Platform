@@ -7,11 +7,15 @@ from django.views.decorators.csrf import csrf_exempt
 
 from ..services import (
     CourseAINotFoundError,
+    commit_generated_personas,
+    commit_guided_personas,
     create_course_ai_user,
     delete_course_ai_user,
     get_course_ai_user,
     import_course_ai_users,
     list_course_ai_users,
+    preview_generated_personas,
+    preview_guided_personas,
     update_course_ai_user,
 )
 
@@ -134,3 +138,99 @@ def course_ai_users_import(request: HttpRequest, course_id: int) -> JsonResponse
     except ValueError as exc:
         return JsonResponse({"error": str(exc)}, status=400)
     return JsonResponse(report)
+
+
+def _load_json_body(request: HttpRequest) -> tuple[dict, JsonResponse | None]:
+    try:
+        payload = json.loads(request.body.decode() or "{}")
+    except json.JSONDecodeError:
+        return {}, JsonResponse({"error": "Request body must be valid JSON."}, status=400)
+    if not isinstance(payload, dict):
+        return {}, JsonResponse({"error": "Request body must be a JSON object."}, status=400)
+    return payload, None
+
+
+@csrf_exempt
+def course_ai_users_guided_preview(request: HttpRequest, course_id: int) -> JsonResponse:
+    auth_error = _ensure_authenticated(request)
+    if auth_error:
+        return auth_error
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    payload, error = _load_json_body(request)
+    if error:
+        return error
+
+    try:
+        result = preview_guided_personas(user=request.user, course_id=course_id, payload=payload)
+    except PermissionError as exc:
+        return JsonResponse({"error": str(exc)}, status=403)
+    except ValueError as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
+    return JsonResponse(result)
+
+
+@csrf_exempt
+def course_ai_users_guided_commit(request: HttpRequest, course_id: int) -> JsonResponse:
+    auth_error = _ensure_authenticated(request)
+    if auth_error:
+        return auth_error
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    payload, error = _load_json_body(request)
+    if error:
+        return error
+
+    try:
+        result = commit_guided_personas(user=request.user, course_id=course_id, payload=payload)
+    except PermissionError as exc:
+        return JsonResponse({"error": str(exc)}, status=403)
+    except ValueError as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
+    return JsonResponse(result, status=201)
+
+
+@csrf_exempt
+def course_ai_users_generate_preview(request: HttpRequest, course_id: int) -> JsonResponse:
+    auth_error = _ensure_authenticated(request)
+    if auth_error:
+        return auth_error
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    payload, error = _load_json_body(request)
+    if error:
+        return error
+
+    try:
+        result = preview_generated_personas(user=request.user, course_id=course_id, payload=payload)
+    except PermissionError as exc:
+        return JsonResponse({"error": str(exc)}, status=403)
+    except ValueError as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
+    except RuntimeError as exc:
+        return JsonResponse({"error": str(exc)}, status=503)
+    return JsonResponse(result)
+
+
+@csrf_exempt
+def course_ai_users_generate_commit(request: HttpRequest, course_id: int) -> JsonResponse:
+    auth_error = _ensure_authenticated(request)
+    if auth_error:
+        return auth_error
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    payload, error = _load_json_body(request)
+    if error:
+        return error
+
+    try:
+        result = commit_generated_personas(user=request.user, course_id=course_id, payload=payload)
+    except PermissionError as exc:
+        return JsonResponse({"error": str(exc)}, status=403)
+    except ValueError as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
+    return JsonResponse(result, status=201)
