@@ -192,42 +192,6 @@ function SegmentBreakdownTable({ segments }) {
   );
 }
 
-function SegmentComparisonTable({ comparison }) {
-  if (!comparison?.segments?.length) {
-    return <EmptyState message="Choose two posts to compare segment performance." />;
-  }
-  return (
-    <div className="space-y-3">
-      <p className="text-sm text-slate-600">{comparison.summary_text || "Segment deltas will appear here once two posts are selected."}</p>
-      <div className="overflow-hidden rounded-2xl ring-1 ring-brand-100 shadow-sm">
-        <table className="min-w-full text-sm">
-          <thead className="bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] border-b border-accent-100">
-            <tr className="text-left text-[12px] font-semibold uppercase tracking-wider text-slate-700">
-              <th className="px-4 py-3">Segment</th>
-              <th className="px-4 py-3">Post A</th>
-              <th className="px-4 py-3">Post B</th>
-              <th className="px-4 py-3 text-right">Delta</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-brand-100">
-            {comparison.segments.map((segment) => (
-              <tr key={segment.key} className="odd:bg-white even:bg-brand-50/30">
-                <td className="px-4 py-3 font-semibold text-slate-800">{segment.label}</td>
-                <td className="px-4 py-3 text-slate-700">{formatRate(segment.post_metrics?.engagement_rate)}</td>
-                <td className="px-4 py-3 text-slate-700">{formatRate(segment.compare_metrics?.engagement_rate)}</td>
-                <td className={`px-4 py-3 text-right font-semibold ${segment.delta_engagement_rate >= 0 ? "text-emerald-700" : "text-rose-600"}`}>
-                  {segment.delta_engagement_rate >= 0 ? "+" : ""}
-                  {formatRate(segment.delta_engagement_rate)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
 function capitalize(label) {
   if (!label) return "";
   return label.charAt(0).toUpperCase() + label.slice(1);
@@ -301,10 +265,6 @@ export default function CourseDashboardPage() {
     loading: true,
     error: "",
   });
-  const [comparePrimaryId, setComparePrimaryId] = useState("");
-  const [compareSecondaryId, setCompareSecondaryId] = useState("");
-  const [compareData, setCompareData] = useState(null);
-  const [compareStatus, setCompareStatus] = useState({ loading: false, error: "" });
 
   // Fixed default sorting (no interactive controls)
   const [hashtagSortKey] = useState("total_posts");
@@ -351,18 +311,7 @@ export default function CourseDashboardPage() {
     setSegmentationStatus({ loading: true, error: "" });
     getJson(`/api/admin/dashboard/courses/${courseId}/segmentation?lens=${encodeURIComponent(selectedLens)}`)
       .then((payload) => {
-        const next = payload.segmentation || null;
-        setSegmentation(next);
-        const options = next?.compare_options || [];
-        const primaryExists = options.some((item) => String(item.post_id) === String(comparePrimaryId));
-        const secondaryExists = options.some((item) => String(item.post_id) === String(compareSecondaryId));
-        if (!primaryExists) {
-          setComparePrimaryId(options[0]?.post_id ? String(options[0].post_id) : "");
-        }
-        if (!secondaryExists) {
-          const fallback = options.find((item) => String(item.post_id) !== String(options[0]?.post_id));
-          setCompareSecondaryId(fallback?.post_id ? String(fallback.post_id) : "");
-        }
+        setSegmentation(payload.segmentation || null);
         setSegmentationStatus({ loading: false, error: "" });
       })
       .catch((error) => {
@@ -373,31 +322,6 @@ export default function CourseDashboardPage() {
         });
       });
   }, [authCheckComplete, authUser, courseId, isAdmin, selectedLens]);
-
-  useEffect(() => {
-    if (!isAdmin || !comparePrimaryId || !compareSecondaryId || comparePrimaryId === compareSecondaryId) {
-      setCompareData(null);
-      setCompareStatus({ loading: false, error: "" });
-      return;
-    }
-    setCompareStatus({ loading: true, error: "" });
-    getJson(
-      `/api/admin/courses/${courseId}/posts/${comparePrimaryId}/segmentation?lens=${encodeURIComponent(
-        selectedLens
-      )}&compare_post_id=${encodeURIComponent(compareSecondaryId)}`
-    )
-      .then((payload) => {
-        setCompareData(payload.segmentation?.comparison || null);
-        setCompareStatus({ loading: false, error: "" });
-      })
-      .catch((error) => {
-        setCompareData(null);
-        setCompareStatus({
-          loading: false,
-          error: error.message || "Failed to load comparison data.",
-        });
-      });
-  }, [comparePrimaryId, compareSecondaryId, courseId, isAdmin, selectedLens]);
 
   if (authCheckComplete && authUser && !isAdmin) {
     return <Navigate to="/courses" replace />;
@@ -432,7 +356,6 @@ export default function CourseDashboardPage() {
     if (!studentsRaw?.length) return [];
     return sortByNumeric(studentsRaw, studentSortKey, studentAsc);
   }, [studentsRaw, studentSortKey, studentAsc]);
-  const compareOptions = segmentation?.compare_options || [];
 
   // Scroll into view when landing on the #students-section anchor
   useEffect(() => {
@@ -583,136 +506,8 @@ export default function CourseDashboardPage() {
                   )}
                 </div>
 
-                <div className="space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <h3 className="text-lg font-semibold text-slate-800">Compare posts by segment</h3>
-                      <p className="text-sm text-slate-500">Select two posts under the same lens to compare engagement deltas.</p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <select
-                        value={comparePrimaryId}
-                        onChange={(event) => setComparePrimaryId(event.target.value)}
-                        className="rounded-full border border-brand-200 bg-white px-4 py-2 text-sm text-slate-700"
-                      >
-                        {compareOptions.map((item) => (
-                          <option key={`primary-${item.post_id}`} value={item.post_id}>
-                            Post A: {item.label}
-                          </option>
-                        ))}
-                      </select>
-                      <select
-                        value={compareSecondaryId}
-                        onChange={(event) => setCompareSecondaryId(event.target.value)}
-                        className="rounded-full border border-brand-200 bg-white px-4 py-2 text-sm text-slate-700"
-                      >
-                        <option value="">Select Post B</option>
-                        {compareOptions
-                          .filter((item) => String(item.post_id) !== String(comparePrimaryId))
-                          .map((item) => (
-                            <option key={`secondary-${item.post_id}`} value={item.post_id}>
-                              Post B: {item.label}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-                  </div>
-                  {compareStatus.error ? <Feedback error={compareStatus.error} /> : null}
-                  {compareStatus.loading ? (
-                    <p className="text-sm text-slate-500">Loading comparison...</p>
-                  ) : (
-                    <SegmentComparisonTable comparison={compareData} />
-                  )}
-                </div>
               </>
             ) : null}
-          </section>
-
-          {/* ---------------- Hashtags table (styling polish) ---------------- */}
-          <section className="space-y-4 rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
-            <header className="mb-2">
-              <h2 className="text-2xl font-bold text-slate-900">
-                Most Active Topic Hashtags
-              </h2>
-              <p className="text-sm text-slate-500">
-                Ordered by total posts (desc).
-              </p>
-            </header>
-
-            {hashtags.length === 0 ? (
-              <EmptyState message="No hashtag analytics available for this course yet." />
-            ) : (
-              <div className="overflow-hidden rounded-2xl ring-1 ring-brand-100 shadow-sm">
-                <table className="min-w-full text-sm">
-                  {/* Sticky header row with a subtle gradient background */}
-                  <thead
-                    className="sticky top-0 z-10 bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb]
-             border-b border-accent-100 shadow-sm"
-                  >
-                    <tr className="text-left text-[13px] font-semibold uppercase tracking-wider text-slate-900">
-                      <th className="px-5 py-3 w-16">Rank</th>
-                      <th className="px-5 py-3">Hashtag</th>
-                      <th className="px-5 py-3">Total Posts</th>
-                      <th className="px-5 py-3">Total Interactions</th>
-                      <th className="px-5 py-3">Sentiment</th>
-                      <th className="px-5 py-3 text-right">WoW Change</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-brand-100">
-                    {hashtags.map((item, idx) => (
-                      <tr
-                        key={item.hashtag}
-                        className="odd:bg-white even:bg-brand-50/30 hover:bg-brand-50/60 transition-colors"
-                      >
-                        <td className="px-5 py-4 font-mono tabular-nums font-bold">
-                          <span
-                            className={
-                              idx === 0
-                                ? "text-[#0e050c]" // Rank 1: light amber
-                                : idx === 1
-                                ? "text-[#120811]" // Rank 2: medium amber
-                                : idx === 2
-                                ? "text-[#161315]" // Rank 3: deep amber
-                                : "text-slate-400" // Others: gray
-                            }
-                          >
-                            {`No.${idx + 1}`}
-                          </span>
-                        </td>
-
-                        <td className="px-5 py-4 font-semibold">
-                          <Btn
-                            variant="link"
-                            onClick={() =>
-                              navigate(
-                                `/dashboard/courses/${courseId}/hashtags/${encodeURIComponent(
-                                  item.hashtag
-                                )}`
-                              )
-                            }
-                            className="px-0 py-0"
-                          >
-                            #{item.hashtag}
-                          </Btn>
-                        </td>
-                        <td className="px-5 py-4 text-slate-700 font-mono tabular-nums">
-                          {item.total_posts}
-                        </td>
-                        <td className="px-5 py-4 text-slate-700 font-mono tabular-nums">
-                          {item.total_interactions}
-                        </td>
-                        <td className="px-5 py-4 text-slate-700">
-                          <SentimentCell sentiment={item.sentiment} />
-                        </td>
-                        <td className="px-5 py-4 text-right">
-                          <ChangeBadge value={item.change_percent} />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
           </section>
 
           {/* --------------- Students table (styling polish) --------------- */}
@@ -784,6 +579,92 @@ export default function CourseDashboardPage() {
                         </td>
                         <td className="px-5 py-4 text-slate-700 font-mono tabular-nums">
                           {item.interactions_total}
+                        </td>
+                        <td className="px-5 py-4 text-slate-700">
+                          <SentimentCell sentiment={item.sentiment} />
+                        </td>
+                        <td className="px-5 py-4 text-right">
+                          <ChangeBadge value={item.change_percent} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+
+          {/* ---------------- Hashtags table (styling polish) ---------------- */}
+          <section className="space-y-4 rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
+            <header className="mb-2">
+              <h2 className="text-2xl font-bold text-slate-900">
+                Most Active Topic Hashtags
+              </h2>
+              <p className="text-sm text-slate-500">
+                Ordered by total posts (desc).
+              </p>
+            </header>
+
+            {hashtags.length === 0 ? (
+              <EmptyState message="No hashtag analytics available for this course yet." />
+            ) : (
+              <div className="overflow-hidden rounded-2xl ring-1 ring-brand-100 shadow-sm">
+                <table className="min-w-full text-sm">
+                  <thead
+                    className="sticky top-0 z-10 bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb]
+             border-b border-accent-100 shadow-sm"
+                  >
+                    <tr className="text-left text-[13px] font-semibold uppercase tracking-wider text-slate-900">
+                      <th className="px-5 py-3 w-16">Rank</th>
+                      <th className="px-5 py-3">Hashtag</th>
+                      <th className="px-5 py-3">Total Posts</th>
+                      <th className="px-5 py-3">Total Interactions</th>
+                      <th className="px-5 py-3">Sentiment</th>
+                      <th className="px-5 py-3 text-right">WoW Change</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-brand-100">
+                    {hashtags.map((item, idx) => (
+                      <tr
+                        key={item.hashtag}
+                        className="odd:bg-white even:bg-brand-50/30 hover:bg-brand-50/60 transition-colors"
+                      >
+                        <td className="px-5 py-4 font-mono tabular-nums font-bold">
+                          <span
+                            className={
+                              idx === 0
+                                ? "text-[#0e050c]"
+                                : idx === 1
+                                ? "text-[#120811]"
+                                : idx === 2
+                                ? "text-[#161315]"
+                                : "text-slate-400"
+                            }
+                          >
+                            {`No.${idx + 1}`}
+                          </span>
+                        </td>
+
+                        <td className="px-5 py-4 font-semibold">
+                          <Btn
+                            variant="link"
+                            onClick={() =>
+                              navigate(
+                                `/dashboard/courses/${courseId}/hashtags/${encodeURIComponent(
+                                  item.hashtag
+                                )}`
+                              )
+                            }
+                            className="px-0 py-0"
+                          >
+                            #{item.hashtag}
+                          </Btn>
+                        </td>
+                        <td className="px-5 py-4 text-slate-700 font-mono tabular-nums">
+                          {item.total_posts}
+                        </td>
+                        <td className="px-5 py-4 text-slate-700 font-mono tabular-nums">
+                          {item.total_interactions}
                         </td>
                         <td className="px-5 py-4 text-slate-700">
                           <SentimentCell sentiment={item.sentiment} />

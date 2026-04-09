@@ -594,6 +594,8 @@ export default function PostAnalyticsPage() {
             <LineChart data={chartSeries} />
           </section>
 
+          <SentimentDistribution sentiment={sentimentData} />
+
           <section className="space-y-3 rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
             <header className="flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -601,7 +603,7 @@ export default function PostAnalyticsPage() {
                   Hashtag comparison
                 </h2>
                 <p className="text-xs text-slate-500">
-                  Compare this post with the average engagement of other posts using the same hashtag.
+                  Supporting evidence showing how this post compares with other posts using the same hashtag.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -660,8 +662,6 @@ export default function PostAnalyticsPage() {
               <p className="text-sm text-slate-500">Select a hashtag to view details.</p>
             )}
           </section>
-
-          <SentimentDistribution sentiment={sentimentData} />
 
           {isAdmin ? (
             <section className="space-y-4 rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">

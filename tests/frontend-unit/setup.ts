@@ -30,3 +30,19 @@ class MockWebSocket {
 
 // @ts-ignore
 globalThis.WebSocket = MockWebSocket as any;
+
+if (!globalThis.window.matchMedia) {
+  Object.defineProperty(globalThis.window, "matchMedia", {
+    writable: true,
+    value: (query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    }),
+  });
+}
