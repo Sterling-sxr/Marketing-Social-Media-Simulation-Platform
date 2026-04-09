@@ -130,6 +130,104 @@ function EmptyState({ message }) {
   );
 }
 
+function formatRate(value) {
+  const num = Number(value ?? 0);
+  if (!Number.isFinite(num)) return "0.0%";
+  return `${(num * 100).toFixed(1)}%`;
+}
+
+function SegmentationCoverage({ coverage, overlapping }) {
+  if (!coverage) return null;
+  return (
+    <div className="rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-3 text-xs text-slate-600">
+      <p>
+        Audience size: <span className="font-semibold text-slate-800">{coverage.total_audience ?? 0}</span>
+        {" · "}
+        Missing profile data: <span className="font-semibold text-slate-800">{coverage.missing_profile_count ?? 0}</span>
+        {" · "}
+        Unattributed interactions: <span className="font-semibold text-slate-800">{coverage.missing_actor_identity_count ?? 0}</span>
+      </p>
+      <p className="mt-1">
+        {overlapping
+          ? "Interest buckets overlap: a single student can appear in multiple interest segments."
+          : "Each student appears in at most one bucket for this lens."}
+      </p>
+    </div>
+  );
+}
+
+function SegmentBreakdownTable({ segments }) {
+  if (!segments?.length) {
+    return <EmptyState message="No segment data available for this lens yet." />;
+  }
+  return (
+    <div className="overflow-hidden rounded-2xl ring-1 ring-brand-100 shadow-sm">
+      <table className="min-w-full text-sm">
+        <thead className="bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] border-b border-accent-100">
+          <tr className="text-left text-[12px] font-semibold uppercase tracking-wider text-slate-700">
+            <th className="px-4 py-3">Segment</th>
+            <th className="px-4 py-3">Audience</th>
+            <th className="px-4 py-3">Engaged</th>
+            <th className="px-4 py-3">Views</th>
+            <th className="px-4 py-3">Likes</th>
+            <th className="px-4 py-3">Comments</th>
+            <th className="px-4 py-3 text-right">Engagement</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-brand-100">
+          {segments.map((segment) => (
+            <tr key={segment.key} className="odd:bg-white even:bg-brand-50/30">
+              <td className="px-4 py-3 font-semibold text-slate-800">{segment.label}</td>
+              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.audience_count}</td>
+              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.engaged_user_count}</td>
+              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.metrics?.views ?? 0}</td>
+              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.metrics?.likes ?? 0}</td>
+              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.metrics?.comments ?? 0}</td>
+              <td className="px-4 py-3 text-right font-semibold text-brand">{formatRate(segment.metrics?.engagement_rate)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function SegmentComparisonTable({ comparison }) {
+  if (!comparison?.segments?.length) {
+    return <EmptyState message="Choose two posts to compare segment performance." />;
+  }
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-slate-600">{comparison.summary_text || "Segment deltas will appear here once two posts are selected."}</p>
+      <div className="overflow-hidden rounded-2xl ring-1 ring-brand-100 shadow-sm">
+        <table className="min-w-full text-sm">
+          <thead className="bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] border-b border-accent-100">
+            <tr className="text-left text-[12px] font-semibold uppercase tracking-wider text-slate-700">
+              <th className="px-4 py-3">Segment</th>
+              <th className="px-4 py-3">Post A</th>
+              <th className="px-4 py-3">Post B</th>
+              <th className="px-4 py-3 text-right">Delta</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-brand-100">
+            {comparison.segments.map((segment) => (
+              <tr key={segment.key} className="odd:bg-white even:bg-brand-50/30">
+                <td className="px-4 py-3 font-semibold text-slate-800">{segment.label}</td>
+                <td className="px-4 py-3 text-slate-700">{formatRate(segment.post_metrics?.engagement_rate)}</td>
+                <td className="px-4 py-3 text-slate-700">{formatRate(segment.compare_metrics?.engagement_rate)}</td>
+                <td className={`px-4 py-3 text-right font-semibold ${segment.delta_engagement_rate >= 0 ? "text-emerald-700" : "text-rose-600"}`}>
+                  {segment.delta_engagement_rate >= 0 ? "+" : ""}
+                  {formatRate(segment.delta_engagement_rate)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 function capitalize(label) {
   if (!label) return "";
   return label.charAt(0).toUpperCase() + label.slice(1);
@@ -197,6 +295,16 @@ export default function CourseDashboardPage() {
 
   const [data, setData] = useState(null);
   const [status, setStatus] = useState({ loading: true, error: "" });
+  const [selectedLens, setSelectedLens] = useState("interests");
+  const [segmentation, setSegmentation] = useState(null);
+  const [segmentationStatus, setSegmentationStatus] = useState({
+    loading: true,
+    error: "",
+  });
+  const [comparePrimaryId, setComparePrimaryId] = useState("");
+  const [compareSecondaryId, setCompareSecondaryId] = useState("");
+  const [compareData, setCompareData] = useState(null);
+  const [compareStatus, setCompareStatus] = useState({ loading: false, error: "" });
 
   // Fixed default sorting (no interactive controls)
   const [hashtagSortKey] = useState("total_posts");
@@ -238,6 +346,59 @@ export default function CourseDashboardPage() {
       });
   }, [authCheckComplete, authUser, isAdmin, courseId, navigate]);
 
+  useEffect(() => {
+    if (!authCheckComplete || !authUser || !isAdmin || !Number.isFinite(courseId)) return;
+    setSegmentationStatus({ loading: true, error: "" });
+    getJson(`/api/admin/dashboard/courses/${courseId}/segmentation?lens=${encodeURIComponent(selectedLens)}`)
+      .then((payload) => {
+        const next = payload.segmentation || null;
+        setSegmentation(next);
+        const options = next?.compare_options || [];
+        const primaryExists = options.some((item) => String(item.post_id) === String(comparePrimaryId));
+        const secondaryExists = options.some((item) => String(item.post_id) === String(compareSecondaryId));
+        if (!primaryExists) {
+          setComparePrimaryId(options[0]?.post_id ? String(options[0].post_id) : "");
+        }
+        if (!secondaryExists) {
+          const fallback = options.find((item) => String(item.post_id) !== String(options[0]?.post_id));
+          setCompareSecondaryId(fallback?.post_id ? String(fallback.post_id) : "");
+        }
+        setSegmentationStatus({ loading: false, error: "" });
+      })
+      .catch((error) => {
+        setSegmentation(null);
+        setSegmentationStatus({
+          loading: false,
+          error: error.message || "Failed to load segmentation analytics.",
+        });
+      });
+  }, [authCheckComplete, authUser, courseId, isAdmin, selectedLens]);
+
+  useEffect(() => {
+    if (!isAdmin || !comparePrimaryId || !compareSecondaryId || comparePrimaryId === compareSecondaryId) {
+      setCompareData(null);
+      setCompareStatus({ loading: false, error: "" });
+      return;
+    }
+    setCompareStatus({ loading: true, error: "" });
+    getJson(
+      `/api/admin/courses/${courseId}/posts/${comparePrimaryId}/segmentation?lens=${encodeURIComponent(
+        selectedLens
+      )}&compare_post_id=${encodeURIComponent(compareSecondaryId)}`
+    )
+      .then((payload) => {
+        setCompareData(payload.segmentation?.comparison || null);
+        setCompareStatus({ loading: false, error: "" });
+      })
+      .catch((error) => {
+        setCompareData(null);
+        setCompareStatus({
+          loading: false,
+          error: error.message || "Failed to load comparison data.",
+        });
+      });
+  }, [comparePrimaryId, compareSecondaryId, courseId, isAdmin, selectedLens]);
+
   if (authCheckComplete && authUser && !isAdmin) {
     return <Navigate to="/courses" replace />;
   }
@@ -271,6 +432,7 @@ export default function CourseDashboardPage() {
     if (!studentsRaw?.length) return [];
     return sortByNumeric(studentsRaw, studentSortKey, studentAsc);
   }, [studentsRaw, studentSortKey, studentAsc]);
+  const compareOptions = segmentation?.compare_options || [];
 
   // Scroll into view when landing on the #students-section anchor
   useEffect(() => {
@@ -325,6 +487,145 @@ export default function CourseDashboardPage() {
                 onClick={item.key === "total_posts" ? goAllPosts : undefined}
               />
             ))}
+          </section>
+
+          <section className="space-y-4 rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
+            <header className="space-y-3">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900">Audience Segmentation</h2>
+                <p className="text-sm text-slate-500">
+                  Explain how different audience groups respond using stable persona-derived buckets.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {(segmentation?.available_lenses || []).map((lens) => (
+                  <button
+                    key={lens.key}
+                    type="button"
+                    onClick={() => setSelectedLens(lens.key)}
+                    className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                      selectedLens === lens.key
+                        ? "bg-brand-100 text-brand"
+                        : "border border-brand-200 bg-white text-slate-600 hover:border-brand hover:text-brand"
+                    }`}
+                  >
+                    {lens.label}
+                  </button>
+                ))}
+              </div>
+            </header>
+
+            {segmentationStatus.error ? <Feedback error={segmentationStatus.error} /> : null}
+            {segmentationStatus.loading ? (
+              <p className="text-sm text-slate-500">Loading segmentation analytics...</p>
+            ) : segmentation ? (
+              <>
+                <SegmentationCoverage
+                  coverage={segmentation.coverage}
+                  overlapping={segmentation.lens_meta?.overlapping}
+                />
+                <div className="space-y-4">
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-slate-800">Course audience distribution</h3>
+                    <SegmentBreakdownTable segments={segmentation.segments} />
+                  </div>
+                  <div className="space-y-4 rounded-2xl border border-brand-100 bg-brand-50/60 p-4">
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold text-slate-800">Insight summary</h3>
+                      <p className="text-sm leading-6 text-slate-600 break-words">
+                        {segmentation.insights?.summary_text || "Insights will appear once segment data is available."}
+                      </p>
+                    </div>
+                    <dl className="grid gap-3 text-sm sm:grid-cols-2">
+                      <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
+                        <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">Top segment</dt>
+                        <dd className="mt-2 break-words font-semibold leading-6 text-slate-800">
+                          {segmentation.insights?.top_segment?.label || "—"}
+                        </dd>
+                      </div>
+                      <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
+                        <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">Under-engaged</dt>
+                        <dd className="mt-2 break-words font-semibold leading-6 text-slate-800">
+                          {segmentation.insights?.under_engaged_segment?.label || "—"}
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold text-slate-800">Post segment performance</h3>
+                  {!segmentation.posts?.length ? (
+                    <EmptyState message="No posts available for segment summaries yet." />
+                  ) : (
+                    <div className="grid gap-3">
+                      {segmentation.posts.map((item) => (
+                        <div
+                          key={item.post_id}
+                          className="rounded-2xl border border-brand-100 bg-white px-4 py-4 shadow-sm"
+                        >
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-semibold text-slate-900">{item.label}</p>
+                              <p className="mt-1 text-xs text-slate-500">{item.summary_text}</p>
+                            </div>
+                            <button
+                              type="button"
+                              className="rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand transition hover:border-brand"
+                              onClick={() => navigate(`/courses/${courseId}/posts/${item.post_id}/analytics`)}
+                            >
+                              Open post analytics
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-800">Compare posts by segment</h3>
+                      <p className="text-sm text-slate-500">Select two posts under the same lens to compare engagement deltas.</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <select
+                        value={comparePrimaryId}
+                        onChange={(event) => setComparePrimaryId(event.target.value)}
+                        className="rounded-full border border-brand-200 bg-white px-4 py-2 text-sm text-slate-700"
+                      >
+                        {compareOptions.map((item) => (
+                          <option key={`primary-${item.post_id}`} value={item.post_id}>
+                            Post A: {item.label}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        value={compareSecondaryId}
+                        onChange={(event) => setCompareSecondaryId(event.target.value)}
+                        className="rounded-full border border-brand-200 bg-white px-4 py-2 text-sm text-slate-700"
+                      >
+                        <option value="">Select Post B</option>
+                        {compareOptions
+                          .filter((item) => String(item.post_id) !== String(comparePrimaryId))
+                          .map((item) => (
+                            <option key={`secondary-${item.post_id}`} value={item.post_id}>
+                              Post B: {item.label}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+                  </div>
+                  {compareStatus.error ? <Feedback error={compareStatus.error} /> : null}
+                  {compareStatus.loading ? (
+                    <p className="text-sm text-slate-500">Loading comparison...</p>
+                  ) : (
+                    <SegmentComparisonTable comparison={compareData} />
+                  )}
+                </div>
+              </>
+            ) : null}
           </section>
 
           {/* ---------------- Hashtags table (styling polish) ---------------- */}

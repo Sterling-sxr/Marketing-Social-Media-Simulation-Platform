@@ -86,6 +86,11 @@ from .profile_service import (
     profile_to_dict,
     save_profile,
 )
+from .segmentation_analytics_service import (
+    LENS_CONFIG,
+    get_admin_course_segmentation,
+    get_admin_post_segmentation,
+)
 from .registration_service import (
     EmailThrottleError,
     RegistrationError,
@@ -134,6 +139,7 @@ __all__ = [
     "profile_to_dict",
     "following_count",
     "followers_count",
+    "LENS_CONFIG",
     "list_courses_for_user",
     "join_course_by_code",
     "create_course",
@@ -168,6 +174,8 @@ __all__ = [
     "get_course_hashtag_dashboard",
     "get_course_student_dashboard",
     "classify_comment_sentiment",
+    "get_admin_course_segmentation",
+    "get_admin_post_segmentation",
     "get_course_ai_user",
     "list_course_ai_users",
     "create_course_ai_user",
