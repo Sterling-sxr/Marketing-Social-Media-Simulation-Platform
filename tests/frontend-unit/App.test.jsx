@@ -40,7 +40,7 @@ describe('HomePage landing experience', () => {
   test('renders hero copy and login form', () => {
     renderHome();
     expect(
-      screen.getByText(/Donut campus social simulation platform/i)
+      screen.getByText(/Bread campus social simulation platform/i)
     ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /login/i })).toBeInTheDocument();
     expect(

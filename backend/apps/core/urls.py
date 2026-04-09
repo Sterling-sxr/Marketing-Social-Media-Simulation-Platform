@@ -9,6 +9,10 @@ from .controllers import (
     complete_registration_view,
     confirm_password_reset_view,
     course_ai_user_detail,
+    course_ai_users_generate_commit,
+    course_ai_users_generate_preview,
+    course_ai_users_guided_commit,
+    course_ai_users_guided_preview,
     course_ai_users,
     course_ai_users_import,
     course_material_detail_view,
@@ -118,6 +122,26 @@ urlpatterns = [
     ),
     path("courses/<int:course_id>/posts/", course_posts, name="course-posts"),
     path("courses/<int:course_id>/ai-users/", course_ai_users, name="course-ai-users"),
+    path(
+        "courses/<int:course_id>/ai-users/guided-preview/",
+        course_ai_users_guided_preview,
+        name="course-ai-users-guided-preview",
+    ),
+    path(
+        "courses/<int:course_id>/ai-users/guided-commit/",
+        course_ai_users_guided_commit,
+        name="course-ai-users-guided-commit",
+    ),
+    path(
+        "courses/<int:course_id>/ai-users/generate-preview/",
+        course_ai_users_generate_preview,
+        name="course-ai-users-generate-preview",
+    ),
+    path(
+        "courses/<int:course_id>/ai-users/generate-commit/",
+        course_ai_users_generate_commit,
+        name="course-ai-users-generate-commit",
+    ),
     path(
         "courses/<int:course_id>/ai-users/import/",
         course_ai_users_import,
