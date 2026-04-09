@@ -126,6 +126,21 @@ describe("CourseAIUsersPage persona creation flows", () => {
     });
   });
 
+  test("renders AI users inside a scrollable table container", async () => {
+    renderPage();
+
+    await screen.findByText("legacy-user");
+
+    const table = screen.getByRole("table");
+    const scrollContainer = table.parentElement;
+
+    expect(scrollContainer).toHaveClass("max-h-[70vh]");
+    expect(scrollContainer).toHaveClass("overflow-y-auto");
+    expect(screen.getByRole("columnheader", { name: /username/i })).toHaveClass(
+      "sticky"
+    );
+  });
+
   test("smart generate previews broad audience coverage and commits", async () => {
     getJson
       .mockResolvedValueOnce({
