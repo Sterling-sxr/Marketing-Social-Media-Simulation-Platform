@@ -28,6 +28,99 @@ logger = logging.getLogger(__name__)
 
 MAX_PERSONA_PREVIEW_COUNT = 100
 _client_cache: OpenAI | None = None  # type: ignore[assignment]
+GENERATION_MODE_AI_BULK = "ai_bulk"
+GENERATION_CONSTRAINT_OPTIONS = {
+    "gender": "genders",
+    "city": "cities",
+    "age_group": "age_groups",
+    "education_level": "education_levels",
+    "income_level": "income_levels",
+    "interests": "interests",
+    "shopping_frequency": "shopping_frequency",
+    "buying_behavior": "buying_behavior",
+    "decision_factor": "decision_factors",
+    "shopping_preference": "shopping_preference",
+    "digital_time": "digital_time",
+    "content_preference": "content_preference",
+    "interaction_style": "interaction_style",
+    "influencer_type": "influencer_type",
+}
+SEED_SCORE_TEXT_MAP = {
+    "very low": 2,
+    "low": 3,
+    "medium-low": 4,
+    "medium": 5,
+    "balanced": 5,
+    "medium-high": 6,
+    "high": 8,
+    "very high": 9,
+}
+SEED_BEHAVIOR_RULES = {
+    "commenter": {"interaction_style": "Comment on posts", "sociability": 7},
+    "observer": {"interaction_style": "Mostly just scroll/watch", "sociability": 4},
+    "scroll-heavy": {"interaction_style": "Mostly just scroll/watch", "social_value": 4},
+    "high activity": {"digital_time": "Almost constantly", "social_value": 7},
+    "moderate activity": {"digital_time": "About once a day", "social_value": 5},
+    "low activity": {"digital_time": "A few times a week", "social_value": 3},
+    "sharer": {"interaction_style": "Share posts with friends", "sociability": 8},
+}
+PERSONA_BLUEPRINT_FIELD_TYPES = {
+    "summary": "string",
+    "age_mix": "array[string]",
+    "interest_clusters": "array[string]",
+    "activity_profile": "string",
+    "content_tendencies": "array[string]",
+    "guardrails": "array[string]",
+}
+PERSONA_SEED_FIELD_TYPES = {
+    "username": "string",
+    "display_name": "string",
+    "seed_label": "string",
+    "interest_biases": "array[string]",
+    "behavior_signals": "array[string]",
+    "score_hints": "object",
+    "content_bias": "string",
+    "shopping_bias": "string",
+    "age_group": "string",
+    "context_note": "string",
+}
+PERSONA_SCORE_HINT_FIELDS = ("social_value", "sociability", "openness")
+PROMPT_ALLOWED_VALUE_FIELDS = {
+    "interest_biases": PROFILE_OPTIONS["interests"],
+    "behavior_signals": list(SEED_BEHAVIOR_RULES.keys()),
+    "content_bias": PROFILE_OPTIONS["content_preference"],
+    "shopping_bias": PROFILE_OPTIONS["decision_factors"],
+    "age_group": PROFILE_OPTIONS["age_groups"],
+}
+PERSONA_PROMPT_VALID_EXAMPLE = {
+    "cohort_blueprint": {
+        "summary": "Contrasting segments for a product launch campaign.",
+        "age_mix": ["Gen Z (16-28)", "Gen Y (29-44)"],
+        "interest_clusters": ["Technology & Gaming", "Travel & Food"],
+        "activity_profile": "About once a day",
+        "content_tendencies": ["Pictures or videos", "Thoughtful opinions"],
+        "guardrails": ["Use only known schema values."],
+    },
+    "persona_seeds": [
+        {
+            "username": "launch-follower",
+            "display_name": "Launch Follower",
+            "seed_label": "launch follower",
+            "interest_biases": ["Technology & Gaming", "Travel & Food"],
+            "behavior_signals": ["commenter", "high activity"],
+            "score_hints": {"social_value": 6, "sociability": 7, "openness": 8},
+            "content_bias": "Pictures or videos",
+            "shopping_bias": "Convenience",
+            "age_group": "Gen Z (16-28)",
+            "context_note": "Quick to respond to visual launches.",
+        }
+    ],
+}
+PERSONA_PROMPT_INVALID_EXAMPLES = (
+    'Do NOT return: "score_hints": "high"',
+    'Do NOT return: "behavior_signals": "commenter"',
+    'Do NOT return: "interest_biases": "Technology & Gaming"',
+)
 
 SMART_GENERATE_MODES = {"broad_coverage", "focused_theme"}
 SMART_GENERATE_GOALS = {"broad_audience", "theme", "conversion_style", "engagement_style"}
@@ -739,47 +832,588 @@ def commit_guided_personas(*, user, course_id: int, payload: dict[str, Any]) -> 
     return _commit_personas(user=user, course_id=course_id, payload=payload)
 
 
-def _build_generation_prompt(*, payload: dict[str, Any], course) -> str:
-    count = _validate_count(payload.get("count"))
-    scenario_prompt = (payload.get("scenario_prompt") or "").strip()
-    template_id = (payload.get("template_id") or "").strip()
+def _validate_constraints(payload: dict[str, Any]) -> dict[str, list[str]]:
     constraints = payload.get("constraints") or {}
     if constraints and not isinstance(constraints, dict):
         raise ValueError("Field `constraints` must be an object.")
 
-    allowed = {
-        "genders": PROFILE_OPTIONS["genders"],
-        "cities": PROFILE_OPTIONS["cities"],
-        "age_groups": PROFILE_OPTIONS["age_groups"],
-        "education_levels": PROFILE_OPTIONS["education_levels"],
-        "income_levels": PROFILE_OPTIONS["income_levels"],
-        "interests": PROFILE_OPTIONS["interests"],
-        "shopping_frequency": PROFILE_OPTIONS["shopping_frequency"],
-        "buying_behavior": PROFILE_OPTIONS["buying_behavior"],
-        "decision_factors": PROFILE_OPTIONS["decision_factors"],
-        "shopping_preference": PROFILE_OPTIONS["shopping_preference"],
-        "digital_time": PROFILE_OPTIONS["digital_time"],
-        "content_preference": PROFILE_OPTIONS["content_preference"],
-        "interaction_style": PROFILE_OPTIONS["interaction_style"],
-        "influencer_type": PROFILE_OPTIONS["influencer_type"],
+    normalized: dict[str, list[str]] = {}
+    for field, options_key in GENERATION_CONSTRAINT_OPTIONS.items():
+        if field not in constraints:
+            continue
+        raw_value = constraints[field]
+        if isinstance(raw_value, list):
+            values = [str(item).strip() for item in raw_value if str(item).strip()]
+        elif raw_value in (None, ""):
+            values = []
+        else:
+            values = [str(raw_value).strip()]
+        allowed = set(PROFILE_OPTIONS[options_key])
+        invalid = [value for value in values if value not in allowed]
+        if invalid:
+            raise ValueError(f"Field `constraints.{field}` contains unsupported values.")
+        normalized[field] = values
+    return normalized
+
+
+def _normalize_generation_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    count = _validate_count(payload.get("count"))
+    generation_mode = (payload.get("generation_mode") or "").strip()
+    if generation_mode and generation_mode != GENERATION_MODE_AI_BULK:
+        raise ValueError(f"Field `generation_mode` must be `{GENERATION_MODE_AI_BULK}` when provided.")
+    return {
+        "count": count,
+        "scenario_prompt": (payload.get("scenario_prompt") or "").strip(),
+        "template_seed": (payload.get("template_seed") or payload.get("template_id") or "").strip(),
+        "guided_answers_seed": payload.get("guided_answers_seed") or {},
+        "constraints": _validate_constraints(payload),
+        "generation_mode": generation_mode or GENERATION_MODE_AI_BULK,
     }
-    return (
-        "Generate AI persona drafts for a university social media simulation platform.\n"
-        f"Course: {course.course_code} - {course.name}\n"
-        f"Count: {count}\n"
-        f"Template seed: {template_id or 'none'}\n"
-        f"Scenario prompt: {scenario_prompt or 'none'}\n"
-        f"Constraints: {json.dumps(constraints, ensure_ascii=False)}\n"
-        "Return strict JSON as an array of persona objects.\n"
-        "Use only the allowed categorical values listed below and keep numeric scores between 1 and 10.\n"
-        "Each persona must include: username, display_name, gender, city, age_group, education_level, income_level, "
-        "social_value, sociability, openness, content_preference, interests, shopping_frequency, buying_behavior, "
-        "decision_factor, shopping_preference, digital_time, interaction_style, influencer_type, notes.\n"
-        f"Allowed values: {json.dumps(allowed, ensure_ascii=False)}"
+
+
+def _default_cohort_blueprint(*, normalized_payload: dict[str, Any]) -> dict[str, Any]:
+    constraints = normalized_payload["constraints"]
+    interest_clusters = constraints.get("interests") or list(PROFILE_OPTIONS["interests"][:3])
+    age_mix = constraints.get("age_group") or list(PROFILE_OPTIONS["age_groups"][:2])
+    content_bias = constraints.get("content_preference") or list(PROFILE_OPTIONS["content_preference"][:2])
+    summary_bits = []
+    if normalized_payload["scenario_prompt"]:
+        summary_bits.append(normalized_payload["scenario_prompt"])
+    if normalized_payload["template_seed"]:
+        summary_bits.append(f"Template seed: {normalized_payload['template_seed']}")
+    if not summary_bits:
+        summary_bits.append("Teacher-authored marketing audience segments")
+    return {
+        "summary": " | ".join(summary_bits),
+        "age_mix": age_mix,
+        "interest_clusters": interest_clusters,
+        "activity_profile": (constraints.get("digital_time") or ["About once a day"])[0],
+        "content_tendencies": content_bias,
+        "guardrails": ["Use only existing persona schema values."],
+    }
+
+
+def _ensure_generated_response_shape(raw_response: Any, *, normalized_payload: dict[str, Any]) -> dict[str, Any]:
+    if isinstance(raw_response, list):
+        return {
+            "cohort_blueprint": _default_cohort_blueprint(normalized_payload=normalized_payload),
+            "persona_seeds": raw_response,
+        }
+    if not isinstance(raw_response, dict):
+        raise RuntimeError("AI persona generation returned an unexpected JSON shape.")
+
+    if isinstance(raw_response.get("persona_seeds"), list):
+        blueprint = raw_response.get("cohort_blueprint") or {}
+        if blueprint and not isinstance(blueprint, dict):
+            raise RuntimeError("AI persona generation returned an invalid cohort blueprint.")
+        return {
+            "cohort_blueprint": blueprint or _default_cohort_blueprint(normalized_payload=normalized_payload),
+            "persona_seeds": list(raw_response["persona_seeds"]),
+        }
+    if isinstance(raw_response.get("items"), list):
+        return {
+            "cohort_blueprint": raw_response.get("cohort_blueprint") or _default_cohort_blueprint(normalized_payload=normalized_payload),
+            "persona_seeds": list(raw_response["items"]),
+        }
+    if isinstance(raw_response.get("personas"), list):
+        return {
+            "cohort_blueprint": raw_response.get("cohort_blueprint") or _default_cohort_blueprint(normalized_payload=normalized_payload),
+            "persona_seeds": list(raw_response["personas"]),
+        }
+    raise RuntimeError("AI persona generation returned an unexpected JSON shape.")
+
+
+def _score_from_hint(value: Any, *, default: int) -> tuple[int, bool]:
+    if isinstance(value, bool):
+        return default, True
+    if isinstance(value, (int, float)):
+        num = max(1, min(10, int(value)))
+        return num, int(value) != num
+    text = str(value or "").strip().lower()
+    if not text:
+        return default, False
+    if text in SEED_SCORE_TEXT_MAP:
+        return SEED_SCORE_TEXT_MAP[text], False
+    return default, True
+
+
+def _pick_allowed_value(
+    candidate: Any,
+    *,
+    allowed_key: str,
+    fallback_values: list[str],
+) -> tuple[str, bool]:
+    candidate_text = str(candidate or "").strip()
+    if candidate_text in PROFILE_OPTIONS[allowed_key]:
+        return candidate_text, False
+    for value in fallback_values:
+        if value in PROFILE_OPTIONS[allowed_key]:
+            return value, bool(candidate_text)
+    return PROFILE_OPTIONS[allowed_key][0], bool(candidate_text)
+
+
+def _cohort_summary_from_blueprint(blueprint: dict[str, Any]) -> str:
+    summary = str(blueprint.get("summary") or "").strip()
+    if summary:
+        return summary
+    interests = [str(item).strip() for item in blueprint.get("interest_clusters") or [] if str(item).strip()]
+    if interests:
+        return f"Audience segments centered on {', '.join(interests[:2])}."
+    return "Teacher-authored marketing audience segments."
+
+
+def _resolve_constraint_values(constraints: dict[str, list[str]], field: str, fallback_key: str) -> list[str]:
+    values = [value for value in constraints.get(field, []) if value]
+    return values or list(PROFILE_OPTIONS[fallback_key])
+
+
+def _format_prompt_field_contract(field_types: dict[str, str]) -> str:
+    return "\n".join(f"- {field}: {field_type}" for field, field_type in field_types.items())
+
+
+def _format_allowed_values_by_field() -> str:
+    return "\n".join(
+        f"- {field}: {json.dumps(values, ensure_ascii=False)}"
+        for field, values in PROMPT_ALLOWED_VALUE_FIELDS.items()
     )
 
 
-def _request_generated_drafts(*, payload: dict[str, Any], course, existing_usernames: set[str]) -> list[dict[str, Any]]:
+def _persona_signature(draft: dict[str, Any]) -> tuple[tuple[str, ...], str, str, str, str]:
+    interests = tuple(str(item).strip() for item in (draft.get("interests") or [])[:2] if str(item).strip())
+    return (
+        interests,
+        str(draft.get("interaction_style") or "").strip(),
+        str(draft.get("content_preference") or "").strip(),
+        str(draft.get("decision_factor") or "").strip(),
+        str(draft.get("digital_time") or "").strip(),
+    )
+
+
+def _ordered_unique(values: list[str]) -> list[str]:
+    return list(dict.fromkeys(value for value in values if value))
+
+
+def _attempt_duplicate_signature_repair(
+    *,
+    draft: dict[str, Any],
+    normalized_payload: dict[str, Any],
+    blueprint: dict[str, Any],
+    signature_counts: dict[tuple[tuple[str, ...], str, str, str, str], int],
+    username: str,
+) -> tuple[dict[str, Any], bool]:
+    current_signature = _persona_signature(draft)
+    if signature_counts.get(current_signature, 0) < 1:
+        return draft, False
+
+    interests = [str(item).strip() for item in draft.get("interests") or [] if str(item).strip()]
+    primary_interest = interests[0] if interests else ""
+    secondary_interest = interests[1] if len(interests) > 1 else ""
+    interest_candidates = _ordered_unique(
+        [secondary_interest]
+        + [str(item).strip() for item in normalized_payload["constraints"].get("interests", [])]
+        + [str(item).strip() for item in blueprint.get("interest_clusters") or []]
+    )
+    if primary_interest:
+        interest_options = [(primary_interest, candidate) for candidate in interest_candidates if candidate and candidate != primary_interest]
+    else:
+        interest_options = [(candidate,) for candidate in interest_candidates if candidate]
+    if not interest_options:
+        interest_options = [tuple(interests[:2])] if interests else [tuple()]
+
+    decision_candidates = _ordered_unique(
+        [str(draft.get("decision_factor") or "").strip()]
+        + [str(item).strip() for item in normalized_payload["constraints"].get("decision_factor", [])]
+    )
+    digital_time_candidates = _ordered_unique(
+        [str(draft.get("digital_time") or "").strip()]
+        + [str(item).strip() for item in normalized_payload["constraints"].get("digital_time", [])]
+        + [str(blueprint.get("activity_profile") or "").strip()]
+    )
+
+    for interest_option in interest_options:
+        for decision_candidate in decision_candidates:
+            for digital_time_candidate in digital_time_candidates:
+                candidate = {
+                    **draft,
+                    "interests": list(interest_option)[:2],
+                    "decision_factor": decision_candidate or draft.get("decision_factor") or "",
+                    "digital_time": digital_time_candidate or draft.get("digital_time") or "",
+                }
+                candidate_signature = _persona_signature(candidate)
+                if signature_counts.get(candidate_signature, 0) < 1:
+                    candidate_warnings = list(candidate.get("warnings") or [])
+                    candidate_warnings.append(
+                        f"Adjusted draft `{username}` to avoid duplicate persona signature in preview batch."
+                    )
+                    candidate["warnings"] = candidate_warnings
+                    return candidate, True
+
+    return draft, False
+
+
+def _normalize_seed_list_field(
+    seed: dict[str, Any],
+    *,
+    field_name: str,
+    username: str,
+    warnings: list[str],
+    lowercase: bool = False,
+) -> list[str]:
+    raw_value = seed.get(field_name)
+    if raw_value in (None, "", []):
+        return []
+    if isinstance(raw_value, list):
+        items = raw_value
+    else:
+        warnings.append(f"Seed `{username}` used fallback parsing for malformed {field_name}.")
+        items = []
+    normalized: list[str] = []
+    for item in items:
+        text = str(item).strip()
+        if not text:
+            continue
+        normalized.append(text.lower() if lowercase else text)
+    return normalized
+
+
+def _normalize_seed_score_hints(
+    seed: dict[str, Any],
+    *,
+    username: str,
+    warnings: list[str],
+) -> tuple[dict[str, Any], bool]:
+    raw_value = seed.get("score_hints")
+    if raw_value in (None, "", {}):
+        return {}, False
+    if isinstance(raw_value, dict):
+        return raw_value, bool(raw_value)
+    warnings.append(f"Seed `{username}` used fallback defaults after malformed score hints.")
+    return {}, False
+
+
+def _seed_to_draft(
+    *,
+    seed: dict[str, Any],
+    course_id: int,
+    index: int,
+    seen_usernames: set[str],
+    normalized_payload: dict[str, Any],
+    blueprint: dict[str, Any],
+) -> tuple[dict[str, Any] | None, list[str]]:
+    warnings: list[str] = []
+    constraints = normalized_payload["constraints"]
+    username_hint = (seed.get("username") or seed.get("seed_label") or seed.get("display_name") or "").strip()
+    display_name = (seed.get("display_name") or seed.get("seed_label") or f"Generated Persona {index + 1}").strip()
+    if not username_hint:
+        username_hint = slugify(display_name) or f"generated-persona-{index + 1}"
+        warnings.append("Missing username/seed label; generated fallback username.")
+    username = ensure_ai_user_username_available(
+        course_id=course_id,
+        username=username_hint,
+        seen_usernames=seen_usernames,
+    )
+
+    behavior_signals = _normalize_seed_list_field(
+        seed,
+        field_name="behavior_signals",
+        username=username,
+        warnings=warnings,
+        lowercase=True,
+    )
+    interest_candidates = _normalize_seed_list_field(
+        seed,
+        field_name="interest_biases",
+        username=username,
+        warnings=warnings,
+    )
+    context_note = (seed.get("context_note") or "").strip()
+    content_bias = (seed.get("content_bias") or "").strip()
+    shopping_bias = (seed.get("shopping_bias") or "").strip()
+    score_hints, has_score_hints = _normalize_seed_score_hints(
+        seed,
+        username=username,
+        warnings=warnings,
+    )
+    if not interest_candidates and not behavior_signals and not has_score_hints and not content_bias and not shopping_bias and not context_note:
+        return None, [f"Skipped draft `{username}`: seed did not include enough persona detail to materialize."]
+    valid_interests = [item for item in interest_candidates if item in PROFILE_OPTIONS["interests"]]
+    if not valid_interests:
+        fallback_interests = [
+            str(item).strip() for item in blueprint.get("interest_clusters") or [] if str(item).strip() in PROFILE_OPTIONS["interests"]
+        ]
+        valid_interests = fallback_interests[:2]
+        if interest_candidates:
+            warnings.append(f"Seed `{username}` used fallback interests after invalid interest_biases.")
+    if not valid_interests:
+        return None, [f"Skipped draft `{username}`: no valid interests available from seed or cohort blueprint."]
+
+    if len(valid_interests) == 1:
+        for fallback in PROFILE_OPTIONS["interests"]:
+            if fallback != valid_interests[0]:
+                valid_interests.append(fallback)
+                break
+
+    social_value, social_repaired = _score_from_hint(score_hints.get("social_value"), default=5)
+    sociability, sociability_repaired = _score_from_hint(score_hints.get("sociability"), default=5)
+    openness, openness_repaired = _score_from_hint(score_hints.get("openness"), default=5)
+    if social_repaired or sociability_repaired or openness_repaired:
+        warnings.append(f"Seed `{username}` used normalized score hints.")
+
+    for signal in behavior_signals:
+        rule = SEED_BEHAVIOR_RULES.get(signal)
+        if not rule:
+            continue
+        if "social_value" in rule:
+            social_value = max(social_value, int(rule["social_value"]))
+        if "sociability" in rule:
+            sociability = max(sociability, int(rule["sociability"]))
+
+    content_preference, content_repaired = _pick_allowed_value(
+        content_bias,
+        allowed_key="content_preference",
+        fallback_values=_resolve_constraint_values(constraints, "content_preference", "content_preference"),
+    )
+    decision_factor, decision_repaired = _pick_allowed_value(
+        shopping_bias,
+        allowed_key="decision_factors",
+        fallback_values=_resolve_constraint_values(constraints, "decision_factor", "decision_factors"),
+    )
+    if content_repaired:
+        warnings.append(f"Seed `{username}` used fallback content preference.")
+    if decision_repaired:
+        warnings.append(f"Seed `{username}` used fallback decision factor.")
+
+    interaction_style = ""
+    digital_time = ""
+    for signal in behavior_signals:
+        rule = SEED_BEHAVIOR_RULES.get(signal)
+        if not rule:
+            continue
+        interaction_style = interaction_style or str(rule.get("interaction_style") or "")
+        digital_time = digital_time or str(rule.get("digital_time") or "")
+
+    interaction_style, _ = _pick_allowed_value(
+        interaction_style,
+        allowed_key="interaction_style",
+        fallback_values=_resolve_constraint_values(constraints, "interaction_style", "interaction_style"),
+    )
+    digital_time, _ = _pick_allowed_value(
+        digital_time or blueprint.get("activity_profile"),
+        allowed_key="digital_time",
+        fallback_values=_resolve_constraint_values(constraints, "digital_time", "digital_time"),
+    )
+
+    influencer_type, _ = _pick_allowed_value(
+        seed.get("influencer_type") or valid_interests[0],
+        allowed_key="influencer_type",
+        fallback_values=_resolve_constraint_values(constraints, "influencer_type", "influencer_type"),
+    )
+    age_group, _ = _pick_allowed_value(
+        seed.get("age_group"),
+        allowed_key="age_groups",
+        fallback_values=_resolve_constraint_values(constraints, "age_group", "age_groups"),
+    )
+    gender, _ = _pick_allowed_value(seed.get("gender"), allowed_key="genders", fallback_values=_resolve_constraint_values(constraints, "gender", "genders"))
+    city, _ = _pick_allowed_value(seed.get("city"), allowed_key="cities", fallback_values=_resolve_constraint_values(constraints, "city", "cities"))
+    education_level, _ = _pick_allowed_value(
+        seed.get("education_level"),
+        allowed_key="education_levels",
+        fallback_values=_resolve_constraint_values(constraints, "education_level", "education_levels"),
+    )
+    income_level, _ = _pick_allowed_value(
+        seed.get("income_level"),
+        allowed_key="income_levels",
+        fallback_values=_resolve_constraint_values(constraints, "income_level", "income_levels"),
+    )
+    shopping_frequency, _ = _pick_allowed_value(
+        seed.get("shopping_frequency"),
+        allowed_key="shopping_frequency",
+        fallback_values=_resolve_constraint_values(constraints, "shopping_frequency", "shopping_frequency"),
+    )
+    buying_behavior, _ = _pick_allowed_value(
+        seed.get("buying_behavior"),
+        allowed_key="buying_behavior",
+        fallback_values=_resolve_constraint_values(constraints, "buying_behavior", "buying_behavior"),
+    )
+    shopping_preference, _ = _pick_allowed_value(
+        seed.get("shopping_preference"),
+        allowed_key="shopping_preference",
+        fallback_values=_resolve_constraint_values(constraints, "shopping_preference", "shopping_preference"),
+    )
+
+    note_parts = [f"Seed: {(seed.get('seed_label') or display_name).strip()}"]
+    summary = _cohort_summary_from_blueprint(blueprint)
+    if summary:
+        note_parts.append(f"Segment set: {summary}")
+    if context_note:
+        note_parts.append(context_note)
+
+    return {
+        "username": username,
+        "display_name": display_name,
+        "gender": gender,
+        "city": city,
+        "age_group": age_group,
+        "education_level": education_level,
+        "income_level": income_level,
+        "social_value": social_value,
+        "sociability": sociability,
+        "openness": openness,
+        "content_preference": content_preference,
+        "interests": valid_interests[:2],
+        "shopping_frequency": shopping_frequency,
+        "buying_behavior": buying_behavior,
+        "decision_factor": decision_factor,
+        "shopping_preference": shopping_preference,
+        "digital_time": digital_time,
+        "interaction_style": interaction_style,
+        "influencer_type": influencer_type,
+        "notes": " | ".join(note_parts),
+    }, warnings
+
+
+def _materialize_generated_personas(
+    *,
+    course_id: int,
+    normalized_payload: dict[str, Any],
+    generated: dict[str, Any],
+) -> dict[str, Any]:
+    blueprint = generated["cohort_blueprint"]
+    raw_seeds = generated["persona_seeds"]
+    seen_usernames: set[str] = set()
+    signature_counts: dict[tuple[tuple[str, ...], str, str, str, str], int] = {}
+    drafts: list[dict[str, Any]] = []
+    warnings: list[str] = []
+    repaired_count = 0
+    rejected_count = 0
+
+    for index, raw_seed in enumerate(raw_seeds):
+        if not isinstance(raw_seed, dict):
+            rejected_count += 1
+            warnings.append(f"Skipped draft `item-{index + 1}`: seed must be an object.")
+            continue
+        if "interests" in raw_seed or "content_preference" in raw_seed:
+            current_warnings: list[str] = []
+            try:
+                normalized = normalize_ai_user_payload(raw_seed, require_username=True)
+                normalized["username"] = ensure_ai_user_username_available(
+                    course_id=course_id,
+                    username=normalized["username"],
+                    seen_usernames=seen_usernames,
+                )
+                normalized, repaired_signature = _attempt_duplicate_signature_repair(
+                    draft=normalized,
+                    normalized_payload=normalized_payload,
+                    blueprint=blueprint,
+                    signature_counts=signature_counts,
+                    username=normalized["username"],
+                )
+                signature = _persona_signature(normalized)
+                if signature_counts.get(signature, 0) >= 1:
+                    rejected_count += 1
+                    warnings.append(
+                        f"Skipped draft `{normalized['username']}`: duplicate persona signature in preview batch after repair attempts."
+                    )
+                    continue
+                signature_counts[signature] = signature_counts.get(signature, 0) + 1
+                if repaired_signature:
+                    repaired_count += 1
+                item_warnings = list(current_warnings)
+                item_warnings.extend(normalized.pop("warnings", []))
+                drafts.append(serialize_ai_user_draft(normalized, warnings=item_warnings))
+            except ValueError as exc:
+                rejected_count += 1
+                username = (raw_seed.get("username") or f"item-{index + 1}").strip() or f"item-{index + 1}"
+                warnings.append(f"Skipped draft `{username}`: {exc}")
+            continue
+        draft, seed_warnings = _seed_to_draft(
+            seed=raw_seed,
+            course_id=course_id,
+            index=index,
+            seen_usernames=seen_usernames,
+            normalized_payload=normalized_payload,
+            blueprint=blueprint,
+        )
+        if draft is None:
+            rejected_count += 1
+            warnings.extend(seed_warnings)
+            continue
+        draft, repaired_signature = _attempt_duplicate_signature_repair(
+            draft=draft,
+            normalized_payload=normalized_payload,
+            blueprint=blueprint,
+            signature_counts=signature_counts,
+            username=draft["username"],
+        )
+        signature = _persona_signature(draft)
+        if signature_counts.get(signature, 0) >= 1:
+            rejected_count += 1
+            warnings.append(
+                f"Skipped draft `{draft['username']}`: duplicate persona signature in preview batch after repair attempts."
+            )
+            continue
+        signature_counts[signature] = signature_counts.get(signature, 0) + 1
+        repaired_count += len(seed_warnings) + (1 if repaired_signature else 0)
+        drafts.append(serialize_ai_user_draft(draft, warnings=seed_warnings))
+        warnings.extend(seed_warnings)
+
+    return {
+        "cohort_blueprint": {
+            "summary": _cohort_summary_from_blueprint(blueprint),
+            "age_mix": list(blueprint.get("age_mix") or []),
+            "interest_clusters": list(blueprint.get("interest_clusters") or []),
+            "activity_profile": str(blueprint.get("activity_profile") or ""),
+            "content_tendencies": list(blueprint.get("content_tendencies") or []),
+            "guardrails": list(blueprint.get("guardrails") or []),
+        },
+        "items": drafts,
+        "warnings": warnings,
+        "repaired_count": repaired_count,
+        "rejected_count": rejected_count,
+    }
+
+
+def _build_generation_prompt(*, payload: dict[str, Any], course) -> str:
+    normalized_payload = _normalize_generation_payload(payload)
+    count = normalized_payload["count"]
+    scenario_prompt = normalized_payload["scenario_prompt"]
+    template_seed = normalized_payload["template_seed"]
+    constraints = normalized_payload["constraints"]
+
+    return (
+        "Generate AI persona seeds for a university social media simulation platform.\n"
+        f"Course: {course.course_code} - {course.name}\n"
+        f"Count: {count}\n"
+        f"Generation mode: {normalized_payload['generation_mode']}\n"
+        f"Template seed: {template_seed or 'none'}\n"
+        f"Scenario prompt: {scenario_prompt or 'none'}\n"
+        f"Constraints: {json.dumps(constraints, ensure_ascii=False)}\n"
+        "Return strict JSON only. No markdown, no commentary, no code fences.\n"
+        "Top-level JSON contract:\n"
+        '- top-level object keys: ["cohort_blueprint", "persona_seeds"]\n'
+        "- no additional top-level keys\n"
+        "cohort_blueprint field types:\n"
+        f"{_format_prompt_field_contract(PERSONA_BLUEPRINT_FIELD_TYPES)}\n"
+        "persona_seeds[*] field types:\n"
+        f"{_format_prompt_field_contract(PERSONA_SEED_FIELD_TYPES)}\n"
+        f'score_hints object keys must be only: {json.dumps(PERSONA_SCORE_HINT_FIELDS, ensure_ascii=False)}\n'
+        "Every score_hints value must be an integer 1-10.\n"
+        "interest_biases and behavior_signals must always be JSON arrays of strings, never a single string.\n"
+        "Return at least one persona seed unless the constraints make it impossible.\n"
+        "Prioritize contrast across interests, response tendencies, and decision drivers so students can compare which content attracts which audience segments.\n"
+        "Do not invent new schema fields beyond those listed above. Prefer allowed values where possible.\n"
+        "Allowed values by field:\n"
+        f"{_format_allowed_values_by_field()}\n"
+        "Valid example:\n"
+        f"{json.dumps(PERSONA_PROMPT_VALID_EXAMPLE, ensure_ascii=False)}\n"
+        "Invalid examples:\n"
+        f"- {PERSONA_PROMPT_INVALID_EXAMPLES[0]}\n"
+        f"- {PERSONA_PROMPT_INVALID_EXAMPLES[1]}\n"
+        f"- {PERSONA_PROMPT_INVALID_EXAMPLES[2]}"
+    )
+
+
+def _request_generated_drafts(*, payload: dict[str, Any], course, existing_usernames: set[str]) -> dict[str, Any] | list[dict[str, Any]]:
     client = _get_client()
     if client is None:
         raise RuntimeError("AI persona generation is unavailable.")
@@ -799,36 +1433,40 @@ def _request_generated_drafts(*, payload: dict[str, Any], course, existing_usern
     message = response.choices[0].message
     content = getattr(message, "parsed", None) or message.content
     if isinstance(content, dict):
-        if isinstance(content.get("items"), list):
-            return list(content["items"])
-        if isinstance(content.get("personas"), list):
-            return list(content["personas"])
-        raise RuntimeError("AI persona generation returned an unexpected JSON shape.")
+        return content
 
     raw = (content or "").strip()
     if not raw:
         raise RuntimeError("AI persona generation returned an empty response.")
     data = json.loads(raw)
-    if isinstance(data, list):
+    if isinstance(data, (list, dict)):
         return data
-    if isinstance(data, dict):
-        if isinstance(data.get("items"), list):
-            return list(data["items"])
-        if isinstance(data.get("personas"), list):
-            return list(data["personas"])
     raise RuntimeError("AI persona generation returned an unexpected JSON shape.")
 
 
 def preview_generated_personas(*, user, course_id: int, payload: dict[str, Any]) -> dict[str, Any]:
     course = ensure_can_manage_course_ai_users(user=user, course_id=course_id)
-    _validate_count(payload.get("count"))
+    normalized_payload = _normalize_generation_payload(payload)
     existing_usernames = {item.username.lower() for item in CourseAIUserRepository.list_for_course(course_id)}
-    raw_items = _request_generated_drafts(payload=payload, course=course, existing_usernames=existing_usernames)
-    normalized = _normalize_preview_items(course_id=course_id, raw_items=raw_items)
+    raw_response = _request_generated_drafts(payload=payload, course=course, existing_usernames=existing_usernames)
+    generated = _ensure_generated_response_shape(raw_response, normalized_payload=normalized_payload)
+    normalized = _materialize_generated_personas(
+        course_id=course_id,
+        normalized_payload=normalized_payload,
+        generated=generated,
+    )
+    if not normalized["items"]:
+        raise RuntimeError("AI persona generation did not produce any valid preview personas.")
     return {
         "items": normalized["items"],
         "count": len(normalized["items"]),
         "warnings": normalized["warnings"],
+        "cohort_blueprint": normalized["cohort_blueprint"],
+        "generation_meta": {
+            "model_strategy": "single_call_blueprint_seed",
+            "repaired_count": normalized["repaired_count"],
+            "rejected_count": normalized["rejected_count"],
+        },
         "limits": {"max_count": MAX_PERSONA_PREVIEW_COUNT, "mode": "generated"},
     }
 

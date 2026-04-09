@@ -132,7 +132,12 @@ export default function CourseAIUsersPage() {
 
   const openSmartGenerate = () => {
     setCreationMessage("");
-    setCreationMode("smart");
+    setCreationMode("smart_guided");
+  };
+
+  const openAIBulkGenerate = () => {
+    setCreationMessage("");
+    setCreationMode("ai_bulk");
   };
 
   const openAdvancedCreate = () => {
@@ -413,6 +418,13 @@ export default function CourseAIUsersPage() {
             onClick={openSmartGenerate}
           >
             Smart Generate
+          </button>
+          <button
+            type="button"
+            className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
+            onClick={openAIBulkGenerate}
+          >
+            AI Bulk Generate
           </button>
           <button
             type="button"

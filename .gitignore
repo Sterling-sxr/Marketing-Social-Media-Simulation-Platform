@@ -17,5 +17,6 @@ __pycache__/
 .env
 .venv/
 .venv/*
+.worktrees/
 
 AGENT.md

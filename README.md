@@ -124,6 +124,8 @@ ai_student_02,Bob AI,Male,Melbourne,Gen Y (29-44),Post-graduate Education,"$90K 
 
 ### AI automation (DeepSeek)
 - Configure `DEEPSEEK_API_KEY` in `.env` or the deployment environment (optional overrides: `DEEPSEEK_API_BASE`, `DEEPSEEK_MODEL_NAME`, `DEEPSEEK_POST_DELAY_SECONDS`, `DEEPSEEK_AI_USER_DELAY_SECONDS`). Leaving the API key empty disables AI interactions.
+- The AI persona `generate-preview` flow also calls DeepSeek synchronously, so it can take noticeably longer than local draft generation such as `guided-preview`.
+- If you change nginx timeout settings for AI preview requests, restart the gateway so the new proxy config is loaded: `docker compose restart gateway`.
 - After a post is committed, the backend asynchronously calls the DeepSeek API for each AI persona to decide likes/comments and posts them via the persona’s system account.
 - API failures and network errors are caught and logged so normal posting is unaffected.
 - Post-analytics sentiment snapshots run on the same scheduler (controlled by `POST_ANALYTICS_REFRESH_INTERVAL`, default 1 hour). A snapshot is also triggered once at service startup.
