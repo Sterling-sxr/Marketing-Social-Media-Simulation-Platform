@@ -5,9 +5,12 @@ import AuthenticatedShell from "../components/AuthenticatedShell";
 // Structure:
 // {
 //   summary: { totalPosts, totalLikes, totalComments, totalShares },
+//   engagementTrend: {...},
 //   topPosts: [...],
 //   audienceInsights: { targetAudience, strongestEngagedAudience, matchLevel, breakdown: [...] },
-//   suggestions: [...]
+//   bestTimeToPost: {...},
+//   suggestions: [...],
+//   aiInsight: {...}
 // }
 const mockAnalytics = {
   summary: {
@@ -15,6 +18,15 @@ const mockAnalytics = {
     totalLikes: 342,
     totalComments: 97,
     totalShares: 54,
+  },
+  engagementTrend: {
+    changePercent: 12,
+    direction: "up",
+    windowLabel: "vs last week",
+    narrative:
+      "Your overall engagement is trending up compared with last week.",
+    // Simple mock series for potential future sparkline use
+    series: [4, 5, 6, 5, 7, 7.5, 8],
   },
   topPosts: [
     {
@@ -60,6 +72,11 @@ const mockAnalytics = {
       { persona: "Career Planner", percentage: 13 },
     ],
   },
+  bestTimeToPost: {
+    bestHourLabel: "7 PM",
+    summary: "Most engagement comes from posts published in the early evening.",
+    slots: ["5–7 PM", "7–9 PM", "Noon break"],
+  },
   suggestions: [
     {
       id: "short-form",
@@ -90,6 +107,11 @@ const mockAnalytics = {
       focus: "Audience",
     },
   ],
+  aiInsight: {
+    title: "AI Insight",
+    message:
+      "Your AI Explorer and Time‑poor Student personas engage most with concise, example‑driven posts published in the evening. Turning long notes into short, scenario‑based posts can unlock more comments.",
+  },
 };
 
 // =============================== Helpers =================================
@@ -113,6 +135,49 @@ function SummaryCard({ label, value }) {
       </p>
       <p className="mt-2 text-2xl font-extrabold text-slate-900">{value}</p>
     </div>
+  );
+}
+
+function EngagementTrendSection({ trend }) {
+  const sign = trend.changePercent >= 0 ? "+" : "−";
+  const absPercent = Math.abs(trend.changePercent);
+
+  return (
+    <section className="rounded-3xl border border-brand-100 bg-white p-5 shadow-soft">
+      <header className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+            Engagement Trend
+          </h2>
+          <p className="text-xs text-slate-500">{trend.windowLabel}</p>
+        </div>
+        <div
+          className={`inline-flex items-baseline gap-1 rounded-full px-3 py-1 text-xs font-semibold ${
+            trend.direction === "up"
+              ? "bg-emerald-50 text-emerald-700"
+              : "bg-rose-50 text-rose-600"
+          }`}
+        >
+          <span aria-hidden>{trend.direction === "up" ? "⬆️" : "⬇️"}</span>
+          <span>
+            {sign}
+            {absPercent}%
+          </span>
+        </div>
+      </header>
+      <p className="mb-3 text-xs text-slate-600">{trend.narrative}</p>
+      {/* Lightweight sparkline-style placeholder (no chart library) */}
+      <div className="flex items-end gap-1.5 rounded-2xl bg-gradient-to-r from-brand-50 via-white to-accent-50 px-3 py-2">
+        {trend.series.map((value, index) => (
+          // eslint-disable-next-line react/no-array-index-key
+          <div
+            key={index}
+            className="flex-1 rounded-full bg-brand-200/70"
+            style={{ height: `${20 + value * 6}px` }}
+          />
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -331,7 +396,15 @@ function StrategySuggestionsSection({ suggestions }) {
 
 // ============================= Page component ============================
 export default function StudentAnalyticsPage() {
-  const { summary, topPosts, audienceInsights, suggestions } = mockAnalytics;
+  const {
+    summary,
+    engagementTrend,
+    topPosts,
+    audienceInsights,
+    bestTimeToPost,
+    suggestions,
+    aiInsight,
+  } = mockAnalytics;
 
   return (
     <AuthenticatedShell
@@ -346,10 +419,56 @@ export default function StudentAnalyticsPage() {
         <SummaryCard label="Total Shares" value={summary.totalShares} />
       </section>
 
+      {/* 1b. Engagement trend + Best time to post */}
+      <section className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        <EngagementTrendSection trend={engagementTrend} />
+        <section className="rounded-3xl border border-brand-100 bg-white p-5 shadow-soft">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+            Best Time to Post
+          </h2>
+          <p className="mt-2 text-xs text-slate-500">
+            Based on your recent high‑engagement posts.
+          </p>
+          <div className="mt-4 flex items-baseline gap-2">
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              Best hour
+            </span>
+            <span className="text-xl font-extrabold text-brand-800">
+              {bestTimeToPost.bestHourLabel}
+            </span>
+          </div>
+          <p className="mt-2 text-xs text-slate-600">
+            {bestTimeToPost.summary}
+          </p>
+          {bestTimeToPost.slots?.length ? (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {bestTimeToPost.slots.map((slot) => (
+                <span
+                  key={slot}
+                  className="inline-flex items-center rounded-full border border-brand-100 bg-brand-50/70 px-3 py-1 text-[11px] font-medium uppercase tracking-wide text-slate-700"
+                >
+                  {slot}
+                </span>
+              ))}
+            </div>
+          ) : null}
+        </section>
+      </section>
+
       {/* 2 & 3. Top posts + audience insights */}
       <section className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
         <TopPostsSection posts={topPosts} />
         <AudienceInsightsSection insights={audienceInsights} />
+      </section>
+
+      {/* 3b. AI Insight */}
+      <section className="rounded-3xl border border-brand-100 bg-gradient-to-r from-brand-50/80 via-white to-accent-50/80 p-5 shadow-soft">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-800">
+          {aiInsight.title}
+        </h2>
+        <p className="mt-2 text-xs text-slate-700 leading-relaxed">
+          {aiInsight.message}
+        </p>
       </section>
 
       {/* 4. Strategy suggestions */}
