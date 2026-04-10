@@ -9,8 +9,9 @@ import AuthenticatedShell from "../components/AuthenticatedShell";
 //   topPosts: [...],
 //   audienceInsights: { targetAudience, strongestEngagedAudience, matchLevel, breakdown: [...] },
 //   bestTimeToPost: {...},
+//   contentPatterns: [...],
 //   suggestions: [...],
-//   aiInsight: {...}
+//   aiInsight: {...},
 // }
 const mockAnalytics = {
   summary: {
@@ -77,6 +78,29 @@ const mockAnalytics = {
     summary: "Most engagement comes from posts published in the early evening.",
     slots: ["5–7 PM", "7–9 PM", "Noon break"],
   },
+  contentPatterns: [
+    {
+      id: "short-examples",
+      label: "Short, example‑driven posts",
+      engagementDelta: "+32%",
+      bestFor: ["AI Explorer", "Time‑poor Student"],
+      note: "2–3 sentence scenario posts with a concrete takeaway perform significantly better than long theory dumps.",
+    },
+    {
+      id: "reflection",
+      label: "Personal reflections",
+      engagementDelta: "+18%",
+      bestFor: ["Theory Lover", "Career Planner"],
+      note: "Posts that start with “What I learned when…” invite more thoughtful comments, especially from reflection‑oriented personas.",
+    },
+    {
+      id: "questions",
+      label: "Question‑first posts",
+      engagementDelta: "+24%",
+      bestFor: ["AI Explorer"],
+      note: "Opening with a clear question (“What would you try next?”) leads to more replies than statements or announcements.",
+    },
+  ],
   suggestions: [
     {
       id: "short-form",
@@ -394,6 +418,53 @@ function StrategySuggestionsSection({ suggestions }) {
   );
 }
 
+function ContentPerformancePatternsSection({ patterns }) {
+  return (
+    <section className="rounded-3xl border border-brand-100 bg-white p-6 shadow-soft">
+      <header className="mb-4">
+        <h2 className="text-lg font-semibold text-slate-900">
+          Content Performance Patterns
+        </h2>
+        <p className="text-xs text-slate-500">
+          What types of posts currently resonate most with your audience.
+        </p>
+      </header>
+      <ul className="space-y-3">
+        {patterns.map((pattern) => (
+          <li
+            key={pattern.id}
+            className="rounded-2xl border border-brand-100/80 bg-gradient-to-r from-white via-brand-50/60 to-accent-50/60 p-4"
+          >
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-slate-900">
+                  {pattern.label}
+                </p>
+                <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                  Best for:{" "}
+                  <span className="font-semibold text-brand-700">
+                    {pattern.bestFor.join(", ")}
+                  </span>
+                </p>
+              </div>
+              <div className="mt-1 inline-flex items-baseline gap-2 rounded-full border border-emerald-100 bg-emerald-50/80 px-3 py-1.5 text-xs font-semibold text-emerald-700 md:mt-0">
+                <span aria-hidden>📈</span>
+                <span>{pattern.engagementDelta}</span>
+                <span className="text-[10px] uppercase tracking-wide text-emerald-800/80">
+                  vs your average
+                </span>
+              </div>
+            </div>
+            <p className="mt-2 text-xs leading-relaxed text-slate-600">
+              {pattern.note}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 // ============================= Page component ============================
 export default function StudentAnalyticsPage() {
   const {
@@ -402,6 +473,7 @@ export default function StudentAnalyticsPage() {
     topPosts,
     audienceInsights,
     bestTimeToPost,
+    contentPatterns,
     suggestions,
     aiInsight,
   } = mockAnalytics;
@@ -471,7 +543,10 @@ export default function StudentAnalyticsPage() {
         </p>
       </section>
 
-      {/* 4. Strategy suggestions */}
+      {/* 4. Content patterns */}
+      <ContentPerformancePatternsSection patterns={contentPatterns} />
+
+      {/* 5. Strategy suggestions */}
       <StrategySuggestionsSection suggestions={suggestions} />
     </AuthenticatedShell>
   );
