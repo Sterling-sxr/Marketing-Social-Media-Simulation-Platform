@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
+import { isTeacherLike } from "../../lib/authRole";
 import {
   Home,
   BookOpen,
@@ -68,6 +69,7 @@ export default function AuthenticatedShell({
     notificationStatus,
     fetchNotifications,
   } = useApp();
+  const isTeacherOrAdmin = isTeacherLike(authUser);
 
   // On first load or account switch, fetch once when auto-polling is enabled
   useEffect(() => {
@@ -132,33 +134,34 @@ export default function AuthenticatedShell({
         label: "Analytics",
         icon: <LayoutDashboard className="h-5 w-5" />,
       },
-      {
+    ];
+    if (!isTeacherOrAdmin) {
+      base.push({
         to: "/ai-tutor",
         label: "AI Tutor",
         icon: <BotMessageSquare className="h-5 w-5" />,
-      },
-    ];
+      });
+    }
 
-    const admin =
-      authUser?.is_superuser || authUser?.is_staff
-        ? [
-            {
-              to: "/dashboard",
-              label: "Dashboard",
-              icon: <LayoutDashboard className="h-5 w-5" />,
-            },
-            {
-              to: "/courses/manage",
-              label: "Course Manage",
-              icon: <Wrench className="h-5 w-5" />,
-            },
-          ]
-        : [];
+    const admin = isTeacherOrAdmin
+      ? [
+          {
+            to: "/dashboard",
+            label: "Dashboard",
+            icon: <LayoutDashboard className="h-5 w-5" />,
+          },
+          {
+            to: "/courses/manage",
+            label: "Course Manage",
+            icon: <Wrench className="h-5 w-5" />,
+          },
+        ]
+      : [];
 
     const merged = [...base.slice(0, 2), ...admin, ...base.slice(2)];
     const uniq = Array.from(new Map(merged.map((i) => [i.to, i])).values());
     return uniq;
-  }, [links, authUser?.id, authUser?.is_superuser, authUser?.is_staff]);
+  }, [links, authUser?.id, isTeacherOrAdmin]);
 
   const compactName = displayName || "User";
   const compactLinks = useMemo(() => {
@@ -172,20 +175,22 @@ export default function AuthenticatedShell({
     }
     const uid = authUser?.id;
     const preferred = Array.from(
-      new Set([
-        "/studenthome",
-        "/courses",
-        "/search",
-        "/notifications",
-        "/ai-tutor",
-      ])
+      new Set(
+        [
+          "/studenthome",
+          "/courses",
+          "/search",
+          "/notifications",
+          !isTeacherOrAdmin ? "/ai-tutor" : null,
+        ].filter(Boolean)
+      )
     );
     const linksByTo = new Map(sidebarLinks.map((item) => [item.to, item]));
     const picked = preferred.map((to) => linksByTo.get(to)).filter(Boolean);
     if (picked.length >= 4) return picked.slice(0, 5);
     // Keep mobile nav capped to 5 primary destinations. Admin shortcuts can live in page-level quick actions.
     return dedupeByTo(sidebarLinks).slice(0, 5);
-  }, [mobileNavLinks, sidebarLinks, authUser?.id]);
+  }, [mobileNavLinks, sidebarLinks, authUser?.id, isTeacherOrAdmin]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-accent-50">

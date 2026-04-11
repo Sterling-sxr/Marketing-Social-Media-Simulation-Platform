@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
+import { isTeacherLike } from "../lib/authRole";
 import Feedback from "./components/Feedback";
 import CircleImage from "./components/CircleImage";
 import { Eye, EyeOff } from "lucide-react";
@@ -24,9 +25,13 @@ export default function HomePage() {
     e.preventDefault();
     setStatus({ loading: true, message: "", error: "" });
     try {
-      await login(email, password);
+      const { user } = await login(email, password);
       setStatus({ loading: false, message: "Login Success!", error: "" });
-      navigate("/studenthome");
+      if (isTeacherLike(user)) {
+        navigate("/dashboard");
+      } else {
+        navigate("/studenthome");
+      }
     } catch (error) {
       setStatus({ loading: false, message: "", error: error.message });
     }
@@ -188,9 +193,13 @@ export default function HomePage() {
                   <button
                     type="button"
                     className="w-full rounded-xl bg-gradient-to-r from-brand to-brand-dark py-3 text-sm font-semibold text-white shadow-lg shadow-brand-200 transition hover:from-brand-dark hover:to-brand"
-                    onClick={() => navigate("/courses")}
+                    onClick={() =>
+                      isTeacherLike(authUser)
+                        ? navigate("/dashboard")
+                        : navigate("/studenthome")
+                    }
                   >
-                    enter course
+                    Enter Bread
                   </button>
                   <button
                     type="button"

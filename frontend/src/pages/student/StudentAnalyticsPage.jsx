@@ -1,4 +1,9 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AuthenticatedShell from "../components/AuthenticatedShell";
+import { useApp } from "../../context/AppContext";
+import { getJson } from "../../lib/api";
+import { isTeacherLike } from "../../lib/authRole";
 
 // ======================= Mock analytics data (MVP) =======================
 // NOTE: All data is mocked on the frontend for demo purposes only.
@@ -161,6 +166,178 @@ const mockAnalytics = {
       "AI Explorer and Time‑poor Student personas respond best when you turn long theory notes into short, scenario‑based posts they can scan and react to quickly.",
   },
 };
+
+// ====================== Derivation helpers from API data ======================
+function computeSummaryFromItems(items) {
+  const totalPosts = items.length;
+  let totalLikes = 0;
+  let totalComments = 0;
+  let totalShares = 0; // backend does not track shares yet
+
+  items.forEach((item) => {
+    totalLikes += Number(item.likes || 0);
+    totalComments += Number(item.comments || 0);
+  });
+
+  return {
+    totalPosts,
+    totalLikes,
+    totalComments,
+    totalShares,
+  };
+}
+
+function computeEngagementTrendFromItems(items) {
+  if (!items.length) {
+    return mockAnalytics.engagementTrend;
+  }
+  const sorted = [...items].sort(
+    (a, b) => new Date(a.created_at) - new Date(b.created_at)
+  );
+  const half = Math.max(1, Math.floor(sorted.length / 2));
+  const older = sorted.slice(0, half);
+  const recent = sorted.slice(sorted.length - half);
+  const totalEngagement = (list) =>
+    list.reduce(
+      (sum, item) =>
+        sum +
+        Number(item.likes || 0) +
+        Number(item.comments || 0) +
+        Number(item.views || 0),
+      0
+    );
+  const olderEng = totalEngagement(older);
+  const recentEng = totalEngagement(recent);
+  let changePercent = 0;
+  if (olderEng > 0) {
+    changePercent = Math.round(((recentEng - olderEng) * 100) / olderEng);
+  }
+  const direction = changePercent >= 0 ? "up" : "down";
+  const absPercent = Math.abs(changePercent);
+  const windowLabel = "Recent posts vs previous posts";
+  let narrative = "Engagement is stable compared with your earlier posts.";
+  if (absPercent > 0) {
+    narrative =
+      direction === "up"
+        ? "Your recent posts are generating more interactions than older ones."
+        : "Your recent posts are receiving fewer interactions than earlier ones.";
+  }
+
+  const series = sorted
+    .slice(-7)
+    .map(
+      (item) =>
+        Number(item.likes || 0) +
+        Number(item.comments || 0) +
+        Number(item.views || 0)
+    );
+
+  return {
+    ...mockAnalytics.engagementTrend,
+    changePercent: absPercent,
+    direction,
+    windowLabel,
+    narrative,
+    series,
+  };
+}
+
+function formatHourLabel(hour) {
+  const h = ((hour % 24) + 24) % 24;
+  const suffix = h >= 12 ? "PM" : "AM";
+  const display = h % 12 === 0 ? 12 : h % 12;
+  return `${display} ${suffix}`;
+}
+
+function computeBestTimeFromItems(items) {
+  if (!items.length) {
+    return mockAnalytics.bestTimeToPost;
+  }
+  const buckets = Array(24).fill(0);
+  items.forEach((item) => {
+    if (!item.created_at) return;
+    const dt = new Date(item.created_at);
+    if (Number.isNaN(dt.getTime())) return;
+    const h = dt.getHours();
+    const score =
+      Number(item.likes || 0) +
+      Number(item.comments || 0) +
+      Number(item.views || 0);
+    buckets[h] += score;
+  });
+  let bestHour = 0;
+  buckets.forEach((val, idx) => {
+    if (val > buckets[bestHour]) bestHour = idx;
+  });
+  const bestHourLabel = formatHourLabel(bestHour);
+
+  let summary = "Most engagement comes from posts published in the afternoon.";
+  if (bestHour >= 18 || bestHour < 5) {
+    summary = "Most engagement comes from posts published in the evening.";
+  } else if (bestHour >= 5 && bestHour < 12) {
+    summary = "Most engagement comes from posts published in the morning.";
+  }
+
+  const slots = [];
+  const primaryStart = (bestHour + 23) % 24;
+  const primaryEnd = (bestHour + 1) % 24;
+  slots.push(`${formatHourLabel(primaryStart)}–${formatHourLabel(primaryEnd)}`);
+  const secondaryEnd = (bestHour + 3) % 24;
+  slots.push(`${formatHourLabel(bestHour)}–${formatHourLabel(secondaryEnd)}`);
+
+  return {
+    ...mockAnalytics.bestTimeToPost,
+    bestHourLabel,
+    summary,
+    slots,
+  };
+}
+
+function buildTopPostsFromItems(items) {
+  if (!items.length) return [];
+  const scored = items.map((item) => {
+    const likes = Number(item.likes || 0);
+    const comments = Number(item.comments || 0);
+    const views = Number(item.views || 0);
+    const rawScore = likes + comments * 2 + views * 0.1;
+    return { item, rawScore };
+  });
+  scored.sort((a, b) => b.rawScore - a.rawScore);
+  const top = scored.slice(0, 3);
+  const maxScore = top[0]?.rawScore || 1;
+  return top.map(({ item, rawScore }) => {
+    const engagementScore = (rawScore / maxScore) * 10;
+    return {
+      id: item.id,
+      content: item.title || item.content || "",
+      createdAt: item.created_at,
+      likes: Number(item.likes || 0),
+      comments: Number(item.comments || 0),
+      shares: 0,
+      engagementScore: Number.isFinite(engagementScore)
+        ? engagementScore
+        : 0,
+    };
+  });
+}
+
+function buildAnalyticsFromApi(items) {
+  if (!Array.isArray(items) || !items.length) {
+    return null;
+  }
+  const summary = computeSummaryFromItems(items);
+  const engagementTrend = computeEngagementTrendFromItems(items);
+  const bestTimeToPost = computeBestTimeFromItems(items);
+  const topPosts = buildTopPostsFromItems(items);
+
+  return {
+    ...mockAnalytics,
+    summary,
+    engagementTrend,
+    bestTimeToPost,
+    topPosts,
+  };
+}
 
 // =============================== Helpers =================================
 function formatDate(isoString) {
@@ -524,6 +701,45 @@ function ContentPerformancePatternsSection({ patterns }) {
 
 // ============================= Page component ============================
 export default function StudentAnalyticsPage() {
+  const navigate = useNavigate();
+  const { authUser, authCheckComplete } = useApp();
+  const [analytics, setAnalytics] = useState(null);
+  const [status, setStatus] = useState({ loading: true, error: "" });
+
+  useEffect(() => {
+    if (!authCheckComplete) return;
+    if (!authUser) {
+      setStatus({ loading: false, error: "You need to be signed in." });
+      navigate("/login", { replace: true });
+      return;
+    }
+    if (isTeacherLike(authUser)) {
+      navigate("/dashboard", { replace: true });
+      return;
+    }
+    let cancelled = false;
+    setStatus({ loading: true, error: "" });
+    getJson(`/api/users/${authUser.id}/posts/analytics/`)
+      .then((data) => {
+        if (cancelled) return;
+        const items = Array.isArray(data?.items) ? data.items : [];
+        const derived = buildAnalyticsFromApi(items);
+        setAnalytics(derived);
+        setStatus({ loading: false, error: "" });
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setAnalytics(null);
+        setStatus({
+          loading: false,
+          error: error.message || "Failed to load analytics.",
+        });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [authUser, authCheckComplete]);
+
   const {
     summary,
     engagementTrend,
@@ -534,13 +750,20 @@ export default function StudentAnalyticsPage() {
     contentPatterns,
     suggestions,
     aiInsight,
-  } = mockAnalytics;
+  } = analytics || mockAnalytics;
 
   return (
     <AuthenticatedShell
       title="My Analytics"
       subtitle="Understand how your posts perform and improve your engagement strategy."
     >
+      {status.loading && !analytics ? (
+        <p className="text-xs text-slate-500">Loading analytics...</p>
+      ) : null}
+      {status.error ? (
+        <p className="text-xs text-red-600">{status.error}</p>
+      ) : null}
+
       {/* 1. Summary cards */}
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryCard label="Total Posts" value={summary.totalPosts} />

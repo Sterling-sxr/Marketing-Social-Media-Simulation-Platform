@@ -2,18 +2,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
+import { isTeacherLike } from "../lib/authRole";
 import AuthenticatedShell from "./components/AuthenticatedShell";
 import Feedback from "./components/Feedback";
 
 // Centralized badge renderer for TEACHER / STUDENT
 function RoleBadge({ courseRole, isStaff, isSuperuser }) {
-  const roleFromCourse = (courseRole || "").toString().toLowerCase();
-
-  const isTeacher =
-    roleFromCourse === "teacher" ||
-    roleFromCourse === "instructor" ||
-    isStaff ||
-    isSuperuser;
+  const isTeacher = isTeacherLike({
+    role: courseRole,
+    is_staff: isStaff,
+    is_superuser: isSuperuser,
+  });
 
   const text = isTeacher ? "TEACHER" : "STUDENT";
 
@@ -73,15 +72,6 @@ export default function CoursesPage() {
     return null;
   }
 
-  const handleEnterCourse = (course) => {
-    if (!course) return;
-    if (course.profile_completed) {
-      navigate(`/courses/${course.id}`);
-    } else {
-      navigate(`/courses/${course.id}/profile`);
-    }
-  };
-
   const handleSubmit = async (event) => {
     event.preventDefault();
     await joinCourse();
@@ -89,7 +79,16 @@ export default function CoursesPage() {
 
   const enrolledCount = courses.joined.length;
   const availableCount = courses.available.length;
-  const isAdmin = !!authUser?.is_staff || !!authUser?.is_superuser;
+  const isTeacherOrAdmin = isTeacherLike(authUser);
+
+  const handleEnterCourse = (course) => {
+    if (!course) return;
+    if (isTeacherOrAdmin || course.profile_completed) {
+      navigate(`/courses/${course.id}`);
+    } else {
+      navigate(`/courses/${course.id}/profile`);
+    }
+  };
 
   return (
     <AuthenticatedShell
@@ -147,7 +146,7 @@ export default function CoursesPage() {
                       {course.course_code} · {course.name}
                     </p>
                     <p className="text-xs text-slate-400">{course.term}</p>
-                    {!course.profile_completed ? (
+                    {!isTeacherOrAdmin && !course.profile_completed ? (
                       <p className="mt-1 rounded-lg bg-brand-50 px-2 py-1 text-xs font-medium text-brand-600">
                         Complete your course profile to enter
                       </p>
