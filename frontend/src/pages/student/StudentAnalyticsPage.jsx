@@ -106,17 +106,17 @@ const mockAnalytics = {
     {
       persona: "AI Explorer",
       summary:
-        "Prefers example‑driven walkthroughs, mini experiments, and side‑by‑side comparisons.",
+        "Short, example‑driven walkthroughs and mini experiments.",
     },
     {
       persona: "Time‑poor Student",
       summary:
-        "Engages more with short summaries, bullet lists, and clear next steps they can copy quickly.",
+        "Engages most with concise summaries, bullet lists, and clear next steps.",
     },
     {
       persona: "Theory Lover",
       summary:
-        "Responds better to concept‑based explanations with clear structure and references to course ideas.",
+        "Responds best to concept‑based explanations with clear structure and course links.",
     },
   ],
   suggestions: [
@@ -152,7 +152,7 @@ const mockAnalytics = {
   aiInsight: {
     title: "AI Insight",
     headline:
-      "Your strongest engagement comes from concise, example‑driven posts published in the evening.",
+      "Engagement is highest for concise, example‑driven posts published in the evening.",
     detail:
       "AI Explorer and Time‑poor Student personas respond best when you turn long theory notes into short, scenario‑based posts they can scan and react to quickly.",
   },
@@ -242,20 +242,25 @@ function TopPostsSection({ posts }) {
         </p>
       </header>
       <div className="space-y-5">
-        {posts.map((post) => (
+        {posts.map((post, index) => (
           <article
             key={post.id}
             className="flex flex-col gap-3 rounded-2xl border border-brand-100/80 bg-gradient-to-r from-brand-50/80 via-white to-accent-50/80 p-5 md:p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-brand"
           >
-            {/* 第一层：内容摘要（视觉主角） */}
-            <div className="space-y-1.5 border-l-2 border-brand-200/70 pl-3">
-              <p className="text-sm font-semibold text-slate-900 line-clamp-3">
-                {post.content}
-              </p>
-              {/* 第二层：发布时间 */}
-              <p className="text-xs text-slate-500">
-                Posted on {formatDate(post.createdAt)}
-              </p>
+            {/* 第一层：排名 + 内容摘要（视觉主角） */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1.5 border-l-2 border-brand-200/70 pl-3">
+                <p className="text-sm font-semibold text-slate-900 line-clamp-2">
+                  {post.content}
+                </p>
+                {/* 第二层：发布时间 */}
+                <p className="text-xs text-slate-500">
+                  Posted on {formatDate(post.createdAt)}
+                </p>
+              </div>
+              <span className="ml-2 inline-flex items-center rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                #{index + 1}
+              </span>
             </div>
 
             {/* 第三层：轻量 inline metrics（likes / comments / shares） */}
@@ -265,7 +270,7 @@ function TopPostsSection({ posts }) {
                   <span className="text-sm" aria-hidden>
                     👍
                   </span>
-                  <span className="text-sm font-semibold text-slate-900">
+                  <span className="text-[13px] font-medium text-slate-900">
                     {post.likes}
                   </span>
                 </span>
@@ -278,7 +283,7 @@ function TopPostsSection({ posts }) {
                   <span className="text-sm" aria-hidden>
                     💬
                   </span>
-                  <span className="text-sm font-semibold text-slate-900">
+                  <span className="text-[13px] font-medium text-slate-900">
                     {post.comments}
                   </span>
                 </span>
@@ -291,7 +296,7 @@ function TopPostsSection({ posts }) {
                   <span className="text-sm" aria-hidden>
                     🔁
                   </span>
-                  <span className="text-sm font-semibold text-slate-900">
+                  <span className="text-[13px] font-medium text-slate-900">
                     {post.shares}
                   </span>
                 </span>
@@ -336,7 +341,7 @@ function AudienceInsightsSection({ insights, patterns }) {
           Audience Insights
         </h2>
         <p className="text-xs text-slate-500">
-          AI audience / persona groups that are most engaged with your content.
+          How your target audiences and AI personas currently align with your content.
         </p>
       </header>
 
@@ -349,6 +354,9 @@ function AudienceInsightsSection({ insights, patterns }) {
             <p className="mt-1 text-sm text-slate-900">
               {insights.targetAudience}
             </p>
+            <p className="mt-1 text-[11px] text-slate-500">
+              Who you intend to reach with most posts.
+            </p>
           </div>
           <div className="rounded-2xl border border-accent-50 bg-accent-50/80 px-4 py-3">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-accent-700">
@@ -357,6 +365,9 @@ function AudienceInsightsSection({ insights, patterns }) {
             <p className="mt-1 text-sm text-slate-900">
               {insights.strongestEngagedAudience}
             </p>
+            <p className="mt-1 text-[11px] text-slate-500">
+              Personas that currently react and comment the most.
+            </p>
           </div>
           <div className="rounded-2xl border border-emerald-50 bg-emerald-50/80 px-4 py-3">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
@@ -364,6 +375,9 @@ function AudienceInsightsSection({ insights, patterns }) {
             </p>
             <p className="mt-1 text-sm font-semibold text-slate-900">
               {insights.matchLevel}
+            </p>
+            <p className="mt-1 text-[11px] text-slate-600">
+              Your planned audience and strongest engaged audience are closely aligned.
             </p>
           </div>
         </div>
@@ -408,14 +422,13 @@ function AudienceInsightsSection({ insights, patterns }) {
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
             Persona response patterns
           </p>
-          <ul className="space-y-1.5">
+          <ul className="space-y-3">
             {patterns.map((item) => (
-              <li key={item.persona} className="text-xs text-slate-600">
-                <span className="font-semibold text-slate-800">
+              <li key={item.persona} className="space-y-0.5">
+                <p className="text-xs font-semibold text-slate-800">
                   {item.persona}
-                </span>
-                <span className="mx-1 text-slate-400">·</span>
-                <span>{item.summary}</span>
+                </p>
+                <p className="text-[11px] text-slate-600">{item.summary}</p>
               </li>
             ))}
           </ul>
@@ -494,7 +507,7 @@ function ContentPerformancePatternsSection({ patterns }) {
                 <span aria-hidden>📈</span>
                 <span>{pattern.engagementDelta}</span>
                 <span className="text-[10px] uppercase tracking-wide text-emerald-800/80">
-                  vs your average
+                  higher engagement
                 </span>
               </div>
             </div>
