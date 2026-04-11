@@ -714,7 +714,7 @@ export default function StudentAnalyticsPage() {
       return;
     }
     if (isTeacherLike(authUser)) {
-      navigate("/dashboard", { replace: true });
+      navigate("/teacher/analytics", { replace: true });
       return;
     }
     let cancelled = false;

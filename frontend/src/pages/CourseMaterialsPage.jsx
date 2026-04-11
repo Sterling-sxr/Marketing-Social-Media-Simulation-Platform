@@ -13,6 +13,7 @@ import {
   Eye,
   FileText,
   Home,
+  LayoutDashboard,
   Loader2,
   MessageSquare,
   Paperclip,
@@ -353,6 +354,10 @@ export default function CourseMaterialsPage() {
     const membership = allCourses.find((c) => c.id === courseId);
     return isTeacherLike(membership);
   }, [authUser, courses, courseId]);
+  const homeRoute = isTeacherOrAdmin ? "/teacherhome" : "/studenthome";
+  const analyticsRoute = isTeacherOrAdmin
+    ? "/teacher/analytics"
+    : "/student/analytics";
 
   useEffect(() => {
     if (!authCheckComplete) return;
@@ -425,15 +430,16 @@ export default function CourseMaterialsPage() {
   const globalMobileNav = useMemo(
     () =>
       [
-        { to: "/studenthome", label: "Home", icon: <Home className="h-5 w-5" /> },
+        { to: homeRoute, label: "Home", icon: <Home className="h-5 w-5" /> },
         { to: "/courses", label: "Courses", icon: <BookOpen className="h-5 w-5" /> },
+        { to: analyticsRoute, label: "Analytics", icon: <LayoutDashboard className="h-5 w-5" /> },
         { to: "/search", label: "Search", icon: <Search className="h-5 w-5" /> },
         { to: "/notifications", label: "Messages", icon: <Bell className="h-5 w-5" /> },
         !isTeacherOrAdmin
           ? { to: "/ai-tutor", label: "AI Tutor", icon: <BotMessageSquare className="h-5 w-5" /> }
           : null,
       ].filter(Boolean),
-    [isTeacherOrAdmin]
+    [analyticsRoute, homeRoute, isTeacherOrAdmin]
   );
 
   if (!authCheckComplete || !authUser) return null;

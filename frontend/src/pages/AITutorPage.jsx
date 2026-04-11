@@ -141,7 +141,7 @@ export default function AITutorPage() {
       return;
     }
     if (isTeacherOrAdmin) {
-      navigate("/dashboard", { replace: true });
+      navigate("/teacherhome", { replace: true });
     }
   }, [authCheckComplete, authUser, isTeacherOrAdmin, navigate]);
 

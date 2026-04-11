@@ -34,6 +34,8 @@ import SearchPage from "./pages/SearchPage";
 import AITutorPage from "./pages/AITutorPage";
 import CourseMaterialsPage from "./pages/CourseMaterialsPage";
 import StudentAnalyticsPage from "./pages/student/StudentAnalyticsPage";
+import TeacherHomePage from "./pages/TeacherHomePage";
+import TeacherAnalyticsPage from "./pages/TeacherAnalyticsPage";
 
 export default function App() {
   function MyProfileRedirect() {
@@ -59,7 +61,12 @@ export default function App() {
           <Route path="/reset/password" element={<ResetPasswordPage />} />
           <Route path="/reset/success" element={<ResetSuccessPage />} />
           <Route path="/studenthome" element={<StudentHomePage />} />
+          <Route path="/teacherhome" element={<TeacherHomePage />} />
           <Route path="/student/analytics" element={<StudentAnalyticsPage />} />
+          <Route
+            path="/teacher/analytics"
+            element={<TeacherAnalyticsPage />}
+          />
           <Route path="/ai-tutor" element={<AITutorPage />} />
           <Route path="/profile" element={<MyProfileRedirect />} />
           <Route path="/profile/edit" element={<ProfilePage />} />

@@ -95,7 +95,7 @@ export default function CoursesPage() {
       title="Course Center"
       subtitle="Join a course to access the class community"
     >
-      {isAdmin ? (
+      {isTeacherOrAdmin ? (
         <section className="lg:hidden" aria-label="Admin quick actions">
           <div className="grid grid-cols-2 divide-x divide-slate-200 rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
             <button

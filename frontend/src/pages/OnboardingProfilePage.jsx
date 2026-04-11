@@ -249,7 +249,7 @@ export default function OnboardingProfilePage() {
       return;
     }
     if (isTeacherOrAdmin) {
-      navigate("/dashboard", { replace: true });
+      navigate("/teacherhome", { replace: true });
     }
   }, [authUser, authCheckComplete, isTeacherOrAdmin, navigate]);
 

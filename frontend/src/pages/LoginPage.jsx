@@ -26,7 +26,7 @@ export default function LoginPage() {
       const { user } = await login(email, password);
       setStatus({ loading: false, message: "Login Success!", error: "" });
       if (isTeacherLike(user)) {
-        navigate("/dashboard");
+        navigate("/teacherhome");
       } else {
         navigate("/studenthome");
       }
@@ -180,7 +180,7 @@ export default function LoginPage() {
                     className="w-full rounded-xl bg-gradient-to-r from-brand to-brand-dark py-3 text-sm font-semibold text-white shadow-lg shadow-brand-200 transition hover:from-brand-dark hover:to-brand"
                     onClick={() =>
                       isTeacherLike(authUser)
-                        ? navigate("/dashboard")
+                        ? navigate("/teacherhome")
                         : navigate("/studenthome")
                     }
                   >

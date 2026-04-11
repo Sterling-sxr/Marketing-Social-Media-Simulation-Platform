@@ -16,7 +16,7 @@ export default function StudentHomePage() {
       return;
     }
     if (isTeacherLike(authUser)) {
-      navigate("/dashboard", { replace: true });
+      navigate("/teacherhome", { replace: true });
     }
   }, [authUser, authCheckComplete, navigate]);
 
