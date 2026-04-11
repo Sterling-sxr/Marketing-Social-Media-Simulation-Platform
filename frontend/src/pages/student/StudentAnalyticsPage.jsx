@@ -106,17 +106,17 @@ const mockAnalytics = {
     {
       persona: "AI Explorer",
       summary:
-        "Short, example‑driven walkthroughs and mini experiments.",
+        "Examples and mini experiments.",
     },
     {
       persona: "Time‑poor Student",
       summary:
-        "Engages most with concise summaries, bullet lists, and clear next steps.",
+        "Short summaries and bullet points.",
     },
     {
       persona: "Theory Lover",
       summary:
-        "Responds best to concept‑based explanations with clear structure and course links.",
+        "Concept‑based explanations.",
     },
   ],
   suggestions: [
@@ -126,6 +126,7 @@ const mockAnalytics = {
       detail:
         "Aim for under 150 words and use 3–5 bullet points so classmates can scan your key ideas in under 10 seconds.",
       focus: "Format",
+      priority: "Quick win",
     },
     {
       id: "examples",
@@ -133,6 +134,7 @@ const mockAnalytics = {
       detail:
         "Start new posts with a single, simple example (or “mini story”), then explain the concept. This structure currently brings ~1.8× more comments.",
       focus: "Content structure",
+      priority: "High impact",
     },
     {
       id: "call-to-action",
@@ -140,6 +142,7 @@ const mockAnalytics = {
       detail:
         "Finish posts with a concrete question such as “What would you try next?” or “Do you agree with this approach?” to invite replies instead of likes only.",
       focus: "Engagement",
+      priority: "Next step",
     },
     {
       id: "persona-match",
@@ -147,6 +150,7 @@ const mockAnalytics = {
       detail:
         "Most engagement comes from the AI Explorer persona. Share more small experiments, tool comparisons and practical AI tips.",
       focus: "Audience",
+      priority: "Growth focus",
     },
   ],
   aiInsight: {
@@ -245,7 +249,7 @@ function TopPostsSection({ posts }) {
         {posts.map((post, index) => (
           <article
             key={post.id}
-            className="flex flex-col gap-3 rounded-2xl border border-brand-100/80 bg-gradient-to-r from-brand-50/80 via-white to-accent-50/80 p-5 md:p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-brand"
+            className="flex flex-col gap-3 rounded-2xl border border-brand-100/80 bg-gradient-to-r from-brand-50/80 via-white to-accent-50/80 p-5 md:p-6 transition hover:-translate-y-0.5 hover:shadow-brand"
           >
             {/* 第一层：排名 + 内容摘要（视觉主角） */}
             <div className="flex items-start justify-between gap-3">
@@ -341,7 +345,7 @@ function AudienceInsightsSection({ insights, patterns }) {
           Audience Insights
         </h2>
         <p className="text-xs text-slate-500">
-          How your target audiences and AI personas currently align with your content.
+          How your target audiences and AI personas align with your content.
         </p>
       </header>
 
@@ -354,9 +358,7 @@ function AudienceInsightsSection({ insights, patterns }) {
             <p className="mt-1 text-sm text-slate-900">
               {insights.targetAudience}
             </p>
-            <p className="mt-1 text-[11px] text-slate-500">
-              Who you intend to reach with most posts.
-            </p>
+            <p className="mt-1 text-[11px] text-slate-500">Planned focus.</p>
           </div>
           <div className="rounded-2xl border border-accent-50 bg-accent-50/80 px-4 py-3">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-accent-700">
@@ -366,7 +368,7 @@ function AudienceInsightsSection({ insights, patterns }) {
               {insights.strongestEngagedAudience}
             </p>
             <p className="mt-1 text-[11px] text-slate-500">
-              Personas that currently react and comment the most.
+              Most reactions today.
             </p>
           </div>
           <div className="rounded-2xl border border-emerald-50 bg-emerald-50/80 px-4 py-3">
@@ -376,9 +378,7 @@ function AudienceInsightsSection({ insights, patterns }) {
             <p className="mt-1 text-sm font-semibold text-slate-900">
               {insights.matchLevel}
             </p>
-            <p className="mt-1 text-[11px] text-slate-600">
-              Your planned audience and strongest engaged audience are closely aligned.
-            </p>
+            <p className="mt-1 text-[11px] text-slate-600">Plan vs reality.</p>
           </div>
         </div>
 
@@ -457,9 +457,10 @@ function StrategySuggestionsSection({ suggestions }) {
             className="flex flex-col justify-between rounded-2xl border border-brand-100/80 bg-gradient-to-br from-white via-brand-50/70 to-accent-50/70 p-4"
           >
             <div className="space-y-1.5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-brand-700">
-                {item.focus}
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-700">
+                {item.priority}
               </p>
+              <p className="text-[11px] text-slate-500">{item.focus}</p>
               <h3 className="text-sm font-semibold text-slate-900">
                 {item.title}
               </h3>
