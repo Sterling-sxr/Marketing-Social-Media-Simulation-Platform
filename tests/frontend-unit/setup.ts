@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom';
+import { cleanup } from '@testing-library/react';
 import React from 'react';
-import { vi } from 'vitest';
+import { afterEach, vi } from 'vitest';
 
 // expose React globally for classic JSX runtime
 // @ts-ignore
@@ -64,3 +65,10 @@ vi.mock(
     ),
   { virtual: true }
 );
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllTimers();
+  vi.useRealTimers();
+  vi.restoreAllMocks();
+});
