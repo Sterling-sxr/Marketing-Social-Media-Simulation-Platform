@@ -1,7 +1,17 @@
-﻿import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import HomePage from '../../frontend/src/pages/HomePage.jsx';
 import { useApp } from '../../frontend/src/context/AppContext';
+
+const navigateMock = vi.fn();
+
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => navigateMock,
+  };
+});
 
 vi.mock('../../frontend/src/context/AppContext', () => ({
   useApp: vi.fn(),
@@ -26,6 +36,7 @@ describe('HomePage landing experience', () => {
   beforeEach(() => {
     loginMock = vi.fn().mockResolvedValue({});
     logoutMock = vi.fn().mockResolvedValue({});
+    navigateMock.mockReset();
     mockedUseApp.mockReturnValue({
       authUser: null,
       login: loginMock,
@@ -40,7 +51,7 @@ describe('HomePage landing experience', () => {
   test('renders hero copy and login form', () => {
     renderHome();
     expect(
-      screen.getByText(/Donut campus social simulation platform/i)
+      screen.getByText(/Bread campus social simulation platform/i)
     ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /login/i })).toBeInTheDocument();
     expect(
@@ -62,7 +73,7 @@ describe('HomePage landing experience', () => {
     expect(passwordInput).toHaveAttribute('type', 'password');
   });
 
-  test('submits credentials and shows success feedback', async () => {
+  test('submits credentials and navigates on success', async () => {
     renderHome();
     fireEvent.change(getEmailInput(), {
       target: { value: 'z1234567@ad.unsw.edu.au' },
@@ -78,8 +89,8 @@ describe('HomePage landing experience', () => {
         'z1234567@ad.unsw.edu.au',
         'MyPass123!'
       );
+      expect(navigateMock).toHaveBeenCalledWith('/studenthome');
     });
-    expect(await screen.findByText(/Login Success!/i)).toBeInTheDocument();
   });
 
   test('shows error feedback when login fails', async () => {
