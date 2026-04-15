@@ -67,11 +67,11 @@ from .profile_controller import (
     user_posts,
     user_posts_analytics,
 )
-from .search import(
-    search_posts,
+from .search import (
     add_search_history,
-    suggested_search,
     get_search_history,
+    search_posts,
+    suggested_search,
 )
 
 __all__ = [

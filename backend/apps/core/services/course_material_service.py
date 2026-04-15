@@ -6,7 +6,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 
-from ..repositories.models import CourseMaterial, CourseMember, Course
+from ..repositories.models import Course, CourseMaterial, CourseMember
 
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
 

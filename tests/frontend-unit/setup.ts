@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom';
 import React from 'react';
+import { vi } from 'vitest';
 
 // expose React globally for classic JSX runtime
 // @ts-ignore
@@ -30,3 +31,36 @@ class MockWebSocket {
 
 // @ts-ignore
 globalThis.WebSocket = MockWebSocket as any;
+
+const stubComponent = ({ children, ...props }: any) =>
+  React.createElement('div', props, children);
+
+vi.mock(
+  'lucide-react',
+  () =>
+    new Proxy(
+      { __esModule: true },
+      {
+        get: (_, key) => {
+          if (key === '__esModule') return true;
+          return stubComponent;
+        },
+      }
+    ),
+  { virtual: true }
+);
+
+vi.mock(
+  'recharts',
+  () =>
+    new Proxy(
+      { __esModule: true },
+      {
+        get: (_, key) => {
+          if (key === '__esModule') return true;
+          return stubComponent;
+        },
+      }
+    ),
+  { virtual: true }
+);

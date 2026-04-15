@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 
-import dj_database_url
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent  # 指向 capstone-project-26t1-9900-f09d-bread-1
