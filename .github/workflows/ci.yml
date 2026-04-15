@@ -1,12 +1,15 @@
 name: CI
 
 on:
+  # Run on pushes to any branch.
   push:
     branches:
       - "**"
+  # Run on pull requests targeting any branch.
   pull_request:
     branches:
       - "**"
+  # Allow manual runs from GitHub Actions.
   workflow_dispatch:
 
 permissions:
@@ -15,6 +18,7 @@ permissions:
   security-events: write
 
 concurrency:
+  # Cancel older runs on the same ref to save CI time.
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
@@ -33,7 +37,7 @@ jobs:
 
       - name: Install backend dependencies
         env:
-          # Force CPU-only PyTorch wheels to avoid downloading CUDA toolkits
+          # Use CPU-only wheels so CI does not try to pull CUDA packages.
           PIP_INDEX_URL: https://download.pytorch.org/whl/cpu
           PIP_EXTRA_INDEX_URL: https://pypi.org/simple
         run: |
@@ -41,10 +45,12 @@ jobs:
           pip install -r backend/requirements.txt ruff
 
       - name: Ruff lint
+        # Lint backend source files.
         run: ruff check backend
 
       - name: Django system checks
         env:
+          # Use lightweight CI settings for framework checks.
           DJANGO_SECRET_KEY: ci-secret
           DATABASE_URL: sqlite:///ci.sqlite3
         run: python backend/manage.py check
@@ -121,10 +127,12 @@ jobs:
         run: npm ci
 
       - name: Run ESLint
+        # Check frontend code style and common issues.
         working-directory: frontend
         run: npm run lint
 
       - name: Build frontend
+        # Make sure the app can build in CI.
         working-directory: frontend
         run: npm run build
 
@@ -185,6 +193,7 @@ jobs:
       - uses: docker/setup-buildx-action@v3
 
       - name: Build backend image
+        # Check that the backend image can be built successfully.
         uses: docker/build-push-action@v6
         with:
           context: ./backend
@@ -192,6 +201,7 @@ jobs:
           push: false
 
       - name: Build frontend image
+        # Check that the frontend image can be built successfully.
         uses: docker/build-push-action@v6
         with:
           context: ./frontend
