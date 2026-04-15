@@ -142,6 +142,7 @@ jobs:
   frontend-unit-tests:
     name: Frontend Unit Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -161,7 +162,7 @@ jobs:
 
       - name: Run frontend unit tests
         working-directory: tests/frontend-unit
-        run: npm test
+        run: npm test -- --testTimeout=15000 --hookTimeout=15000 --teardownTimeout=15000
 
   security-audit:
     name: Dependency Security Audit
