@@ -108,6 +108,9 @@ jobs:
 
       - name: Run backend unit tests
         working-directory: tests/backend-unit
+        env:
+          DJANGO_SECRET_KEY: ci-secret
+          DATABASE_URL: sqlite:///ci.sqlite3
         run: pytest
 
   frontend-quality:
