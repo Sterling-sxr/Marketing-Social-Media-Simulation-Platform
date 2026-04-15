@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+import dj_database_url
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent  # 指向 capstone-project-26t1-9900-f09d-bread-1
@@ -61,8 +62,11 @@ TEMPLATES = [
 WSGI_APPLICATION = "apps.conf.wsgi.application"
 ASGI_APPLICATION = "apps.conf.asgi.application"
 
-DATABASES = {
-    "default": {
+_database_url = os.environ.get("DATABASE_URL")
+if _database_url:
+    _default_database = dj_database_url.parse(_database_url, conn_max_age=600)
+else:
+    _default_database = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.environ.get("PG_DB"),
         "USER": os.environ.get("PG_USER"),
@@ -71,7 +75,8 @@ DATABASES = {
         "PORT": os.environ.get("PG_PORT"),
         "CONN_MAX_AGE": 600,
     }
-}
+
+DATABASES = {"default": _default_database}
 
 CACHES = {
     "default": {

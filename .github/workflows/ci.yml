@@ -152,6 +152,10 @@ jobs:
         working-directory: tests/frontend-unit
         run: npm ci
 
+      - name: Install frontend runtime deps required by unit tests
+        working-directory: tests/frontend-unit
+        run: npm install --no-save lucide-react recharts
+
       - name: Run frontend unit tests
         working-directory: tests/frontend-unit
         run: npm test
