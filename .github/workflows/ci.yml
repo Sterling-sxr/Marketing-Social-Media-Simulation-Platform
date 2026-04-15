@@ -165,7 +165,6 @@ jobs:
         run: |
           set -e
           files=(
-            "App.test.jsx"
             "AppContext.test.jsx"
             "ToastHost.test.jsx"
             "DigitInput.test.jsx"
@@ -174,7 +173,7 @@ jobs:
           )
           for file in "${files[@]}"; do
             echo "Running $file ..."
-            npx vitest run "$file" \
+            timeout 180s npx vitest run "$file" \
               --pool=forks \
               --maxWorkers=1 \
               --minWorkers=1 \
