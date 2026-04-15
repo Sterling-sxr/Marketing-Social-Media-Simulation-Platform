@@ -67,7 +67,9 @@ def course_materials_view(request: HttpRequest, course_id: int) -> JsonResponse:
 
 
 @csrf_exempt
-def course_material_detail_view(request: HttpRequest, course_id: int, material_id: int) -> JsonResponse:
+def course_material_detail_view(
+    request: HttpRequest, course_id: int, material_id: int
+) -> JsonResponse:
     """
     DELETE /api/courses/<course_id>/materials/<material_id>/  — delete a material
     """

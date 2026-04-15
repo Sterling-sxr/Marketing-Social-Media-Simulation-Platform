@@ -1,13 +1,13 @@
 import { useEffect, useMemo } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
-import { isTeacherLike } from "../../lib/authRole";
 import {
   Home,
   BookOpen,
   Search,
   Bell,
   FileText,
+  BarChart3,
   LayoutDashboard,
   Wrench,
   BotMessageSquare,
@@ -68,11 +68,6 @@ export default function AuthenticatedShell({
     notificationStatus,
     fetchNotifications,
   } = useApp();
-  const isTeacherOrAdmin = isTeacherLike(authUser);
-  const homeRoute = isTeacherOrAdmin ? "/teacherhome" : "/studenthome";
-  const analyticsRoute = isTeacherOrAdmin
-    ? "/teacher/analytics"
-    : "/student/analytics";
 
   // On first load or account switch, fetch once when auto-polling is enabled
   useEffect(() => {
@@ -106,89 +101,64 @@ export default function AuthenticatedShell({
   const sidebarLinks = useMemo(() => {
     if (links && links.length) return links;
     const uid = authUser?.id;
-    const merged = isTeacherOrAdmin
-      ? [
-          {
-            to: homeRoute,
-            label: "Homepage",
-            icon: <Home className="h-5 w-5" />,
-          },
-          {
-            to: "/courses",
-            label: "Course Center",
-            icon: <BookOpen className="h-5 w-5" />,
-          },
-          {
-            to: uid ? analyticsRoute : "/login",
-            label: "Analytics",
-            icon: <LayoutDashboard className="h-5 w-5" />,
-          },
-          {
-            to: "/notifications",
-            label: "Messages",
-            icon: <Bell className="h-5 w-5" />,
-          },
-          {
-            to: "/courses/manage",
-            label: "Course Manage",
-            icon: <Wrench className="h-5 w-5" />,
-          },
-          {
-            to: "/dashboard",
-            label: "Dashboard",
-            icon: <LayoutDashboard className="h-5 w-5" />,
-          },
-          {
-            to: "/search",
-            label: "Search",
-            icon: <Search className="h-5 w-5" />,
-          },
-          {
-            to: uid ? `/people/${uid}?tab=posts` : "/login",
-            label: "Posts",
-            icon: <FileText className="h-5 w-5" />,
-          },
-        ]
-      : [
-          {
-            to: homeRoute,
-            label: "Homepage",
-            icon: <Home className="h-5 w-5" />,
-          },
-          {
-            to: "/courses",
-            label: "Course Center",
-            icon: <BookOpen className="h-5 w-5" />,
-          },
-          {
-            to: "/search",
-            label: "Search",
-            icon: <Search className="h-5 w-5" />,
-          },
-          {
-            to: "/notifications",
-            label: "Messages",
-            icon: <Bell className="h-5 w-5" />,
-          },
-          {
-            to: uid ? `/people/${uid}?tab=posts` : "/login",
-            label: "Posts",
-            icon: <FileText className="h-5 w-5" />,
-          },
-          {
-            to: uid ? analyticsRoute : "/login",
-            label: "Analytics",
-            icon: <LayoutDashboard className="h-5 w-5" />,
-          },
-          {
-            to: "/ai-tutor",
-            label: "AI Tutor",
-            icon: <BotMessageSquare className="h-5 w-5" />,
-          },
-        ];
+    const base = [
+      {
+        to: "/studenthome",
+        label: "Homepage",
+        icon: <Home className="h-5 w-5" />,
+      },
+      {
+        to: "/courses",
+        label: "Course Center",
+        icon: <BookOpen className="h-5 w-5" />,
+      },
+      {
+        to: "/search",
+        label: "Search",
+        icon: <Search className="h-5 w-5" />,
+      },
+      {
+        to: "/notifications",
+        label: "Messages",
+        icon: <Bell className="h-5 w-5" />,
+      },
+      {
+        to: uid ? `/people/${uid}?tab=posts` : "/login",
+        label: "Posts",
+        icon: <FileText className="h-5 w-5" />,
+      },
+      {
+        to: uid ? `/student/analysis` : "/login",
+        label: "Analysis",
+        icon: <BarChart3 className="h-5 w-5" />,
+      },
+      {
+        to: "/ai-tutor",
+        label: "AI Tutor",
+        icon: <BotMessageSquare className="h-5 w-5" />,
+      },
+    ];
+
+    const admin =
+      authUser?.is_superuser || authUser?.is_staff
+        ? [
+            {
+              to: "/dashboard",
+              label: "Dashboard",
+              icon: <LayoutDashboard className="h-5 w-5" />,
+            },
+            {
+              to: "/courses/manage",
+              label: "Course Manage",
+              icon: <Wrench className="h-5 w-5" />,
+            },
+          ]
+        : [];
+
+    const merged = [...base.slice(0, 2), ...admin, ...base.slice(2)];
     const uniq = Array.from(new Map(merged.map((i) => [i.to, i])).values());
     return uniq;
-  }, [links, authUser?.id, analyticsRoute, homeRoute, isTeacherOrAdmin]);
+  }, [links, authUser?.id, authUser?.is_superuser, authUser?.is_staff]);
 
   const compactName = displayName || "User";
   const compactLinks = useMemo(() => {
@@ -200,24 +170,22 @@ export default function AuthenticatedShell({
     if (mobileNavLinks && mobileNavLinks.length) {
       return dedupeByTo(mobileNavLinks).slice(0, 5);
     }
+    const uid = authUser?.id;
     const preferred = Array.from(
-      new Set(
-        [
-          homeRoute,
-          "/courses",
-          analyticsRoute,
-          "/search",
-          "/notifications",
-          !isTeacherOrAdmin ? "/ai-tutor" : null,
-        ].filter(Boolean)
-      )
+      new Set([
+        "/studenthome",
+        "/courses",
+        "/search",
+        "/notifications",
+        "/ai-tutor",
+      ])
     );
     const linksByTo = new Map(sidebarLinks.map((item) => [item.to, item]));
     const picked = preferred.map((to) => linksByTo.get(to)).filter(Boolean);
     if (picked.length >= 4) return picked.slice(0, 5);
     // Keep mobile nav capped to 5 primary destinations. Admin shortcuts can live in page-level quick actions.
     return dedupeByTo(sidebarLinks).slice(0, 5);
-  }, [analyticsRoute, homeRoute, mobileNavLinks, sidebarLinks, authUser?.id, isTeacherOrAdmin]);
+  }, [mobileNavLinks, sidebarLinks, authUser?.id]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-accent-50">
@@ -227,9 +195,9 @@ export default function AuthenticatedShell({
           {/* Bread brand section */}
           <button
             type="button"
-            onClick={() => navigate(homeRoute)}
-            aria-label="Return to home"
-            className="group relative flex min-w-0 items-center gap-2.5 rounded-lg text-xl font-bold
+            onClick={() => navigate("/studenthome")}
+            aria-label="Return to student home"
+            className="group relative flex items-center gap-2.5 text-xl font-bold rounded-lg
                        leading-none focus:outline-none focus:ring-2 focus:ring-brand/30 transition"
           >
             <img
@@ -372,7 +340,7 @@ export default function AuthenticatedShell({
           })}
         </aside>
 
-        <main className="min-w-0 flex-1 space-y-4 rounded-2xl border border-brand-100/80 bg-white/92 p-4 pb-24 shadow-soft sm:space-y-5 sm:p-5 sm:pb-24 lg:space-y-6 lg:rounded-3xl lg:p-6 lg:pb-6 lg:shadow-brand">
+        <main className="flex-1 space-y-4 rounded-2xl border border-brand-100/80 bg-white/92 p-4 pb-24 shadow-soft sm:space-y-5 sm:p-5 sm:pb-24 lg:space-y-6 lg:rounded-3xl lg:p-6 lg:pb-6 lg:shadow-brand">
           <div className="space-y-1">
             {title ? (
               <h1 className="break-words text-xl font-bold text-slate-900 sm:text-2xl">

@@ -83,21 +83,9 @@ COMMENTS = [
 ]
 
 HASHTAGS_POOL = [
-    "学习笔记",
-    "期末考试",
-    "编程",
-    "求助",
-    "大学生活",
-    "teamwork",
-    "数据分析",
-    "资源",
-    "分享",
-    "商科",
-    "AI学习",
-    "反馈",
-    "工具",
-    "解放",
-    "血泪史",
+    "学习笔记", "期末考试", "编程", "求助", "大学生活",
+    "teamwork", "数据分析", "资源", "分享", "商科",
+    "AI学习", "反馈", "工具", "解放", "血泪史",
 ]
 
 
@@ -216,5 +204,11 @@ class Command(BaseCommand):
                     content=random.choice(COMMENTS),
                 )
 
-        self.stdout.write(self.style.SUCCESS(f"\n✅ 完成！共生成 {posts_created} 条帖子，课程: {course.name}（join_code={course.join_code}）"))
-        self.stdout.write(f"   测试用户: {', '.join(u.username for u in users)}  密码均为 Test1234!")
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"\n✅ 完成！共生成 {posts_created} 条帖子，课程: {course.name}（join_code={course.join_code}）"
+            )
+        )
+        self.stdout.write(
+            f"   测试用户: {', '.join(u.username for u in users)}  密码均为 Test1234!"
+        )

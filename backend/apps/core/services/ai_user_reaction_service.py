@@ -1,5 +1,4 @@
 """Background helpers that let AI personas react to new posts."""
-
 from __future__ import annotations
 
 import json
@@ -96,9 +95,9 @@ def _build_persona_prompt(ai_user, post: CoursePost) -> str:
         f"Evaluate the new post shared in {course_info}.\n"
         "Decide if the persona is interested. If yes, decide whether to like the post and optionally craft a short comment "
         "(max 200 characters, keep a friendly tone). Respond strictly in JSON with keys "
-        "`interested` (bool), `like` (bool), `comment` (string). "
+        '`interested` (bool), `like` (bool), `comment` (string). '
         "Use an empty string when no comment is needed.\n\n"
-        f'Post content:\n"""{post.content}"""\n'
+        f"Post content:\n\"\"\"{post.content}\"\"\"\n"
     )
 
 

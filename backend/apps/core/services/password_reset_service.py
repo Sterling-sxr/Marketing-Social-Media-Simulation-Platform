@@ -1,5 +1,4 @@
 """Password reset workflows using email verification codes."""
-
 from __future__ import annotations
 
 import logging

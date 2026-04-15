@@ -1,5 +1,4 @@
 """Authentication helpers for login/logout."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
