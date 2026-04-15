@@ -160,9 +160,28 @@ jobs:
         working-directory: tests/frontend-unit
         run: npm install --no-save lucide-react recharts
 
-      - name: Run frontend unit tests
+      - name: Run frontend unit tests (file-by-file)
         working-directory: tests/frontend-unit
-        run: npm test -- --testTimeout=15000 --hookTimeout=15000 --teardownTimeout=15000
+        run: |
+          set -e
+          files=(
+            "App.test.jsx"
+            "AppContext.test.jsx"
+            "ToastHost.test.jsx"
+            "DigitInput.test.jsx"
+            "Feedback.test.jsx"
+            "CircleImage.test.jsx"
+          )
+          for file in "${files[@]}"; do
+            echo "Running $file ..."
+            npx vitest run "$file" \
+              --pool=forks \
+              --maxWorkers=1 \
+              --minWorkers=1 \
+              --testTimeout=15000 \
+              --hookTimeout=15000 \
+              --teardownTimeout=15000
+          done
 
   security-audit:
     name: Dependency Security Audit

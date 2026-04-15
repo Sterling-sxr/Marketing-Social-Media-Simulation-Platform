@@ -26,6 +26,12 @@ export default defineConfig({
     setupFiles: ['./setup.ts'],
     globals: true,
     css: true,
+    pool: 'forks',
+    maxWorkers: 1,
+    minWorkers: 1,
+    sequence: {
+      concurrent: false,
+    },
     testTimeout: 15000,
     hookTimeout: 15000,
   },
