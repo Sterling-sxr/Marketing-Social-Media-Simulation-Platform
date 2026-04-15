@@ -1,5 +1,4 @@
 """Utilities for sending email via the Gmail API."""
-
 import base64
 from email.mime.text import MIMEText
 from typing import Optional
@@ -40,7 +39,9 @@ def _build_credentials() -> Credentials:
     )
 
 
-def send_gmail_message(*, subject: str, body: str, recipient: Optional[str] = None) -> dict:
+def send_gmail_message(
+    *, subject: str, body: str, recipient: Optional[str] = None
+) -> dict:
     """Send a plaintext email using the Gmail API.
 
     Args:
@@ -55,7 +56,9 @@ def send_gmail_message(*, subject: str, body: str, recipient: Optional[str] = No
 
     to_address = recipient or settings.GMAIL_DEMO_RECIPIENT
     if not to_address:
-        raise GmailNotConfiguredError("Recipient email missing. Supply `recipient` or set GMAIL_DEMO_RECIPIENT.")
+        raise GmailNotConfiguredError(
+            "Recipient email missing. Supply `recipient` or set GMAIL_DEMO_RECIPIENT."
+        )
 
     credentials = _build_credentials()
     service = build("gmail", "v1", credentials=credentials, cache_discovery=False)
@@ -68,6 +71,11 @@ def send_gmail_message(*, subject: str, body: str, recipient: Optional[str] = No
     raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
 
     try:
-        return service.users().messages().send(userId="me", body={"raw": raw_message}).execute()
+        return (
+            service.users()
+            .messages()
+            .send(userId="me", body={"raw": raw_message})
+            .execute()
+        )
     except HttpError as exc:  # pragma: no cover - network path
         raise RuntimeError(f"Gmail API error: {exc}") from exc

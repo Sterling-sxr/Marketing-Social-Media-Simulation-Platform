@@ -2,7 +2,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useApp, createEmptyProfileData } from "../context/AppContext";
-import { isTeacherLike } from "../lib/authRole";
 import Feedback from "./components/Feedback";
 import CircleImage from "./components/CircleImage";
 
@@ -175,7 +174,6 @@ export default function OnboardingProfilePage() {
     loadCourseProfile,
     saveCourseProfile,
   } = useApp();
-  const isTeacherOrAdmin = isTeacherLike(authUser);
 
   const courseIdParam = params?.courseId;
   const courseId = courseIdParam ? Number(courseIdParam) : null;
@@ -244,14 +242,8 @@ export default function OnboardingProfilePage() {
 
   useEffect(() => {
     if (!authCheckComplete) return;
-    if (!authUser) {
-      navigate("/login", { replace: true });
-      return;
-    }
-    if (isTeacherOrAdmin) {
-      navigate("/teacherhome", { replace: true });
-    }
-  }, [authUser, authCheckComplete, isTeacherOrAdmin, navigate]);
+    if (!authUser) navigate("/login", { replace: true });
+  }, [authUser, authCheckComplete, navigate]);
 
   useEffect(() => {
     if (!authUser) return;

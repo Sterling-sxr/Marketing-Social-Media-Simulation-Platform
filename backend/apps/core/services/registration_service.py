@@ -1,5 +1,4 @@
 """Business logic for student/teacher self-registration."""
-
 from __future__ import annotations
 
 import logging
@@ -50,7 +49,6 @@ class EmailThrottleError(RegistrationError):
 class VerificationRequest:
     email: str
     code: str
-
 
 def _send_code_email(email: str, code: str) -> None:
     try:

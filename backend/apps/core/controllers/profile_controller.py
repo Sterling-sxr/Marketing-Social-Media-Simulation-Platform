@@ -77,10 +77,10 @@ def get_my_profile(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
         return auth_error
-
+    
     if not hasattr(request.user, "userprofile"):
         return JsonResponse({"error": "Profile not found"}, status=404)
-
+    
     profile_data = profile_to_dict(request.user.userprofile)
     return JsonResponse(profile_data)
 
@@ -131,7 +131,6 @@ def profile_detail(request: HttpRequest, user_id: int) -> JsonResponse:
     am_following = False
     if me and me.id != target.id:
         from ..repositories import UserFollow
-
         am_following = UserFollow.objects.filter(follower=me, target=target).exists()
 
     data = {
@@ -236,15 +235,13 @@ def set_user_admin(request: HttpRequest, user_id: int) -> JsonResponse:
         target.is_superuser = bool(payload.get("is_superuser"))
     target.save(update_fields=["is_staff", "is_superuser"])
 
-    return JsonResponse(
-        {
-            "id": target.id,
-            "username": target.username,
-            "email": target.email,
-            "is_staff": target.is_staff,
-            "is_superuser": target.is_superuser,
-        }
-    )
+    return JsonResponse({
+        "id": target.id,
+        "username": target.username,
+        "email": target.email,
+        "is_staff": target.is_staff,
+        "is_superuser": target.is_superuser,
+    })
 
 
 @csrf_exempt
@@ -254,12 +251,11 @@ def follow_user(request: HttpRequest, user_id: int) -> JsonResponse:
         return auth_error
 
     from ..repositories import UserFollow
-
     me = request.user
     if request.method == "POST":
         if me.id == user_id:
             return JsonResponse({"error": "You cannot follow yourself."}, status=400)
-
+        
         # Load target user to get username/email for notification
         UserModel = get_user_model()
         try:
@@ -277,7 +273,6 @@ def follow_user(request: HttpRequest, user_id: int) -> JsonResponse:
                 import logging
 
                 from ..services import create_notification
-
                 logger = logging.getLogger(__name__)
                 logger.info(f"[FOLLOW] Creating notification for recipient={recipient}, actor={actor_name}")
                 create_notification(
@@ -292,7 +287,6 @@ def follow_user(request: HttpRequest, user_id: int) -> JsonResponse:
                 logger.info("[FOLLOW] Notification created successfully")
             except Exception as e:
                 import logging
-
                 logger = logging.getLogger(__name__)
                 logger.error(f"[FOLLOW] Failed to create notification: {e}", exc_info=True)
         return JsonResponse({"success": True})
@@ -307,9 +301,11 @@ def list_following(request: HttpRequest, user_id: int) -> JsonResponse:
     if auth_error:
         return auth_error
     from ..repositories import UserFollow
-
     follows = UserFollow.objects.filter(follower_id=user_id).select_related("target").order_by("-created_at")
-    items = [{"id": f.target.id, "username": f.target.username, "email": f.target.email} for f in follows]
+    items = [
+        {"id": f.target.id, "username": f.target.username, "email": f.target.email}
+        for f in follows
+    ]
     return JsonResponse({"items": items})
 
 
@@ -318,9 +314,11 @@ def list_followers(request: HttpRequest, user_id: int) -> JsonResponse:
     if auth_error:
         return auth_error
     from ..repositories import UserFollow
-
     follows = UserFollow.objects.filter(target_id=user_id).select_related("follower").order_by("-created_at")
-    items = [{"id": f.follower.id, "username": f.follower.username, "email": f.follower.email} for f in follows]
+    items = [
+        {"id": f.follower.id, "username": f.follower.username, "email": f.follower.email}
+        for f in follows
+    ]
     return JsonResponse({"items": items})
 
 

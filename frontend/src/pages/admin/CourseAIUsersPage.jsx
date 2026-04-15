@@ -36,12 +36,6 @@ const INITIAL_FORM = {
   notes: "",
 };
 
-const AI_INPUT_LIMITS = {
-  audienceType: 160,
-  interests: 400,
-  notes: 400,
-};
-
 export default function CourseAIUsersPage() {
   const { courseId: courseIdParam } = useParams();
   const courseId = Number(courseIdParam);
@@ -53,31 +47,16 @@ export default function CourseAIUsersPage() {
   const [items, setItems] = useState([]);
   const [courseInfo, setCourseInfo] = useState(null);
   const [search, setSearch] = useState("");
-  // Manual create/edit form
   const [formOpen, setFormOpen] = useState(false);
   const [formBusy, setFormBusy] = useState(false);
   const [formError, setFormError] = useState("");
   const [formData, setFormData] = useState(INITIAL_FORM);
-  // CSV import
   const [importBusy, setImportBusy] = useState(false);
   const [importMessage, setImportMessage] = useState("");
-  // Delete & bulk delete
   const [deleteState, setDeleteState] = useState({ open: false, item: null });
   const [selectedIds, setSelectedIds] = useState([]);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkBusy, setBulkBusy] = useState(false);
-  // Educator-friendly AI-assisted creation flow (first version – uses mock data)
-  const [aiFlowOpen, setAiFlowOpen] = useState(false);
-  const [aiInput, setAiInput] = useState({
-    audienceType: "",
-    numberOfUsers: 3,
-    interests: "",
-    activityLevel: "Medium",
-    notes: "",
-  });
-  const [aiSuggestions, setAiSuggestions] = useState([]);
-  const [aiStatus, setAiStatus] = useState({ loading: false, error: "" });
-
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -366,185 +345,9 @@ export default function CourseAIUsersPage() {
     }
   };
 
-  // ---------- AI-assisted creation flow ----------
-
-  const openAiFlow = () => {
-    setAiFlowOpen(true);
-    setAiStatus({ loading: false, error: "" });
-    setAiSuggestions([]);
-  };
-
-  const closeAiFlow = () => {
-    setAiFlowOpen(false);
-    setAiStatus({ loading: false, error: "" });
-  };
-
-  const handleAiInputChange = (field, value) => {
-    setAiInput((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const handleGenerateAiSuggestions = async (event) => {
-    event.preventDefault();
-    setAiStatus({ loading: true, error: "" });
-    try {
-      const suggestions = await mockGenerateAISuggestions(aiInput, courseInfo);
-      setAiSuggestions(suggestions);
-      setAiStatus({ loading: false, error: "" });
-    } catch (error) {
-      setAiStatus({
-        loading: false,
-        error: error.message || "Unable to generate suggestions.",
-      });
-    }
-  };
-
-  const applySuggestionToForm = (suggestion) => {
-    const pickOption = (value, options) => {
-      if (
-        value === undefined ||
-        value === null ||
-        !Array.isArray(options) ||
-        options.length === 0
-      ) {
-        return "";
-      }
-      const normalizedValue = String(value).trim();
-      if (!normalizedValue) return "";
-      if (options.includes(normalizedValue)) return normalizedValue;
-      const lower = normalizedValue.toLowerCase();
-      const exactMatch = options.find((opt) => opt.toLowerCase() === lower);
-      if (exactMatch) return exactMatch;
-      const keywordMatch = options.find((opt) =>
-        opt.toLowerCase().includes(lower)
-      );
-      return keywordMatch || "";
-    };
-    const getFirstValue = (obj, keys, fallback = "") => {
-      for (const key of keys) {
-        const value = obj?.[key];
-        if (
-          value !== undefined &&
-          value !== null &&
-          String(value).trim() !== ""
-        ) {
-          return value;
-        }
-      }
-      return fallback;
-    };
-    const normalizeScale = (value, fallback = 5) => {
-      const numeric = Number(value);
-      if (!Number.isFinite(numeric)) return fallback;
-      if (numeric < 1) return 1;
-      if (numeric > 10) return 10;
-      return Math.round(numeric);
-    };
-    const normalizeInterests = (value, options) => {
-      if (!Array.isArray(options) || options.length === 0) return [];
-      const rawItems = Array.isArray(value)
-        ? value
-        : String(value || "")
-            .replace(/;/g, ",")
-            .split(",");
-      const mapped = rawItems
-        .map((item) => pickOption(item, options))
-        .filter(Boolean);
-      return Array.from(new Set(mapped));
-    };
-
-    // Map suggestion into existing AI user form structure.
-    // This keeps the actual create/patch logic unchanged.
-    setFormData({
-      ...INITIAL_FORM,
-      username: String(suggestion?.username || "").trim(),
-      display_name: String(suggestion?.display_name || "").trim(),
-      gender: pickOption(
-        getFirstValue(suggestion, ["gender"]),
-        profileOptions?.genders
-      ),
-      city: pickOption(
-        getFirstValue(suggestion, ["city"]),
-        profileOptions?.cities
-      ),
-      age_group: pickOption(
-        getFirstValue(suggestion, ["age_group"]),
-        profileOptions?.age_groups
-      ),
-      education_level: pickOption(
-        getFirstValue(suggestion, ["education_level"]),
-        profileOptions?.education_levels
-      ),
-      income_level: pickOption(
-        getFirstValue(suggestion, ["income_level"]),
-        profileOptions?.income_levels
-      ),
-      social_value: normalizeScale(suggestion?.social_value, 5),
-      sociability: normalizeScale(suggestion?.sociability, 5),
-      openness: normalizeScale(suggestion?.openness, 5),
-      content_preference: pickOption(
-        getFirstValue(suggestion, ["content_preference", "preferred_content"]),
-        profileOptions?.content_preference
-      ),
-      interests: normalizeInterests(
-        getFirstValue(suggestion, ["interests"], []),
-        profileOptions?.interests
-      ),
-      shopping_frequency: pickOption(
-        getFirstValue(suggestion, ["shopping_frequency"]),
-        profileOptions?.shopping_frequency
-      ),
-      buying_behavior: pickOption(
-        getFirstValue(suggestion, ["buying_behavior", "buying_behaviour"]),
-        profileOptions?.buying_behavior
-      ),
-      decision_factor: pickOption(
-        getFirstValue(suggestion, ["decision_factor", "decision_factors"]),
-        profileOptions?.decision_factors
-      ),
-      shopping_preference: pickOption(
-        getFirstValue(suggestion, ["shopping_preference"]),
-        profileOptions?.shopping_preference
-      ),
-      digital_time: pickOption(
-        getFirstValue(suggestion, ["digital_time", "activity_level"]),
-        profileOptions?.digital_time
-      ),
-      interaction_style: pickOption(
-        getFirstValue(suggestion, ["interaction_style"]),
-        profileOptions?.interaction_style
-      ),
-      influencer_type: pickOption(
-        getFirstValue(suggestion, ["influencer_type"]),
-        profileOptions?.influencer_type
-      ),
-      notes: String(suggestion?.notes || "").trim(),
-    });
-    setAiFlowOpen(false);
-    setFormError("");
-    setFormBusy(false);
-    setFormOpen(true);
-  };
-
-  const handleUseTemplate = () => {
-    // Simple, non-AI template: give educators a quick starting point.
-    resetForm();
-    setFormData((prev) => ({
-      ...prev,
-      username: "",
-      display_name: "Typical active student",
-      notes:
-        "Template persona: an engaged student who participates regularly, checks the platform a few times a day, and is curious about new content.",
-    }));
-    setFormOpen(true);
-  };
-
   if (!authCheckComplete || !authUser) return null;
 
   const interestOptions = profileOptions?.interests || [];
-  const hasPersonas = items.length > 0;
 
   return (
     <AuthenticatedShell
@@ -555,83 +358,57 @@ export default function CourseAIUsersPage() {
           : "Manage AI personas for this course"
       }
     >
-      <input
-        type="file"
-        accept=".csv"
-        ref={fileInputRef}
-        className="hidden"
-        onChange={handleImport}
-      />
-
-      {hasPersonas ? (
-        <div className="mt-4 min-w-0 space-y-3 rounded-3xl border border-brand-100 bg-white px-4 py-3">
-          {/* Search row */}
-          <div className="flex min-w-0 w-full flex-col sm:max-w-xs">
-            <label className="text-xs font-semibold text-slate-500">
-              Search students & personas
-            </label>
-            <input
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by username, display name or city…"
-              className="mt-1 w-full min-w-0 rounded-full border border-brand-200 bg-white px-4 py-2 text-xs text-slate-700 outline-none transition focus:border-brand sm:w-64"
-            />
-          </div>
-
-          {/* Main actions row */}
-          <div className="flex flex-wrap items-stretch justify-start gap-2 sm:items-center">
-            <button
-              type="button"
-              className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-brand bg-brand px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-brand/90 disabled:opacity-60 sm:w-auto"
-              onClick={openAiFlow}
-            >
-              <span className="text-[13px]">✨ Generate with AI</span>
-            </button>
-            <button
-              type="button"
-              className="w-full rounded-full border border-brand-200 bg-white px-3 py-2 text-[11px] font-semibold text-brand transition hover:border-brand disabled:opacity-60 sm:w-auto"
-              onClick={handleUseTemplate}
-            >
-              Start from template
-            </button>
-            <button
-              type="button"
-              className="w-full rounded-full border border-brand-200 bg-white px-3 py-2 text-[11px] font-semibold text-brand transition hover:border-brand disabled:opacity-60 sm:w-auto"
-              onClick={openCreate}
-            >
-              Create manually
-            </button>
-          </div>
-
-          {/* Secondary actions row */}
-          <div className="flex flex-wrap items-stretch justify-start gap-2 sm:items-center">
-            <button
-              type="button"
-              className="w-full rounded-full border border-brand-200 bg-white px-3 py-2 text-[11px] font-semibold text-brand transition hover:border-brand disabled:opacity-60 sm:w-auto"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={importBusy}
-            >
-              {importBusy ? "Importing CSV…" : "Import CSV"}
-            </button>
-            <button
-              type="button"
-              className="w-full rounded-full border border-brand-200 bg-white px-3 py-2 text-[11px] font-semibold text-brand transition hover:border-brand sm:w-auto"
-              onClick={() => navigate(`/courses/${courseId}`)}
-            >
-              Back to course
-            </button>
-            <button
-              type="button"
-              className="w-full rounded-full border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-semibold text-red-500 transition hover:border-red-300 disabled:opacity-60 sm:w-auto"
-              onClick={handleBulkDeleteClick}
-              disabled={selectedIds.length === 0 || bulkBusy}
-            >
-              {bulkBusy ? "Deleting…" : "Delete selected"}
-            </button>
-          </div>
+      <div className="mt-4 flex flex-wrap items-center gap-3 rounded-3xl border border-brand-100 bg-white px-4 py-3">
+        <div className="flex min-w-[220px] flex-1 flex-col">
+          <label className="text-xs font-semibold text-slate-500">Search</label>
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search username, display name or city..."
+            className="mt-1 w-full rounded-full border border-brand-200 bg-white px-4 py-2 text-xs text-slate-700 outline-none transition focus:border-brand md:w-64"
+          />
         </div>
-      ) : null}
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <button
+            type="button"
+            className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
+            onClick={() => navigate(`/courses/${courseId}`)}
+          >
+            ← Back to course
+          </button>
+          <button
+            type="button"
+            className="rounded-full border border-brand bg-brand-100 px-4 py-2 text-xs font-semibold text-brand transition hover:bg-brand-200 disabled:opacity-60"
+            onClick={openCreate}
+          >
+            ＋ Create AI User
+          </button>
+          <button
+            type="button"
+            className="rounded-full border border-red-200 bg-red-50 px-4 py-2 text-xs font-semibold text-red-500 transition hover:border-red-300 disabled:opacity-60"
+            onClick={handleBulkDeleteClick}
+            disabled={selectedIds.length === 0 || bulkBusy}
+          >
+            {bulkBusy ? "Deleting..." : "Delete selected"}
+          </button>
+          <button
+            type="button"
+            className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand disabled:opacity-60"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={importBusy}
+          >
+            {importBusy ? "Importing..." : "Import CSV"}
+          </button>
+          <input
+            type="file"
+            accept=".csv"
+            ref={fileInputRef}
+            className="hidden"
+            onChange={handleImport}
+          />
+        </div>
+      </div>
 
       {status.error ? <Feedback error={status.error} /> : null}
       {importMessage ? (
@@ -641,64 +418,14 @@ export default function CourseAIUsersPage() {
       ) : null}
 
       {status.loading ? (
-        <p className="text-sm text-slate-500">Loading personas…</p>
-      ) : !hasPersonas ? (
-        <div className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-5 text-sm text-slate-700">
-          <h2 className="text-base font-semibold text-slate-900">
-            No AI personas for this course yet
-          </h2>
-          <p className="mt-1 text-xs text-slate-500">
-            Let AI suggest a few personas for you, or start with a template or a manual setup.
-          </p>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 rounded-full border border-brand bg-brand px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-brand/90 disabled:opacity-60"
-              onClick={openAiFlow}
-            >
-              <span className="text-[13px]">✨ Generate personas with AI</span>
-            </button>
-            <button
-              type="button"
-              className="rounded-full border border-brand-200 bg-white px-3 py-2 text-[11px] font-semibold text-brand transition hover:border-brand disabled:opacity-60"
-              onClick={handleUseTemplate}
-            >
-              Start from template
-            </button>
-            <button
-              type="button"
-              className="rounded-full border border-brand-200 bg-white px-3 py-2 text-[11px] font-semibold text-brand transition hover:border-brand disabled:opacity-60"
-              onClick={openCreate}
-            >
-              Create manually
-            </button>
-          </div>
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-slate-500">
-            <button
-              type="button"
-              className="rounded-full border border-brand-100 bg-white px-3 py-1.5 font-semibold text-brand transition hover:border-brand-200 disabled:opacity-60"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={importBusy}
-            >
-              {importBusy ? "Importing CSV…" : "Import CSV"}
-            </button>
-            <button
-              type="button"
-              className="rounded-full border border-slate-200 bg-white px-3 py-1.5 font-semibold text-slate-600 transition hover:border-slate-300"
-              onClick={() => navigate(`/courses/${courseId}`)}
-            >
-              Back to course
-            </button>
-          </div>
-        </div>
+        <p className="text-sm text-slate-500">Loading...</p>
       ) : filteredItems.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-brand-100 bg-white px-4 py-4 text-xs text-slate-500">
-          No personas match your current search. Try adjusting your keywords.
+        <p className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-6 text-sm text-slate-500">
+          No AI users found yet for this course.
         </p>
       ) : (
-        <div className="rounded-2xl border border-brand-100 bg-white shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="min-w-[900px] w-full divide-y divide-brand-50 text-left text-xs text-slate-600">
+        <div className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-sm">
+          <table className="min-w-full divide-y divide-brand-50 text-left text-xs text-slate-600">
             <thead className="bg-brand-50 text-[11px] uppercase tracking-wide text-slate-500">
               <tr>
                 <th className="px-4 py-3">
@@ -772,18 +499,17 @@ export default function CourseAIUsersPage() {
                 </tr>
               ))}
             </tbody>
-            </table>
-          </div>
+          </table>
         </div>
       )}
 
       {formOpen ? (
-        <div className="fixed inset-0 z-40 overflow-y-auto bg-black/40 px-4 py-4 sm:flex sm:items-center sm:justify-center sm:px-6">
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
           <form
-            className="mx-auto min-h-fit w-full max-w-3xl rounded-3xl bg-white p-4 pb-[calc(env(safe-area-inset-bottom)+6rem)] shadow-2xl shadow-brand-200 sm:max-h-[92vh] sm:overflow-y-auto sm:p-6 sm:pb-6"
+            className="max-h-[95vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl shadow-brand-200"
             onSubmit={handleFormSubmit}
           >
-            <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <header className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">
                   {formData.id ? "Edit AI User" : "Create AI User"}
@@ -1005,10 +731,10 @@ export default function CourseAIUsersPage() {
               />
             </div>
 
-            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">
+            <div className="mt-6 flex items-center justify-end gap-3">
               <button
                 type="button"
-                className="w-full rounded-full border border-brand-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:border-brand-300 hover:text-brand disabled:opacity-60 sm:w-auto"
+                className="rounded-full border border-brand-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:border-brand-300 hover:text-brand disabled:opacity-60"
                 onClick={closeForm}
                 disabled={formBusy}
               >
@@ -1016,260 +742,13 @@ export default function CourseAIUsersPage() {
               </button>
               <button
                 type="submit"
-                className="w-full rounded-full border border-brand bg-brand px-4 py-2 text-xs font-semibold text-white transition hover:bg-brand/90 disabled:opacity-60 sm:w-auto"
+                className="rounded-full border border-brand bg-brand px-4 py-2 text-xs font-semibold text-white transition hover:bg-brand/90 disabled:opacity-60"
                 disabled={formBusy}
               >
                 {formBusy ? "Saving..." : "Save"}
               </button>
             </div>
           </form>
-        </div>
-      ) : null}
-
-      {/* AI-assisted creation modal (first skeleton; suggestions currently mocked) */}
-      {aiFlowOpen ? (
-        <div className="fixed inset-0 z-40 overflow-y-auto bg-black/40 px-4 py-4 sm:flex sm:items-center sm:justify-center sm:px-6">
-          <div className="mx-auto min-h-fit w-full max-w-4xl rounded-3xl bg-white p-4 pb-[calc(env(safe-area-inset-bottom)+6rem)] shadow-2xl shadow-brand-200 sm:max-h-[92vh] sm:overflow-y-auto sm:p-6 sm:pb-6">
-            <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-slate-900">
-                  Generate personas with AI
-                </h2>
-                <p className="text-xs text-slate-500">
-                  Describe the students you have in mind and we&apos;ll suggest a few personas you can adjust and save.
-                </p>
-                {courseInfo ? (
-                  <p className="mt-1 text-[11px] text-slate-400">
-                    Course context:{" "}
-                    <span className="font-medium">
-                      {courseInfo.course_code} · {courseInfo.name}
-                    </span>
-                  </p>
-                ) : null}
-              </div>
-              <button
-                type="button"
-                className="rounded-full border border-brand-200 px-4 py-2 text-xs font-semibold text-slate-500 transition hover:border-brand-300 hover:text-brand"
-                onClick={closeAiFlow}
-                disabled={aiStatus.loading}
-              >
-                Close
-              </button>
-            </header>
-
-            <div className="mt-4 grid gap-4 md:grid-cols-2 md:gap-6">
-              {/* Educator input side */}
-              <section className="space-y-3 rounded-2xl border border-brand-100 bg-brand-50/40 p-4">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-                  1 · Describe your audience
-                </h3>
-                <p className="text-[11px] text-slate-500">
-                  Use plain language. Focus on who your students are and how you&apos;d like this persona to behave.
-                </p>
-                <label className="block text-xs font-semibold text-slate-600">
-                  Audience type
-                  <input
-                    type="text"
-                    value={aiInput.audienceType}
-                    onChange={(e) =>
-                      handleAiInputChange("audienceType", e.target.value)
-                    }
-                    placeholder="e.g. first-year business students, active social media users"
-                    maxLength={AI_INPUT_LIMITS.audienceType}
-                    className="mt-1 w-full rounded-xl border border-brand-200 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
-                  />
-                  <p className="mt-1 text-right text-[10px] text-slate-400">
-                    {aiInput.audienceType.length}/{AI_INPUT_LIMITS.audienceType}
-                  </p>
-                </label>
-                <label className="block text-xs font-semibold text-slate-600">
-                  Number of personas to suggest
-                  <input
-                    type="number"
-                    min="1"
-                    max="5"
-                    value={aiInput.numberOfUsers}
-                    onChange={(e) =>
-                      handleAiInputChange(
-                        "numberOfUsers",
-                        Number(e.target.value || 1)
-                      )
-                    }
-                    className="mt-1 w-24 rounded-xl border border-brand-200 px-3 py-1.5 text-sm text-slate-700 outline-none transition focus:border-brand"
-                  />
-                </label>
-                <label className="block text-xs font-semibold text-slate-600">
-                  Interests & topics
-                  <textarea
-                    rows={3}
-                    value={aiInput.interests}
-                    onChange={(e) =>
-                      handleAiInputChange("interests", e.target.value)
-                    }
-                    placeholder="What kinds of content, hobbies, or campus activities should this persona enjoy?"
-                    maxLength={AI_INPUT_LIMITS.interests}
-                    className="mt-1 w-full rounded-xl border border-brand-200 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
-                  />
-                  <p className="mt-1 text-right text-[10px] text-slate-400">
-                    {aiInput.interests.length}/{AI_INPUT_LIMITS.interests}
-                  </p>
-                </label>
-                <label className="block text-xs font-semibold text-slate-600">
-                  Activity level on Bread
-                  <select
-                    value={aiInput.activityLevel}
-                    onChange={(e) =>
-                      handleAiInputChange("activityLevel", e.target.value)
-                    }
-                    className="mt-1 w-full rounded-xl border border-brand-200 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
-                  >
-                    <option value="Low">Low · rarely checks updates</option>
-                    <option value="Medium">
-                      Medium · checks a few times per week
-                    </option>
-                    <option value="High">
-                      High · checks daily and posts often
-                    </option>
-                  </select>
-                </label>
-                <label className="block text-xs font-semibold text-slate-600">
-                  Any special notes for AI
-                  <textarea
-                    rows={3}
-                    value={aiInput.notes}
-                    onChange={(e) =>
-                      handleAiInputChange("notes", e.target.value)
-                    }
-                    placeholder="e.g. should represent a struggling student, a top performer, or a social connector in the class."
-                    maxLength={AI_INPUT_LIMITS.notes}
-                    className="mt-1 w-full rounded-xl border border-brand-200 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
-                  />
-                  <p className="mt-1 text-right text-[10px] text-slate-400">
-                    {aiInput.notes.length}/{AI_INPUT_LIMITS.notes}
-                  </p>
-                </label>
-                <button
-                  type="button"
-                  onClick={handleGenerateAiSuggestions}
-                  className="mt-1 inline-flex items-center justify-center rounded-full border border-brand bg-brand px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-brand/90 disabled:opacity-60"
-                  disabled={aiStatus.loading}
-                >
-                  {aiStatus.loading
-                    ? "Generating suggestions…"
-                    : "Generate suggestions"}
-                </button>
-                {aiStatus.error ? (
-                  <p className="mt-2 text-[11px] text-red-600">
-                    {aiStatus.error}
-                  </p>
-                ) : null}
-                <p className="mt-1 text-[10px] text-slate-400">
-                  For now, suggestions are sample personas. Your backend can plug in a live AI endpoint later.
-                </p>
-              </section>
-
-              {/* Suggestions / preview side */}
-              <section className="space-y-2 rounded-2xl border border-brand-100 bg-white p-4">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-                  2 · Review suggested personas
-                </h3>
-                {aiSuggestions.length === 0 && !aiStatus.loading ? (
-                  <div className="rounded-xl border border-dashed border-brand-100 bg-brand-50/40 px-3 py-3 text-[11px] text-slate-500">
-                    <p className="font-semibold text-slate-700">
-                      No suggestions yet
-                    </p>
-                    <p className="mt-1">
-                      After you describe your audience and click{" "}
-                      <span className="font-semibold">
-                        Generate suggestions
-                      </span>
-                      , personas will appear here.
-                    </p>
-                    <p className="mt-1">
-                      You can then review a persona and apply it to the detailed form to fine-tune before saving.
-                    </p>
-                  </div>
-                ) : null}
-                <div className="space-y-3">
-                  {aiSuggestions.map((suggestion, index) => (
-                    <article
-                      key={suggestion.username || index}
-                      className="rounded-2xl border border-brand-100 bg-brand-50/40 p-3 text-xs text-slate-700"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                            Persona {index + 1}
-                          </p>
-                          <p className="text-sm font-semibold text-slate-900">
-                            {suggestion.display_name || "Unnamed persona"}
-                          </p>
-                          {suggestion.audience_summary ? (
-                            <p className="mt-1 text-[11px] text-slate-500">
-                              {formatAudienceSummary(
-                                suggestion.audience_summary
-                              )}
-                            </p>
-                          ) : null}
-                        </div>
-                        <button
-                          type="button"
-                          className="rounded-full border border-brand-200 bg-white px-3 py-1 text-[11px] font-semibold text-brand transition hover:border-brand hover:text-brand"
-                          onClick={() => applySuggestionToForm(suggestion)}
-                          disabled={aiStatus.loading}
-                        >
-                          Apply to form
-                        </button>
-                      </div>
-                      <div className="mt-2 flex flex-wrap gap-2 text-[10px] text-slate-500">
-                        {suggestion.city ? (
-                          <span className="rounded-full border border-brand-100 bg-white px-2 py-0.5 font-medium text-slate-600">
-                            City: {suggestion.city}
-                          </span>
-                        ) : null}
-                        {suggestion.gender ? (
-                          <span className="rounded-full border border-brand-100 bg-white px-2 py-0.5 font-medium text-slate-600">
-                            Gender: {suggestion.gender}
-                          </span>
-                        ) : null}
-                        {suggestion.age_group ? (
-                          <span className="rounded-full border border-brand-100 bg-white px-2 py-0.5 font-medium text-slate-600">
-                            Age: {suggestion.age_group}
-                          </span>
-                        ) : null}
-                        {typeof suggestion.social_value === "number" ? (
-                          <span className="rounded-full border border-brand-100 bg-white px-2 py-0.5 font-medium text-slate-600">
-                            Social value: {suggestion.social_value}/10
-                          </span>
-                        ) : null}
-                        {typeof suggestion.sociability === "number" ? (
-                          <span className="rounded-full border border-brand-100 bg-white px-2 py-0.5 font-medium text-slate-600">
-                            Sociability: {suggestion.sociability}/10
-                          </span>
-                        ) : null}
-                        {typeof suggestion.openness === "number" ? (
-                          <span className="rounded-full border border-brand-100 bg-white px-2 py-0.5 font-medium text-slate-600">
-                            Openness: {suggestion.openness}/10
-                          </span>
-                        ) : null}
-                      </div>
-                      {Array.isArray(suggestion.interests) &&
-                      suggestion.interests.length ? (
-                        <div className="mt-2 text-[10px]">
-                          <span className="font-semibold text-slate-600">
-                            Interests:
-                          </span>{" "}
-                          <span className="text-slate-500">
-                            {suggestion.interests.join(", ")}
-                          </span>
-                        </div>
-                      ) : null}
-                    </article>
-                  ))}
-                </div>
-              </section>
-            </div>
-          </div>
         </div>
       ) : null}
 
@@ -1345,84 +824,4 @@ function SliderField({ label, value, onChange }) {
       />
     </label>
   );
-}
-
-function formatAudienceSummary(summary) {
-  if (!summary) return "";
-  // If the text starts with "For <course> ·", strip that part so we
-  // don&apos;t repeat the full course name inside each card.
-  const trimmed = summary.replace(/^For[^·]*·\s*/, "").trim();
-  return trimmed || summary;
-}
-
-// Mocked AI persona suggestion helper.
-// This is the single integration point to replace with a real backend call.
-async function mockGenerateAISuggestions(input, courseInfo) {
-  const count =
-    typeof input.numberOfUsers === "number" && input.numberOfUsers > 0
-      ? Math.min(input.numberOfUsers, 5)
-      : 3;
-  const baseCourseLabel = courseInfo
-    ? `${courseInfo.course_code || ""} ${courseInfo.name || ""}`.trim()
-    : "";
-
-  const personas = [];
-  for (let i = 0; i < count; i += 1) {
-    const activity = input.activityLevel || "";
-    let digitalTime = "";
-    if (activity === "High") {
-      digitalTime = "Several times a day";
-    } else if (activity === "Medium") {
-      digitalTime = "A few times a week";
-    } else if (activity === "Low") {
-      digitalTime = "About once a week or less";
-    }
-
-    personas.push({
-      username: `ai_user_${(i + 1).toString().padStart(2, "0")}`,
-      display_name:
-        i === 0
-          ? "Curious connector"
-          : i === 1
-          ? "Quiet observer"
-          : "Goal‑driven achiever",
-      gender: "",
-      city: "",
-      age_group: "",
-      education_level: "",
-      income_level: "",
-      social_value: i === 1 ? 4 : 8,
-      sociability: i === 1 ? 3 : 7,
-      openness: i === 0 ? 9 : 6,
-      content_preference: "",
-      interests: input.interests
-        ? input.interests
-            .split(/[;,]/)
-            .map((v) => v.trim())
-            .filter(Boolean)
-        : [],
-      shopping_frequency: "",
-      buying_behavior: "",
-      decision_factor: "",
-      shopping_preference: "",
-      digital_time: digitalTime,
-      interaction_style:
-        i === 0 ? "Active commenter" : i === 1 ? "Lurker" : "Question asker",
-      influencer_type: "",
-      notes:
-        input.notes ||
-        "This persona was generated as a starting point. Please review and adjust any details before saving.",
-      audience_summary: [
-        baseCourseLabel && `For ${baseCourseLabel}`,
-        input.audienceType && `Audience: ${input.audienceType}`,
-        input.activityLevel && `Activity: ${input.activityLevel.toLowerCase()}`,
-      ]
-        .filter(Boolean)
-        .join(" · "),
-    });
-  }
-
-  // Simulate network latency a bit so loading state is visible.
-  await new Promise((resolve) => setTimeout(resolve, 700));
-  return personas;
 }

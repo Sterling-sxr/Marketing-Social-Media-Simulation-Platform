@@ -23,7 +23,6 @@ import {
 import { useApp } from "../context/AppContext";
 import AuthenticatedShell from "./components/AuthenticatedShell";
 import { getJson } from "../lib/api";
-import { isTeacherLike } from "../lib/authRole";
 import { HOT_SEARCHES } from "./searchData";
 
 const HISTORY_STORAGE_KEY = "bread:global-search-history";
@@ -105,24 +104,21 @@ function buildCourseResults(query, courses) {
   const tokens = normalized.split(" ").filter(Boolean);
 
   return (courses || [])
-    .map((course) => {
-      const isTeacherCourse = isTeacherLike(course);
-      return {
+    .map((course) => ({
       id: `course-${course.id}`,
       type: "course",
       title: `${course.course_code} ${course.name}`.trim(),
-      snippet: isTeacherCourse || course.profile_completed
+      snippet: course.profile_completed
         ? "Open the course community and continue browsing discussions."
         : "Complete your course profile first, then continue into the class feed.",
-      href: isTeacherCourse || course.profile_completed
+      href: course.profile_completed
         ? `/courses/${course.id}`
         : `/courses/${course.id}/profile`,
       courseName: course.term || "Course",
       authorName: course.role || "Member",
       createdAt: "",
       rankLabel: "From your courses",
-    };
-    })
+    }))
     .filter((item) => {
       const haystack = [item.title, item.courseName, item.authorName, "course"]
         .filter(Boolean)

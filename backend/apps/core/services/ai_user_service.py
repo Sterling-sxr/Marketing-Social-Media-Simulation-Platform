@@ -1,5 +1,4 @@
 """Services for managing course-level AI users."""
-
 from __future__ import annotations
 
 import csv
@@ -19,7 +18,7 @@ from ..repositories import (
     CourseRepository,
     create_user,
 )
-from .profile_service import PROFILE_OPTIONS, normalize_ai_profile_payload
+from .profile_service import PROFILE_OPTIONS
 
 AI_USER_NUMERIC_FIELDS = ("social_value", "sociability", "openness")
 AI_USER_TEXT_FIELDS = (
@@ -188,23 +187,16 @@ def _validate_choices(field: str, value: str) -> str:
 
 
 def _payload_to_data(payload: dict[str, Any]) -> dict[str, Any]:
-    normalized_aliases = normalize_ai_profile_payload(payload)
-
-    def pick(field: str) -> Any:
-        if field in payload:
-            return payload.get(field)
-        return normalized_aliases.get(field)
-
     data: dict[str, Any] = {}
     for field in ("display_name", "notes"):
-        data[field] = (pick(field) or "").strip()
+        data[field] = (payload.get(field) or "").strip()
     for field in AI_USER_TEXT_FIELDS:
-        value = (pick(field) or "").strip()
+        value = (payload.get(field) or "").strip()
         data[field] = _validate_choices(field, value) if value else ""
     for field in AI_USER_NUMERIC_FIELDS:
-        data[field] = _normalize_numeric(pick(field), field)
+        data[field] = _normalize_numeric(payload.get(field), field)
     for field in AI_USER_LIST_FIELDS:
-        data[field] = _normalize_interests(pick(field))
+        data[field] = _normalize_interests(payload.get(field))
         # Validate interests items
         allowed = set(PROFILE_OPTIONS.get("interests", []))
         for item in data[field]:
@@ -387,7 +379,9 @@ def import_course_ai_users(*, user, course_id: int, file_bytes: bytes) -> dict[s
             if not username:
                 raise ValueError("Username is missing.")
             payload = {key: row.get(key, "") for key in CSV_COLUMNS if key != "username"}
-            existing = CourseAIUserRepository.model.objects.filter(course_id=course.id, username__iexact=username).first()
+            existing = CourseAIUserRepository.model.objects.filter(
+                course_id=course.id, username__iexact=username
+            ).first()
             if existing:
                 update_course_ai_user(
                     user=user,
