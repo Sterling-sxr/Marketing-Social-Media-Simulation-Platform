@@ -1,9 +1,13 @@
+# Use the Jira ticket ID for this change.
+# Example: W16B-42
+# Keep the summary short and in imperative mood.
+
 # Ticket: W16B-XX
 
 # Summary (imperative):
 
 # Details (optional):
-# - Why?
-# - Any risks / TODOs?
+# Briefly explain why this change was made.
+# Mention any risk, follow-up work, or notes if needed.
 
-# Lines starting with '#' are ignored.
+# Lines starting with '#' are ignored by git.
