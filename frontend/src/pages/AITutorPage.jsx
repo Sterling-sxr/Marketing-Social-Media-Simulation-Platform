@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BotMessageSquare, Send, Sparkles, RotateCcw, ChevronDown, ChevronUp } from "lucide-react";
 import { postJson } from "../lib/api";
+import { isTeacherLike } from "../lib/authRole";
 import { useApp } from "../context/AppContext";
 import AuthenticatedShell from "./components/AuthenticatedShell";
 
@@ -122,6 +123,7 @@ const SUGGESTED_QUESTIONS = [
 export default function AITutorPage() {
   const navigate = useNavigate();
   const { authUser, authCheckComplete } = useApp();
+  const isTeacherOrAdmin = isTeacherLike(authUser);
 
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
@@ -134,8 +136,14 @@ export default function AITutorPage() {
   // Auth guard
   useEffect(() => {
     if (!authCheckComplete) return;
-    if (!authUser) navigate("/login", { replace: true });
-  }, [authCheckComplete, authUser, navigate]);
+    if (!authUser) {
+      navigate("/login", { replace: true });
+      return;
+    }
+    if (isTeacherOrAdmin) {
+      navigate("/teacherhome", { replace: true });
+    }
+  }, [authCheckComplete, authUser, isTeacherOrAdmin, navigate]);
 
   // Auto scroll to bottom on new answer
   useEffect(() => {

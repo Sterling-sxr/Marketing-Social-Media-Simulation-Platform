@@ -9,9 +9,7 @@ from ..repositories.models import Notification
 from ..utils.serializers import notification_to_dict
 
 
-def list_notifications(
-    *, recipient: str, limit: int = 50
-) -> tuple[list[Notification], int]:
+def list_notifications(*, recipient: str, limit: int = 50) -> tuple[list[Notification], int]:
     """Return notifications for a recipient and the unread count."""
     queryset = Notification.objects.filter(recipient=recipient)
     unread_count = queryset.filter(is_read=False).count()
@@ -63,13 +61,14 @@ def create_notification(
 
 def _broadcast_notification(*, recipient: str, payload: dict) -> None:
     import logging
+
     logger = logging.getLogger(__name__)
-    
+
     channel_layer = get_channel_layer()
     if not channel_layer:
         logger.warning("No channel layer configured for notifications")
         return
-    
+
     group_name = f"notifications_{recipient}"
     logger.info(f"Broadcasting notification to group: {group_name}, payload: {payload}")
     async_to_sync(channel_layer.group_send)(

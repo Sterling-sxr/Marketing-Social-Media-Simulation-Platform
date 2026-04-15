@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 
-import dj_database_url
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent  # 指向 capstone-project-26t1-9900-f09d-bread-1
@@ -11,11 +10,7 @@ load_dotenv(env_path)
 APPS_DIR = BASE_DIR / "apps"
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-secret")
 DEBUG = os.environ.get("DJANGO_DEBUG", "0") == "1"
-ALLOWED_HOSTS = [
-    host.strip()
-    for host in os.environ.get("ALLOWED_HOSTS", "*").split(",")
-    if host.strip()
-] or ["*"]
+ALLOWED_HOSTS = [host.strip() for host in os.environ.get("ALLOWED_HOSTS", "*").split(",") if host.strip()] or ["*"]
 
 INSTALLED_APPS = [
     "channels",

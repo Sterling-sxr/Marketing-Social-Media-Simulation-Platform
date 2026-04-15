@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import AuthenticatedShell from "./components/AuthenticatedShell";
 import { getJson, deleteJson } from "../lib/api";
+import { isTeacherLike } from "../lib/authRole";
 import {
   ArrowLeft,
   Bell,
@@ -12,6 +13,7 @@ import {
   Eye,
   FileText,
   Home,
+  LayoutDashboard,
   Loader2,
   MessageSquare,
   Paperclip,
@@ -347,11 +349,15 @@ export default function CourseMaterialsPage() {
 
   const isTeacherOrAdmin = useMemo(() => {
     if (!authUser) return false;
-    if (authUser.is_superuser || authUser.is_staff) return true;
+    if (isTeacherLike(authUser)) return true;
     const allCourses = [...(courses.joined || []), ...(courses.available || [])];
     const membership = allCourses.find((c) => c.id === courseId);
-    return membership?.role === "teacher";
+    return isTeacherLike(membership);
   }, [authUser, courses, courseId]);
+  const homeRoute = isTeacherOrAdmin ? "/teacherhome" : "/studenthome";
+  const analyticsRoute = isTeacherOrAdmin
+    ? "/teacher/analytics"
+    : "/student/analytics";
 
   useEffect(() => {
     if (!authCheckComplete) return;
@@ -422,14 +428,18 @@ export default function CourseMaterialsPage() {
   // Mobile bottom nav always shows the 5 global destinations so users
   // are never stranded when inside a course-specific page.
   const globalMobileNav = useMemo(
-    () => [
-      { to: "/studenthome", label: "Home", icon: <Home className="h-5 w-5" /> },
-      { to: "/courses", label: "Courses", icon: <BookOpen className="h-5 w-5" /> },
-      { to: "/search", label: "Search", icon: <Search className="h-5 w-5" /> },
-      { to: "/notifications", label: "Messages", icon: <Bell className="h-5 w-5" /> },
-      { to: "/ai-tutor", label: "AI Tutor", icon: <BotMessageSquare className="h-5 w-5" /> },
-    ],
-    []
+    () =>
+      [
+        { to: homeRoute, label: "Home", icon: <Home className="h-5 w-5" /> },
+        { to: "/courses", label: "Courses", icon: <BookOpen className="h-5 w-5" /> },
+        { to: analyticsRoute, label: "Analytics", icon: <LayoutDashboard className="h-5 w-5" /> },
+        { to: "/search", label: "Search", icon: <Search className="h-5 w-5" /> },
+        { to: "/notifications", label: "Messages", icon: <Bell className="h-5 w-5" /> },
+        !isTeacherOrAdmin
+          ? { to: "/ai-tutor", label: "AI Tutor", icon: <BotMessageSquare className="h-5 w-5" /> }
+          : null,
+      ].filter(Boolean),
+    [analyticsRoute, homeRoute, isTeacherOrAdmin]
   );
 
   if (!authCheckComplete || !authUser) return null;

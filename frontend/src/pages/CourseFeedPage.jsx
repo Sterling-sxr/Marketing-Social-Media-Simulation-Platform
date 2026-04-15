@@ -8,6 +8,7 @@ import {
   patchJson,
   uploadFile,
 } from "../lib/api";
+import { isTeacherLike } from "../lib/authRole";
 import PostCard from "./components/PostCard";
 import ConfirmDialog from "./components/ConfirmDialog";
 import Feedback from "./components/Feedback";
@@ -83,6 +84,7 @@ export default function CourseFeedPage() {
     logout,
     loadCourseProfile,
   } = useApp();
+  const isTeacherOrAdmin = isTeacherLike(authUser);
 
   // Left navigation filter: all | tag | following
   const searchParams = new URLSearchParams(location.search);
@@ -223,6 +225,7 @@ export default function CourseFeedPage() {
     if (
       !authCheckComplete ||
       !authUser ||
+      isTeacherOrAdmin ||
       !Number.isFinite(courseId) ||
       !courses.joined.length
     ) {
@@ -243,6 +246,7 @@ export default function CourseFeedPage() {
     navigate,
     location.pathname,
     location.search,
+    isTeacherOrAdmin,
   ]);
 
   // Load posts based on the current left-hand filter
@@ -362,7 +366,7 @@ export default function CourseFeedPage() {
 
   const handleEditProfile = () => {
     closeProfileModal();
-    if (Number.isFinite(courseId)) {
+    if (Number.isFinite(courseId) && !isTeacherOrAdmin) {
       navigate(`/courses/${courseId}/profile`);
     }
   };
@@ -1838,13 +1842,15 @@ export default function CourseFeedPage() {
                 >
                   Close
                 </button>
-                <button
-                  type="button"
-                  className="rounded-full bg-brand px-4 py-2 text-xs font-semibold text-white shadow hover:bg-brand-dark"
-                  onClick={handleEditProfile}
-                >
-                  {profileModal.profile ? "Edit profile" : "Complete profile"}
-                </button>
+                {!isTeacherOrAdmin ? (
+                  <button
+                    type="button"
+                    className="rounded-full bg-brand px-4 py-2 text-xs font-semibold text-white shadow hover:bg-brand-dark"
+                    onClick={handleEditProfile}
+                  >
+                    {profileModal.profile ? "Edit profile" : "Complete profile"}
+                  </button>
+                ) : null}
               </div>
             </header>
 
@@ -1954,11 +1960,9 @@ export default function CourseFeedPage() {
                 </div>
               ) : (
                 <div className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-5 text-sm text-slate-600">
-                  You have not completed this course profile yet. Click{" "}
-                  <span className="font-semibold text-brand">
-                    Complete profile
-                  </span>{" "}
-                  to fill it in now.
+                  {isTeacherOrAdmin
+                    ? "This course profile has not been completed yet."
+                    : "You have not completed this course profile yet. Click Complete profile to fill it in now."}
                 </div>
               )}
             </section>

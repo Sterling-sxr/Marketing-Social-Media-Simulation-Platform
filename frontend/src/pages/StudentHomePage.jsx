@@ -1,12 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
+import { isTeacherLike } from "../lib/authRole";
 import AuthenticatedShell from "./components/AuthenticatedShell";
 
 export default function StudentHomePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { authUser } = useApp();
+  const { authUser, authCheckComplete } = useApp();
+
+  useEffect(() => {
+    if (!authCheckComplete) return;
+    if (!authUser) {
+      navigate("/login", { replace: true });
+      return;
+    }
+    if (isTeacherLike(authUser)) {
+      navigate("/teacherhome", { replace: true });
+    }
+  }, [authUser, authCheckComplete, navigate]);
 
   const queryTab = new URLSearchParams(location.search).get("tab");
   const [active, setActive] = useState(null);

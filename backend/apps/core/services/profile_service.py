@@ -1,4 +1,5 @@
 """Services for managing user profiles."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -90,6 +91,171 @@ PROFILE_NUMERIC_FIELDS = [
     ("openness", 5),
 ]
 
+# Aliases / helpers for AI-generated or UI-friendly payloads
+AI_FIELD_ALIASES: dict[str, str] = {
+    # plural / spelling variants
+    "decision_factors": "decision_factor",
+    "buying_behaviour": "buying_behavior",
+    # common AI / UI naming
+    "activity_level": "digital_time",
+    "preferred_content": "content_preference",
+}
+
+# Map canonical profile fields to the corresponding PROFILE_OPTIONS key
+PROFILE_OPTIONS_KEY_BY_FIELD: dict[str, str] = {
+    "gender": "genders",
+    "city": "cities",
+    "age_group": "age_groups",
+    "education_level": "education_levels",
+    "income_level": "income_levels",
+    "shopping_frequency": "shopping_frequency",
+    "buying_behavior": "buying_behavior",
+    "decision_factor": "decision_factors",
+    "shopping_preference": "shopping_preference",
+    "digital_time": "digital_time",
+    "content_preference": "content_preference",
+    "interaction_style": "interaction_style",
+    "influencer_type": "influencer_type",
+}
+
+
+def _normalize_choice(value: Any, options_key: str) -> str:
+    """Normalize a free-form string into one of PROFILE_OPTIONS[options_key]."""
+    if not value:
+        return ""
+    options = PROFILE_OPTIONS.get(options_key) or []
+    if not options:
+        return (value or "").strip() if isinstance(value, str) else str(value)
+
+    text = (value or "").strip()
+    lowered = text.lower()
+
+    # First pass: strict case-insensitive match
+    for opt in options:
+        if opt.lower() == lowered:
+            return opt
+
+    # Second pass: substring match (for shorter AI labels)
+    for opt in options:
+        if lowered in opt.lower():
+            return opt
+
+    # Fallback to original text (trimmed)
+    return text
+
+
+def _normalize_digital_time(value: Any) -> str:
+    """Normalize activity-level style values into digital_time choices."""
+    if not value:
+        return ""
+    text = (value or "").strip()
+    lowered = text.lower()
+
+    # Explicit mapping for AI-friendly activity levels
+    if lowered == "high":
+        text = "Several times a day"
+    elif lowered == "medium":
+        text = "A few times a week"
+    elif lowered == "low":
+        text = "About once a week or less"
+
+    return _normalize_choice(text, "digital_time")
+
+
+def _normalize_interests(value: Any) -> list[str]:
+    """Normalize interests into a list of valid PROFILE_OPTIONS['interests']."""
+    options = PROFILE_OPTIONS.get("interests") or []
+    if not value:
+        return []
+
+    raw_items: list[str]
+    if isinstance(value, str):
+        # Split on comma / semicolon for convenience
+        raw_items = [part.strip() for part in value.replace("\n", " ").split(",") if part.strip()]
+    elif isinstance(value, (list, tuple, set)):
+        raw_items = [str(item).strip() for item in value if str(item).strip()]
+    else:
+        return []
+
+    normalized: list[str] = []
+    for item in raw_items:
+        lowered = item.lower()
+        # Try case-insensitive exact match first
+        match = None
+        for opt in options:
+            if opt.lower() == lowered:
+                match = opt
+                break
+        if not match:
+            # Fallback to substring match
+            for opt in options:
+                if lowered in opt.lower():
+                    match = opt
+                    break
+        if match and match not in normalized:
+            normalized.append(match)
+
+    return normalized
+
+
+def _normalize_numeric(value: Any, default: int = 5) -> int:
+    """Normalize numeric persona traits (1–10 scale)."""
+    try:
+        num = int(value)
+    except (TypeError, ValueError):
+        return default
+    if num < 1:
+        return 1
+    if num > 10:
+        return 10
+    return num
+
+
+def normalize_ai_profile_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    """
+    Normalize AI-generated or UI-friendly persona payloads into our strict
+    profile schema. The result can safely be passed to merge_profile_payload.
+    """
+    if not isinstance(payload, dict):
+        return {}
+
+    normalized: dict[str, Any] = {}
+
+    for raw_key, raw_value in payload.items():
+        key = AI_FIELD_ALIASES.get(raw_key, raw_key)
+
+        # Numeric traits
+        if key in {"social_value", "sociability", "openness"}:
+            normalized[key] = _normalize_numeric(raw_value)
+            continue
+
+        # Interests
+        if key == "interests":
+            normalized["interests"] = _normalize_interests(raw_value)
+            continue
+
+        # Digital time / activity level
+        if key == "digital_time":
+            normalized["digital_time"] = _normalize_digital_time(raw_value)
+            continue
+
+        # Canonical string fields
+        if key in PROFILE_STRING_FIELDS:
+            options_key = PROFILE_OPTIONS_KEY_BY_FIELD.get(key)
+            if options_key:
+                normalized[key] = _normalize_choice(raw_value, options_key)
+            else:
+                # Free-form strings like avatar_url
+                if isinstance(raw_value, str):
+                    normalized[key] = raw_value.strip()
+                else:
+                    normalized[key] = raw_value
+            continue
+
+        # Unknown fields are ignored
+
+    return normalized
+
 
 def needs_profile(user) -> bool:
     """First-login gating removed; keep for backward compatibility."""
@@ -175,6 +341,7 @@ def followers_count(user_id: int) -> int:
 
 __all__ = [
     "PROFILE_OPTIONS",
+    "normalize_ai_profile_payload",
     "needs_profile",
     "save_profile",
     "profile_to_dict",

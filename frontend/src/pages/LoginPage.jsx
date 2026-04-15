@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
+import { isTeacherLike } from "../lib/authRole";
 import Feedback from "./components/Feedback";
 import CircleImage from "./components/CircleImage";
 
@@ -22,9 +23,13 @@ export default function LoginPage() {
     e.preventDefault();
     setStatus({ loading: true, message: "", error: "" });
     try {
-      await login(email, password);
+      const { user } = await login(email, password);
       setStatus({ loading: false, message: "Login Success!", error: "" });
-      navigate("/studenthome");
+      if (isTeacherLike(user)) {
+        navigate("/teacherhome");
+      } else {
+        navigate("/studenthome");
+      }
     } catch (error) {
       setStatus({ loading: false, message: "", error: error.message });
     }
@@ -173,9 +178,13 @@ export default function LoginPage() {
                   <button
                     type="button"
                     className="w-full rounded-xl bg-gradient-to-r from-brand to-brand-dark py-3 text-sm font-semibold text-white shadow-lg shadow-brand-200 transition hover:from-brand-dark hover:to-brand"
-                    onClick={() => navigate("/courses")}
+                    onClick={() =>
+                      isTeacherLike(authUser)
+                        ? navigate("/teacherhome")
+                        : navigate("/studenthome")
+                    }
                   >
-                    Go to courses
+                    Enter Bread
                   </button>
                   <button
                     type="button"

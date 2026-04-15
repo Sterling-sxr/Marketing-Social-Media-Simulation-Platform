@@ -1,6 +1,7 @@
 """
 Notification repository helpers.
 """
+
 from __future__ import annotations
 
 from typing import List, Tuple
@@ -15,13 +16,14 @@ class NotificationRepository(BaseRepository[Notification]):
 
     Encapsulates notification-specific queries.
     """
+
     model = Notification
-    
+
     @classmethod
     def get_user_notifications(cls, recipient: str, limit: int = 50) -> Tuple[List[Notification], int]:
         """
         Retrieve the user's notifications and unread count.
-        
+
         Returns:
             (notifications, unread_count)
         """
@@ -29,17 +31,14 @@ class NotificationRepository(BaseRepository[Notification]):
         unread_count = queryset.filter(is_read=False).count()
         notifications = list(queryset[:limit])
         return notifications, unread_count
-    
+
     @classmethod
     def mark_as_read(cls, recipient: str, notification_ids: List[int]) -> int:
         """Mark notifications as read."""
         if not notification_ids:
             return 0
-        return cls.model.objects.filter(
-            recipient=recipient,
-            id__in=notification_ids
-        ).update(is_read=True)
-    
+        return cls.model.objects.filter(recipient=recipient, id__in=notification_ids).update(is_read=True)
+
     @classmethod
     def get_unread_count(cls, recipient: str) -> int:
         """Return how many unread notifications remain."""

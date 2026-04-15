@@ -1,4 +1,5 @@
 """Services for course post feeds."""
+
 from __future__ import annotations
 
 import logging
@@ -104,7 +105,7 @@ def _ensure_membership(course: Course, user):
         raise CourseAccessError("You must join this course before you can access its posts.")
     # Return role info
     role = CourseRepository.get_user_role(course.id, user.id)
-    return type('Membership', (), {'course': course, 'user': user, 'role': role or 'student'})()
+    return type("Membership", (), {"course": course, "user": user, "role": role or "student"})()
 
 
 def _user_is_admin(user) -> bool:
@@ -138,11 +139,7 @@ def _extract_mentions(content: str, provided: Sequence[str] | None = None) -> li
 
 def _extract_hashtags(content: str, provided: Sequence[str] | None = None) -> list[str]:
     if provided is not None:
-        return list(
-            dict.fromkeys(
-                [item.strip().lstrip("#").lower() for item in provided if item and item.strip()]
-            )
-        )
+        return list(dict.fromkeys([item.strip().lstrip("#").lower() for item in provided if item and item.strip()]))
     pattern = re.compile(r"#([^\s@#]+)")
     return list(dict.fromkeys(match.lower() for match in pattern.findall(content or "")))
 
@@ -320,7 +317,7 @@ def list_course_posts(*, user, course_id: int, hashtag: str | None = None, follo
     like_count_map = PostLikeRepository.get_like_counts(post_ids)
     liked_ids = PostLikeRepository.get_user_liked_posts(user.id, post_ids)
     comment_count_map = PostCommentRepository.get_comment_counts(post_ids)
-    
+
     # Attach prefetched comment counts for serialization
     for p in posts:
         setattr(p, "prefetched_comments_count", comment_count_map.get(p.id, 0))
@@ -437,14 +434,14 @@ def create_course_post_with_meta(
             user_id = mention_entity_map.get(key)
             if user_id:
                 to_create.append({"user_id": user_id, "identifier": key})
-        
+
         # Bulk-create mentions via repository
         if to_create:
             PostMentionRepository.create_mentions(post.id, to_create)
             # Reload post to get mentions
             post = PostRepository.get_with_details(post.id)
             post.prefetched_mentions = post.mentions_rel.all()
-    
+
     if not hasattr(post, "prefetched_mentions"):
         post.prefetched_mentions = []
 
@@ -460,11 +457,7 @@ def create_course_post_with_meta(
             if not mention.user_id or mention.user_id == getattr(user, "id", None):
                 continue
             target_user = mention.user
-            recipient = (
-                (target_user.username or "").strip()
-                or (target_user.email or "").strip()
-                or str(target_user.id)
-            )
+            recipient = (target_user.username or "").strip() or (target_user.email or "").strip() or str(target_user.id)
             subject = f"{actor_name} mentioned you in a course post"
             link = f"/courses/{course_id}/posts/{post.id}"
             preview = sanitized[:140]
@@ -488,20 +481,11 @@ def create_course_post_with_meta(
             follower_ids.discard(getattr(user, "id", None))
             if follower_ids:
                 User = get_user_model()
-                followers = User.objects.filter(id__in=follower_ids).only(
-                    "id", "username", "email", "first_name", "last_name"
-                )
+                followers = User.objects.filter(id__in=follower_ids).only("id", "username", "email", "first_name", "last_name")
                 subject = f"{actor_name} shared a new update"
-                body = (
-                    f"{actor_name} just posted in {course.course_code}. "
-                    f"{post_preview}"
-                ).strip()
+                body = (f"{actor_name} just posted in {course.course_code}. {post_preview}").strip()
                 for follower in followers:
-                    recipient = (
-                        (follower.username or "").strip()
-                        or (follower.email or "").strip()
-                        or str(follower.id)
-                    )
+                    recipient = (follower.username or "").strip() or (follower.email or "").strip() or str(follower.id)
                     if not recipient or follower.id == getattr(user, "id", None):
                         continue
                     create_notification(
@@ -649,11 +633,7 @@ def like_course_post(*, user, course_id: int, post_id: int) -> dict[str, Any]:
     # Create and broadcast a notification to the post author (except self-like)
     if created and post.author_id != getattr(user, "id", None):
         try:
-            recipient = (
-                (post.author.username or "").strip()
-                or (post.author.email or "").strip()
-                or str(post.author_id)
-            )
+            recipient = (post.author.username or "").strip() or (post.author.email or "").strip() or str(post.author_id)
             actor_name = _display_name(user)
             subject = f"{actor_name} liked your post"
             body = ""
@@ -730,10 +710,7 @@ def add_comment_to_post(
         raise ValueError("Comment content cannot be empty.")
 
     try:
-        post = (
-            CoursePost.objects.select_related("course", "author")
-            .get(id=post_id, course=course)
-        )
+        post = CoursePost.objects.select_related("course", "author").get(id=post_id, course=course)
     except CoursePost.DoesNotExist as exc:
         raise CoursePostNotFoundError("The post does not exist in this course.") from exc
 
@@ -745,11 +722,7 @@ def add_comment_to_post(
 
     if not suppress_notifications and post.author_id != getattr(user, "id", None):
         try:
-            recipient = (
-                (post.author.username or "").strip()
-                or (post.author.email or "").strip()
-                or str(post.author_id)
-            )
+            recipient = (post.author.username or "").strip() or (post.author.email or "").strip() or str(post.author_id)
             actor_name = _display_name(user)
             subject = f"{actor_name} commented on your post"
             body = sanitized[:200]
@@ -852,12 +825,8 @@ def update_course_post(
         if len(normalized_attachment_ids) > MAX_POST_ATTACHMENTS:
             raise ValueError(f"You can upload at most {MAX_POST_ATTACHMENTS} attachments.")
 
-        existing_ids = set(
-            CoursePostAttachment.objects.filter(post_id=post.id).values_list("asset_id", flat=True)
-        )
-        CoursePostAttachment.objects.filter(post_id=post.id).exclude(
-            asset_id__in=normalized_attachment_ids
-        ).delete()
+        existing_ids = set(CoursePostAttachment.objects.filter(post_id=post.id).values_list("asset_id", flat=True))
+        CoursePostAttachment.objects.filter(post_id=post.id).exclude(asset_id__in=normalized_attachment_ids).delete()
         to_add = [asset_id for asset_id in normalized_attachment_ids if asset_id not in existing_ids]
         if to_add:
             PostAttachmentRepository.attach_to_post(post.id, to_add)
@@ -1016,10 +985,7 @@ def get_course_post_analytics(
     view_map = _aggregate_daily(CoursePostView)
 
     def _build_series(source: dict) -> list[dict[str, Any]]:
-        return [
-            {"date": day.isoformat(), "count": int(source.get(day, 0))}
-            for day in date_axis
-        ]
+        return [{"date": day.isoformat(), "count": int(source.get(day, 0))} for day in date_axis]
 
     totals = {
         "likes": CoursePostLike.objects.filter(post_id=post_id).count(),
@@ -1031,11 +997,7 @@ def get_course_post_analytics(
     if snapshot:
         sentiment_counts = snapshot.sentiment_counts or {}
         sentiment_percentages = snapshot.sentiment_percentages or {}
-        sentiment_total = (
-            sentiment_counts.get("positive", 0)
-            + sentiment_counts.get("neutral", 0)
-            + sentiment_counts.get("negative", 0)
-        )
+        sentiment_total = sentiment_counts.get("positive", 0) + sentiment_counts.get("neutral", 0) + sentiment_counts.get("negative", 0)
     else:
         sentiment_counts = {"positive": 0, "neutral": 0, "negative": 0}
         sentiment_percentages = {"positive": 0.0, "neutral": 0.0, "negative": 0.0}
@@ -1044,10 +1006,7 @@ def get_course_post_analytics(
     if totals["comments"] > 0 and sentiment_total == 0:
         sentiment_counts = _compute_sentiment_counts_for_post(post_id)
         sentiment_total = sum(sentiment_counts.values())
-        sentiment_percentages = {
-            key: round(value * 100 / sentiment_total, 1) if sentiment_total else 0.0
-            for key, value in sentiment_counts.items()
-        }
+        sentiment_percentages = {key: round(value * 100 / sentiment_total, 1) if sentiment_total else 0.0 for key, value in sentiment_counts.items()}
 
     hashtags_data: list[dict[str, Any]] = []
     post_hashtags = post_obj.hashtags or []
@@ -1066,10 +1025,9 @@ def get_course_post_analytics(
                 continue
             cohort_size = len(cohort_ids)
             likes_total = CoursePostLike.objects.filter(post_id__in=cohort_ids).count()
-            comments_total = (
-                CoursePostComment.objects.filter(post_id__in=cohort_ids).count()
-            )
+            comments_total = CoursePostComment.objects.filter(post_id__in=cohort_ids).count()
             views_total = CoursePostView.objects.filter(post_id__in=cohort_ids).count()
+
             def _avg(total: int) -> float:
                 return round(total / cohort_size, 2) if cohort_size else 0.0
 
@@ -1117,23 +1075,23 @@ def list_posts_by_user(*, user, target_user_id: int, limit: int | None = None) -
     # Query courses the current user belongs to
     user_courses = CourseRepository.get_user_courses(user.id)
     member_course_ids = [c.id for c in user_courses]
-    
+
     if not member_course_ids:
         return []
 
     # Fetch the target user's posts in those courses
     posts = PostRepository.get_user_posts(target_user_id, member_course_ids, limit=limit)
-    
+
     if not posts:
         return []
-    
+
     post_ids = [p.id for p in posts]
 
     # Batch-load like/comment stats
     like_count_map = PostLikeRepository.get_like_counts(post_ids)
     liked_ids = PostLikeRepository.get_user_liked_posts(user.id, post_ids)
     comment_count_map = PostCommentRepository.get_comment_counts(post_ids)
-    
+
     for p in posts:
         setattr(p, "prefetched_comments_count", comment_count_map.get(p.id, 0))
 
@@ -1153,7 +1111,7 @@ def list_liked_posts(*, user, target_user_id: int) -> list[dict[str, Any]]:
     # Query courses this user belongs to
     user_courses = CourseRepository.get_user_courses(user.id)
     member_course_ids = [c.id for c in user_courses]
-    
+
     if not member_course_ids:
         return []
 
@@ -1162,14 +1120,14 @@ def list_liked_posts(*, user, target_user_id: int) -> list[dict[str, Any]]:
 
     if not posts:
         return []
-    
+
     post_ids = [p.id for p in posts]
 
     # Batch-load stats for serialization
     like_count_map = PostLikeRepository.get_like_counts(post_ids)
     liked_ids = PostLikeRepository.get_user_liked_posts(user.id, post_ids)
     comment_count_map = PostCommentRepository.get_comment_counts(post_ids)
-    
+
     for p in posts:
         setattr(p, "prefetched_comments_count", comment_count_map.get(p.id, 0))
 
@@ -1200,10 +1158,7 @@ def list_posts_with_analytics_by_user(
     snapshot_map = {snap.post_id: snap for snap in snapshots}
 
     view_counts = {
-        row["post_id"]: row["total"]
-        for row in CoursePostView.objects.filter(post_id__in=post_ids)
-        .values("post_id")
-        .annotate(total=Count("id"))
+        row["post_id"]: row["total"] for row in CoursePostView.objects.filter(post_id__in=post_ids).values("post_id").annotate(total=Count("id"))
     }
 
     enriched: list[dict[str, Any]] = []
@@ -1304,18 +1259,11 @@ def _handle_interest_recommendations(
     link = f"/courses/{course_id}/posts/{post.id}"
     for entry in recommendations:
         user_obj = entry["user"]
-        recipient = (
-            (user_obj.username or "").strip()
-            or (user_obj.email or "").strip()
-            or str(user_obj.id)
-        )
+        recipient = (user_obj.username or "").strip() or (user_obj.email or "").strip() or str(user_obj.id)
         if not recipient:
             continue
         reason = entry.get("reason", "")
-        body = (
-            f"{actor_name} just posted in {course.course_code}. "
-            f"{post_preview}"
-        ).strip()
+        body = (f"{actor_name} just posted in {course.course_code}. {post_preview}").strip()
         create_notification(
             recipient=recipient,
             actor=actor_name,
@@ -1385,11 +1333,7 @@ def _gather_interest_recommendations(
             _add_candidate(user_id, 1.3, f"recent comments #{tag}", created_at)
 
     normalized_set = set(normalized_tags)
-    profile_qs = (
-        CourseProfileRepository.model.objects.filter(course_id=post.course_id)
-        .exclude(user_id__in=excluded_user_ids)
-        .select_related("user")
-    )
+    profile_qs = CourseProfileRepository.model.objects.filter(course_id=post.course_id).exclude(user_id__in=excluded_user_ids).select_related("user")
     profile_map: dict[int, Any] = {}
     for profile in profile_qs:
         profile_map[profile.user_id] = profile
@@ -1407,10 +1351,7 @@ def _gather_interest_recommendations(
     if not candidate_ids:
         return []
     user_map = {
-        user.id: user
-        for user in get_user_model()
-        .objects.filter(id__in=candidate_ids)
-        .only("id", "username", "email", "first_name", "last_name")
+        user.id: user for user in get_user_model().objects.filter(id__in=candidate_ids).only("id", "username", "email", "first_name", "last_name")
     }
 
     recommendations: list[dict[str, Any]] = []
@@ -1461,12 +1402,7 @@ def _build_profile_prompt(profile, post: CoursePost) -> str:
     user = getattr(profile, "user", None)
     display_name = ""
     if user:
-        display_name = (
-            user.get_full_name()
-            or user.username
-            or (user.email.split("@")[0] if user.email else "")
-            or f"user{user.pk}"
-        )
+        display_name = user.get_full_name() or user.username or (user.email.split("@")[0] if user.email else "") or f"user{user.pk}"
     persona_lines = [
         f"Display Name: {display_name or 'Unknown'}",
         f"Gender: {profile.gender or 'Unknown'}",
@@ -1485,9 +1421,7 @@ def _build_profile_prompt(profile, post: CoursePost) -> str:
         f"Interaction Style: {profile.interaction_style or 'Unknown'}",
         f"Influencer Type: {profile.influencer_type or 'Unknown'}",
     ]
-    course_info = (
-        f"{post.course.course_code} - {post.course.name}" if post.course else "the course"
-    )
+    course_info = f"{post.course.course_code} - {post.course.name}" if post.course else "the course"
     hashtags = ", ".join(f"#{tag}" for tag in (post.hashtags or []))
     return (
         "You are evaluating whether a real student persona would be interested in a course discussion post.\n"
@@ -1496,7 +1430,7 @@ def _build_profile_prompt(profile, post: CoursePost) -> str:
         f"Post hashtags: {hashtags or 'None'}\n"
         "Respond strictly in JSON with keys `interested` (bool), `like` (bool), `comment` (string). "
         "Leave comment empty when not applicable.\n\n"
-        f"Post content:\n\"\"\"{post.content}\"\"\"\n"
+        f'Post content:\n"""{post.content}"""\n'
     )
 
 

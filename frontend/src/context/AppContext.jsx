@@ -555,8 +555,9 @@ export function AppProvider({ children }) {
 
   const login = useCallback(async (email, password) => {
     const data = await postJson(AUTH_ENDPOINTS.login, { email, password });
-    setAuthUser(data.user || null);
-    return { needsProfile: Boolean(data.needs_profile) };
+    const user = data.user || null;
+    setAuthUser(user);
+    return { user, needsProfile: Boolean(data.needs_profile) };
   }, []);
 
   const logout = useCallback(async () => {
