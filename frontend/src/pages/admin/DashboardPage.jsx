@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
+import { useAuth } from "../../context/AuthContext";
 import { getJson } from "../../lib/api";
+import { resolveCourseScopedTarget } from "../../lib/courseScopeNavigation";
+import { isTeacher } from "../../lib/access";
 import AuthenticatedShell from "../components/AuthenticatedShell";
 import Feedback from "../components/Feedback";
 // import { Sparkles, X } from "lucide-react";
@@ -216,7 +219,8 @@ function makeAutoSummary(summary) {
 }
 
 export default function DashboardPage() {
-  const { authUser, authCheckComplete } = useApp();
+  const { pushToast } = useApp();
+  const { authUser, authCheckComplete } = useAuth();
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [status, setStatus] = useState({ loading: true, error: "" });
@@ -229,9 +233,28 @@ export default function DashboardPage() {
       : false
   );
 
-  const isAdmin = useMemo(
-    () => Boolean(authUser && (authUser.is_superuser || authUser.is_staff)),
-    [authUser]
+  const isAdmin = useMemo(() => isTeacher(authUser), [authUser]);
+  const dashboardCourses = data?.courses || [];
+  const handleNeedCourse = useCallback(() => {
+    pushToast({
+      title: "Course required",
+      message: "Please create or join a course first.",
+    });
+  }, [pushToast]);
+  const openCourseScoped = useCallback(
+    (pathBuilder) => {
+      const target = resolveCourseScopedTarget(dashboardCourses);
+      if (target.state === "single" && target.courseId) {
+        navigate(pathBuilder(target.courseId));
+        return;
+      }
+      if (target.state === "multi") {
+        navigate("/courses/manage");
+        return;
+      }
+      handleNeedCourse();
+    },
+    [dashboardCourses, handleNeedCourse, navigate]
   );
 
   const reloadDashboard = useCallback(() => {
@@ -268,7 +291,8 @@ export default function DashboardPage() {
 
   const sentiment = data?.sentiment || {};
   const lastUpdated = data?.calculated_at ? new Date(data.calculated_at) : null;
-  const courses = data?.courses || [];
+  const courses = dashboardCourses;
+  const topCourse = courses[0] || null;
 
   const sPos = Math.round(
     Math.min(Math.max(Number(sentiment.positive || 0), 0), 100)
@@ -378,6 +402,126 @@ export default function DashboardPage() {
 
       {!status.loading && data ? (
         <div className="pb-24 sm:pb-8">
+          <section className="mt-1 rounded-3xl border border-brand-100 bg-white p-4 shadow-sm sm:p-5">
+            <h2 className="text-sm font-semibold text-slate-800 sm:text-base">
+              Insight Navigation
+            </h2>
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
+              <div className="rounded-2xl border border-brand-100 bg-brand-50/60 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Teaching Insights
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand transition hover:border-brand"
+                    onClick={() =>
+                      courses.length === 0 ? handleNeedCourse() : setShowCoursesModal(true)
+                    }
+                  >
+                    Course Dashboard
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand transition hover:border-brand"
+                    onClick={() =>
+                      topCourse
+                        ? navigate(`/dashboard/courses/${topCourse.id}/students`)
+                        : handleNeedCourse()
+                    }
+                  >
+                    Student Dashboard
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand transition hover:border-brand"
+                    onClick={() =>
+                      topCourse
+                        ? navigate(`/dashboard/courses/${topCourse.id}`)
+                        : handleNeedCourse()
+                    }
+                  >
+                    Segmentation
+                  </button>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-brand-100 bg-brand-50/60 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Dashboard Actions
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand transition hover:border-brand"
+                    onClick={reloadDashboard}
+                    disabled={status.loading}
+                  >
+                    {status.loading ? "Refreshing..." : "Refresh"}
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand transition hover:border-brand"
+                    onClick={() =>
+                      topCourse ? navigate(`/courses/${topCourse.id}`) : openCourseScoped((id) => `/courses/${id}`)
+                    }
+                  >
+                    View Course
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand transition hover:border-brand"
+                    onClick={() =>
+                      topCourse
+                        ? navigate(`/courses/${topCourse.id}/community`)
+                        : openCourseScoped((id) => `/courses/${id}/community`)
+                    }
+                  >
+                    Open Community
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="mt-4 rounded-3xl border border-brand-100 bg-white p-4 shadow-sm sm:p-5">
+            <h2 className="text-sm font-semibold text-slate-800 sm:text-base">
+              Recent Discussions Requiring Attention
+            </h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Jump directly into course-scoped community discussions.
+            </p>
+            {courses.length === 0 ? (
+              <p className="mt-3 rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-3 text-sm text-slate-500">
+                No managed courses yet. Create or join a course first.
+              </p>
+            ) : (
+              <ul className="mt-3 space-y-2">
+                {courses.slice(0, 5).map((course) => (
+                  <li
+                    key={course.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-brand-100 bg-brand-50/40 px-3 py-2"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800">
+                        {course.course_code} · {course.name}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Interactions: {course.total_interactions || 0}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      className="rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand transition hover:border-brand"
+                      onClick={() => navigate(`/courses/${course.id}/community`)}
+                    >
+                      Open Community
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
           {lastUpdated ? (
             <div className="mt-1 flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-xs text-slate-500">

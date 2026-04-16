@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import AuthenticatedShell from "../components/AuthenticatedShell";
 import Feedback from "../components/Feedback";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -12,6 +12,7 @@ import {
   uploadFile,
 } from "../../lib/api";
 import { useApp } from "../../context/AppContext";
+import { isTeacher } from "../../lib/access";
 
 const INITIAL_FORM = {
   id: null,
@@ -43,11 +44,9 @@ export default function CourseAIUsersPage() {
   const navigate = useNavigate();
   const { authUser, authCheckComplete, profileOptions, fetchProfileOptions } =
     useApp();
-
   const [status, setStatus] = useState({ loading: true, error: "" });
   const [items, setItems] = useState([]);
   const [courseInfo, setCourseInfo] = useState(null);
-  const [search, setSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [formBusy, setFormBusy] = useState(false);
   const [formError, setFormError] = useState("");
@@ -55,9 +54,6 @@ export default function CourseAIUsersPage() {
   const [importBusy, setImportBusy] = useState(false);
   const [importMessage, setImportMessage] = useState("");
   const [deleteState, setDeleteState] = useState({ open: false, item: null });
-  const [selectedIds, setSelectedIds] = useState([]);
-  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
-  const [bulkBusy, setBulkBusy] = useState(false);
   const [creationMode, setCreationMode] = useState(null);
   const [creationMessage, setCreationMessage] = useState("");
   const fileInputRef = useRef(null);
@@ -68,7 +64,7 @@ export default function CourseAIUsersPage() {
       navigate("/login", { replace: true });
       return;
     }
-    if (!(authUser.is_superuser || authUser.is_staff)) {
+    if (!isTeacher(authUser)) {
       navigate("/courses", { replace: true });
     }
   }, [authUser, authCheckComplete, navigate]);
@@ -88,7 +84,6 @@ export default function CourseAIUsersPage() {
           `/api/courses/${courseId}/ai-users/${query}`
         );
         setItems(data.items || []);
-        setSelectedIds([]);
         setCourseInfo(data.course || null);
         setStatus({ loading: false, error: "" });
       } catch (error) {
@@ -105,18 +100,6 @@ export default function CourseAIUsersPage() {
     if (!authUser || !courseId) return;
     load().catch(() => {});
   }, [authUser, courseId, load]);
-
-  const filteredItems = useMemo(() => {
-    if (!search.trim()) return items;
-    const q = search.toLowerCase();
-    return items.filter((item) => {
-      return (
-        item.username?.toLowerCase().includes(q) ||
-        (item.display_name || "").toLowerCase().includes(q) ||
-        (item.city || "").toLowerCase().includes(q)
-      );
-    });
-  }, [items, search]);
 
   const resetForm = () => {
     setFormData({ ...INITIAL_FORM, interests: [] });
@@ -138,11 +121,6 @@ export default function CourseAIUsersPage() {
   const openAIBulkGenerate = () => {
     setCreationMessage("");
     setCreationMode("ai_bulk");
-  };
-
-  const openAdvancedCreate = () => {
-    setCreationMessage("");
-    openCreate();
   };
 
   const openEdit = (item) => {
@@ -271,9 +249,6 @@ export default function CourseAIUsersPage() {
         `/api/courses/${courseId}/ai-users/${deleteState.item.id}/`
       );
       setItems((prev) => prev.filter((it) => it.id !== deleteState.item.id));
-      setSelectedIds((prev) =>
-        prev.filter((id) => id !== deleteState.item.id)
-      );
       setDeleteState({ open: false, item: null });
     } catch (error) {
       setStatus((prev) => ({
@@ -312,64 +287,7 @@ export default function CourseAIUsersPage() {
     }
   };
 
-  const toggleSelect = (id) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((existing) => existing !== id) : [...prev, id]
-    );
-  };
-
-  const allVisibleSelected =
-    filteredItems.length > 0 &&
-    filteredItems.every((item) => selectedIds.includes(item.id));
-
-  const toggleSelectAllVisible = () => {
-    if (!filteredItems.length) return;
-    if (allVisibleSelected) {
-      // Deselect all visible items
-      const visibleIds = new Set(filteredItems.map((item) => item.id));
-      setSelectedIds((prev) => prev.filter((id) => !visibleIds.has(id)));
-    } else {
-      // Select all visible items, keep other selected ids
-      const visibleIds = filteredItems.map((item) => item.id);
-      setSelectedIds((prev) => {
-        const merged = new Set([...prev, ...visibleIds]);
-        return Array.from(merged);
-      });
-    }
-  };
-
-  const handleBulkDeleteClick = () => {
-    if (!selectedIds.length) return;
-    setBulkDeleteOpen(true);
-  };
-
-  const confirmBulkDelete = async () => {
-    if (!selectedIds.length) {
-      setBulkDeleteOpen(false);
-      return;
-    }
-    setBulkBusy(true);
-    try {
-      const idsToDelete = [...selectedIds];
-      await Promise.all(
-        idsToDelete.map((id) =>
-          deleteJson(`/api/courses/${courseId}/ai-users/${id}/`).catch(() => null)
-        )
-      );
-      setItems((prev) => prev.filter((it) => !idsToDelete.includes(it.id)));
-      setSelectedIds([]);
-      setBulkDeleteOpen(false);
-    } catch (error) {
-      setStatus((prev) => ({
-        ...prev,
-        error: error.message || "Failed to delete selected AI users.",
-      }));
-      setBulkDeleteOpen(false);
-    } finally {
-      setBulkBusy(false);
-    }
-  };
-
+  if (authCheckComplete && !authUser) return <Navigate to="/login" replace />;
   if (!authCheckComplete || !authUser) return null;
 
   const interestOptions = profileOptions?.interests || [];
@@ -386,7 +304,7 @@ export default function CourseAIUsersPage() {
 
   return (
     <AuthenticatedShell
-      title="AI Users"
+      title="Manage AI Users"
       subtitle={
         courseInfo
           ? `Manage AI personas for ${courseInfo.course_code} · ${courseInfo.name}`
@@ -394,68 +312,45 @@ export default function CourseAIUsersPage() {
       }
     >
       <div className="mt-4 flex flex-wrap items-center gap-3 rounded-3xl border border-brand-100 bg-white px-4 py-3">
-        <div className="flex min-w-[220px] flex-1 flex-col">
-          <label className="text-xs font-semibold text-slate-500">Search</label>
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search username, display name or city..."
-            className="mt-1 w-full rounded-full border border-brand-200 bg-white px-4 py-2 text-xs text-slate-700 outline-none transition focus:border-brand md:w-64"
-          />
-        </div>
-        <div className="flex flex-wrap items-center justify-end gap-2">
+        <div className="flex w-full flex-wrap items-center justify-between gap-2">
           <button
             type="button"
             className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
-            onClick={() => navigate("/courses")}
+            onClick={() => navigate(-1)}
           >
-            ← Back
+            Back
           </button>
-          <button
-            type="button"
-            className="rounded-full border border-brand bg-brand px-4 py-2 text-xs font-semibold text-white transition hover:bg-brand/90 disabled:opacity-60"
-            onClick={openSmartGenerate}
-          >
-            Smart Generate
-          </button>
-          <button
-            type="button"
-            className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
-            onClick={openAIBulkGenerate}
-          >
-            AI Bulk Generate
-          </button>
-          <button
-            type="button"
-            className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
-            onClick={openAdvancedCreate}
-          >
-            Advanced Create
-          </button>
-          <button
-            type="button"
-            className="rounded-full border border-red-200 bg-red-50 px-4 py-2 text-xs font-semibold text-red-500 transition hover:border-red-300 disabled:opacity-60"
-            onClick={handleBulkDeleteClick}
-            disabled={selectedIds.length === 0 || bulkBusy}
-          >
-            {bulkBusy ? "Deleting..." : "Delete selected"}
-          </button>
-          <button
-            type="button"
-            className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand disabled:opacity-60"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={importBusy}
-          >
-            {importBusy ? "Importing..." : "Import CSV"}
-          </button>
-          <input
-            type="file"
-            accept=".csv"
-            ref={fileInputRef}
-            className="hidden"
-            onChange={handleImport}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className="rounded-full border border-brand bg-brand px-4 py-2 text-xs font-semibold text-white transition hover:bg-brand/90 disabled:opacity-60"
+              onClick={openSmartGenerate}
+            >
+              Smart Generate
+            </button>
+            <button
+              type="button"
+              className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
+              onClick={openAIBulkGenerate}
+            >
+              Generate
+            </button>
+            <button
+              type="button"
+              className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand disabled:opacity-60"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={importBusy}
+            >
+              {importBusy ? "Importing..." : "Import CSV"}
+            </button>
+            <input
+              type="file"
+              accept=".csv"
+              ref={fileInputRef}
+              className="hidden"
+              onChange={handleImport}
+            />
+          </div>
         </div>
       </div>
 
@@ -473,7 +368,7 @@ export default function CourseAIUsersPage() {
 
       {status.loading ? (
         <p className="text-sm text-slate-500">Loading...</p>
-      ) : filteredItems.length === 0 ? (
+      ) : items.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-6 text-sm text-slate-500">
           No AI users found yet for this course.
         </p>
@@ -483,14 +378,6 @@ export default function CourseAIUsersPage() {
             <table className="min-w-full divide-y divide-brand-50 text-left text-xs text-slate-600">
               <thead className="bg-brand-50 text-[11px] uppercase tracking-wide text-slate-500">
               <tr>
-                <th className="sticky top-0 z-10 bg-brand-50 px-4 py-3">
-                  <input
-                    type="checkbox"
-                    className="h-3 w-3 rounded border-brand-300 text-brand"
-                    checked={allVisibleSelected && filteredItems.length > 0}
-                    onChange={toggleSelectAllVisible}
-                  />
-                </th>
                 <th className="sticky top-0 z-10 bg-brand-50 px-4 py-3">Username</th>
                 <th className="sticky top-0 z-10 bg-brand-50 px-4 py-3">Display name</th>
                 <th className="sticky top-0 z-10 bg-brand-50 px-4 py-3">City</th>
@@ -502,16 +389,8 @@ export default function CourseAIUsersPage() {
               </tr>
               </thead>
               <tbody className="divide-y divide-brand-50">
-                {filteredItems.map((item) => (
+                {items.map((item) => (
                   <tr key={item.id} className="hover:bg-brand-50/50">
-                    <td className="px-4 py-3">
-                      <input
-                        type="checkbox"
-                        className="h-3 w-3 rounded border-brand-300 text-brand"
-                        checked={selectedIds.includes(item.id)}
-                        onChange={() => toggleSelect(item.id)}
-                      />
-                    </td>
                     <td className="px-4 py-3 font-semibold text-slate-800">
                       {item.username}
                     </td>
@@ -826,19 +705,6 @@ export default function CourseAIUsersPage() {
         }
         onConfirm={confirmDelete}
         onCancel={cancelDelete}
-      />
-      <ConfirmDialog
-        open={bulkDeleteOpen}
-        title="Delete selected AI Users?"
-        message={
-          selectedIds.length
-            ? `Are you sure you want to delete ${selectedIds.length} selected AI users?`
-            : "No AI users are selected."
-        }
-        confirmLabel="Delete"
-        onConfirm={confirmBulkDelete}
-        onCancel={() => setBulkDeleteOpen(false)}
-        processing={bulkBusy}
       />
     </AuthenticatedShell>
   );
