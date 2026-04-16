@@ -4,44 +4,26 @@ import { useApp } from "../context/AppContext";
 import AuthenticatedShell from "./components/AuthenticatedShell";
 
 export default function StudentHomePage() {
-  // Router navigation
   const navigate = useNavigate();
-
-  // Current page location
   const location = useLocation();
-
-  // Get current logged-in user
   const { authUser } = useApp();
 
-  // Read "tab" from URL query string
   const queryTab = new URLSearchParams(location.search).get("tab");
-
-  // Current active shortcut section
   const [active, setActive] = useState(null);
 
-  // Sync active state with URL tab
   useEffect(() => {
     setActive(queryTab ?? null);
   }, [queryTab]);
 
-  // Build display info for current user
   const { zid, email, avatarText, userId } = useMemo(() => {
     const mail = authUser?.email || "";
-
-    // Try to extract zid from email
     const zidMatch = /^z\d+/.exec(mail);
-
-    // Use zid from email if found
-    // Otherwise use username
     const z = zidMatch ? zidMatch[0] : (authUser?.username || "").toLowerCase();
-
-    // Avatar text uses first character
     const initial = (
       authUser?.username?.[0] ||
       authUser?.email?.[0] ||
       "U"
     ).toUpperCase();
-
     return {
       zid: z || "zid",
       email: mail,
@@ -54,31 +36,24 @@ export default function StudentHomePage() {
     <AuthenticatedShell>
       {active ? (
         <>
-          {/* User information block */}
+          {/* User information */}
           <div className="mb-6 flex items-center gap-3">
-            {/* Avatar circle */}
             <div className="grid h-10 w-10 place-items-center rounded-full 
                             bg-gradient-to-br from-accent-300 via-accent-200 to-accent-200 
                             text-white font-bold shadow-md">
               {avatarText}
             </div>
-
-            {/* User text info */}
             <div className="leading-tight">
               <p className="text-sm font-semibold text-slate-900">{zid}</p>
               <p className="text-xs text-slate-500">{email}</p>
             </div>
           </div>
 
-          {/* Page heading */}
           <h1 className="mb-2 text-xl font-bold text-slate-900">Student Home</h1>
-
-          {/* Page description */}
           <p className="mb-4 text-sm text-slate-500">
             Quick access to your courses, profile, and notifications.
           </p>
 
-          {/* Shortcut cards */}
           <div className="grid gap-4">
             {active === "courses" && (
               <CardRow
@@ -88,7 +63,6 @@ export default function StudentHomePage() {
                 onAction={() => navigate("/courses")}
               />
             )}
-
             {active === "profile" && (
               <CardRow
                 title="Profile"
@@ -97,7 +71,6 @@ export default function StudentHomePage() {
                 onAction={() => navigate("/profile")}
               />
             )}
-
             {active === "notifications" && (
               <CardRow
                 title="Notifications"
@@ -106,7 +79,6 @@ export default function StudentHomePage() {
                 onAction={() => navigate("/notifications")}
               />
             )}
-
             {active === "following" && (
               <CardRow
                 title="Following"
@@ -117,7 +89,6 @@ export default function StudentHomePage() {
                 }
               />
             )}
-
             {active === "followers" && (
               <CardRow
                 title="Followers"
@@ -131,48 +102,38 @@ export default function StudentHomePage() {
           </div>
         </>
       ) : (
-        // Default welcome panel
+        // Default Bread welcome panel
         <div className="relative flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-brand-50 via-white to-accent-50 px-4 py-16 shadow-inner">
-          {/* Background glow orb on top right */}
+          {/* Background glow orbs */}
           <div className="absolute top-6 right-6 h-24 w-24 animate-pulse rounded-full bg-gradient-to-br from-brand-200 to-accent-200 opacity-60 blur-3xl" />
-
-          {/* Background glow orb on bottom left */}
           <div className="absolute bottom-10 left-8 h-20 w-20 rounded-full bg-gradient-to-br from-brand-200 to-accent-200 opacity-40 blur-2xl" />
 
-          {/* Animated logo block */}
-          <div className="relative mb-6 animate-float">
-            {/* Rotating ring behind logo */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div
-                className="w-18 h-18 rounded-full border-[4px] 
+<div className="relative mb-6 animate-float">
+  <div className="absolute inset-0 flex items-center justify-center">
+    <div className="w-18 h-18 rounded-full border-[4px] 
                     border-t-transparent border-r-transparent
                     border-b-accent-300 border-l-accent-300
-                    animate-spin-slow opacity-80 blur-[0.3px]"
-              />
-            </div>
+                    animate-spin-slow opacity-80 blur-[0.3px]" />
+  </div>
 
-            {/* Logo image */}
-            <div className="relative flex items-center justify-center">
-              <div
-                className="w-14 h-14 rounded-full overflow-hidden 
+  <div className="relative flex items-center justify-center">
+    <div className="w-14 h-14 rounded-full overflow-hidden 
                     shadow-[0_4px_12px_rgba(32,111,136,0.16)]
-                    transition-transform duration-500 hover:scale-[1.05]"
-              >
-                <img
-                  src="/logo.jpg"
-                  alt="Bread Logo"
-                  className="w-full h-full object-contain bg-transparent"
-                />
-              </div>
-            </div>
-          </div>
+                    transition-transform duration-500 hover:scale-[1.05]">
+      <img
+        src="/logo.jpg"
+        alt="Bread Logo"
+        className="w-full h-full object-contain bg-transparent"
+      />
+    </div>
+  </div>
+</div>
 
-          {/* Welcome text */}
+
+
           <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-2">
             Welcome back, {zid}!
           </h2>
-
-          {/* Intro text */}
           <p className="text-sm text-slate-600 mb-8 max-w-md">
             Welcome to the{" "}
             <span className="font-semibold text-brand">
@@ -181,7 +142,7 @@ export default function StudentHomePage() {
             . Manage your courses, update your profile, and stay connected.
           </p>
 
-          {/* Quick shortcut cards */}
+          {/* Quick entry shortcuts */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-2xl">
             <CardRow
               title="Courses"
@@ -189,14 +150,12 @@ export default function StudentHomePage() {
               actionLabel="Open"
               onAction={() => navigate("/courses")}
             />
-
             <CardRow
               title="Profile"
               desc="Edit your details and preferences."
               actionLabel="Open"
               onAction={() => navigate("/profile")}
             />
-
             <CardRow
               title="Notifications"
               desc="Check your latest updates."
@@ -210,8 +169,7 @@ export default function StudentHomePage() {
   );
 }
 
-/* Card component */
-/* Reusable shortcut card */
+/* Card component with the pastel orange/pink theme */
 function CardRow({ title, desc, actionLabel, onAction }) {
   return (
     <div
@@ -222,13 +180,10 @@ function CardRow({ title, desc, actionLabel, onAction }) {
                  hover:-translate-y-0.5 transition-all backdrop-blur-sm"
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        {/* Card text */}
         <div className="flex-1">
           <p className="text-base font-semibold text-slate-900">{title}</p>
           {desc && <p className="text-xs text-slate-500 mt-0.5">{desc}</p>}
         </div>
-
-        {/* Action button */}
         {actionLabel && (
           <button
             type="button"
