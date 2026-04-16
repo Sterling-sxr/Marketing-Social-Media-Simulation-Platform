@@ -15,26 +15,50 @@ import { hasProfanity } from "../lib/profanity";
 import ProfanityHint from "./components/ProfanityHint";
 
 /** ===== Utilities and constants ===== */
+
+// Initial status for composer
 const initialComposerStatus = { loading: false, error: "", message: "" };
+
+// Initial status for attachment upload
 const initialUploadStatus = { loading: false, error: "", message: "" };
+
+// Maximum number of attachments
 const MAX_ATTACHMENTS = 4;
+
+// Quick emoji list
 const emojiPalette = ["😀", "🎉", "🔥", "👏", "🤔", "❤️"];
+
+// Initial state for suggestions
 const initialSuggestionsState = { items: [], loading: false, error: "" };
+
+// Debounce time for suggestion API
 const SUGGESTION_DEBOUNCE_MS = 180;
 
+// Regex for stopping word scan
 const WORD_BOUNDARY_REGEX = /[\s.,!?()[\]{}"']/;
+
+// Regex for word characters
 const WORD_CHAR_REGEX = /[A-Za-z0-9_]/;
 
+// Find current @mention or #hashtag trigger
 function findTrigger(value, caret) {
   if (!value || caret < 0) return null;
+
   let i = caret - 1;
+
   while (i >= 0) {
     const char = value[i];
+
+    // Found a trigger character
     if (char === "@" || char === "#") {
       const triggerChar = char;
       const prevChar = i > 0 ? value[i - 1] : " ";
+
+      // Ignore if trigger is inside a word
       if (i > 0 && WORD_CHAR_REGEX.test(prevChar)) return null;
+
       const query = value.slice(i + 1, caret);
+
       return {
         type: triggerChar === "@" ? "mention" : "hashtag",
         trigger: triggerChar,
@@ -42,6 +66,8 @@ function findTrigger(value, caret) {
         query,
       };
     }
+
+    // Stop if hit a boundary
     if (
       WORD_BOUNDARY_REGEX.test(char) ||
       char === "\n" ||
@@ -49,16 +75,22 @@ function findTrigger(value, caret) {
       char === "\t"
     )
       break;
+
     i -= 1;
   }
+
   return null;
 }
 
 /** Avatar helper that falls back to initials */
+
+// Build avatar display data
 function useAvatar(user) {
   if (!user) return { initials: "?", displayName: "un login", photoUrl: "" };
+
   const photoUrl =
     user?.avatar_url || user?.profile?.avatar_url || user?.avatar || "";
+
   const displayName =
     user?.full_name ||
     [user?.first_name, user?.last_name].filter(Boolean).join(" ").trim() ||
@@ -66,15 +98,24 @@ function useAvatar(user) {
     user?.username ||
     user?.email ||
     `user${user?.id ?? ""}`;
+
   const initials = displayName ? displayName.charAt(0).toUpperCase() : "?";
+
   return { initials, displayName, photoUrl };
 }
 
 export default function CourseFeedPage() {
+  // Read route params
   const { courseId: courseIdParam, hashtag: routeHashtagParam } = useParams();
+
+  // Convert course id to number
   const courseId = Number(courseIdParam);
+
+  // Router helpers
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Global app context
   const {
     authUser,
     authCheckComplete,
@@ -84,13 +125,14 @@ export default function CourseFeedPage() {
     loadCourseProfile,
   } = useApp();
 
-  // Left navigation filter: all | tag | following
+  // Read following tab from URL
   const searchParams = new URLSearchParams(location.search);
   const followingFromUrl = searchParams.get("tab") === "following";
 
-  // Local keyword filter for posts
+  // Local search keyword
   const [keyword, setKeyword] = useState("");
 
+  // Left sidebar filter state
   const [leftFilter, setLeftFilter] = useState(() =>
     followingFromUrl
       ? { type: "following" }
@@ -102,11 +144,11 @@ export default function CourseFeedPage() {
       : { type: "all" }
   );
 
-  // Tag suggestions pulled from API/feed
-  const [tags, setTags] = useState([]); // [{value:'xxx', count: 12}] or strings
+  // Tag list and loading state
+  const [tags, setTags] = useState([]);
   const [tagsStatus, setTagsStatus] = useState({ loading: false, error: "" });
 
-  // Post feed state
+  // Feed state
   const [feedItems, setFeedItems] = useState([]);
   const [feedStatus, setFeedStatus] = useState({ loading: true, error: "" });
   const [courseSummary, setCourseSummary] = useState(null);
@@ -129,12 +171,15 @@ export default function CourseFeedPage() {
   });
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
+
+  // Whether current mode is edit mode
   const isEditing = Boolean(editingPost);
 
+  // Refs
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
 
-  // Mention / hashtag autocompletion
+  // Mention / hashtag suggestion state
   const [activeTrigger, setActiveTrigger] = useState(null);
   const [suggestionsState, setSuggestionsState] = useState(
     initialSuggestionsState
@@ -143,28 +188,38 @@ export default function CourseFeedPage() {
   const fetchSeqRef = useRef(0);
   const [mentionSelections, setMentionSelections] = useState({});
 
+  // Reset composer feedback
   const resetComposerStatus = useCallback(
     () => setComposerStatus({ ...initialComposerStatus }),
     []
   );
 
-  // Build header title/subtitle
+  // Find current course from joined courses
   const contextCourse = useMemo(() => {
     if (!Number.isFinite(courseId)) return null;
     return courses.joined.find((c) => c.id === courseId) || null;
   }, [courses.joined, courseId]);
 
+  // Prefer backend course summary
   const headerCourse = courseSummary || contextCourse;
+
+  // Course read-only state
   const courseReadOnly = Boolean(headerCourse?.read_only);
+
+  // Course end date
   const courseEndDate = headerCourse?.end_date || null;
+
+  // Page title
   const pageTitle = headerCourse
     ? `${headerCourse.course_code} · ${headerCourse.name}`
     : "Course Dynamics";
 
-  // Subtitle excludes roles; only term/end date plus filters
+  // Build subtitle parts
   const subtitleParts = [];
+
   if (headerCourse) {
     if (headerCourse.term) subtitleParts.push(`${headerCourse.term}`);
+
     if (courseReadOnly) {
       subtitleParts.push(
         courseEndDate ? `Ended · Ended on ${courseEndDate}` : "Ended"
@@ -173,15 +228,18 @@ export default function CourseFeedPage() {
       subtitleParts.push(`Ends on ${courseEndDate}`);
     }
   }
+
   if (leftFilter.type === "tag" && leftFilter.tag) {
     subtitleParts.push(`Topic #${leftFilter.tag}`);
   } else if (leftFilter.type === "following") {
     subtitleParts.push("Followed");
   }
+
   const pageSubtitle = subtitleParts.length
     ? subtitleParts.join(" · ")
     : "Catch up with the latest class discussions.";
 
+  // Title for course profile modal
   const courseProfileTitle = useMemo(() => {
     if (headerCourse) {
       return `${headerCourse.course_code || ""} ${
@@ -191,24 +249,27 @@ export default function CourseFeedPage() {
     return courseId ? `Course ${courseId}` : "Course profile";
   }, [headerCourse, courseId]);
 
-  // Auth/course gating
+  // Redirect to login if auth check finished and no user
   useEffect(() => {
     if (!authCheckComplete) return;
     if (!authUser) navigate("/login", { replace: true });
   }, [authUser, authCheckComplete, navigate]);
 
+  // Load joined courses after login
   useEffect(() => {
     if (authUser) fetchCourses().catch(() => {});
   }, [authUser, fetchCourses]);
 
-  // Sync left filter when the route (or shared link) changes
+  // Sync sidebar filter with route
   useEffect(() => {
     const following =
       new URLSearchParams(location.search).get("tab") === "following";
+
     if (following) {
       setLeftFilter({ type: "following" });
       return;
     }
+
     if (routeHashtagParam) {
       setLeftFilter({
         type: "tag",
@@ -219,6 +280,7 @@ export default function CourseFeedPage() {
     }
   }, [routeHashtagParam, location.search]);
 
+  // Redirect to course profile page if profile is incomplete
   useEffect(() => {
     if (
       !authCheckComplete ||
@@ -228,7 +290,9 @@ export default function CourseFeedPage() {
     ) {
       return;
     }
+
     const membership = courses.joined.find((c) => c.id === courseId);
+
     if (membership && membership.profile_completed === false) {
       navigate(`/courses/${courseId}/profile`, {
         replace: true,
@@ -245,39 +309,48 @@ export default function CourseFeedPage() {
     location.search,
   ]);
 
-  // Load posts based on the current left-hand filter
+  // Load feed based on current filter
   const loadFeed = useCallback(async () => {
     if (!Number.isFinite(courseId)) {
       setFeedStatus({ loading: false, error: "Course not found." });
       return;
     }
+
     setFeedStatus({ loading: true, error: "" });
+
     try {
       const params = new URLSearchParams();
+
       if (leftFilter.type === "following") params.set("tab", "following");
       if (leftFilter.type === "tag" && leftFilter.tag)
         params.set("hashtag", leftFilter.tag);
+
       const endpoint = params.toString()
         ? `/api/courses/${courseId}/posts/?${params.toString()}`
         : `/api/courses/${courseId}/posts/`;
+
       const data = await getJson(endpoint);
+
       setCourseSummary(data.course);
       setFeedItems(data.items || []);
       setFeedStatus({ loading: false, error: "" });
 
-      // If the backend provides no tags, derive them from the feed
+      // Derive tags from feed if backend does not provide them
       if (leftFilter.type === "all") {
         try {
           const tagCounts = {};
+
           for (const p of data.items || []) {
             (p.hashtags || []).forEach((t) => {
               const key = String(t).toLowerCase();
               tagCounts[key] = (tagCounts[key] || 0) + 1;
             });
           }
+
           const derived = Object.entries(tagCounts)
             .sort((a, b) => b[1] - a[1])
             .map(([value, count]) => ({ value, count }));
+
           if (derived.length) setTags((prev) => (prev.length ? prev : derived));
         } catch {}
       }
@@ -290,14 +363,18 @@ export default function CourseFeedPage() {
     }
   }, [courseId, leftFilter]);
 
+  // Reload feed when user and membership are ready
   useEffect(() => {
     if (!authUser) return;
+
     const membership = courses.joined.find((c) => c.id === courseId);
     if (!membership) return;
     if (membership.profile_completed === false) return;
+
     loadFeed();
   }, [authUser, courses.joined, courseId, loadFeed]);
 
+  // Close composer if course becomes read-only
   useEffect(() => {
     if (courseReadOnly) {
       setShowComposer(false);
@@ -305,18 +382,22 @@ export default function CourseFeedPage() {
     }
   }, [courseReadOnly]);
 
-  // Load tag list (prefer dedicated suggestion endpoint)
+  // Load tag suggestions from API
   const loadTags = useCallback(async () => {
     if (!Number.isFinite(courseId)) return;
+
     setTagsStatus({ loading: true, error: "" });
+
     try {
       const data = await getJson(
         `/api/courses/${courseId}/posts/suggestions/?type=hashtag&q=`
       );
+
       const items = (data.items || []).map((it) => ({
         value: (it.insert || it.value || "").toLowerCase(),
         count: it.count || undefined,
       }));
+
       setTags(items);
       setTagsStatus({ loading: false, error: "" });
     } catch (e) {
@@ -324,22 +405,28 @@ export default function CourseFeedPage() {
     }
   }, [courseId]);
 
+  // Load tags on mount / course change
   useEffect(() => {
     loadTags();
   }, [loadTags]);
 
+  // Close mobile filter on route change
   useEffect(() => {
     setMobileFilterOpen(false);
   }, [location.pathname, location.search]);
 
-  // Toolbar actions (top right)
+  // Refresh feed manually
   const handleRefresh = () => loadFeed();
 
+  // Open profile modal and load profile
   const openProfileModal = useCallback(async () => {
     if (!Number.isFinite(courseId)) return;
+
     setProfileModal({ open: true, loading: true, profile: null, error: "" });
+
     try {
       const data = await loadCourseProfile(courseId);
+
       setProfileModal({
         open: true,
         loading: false,
@@ -356,10 +443,12 @@ export default function CourseFeedPage() {
     }
   }, [courseId, loadCourseProfile]);
 
+  // Close profile modal
   const closeProfileModal = () => {
     setProfileModal((prev) => ({ ...prev, open: false }));
   };
 
+  // Navigate to edit course profile page
   const handleEditProfile = () => {
     closeProfileModal();
     if (Number.isFinite(courseId)) {
@@ -367,18 +456,21 @@ export default function CourseFeedPage() {
     }
   };
 
+  // Show all posts
   const handleFilterAll = useCallback(() => {
     setLeftFilter({ type: "all" });
     navigate(`/courses/${courseId}`, { replace: true });
     setMobileFilterOpen(false);
   }, [courseId, navigate]);
 
+  // Show followed posts only
   const handleFilterFollowing = useCallback(() => {
     setLeftFilter({ type: "following" });
     navigate(`/courses/${courseId}?tab=following`, { replace: true });
     setMobileFilterOpen(false);
   }, [courseId, navigate]);
 
+  // Show posts by tag
   const handleFilterTag = useCallback(
     (value) => {
       setLeftFilter({ type: "tag", tag: value });
@@ -389,8 +481,11 @@ export default function CourseFeedPage() {
     },
     [courseId, navigate]
   );
+
+  // Open composer for new post
   const openComposer = () => {
     if (courseReadOnly) return;
+
     setEditingPost(null);
     setComposerContent("");
     setAttachments([]);
@@ -400,6 +495,8 @@ export default function CourseFeedPage() {
     setProfanityMsg("");
     setShowComposer(true);
   };
+
+  // Close composer and reset UI state
   const closeComposer = () => {
     setShowComposer(false);
     setEditingPost(null);
@@ -411,17 +508,21 @@ export default function CourseFeedPage() {
     fetchSeqRef.current += 1;
   };
 
-  // —— Composer suggestion logic ——
+  // Clear suggestion list
   const clearSuggestions = useCallback(() => {
     setSuggestionsState({ ...initialSuggestionsState });
     setHighlightIndex(0);
   }, []);
+
+  // Update current active trigger
   const updateTrigger = useCallback(
     (value, caret) => {
       const next = findTrigger(value, caret);
       const had = Boolean(activeTrigger);
+
       setActiveTrigger((prev) => {
         if (!next) return prev ? null : prev;
+
         if (
           prev &&
           prev.type === next.type &&
@@ -429,8 +530,10 @@ export default function CourseFeedPage() {
           prev.query === next.query
         )
           return prev;
+
         return next;
       });
+
       if (!next) {
         if (had) fetchSeqRef.current += 1;
         clearSuggestions();
@@ -438,24 +541,31 @@ export default function CourseFeedPage() {
     },
     [activeTrigger, clearSuggestions]
   );
+
+  // Insert text into textarea at current cursor
   const insertTextAtCursor = useCallback(
     (text) => {
       const textarea = textareaRef.current;
+
       if (!textarea) {
         setComposerContent((prev) => `${prev}${text}`);
         return;
       }
+
       const start = textarea.selectionStart ?? textarea.value.length;
       const end = textarea.selectionEnd ?? textarea.value.length;
+
       const schedule =
         typeof window !== "undefined" &&
         typeof window.requestAnimationFrame === "function"
           ? window.requestAnimationFrame
           : (cb) => setTimeout(cb, 0);
+
       setComposerContent((prev) => {
         const before = prev.slice(0, start);
         const after = prev.slice(end);
         const next = `${before}${text}${after}`;
+
         schedule(() => {
           const pos = start + text.length;
           textarea.selectionStart = pos;
@@ -463,11 +573,14 @@ export default function CourseFeedPage() {
           textarea.focus();
           updateTrigger(next, pos);
         });
+
         return next;
       });
     },
     [updateTrigger]
   );
+
+  // Insert emoji into composer
   const handleAddEmoji = useCallback(
     (e) => {
       resetComposerStatus();
@@ -475,17 +588,23 @@ export default function CourseFeedPage() {
     },
     [insertTextAtCursor, resetComposerStatus]
   );
+
+  // Insert @ into composer
   const handleAddMention = useCallback(() => {
     resetComposerStatus();
     insertTextAtCursor("@");
   }, [insertTextAtCursor, resetComposerStatus]);
+
+  // Insert # into composer
   const handleAddHashtag = useCallback(() => {
     resetComposerStatus();
     insertTextAtCursor("#");
   }, [insertTextAtCursor, resetComposerStatus]);
 
+  // Open hidden file input
   const handleAttachmentButton = useCallback(() => {
     if (isEditing) return;
+
     if (attachments.length >= MAX_ATTACHMENTS) {
       setUploadStatus({
         loading: false,
@@ -494,23 +613,28 @@ export default function CourseFeedPage() {
       });
       return;
     }
+
     setUploadStatus({ ...initialUploadStatus });
     fileInputRef.current?.click();
   }, [attachments.length, isEditing]);
 
+  // Remove one attachment
   const handleRemoveAttachment = useCallback((assetId) => {
     setAttachments((prev) => prev.filter((i) => i.id !== assetId));
     setUploadStatus({ ...initialUploadStatus });
   }, []);
 
+  // Upload selected files
   const handleSelectFiles = useCallback(
     async (event) => {
       if (isEditing) return;
+
       const files = Array.from(event.target.files || []);
       if (fileInputRef.current) fileInputRef.current.value = "";
       if (!files.length) return;
 
       const remaining = MAX_ATTACHMENTS - attachments.length;
+
       if (remaining <= 0) {
         setUploadStatus({
           loading: false,
@@ -519,9 +643,12 @@ export default function CourseFeedPage() {
         });
         return;
       }
+
+      // Only allow image or video files
       const allowed = files.filter(
         (f) => f.type.startsWith("image/") || f.type.startsWith("video/")
       );
+
       if (!allowed.length) {
         setUploadStatus({
           loading: false,
@@ -532,15 +659,21 @@ export default function CourseFeedPage() {
       }
 
       const filesToUpload = allowed.slice(0, remaining);
+
       setUploadStatus({ loading: true, error: "", message: "" });
+
       try {
         const uploaded = [];
+
         for (const f of filesToUpload) {
           const asset = await uploadFile("/api/messages/files/", f);
           uploaded.push(asset);
         }
+
         setAttachments((prev) => [...prev, ...uploaded]);
+
         const skipped = allowed.length - filesToUpload.length;
+
         setUploadStatus({
           loading: false,
           error: "",
@@ -561,20 +694,26 @@ export default function CourseFeedPage() {
     [attachments.length, isEditing]
   );
 
+  // Fetch mention / hashtag suggestions with debounce
   useEffect(() => {
     if (!activeTrigger || !Number.isFinite(courseId)) return;
+
     const handler = setTimeout(() => {
       const requestId = ++fetchSeqRef.current;
+
       setSuggestionsState((prev) => ({ ...prev, loading: true, error: "" }));
+
       const params = new URLSearchParams({
         type: activeTrigger.type,
         q: activeTrigger.query || "",
       });
+
       getJson(
         `/api/courses/${courseId}/posts/suggestions/?${params.toString()}`
       )
         .then((data) => {
           if (requestId !== fetchSeqRef.current) return;
+
           setSuggestionsState({
             items: data.items || [],
             loading: false,
@@ -584,6 +723,7 @@ export default function CourseFeedPage() {
         })
         .catch((error) => {
           if (requestId !== fetchSeqRef.current) return;
+
           setSuggestionsState({
             items: [],
             loading: false,
@@ -591,19 +731,25 @@ export default function CourseFeedPage() {
           });
         });
     }, SUGGESTION_DEBOUNCE_MS);
+
     return () => clearTimeout(handler);
   }, [activeTrigger, courseId]);
 
+  // Handle composer text change
   const handleComposerChange = useCallback(
     (e) => {
       const { value, selectionStart } = e.target;
+
+      // Keep only mention selections still present in text
       const mentionKeys = new Set(
         (value.match(/@([^\s@#]+)/g) || []).map((i) =>
           i.replace(/^@+/, "").toLowerCase()
         )
       );
+
       setComposerContent(value);
       resetComposerStatus();
+
       setMentionSelections((prev) => {
         const next = {};
         mentionKeys.forEach((k) => {
@@ -611,16 +757,20 @@ export default function CourseFeedPage() {
         });
         return next;
       });
+
       const caret = Number.isInteger(selectionStart)
         ? selectionStart
         : value.length;
+
       updateTrigger(value, caret);
+
       const check = hasProfanity(value);
       setProfanityMsg(check.ok ? "" : check.message);
     },
     [resetComposerStatus, updateTrigger]
   );
 
+  // Update trigger when selection changes
   const handleComposerSelect = useCallback(
     (e) => {
       const { value, selectionStart } = e.target;
@@ -632,23 +782,29 @@ export default function CourseFeedPage() {
     [updateTrigger]
   );
 
+  // Hide suggestions on blur
   const handleComposerBlur = useCallback(() => {
     setActiveTrigger(null);
     clearSuggestions();
     fetchSeqRef.current += 1;
   }, [clearSuggestions]);
 
+  // Apply selected suggestion into textarea
   const applySuggestion = useCallback(
     (item) => {
       if (!activeTrigger) return;
+
       const textarea = textareaRef.current;
       const fallbackLen = textarea?.value?.length ?? 0;
       const caret = textarea?.selectionStart ?? fallbackLen;
+
       const triggerChar =
         activeTrigger.trigger || (activeTrigger.type === "mention" ? "@" : "#");
+
       const insertValue = item.insert || item.value || "";
       const replacement = `${triggerChar}${insertValue} `;
 
+      // Save mention entity info
       if (activeTrigger.type === "mention") {
         setMentionSelections((prev) => ({
           ...prev,
@@ -659,6 +815,7 @@ export default function CourseFeedPage() {
           },
         }));
       }
+
       setComposerContent((prev) => {
         const before = prev.slice(0, activeTrigger.start);
         const after = prev.slice(caret);
@@ -671,11 +828,13 @@ export default function CourseFeedPage() {
       resetComposerStatus();
 
       const nextCaret = activeTrigger.start + replacement.length;
+
       const schedule =
         typeof window !== "undefined" &&
         typeof window.requestAnimationFrame === "function"
           ? window.requestAnimationFrame
           : (cb) => setTimeout(cb, 0);
+
       schedule(() => {
         if (textareaRef.current) {
           textareaRef.current.selectionStart = nextCaret;
@@ -687,25 +846,31 @@ export default function CourseFeedPage() {
     [activeTrigger, clearSuggestions, resetComposerStatus]
   );
 
+  // Keyboard handling for suggestions
   const handleComposerKeyDown = useCallback(
     (e) => {
       if (!activeTrigger) return;
+
       const items = suggestionsState.items || [];
+
       if (e.key === "ArrowDown" && items.length) {
         e.preventDefault();
         setHighlightIndex((p) => (p + 1) % items.length);
         return;
       }
+
       if (e.key === "ArrowUp" && items.length) {
         e.preventDefault();
         setHighlightIndex((p) => (p - 1 + items.length) % items.length);
         return;
       }
+
       if (e.key === "Enter" && !e.shiftKey && items.length) {
         e.preventDefault();
         applySuggestion(items[highlightIndex] || items[0]);
         return;
       }
+
       if (e.key === "Escape") {
         e.preventDefault();
         setActiveTrigger(null);
@@ -723,10 +888,12 @@ export default function CourseFeedPage() {
     ]
   );
 
-  // —— Local search: filter feedItems on the client ——
+  // Filter visible feed items by local keyword
   const visibleFeedItems = useMemo(() => {
     if (!keyword.trim()) return feedItems;
+
     const kw = keyword.trim().toLowerCase();
+
     return feedItems.filter((p) => {
       const text = (p.content || "").toLowerCase();
       const tags = (p.hashtags || []).join(" ").toLowerCase();
@@ -735,10 +902,12 @@ export default function CourseFeedPage() {
         p.author_username ||
         ""
       ).toLowerCase();
+
       return text.includes(kw) || tags.includes(kw) || author.includes(kw);
     });
   }, [feedItems, keyword]);
 
+  // Submit new post or edited post
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -761,6 +930,7 @@ export default function CourseFeedPage() {
     }
 
     let trimmed = composerContent.trim();
+
     if (!trimmed) {
       setComposerStatus({
         loading: false,
@@ -769,7 +939,9 @@ export default function CourseFeedPage() {
       });
       return;
     }
+
     const profanityCheck = hasProfanity(trimmed);
+
     if (!profanityCheck.ok) {
       setProfanityMsg(profanityCheck.message);
       setComposerStatus({
@@ -783,19 +955,20 @@ export default function CourseFeedPage() {
     setComposerStatus({ loading: true, error: "", message: "" });
 
     try {
-      // Build mention / hashtag arrays
+      // Extract mentions and hashtags from content
       const mentions = Array.from(
         new Set(
           (trimmed.match(/@([^\s@#]+)/g) || []).map((i) => i.replace(/^@+/, ""))
         )
       );
+
       const hashtagsSet = new Set(
         (trimmed.match(/#([^\s@#]+)/g) || []).map((i) =>
           i.replace(/^#+/, "").toLowerCase()
         )
       );
 
-      // Ensure the current tag filter is present in the payload when posting within that tag
+      // Auto-add current tag filter if posting inside tag view
       if (
         leftFilter.type === "tag" &&
         leftFilter.tag &&
@@ -806,6 +979,7 @@ export default function CourseFeedPage() {
       }
 
       const hashtags = Array.from(hashtagsSet);
+
       const mentionEntities = mentions.map((v) => {
         const key = v.toLowerCase();
         const info = mentionSelections[key];
@@ -818,44 +992,56 @@ export default function CourseFeedPage() {
         mention_entities: mentionEntities,
         hashtags,
       };
+
+      // Only add attachments when creating a new post
       if (!isEditing) {
         payload.attachments = attachments.map((i) => i.id);
       }
 
       if (isEditing && editingPost) {
+        // Update existing post
         const data = await patchJson(
           `/api/courses/${courseId}/posts/${editingPost.id}/`,
           payload
         );
+
         const updatedItem = { ...(data.item || {}) };
+
         setFeedItems((prev) => {
           const lowerTag =
             leftFilter.type === "tag" && leftFilter.tag
               ? leftFilter.tag.toLowerCase()
               : null;
+
           const hasTag = lowerTag
             ? (updatedItem.hashtags || [])
                 .map((h) => String(h).toLowerCase())
                 .includes(lowerTag)
             : true;
+
           const next = prev.map((it) =>
             it.id === editingPost.id ? updatedItem : it
           );
+
+          // Remove item if it no longer matches tag filter
           if (lowerTag && !hasTag) {
             return next.filter((it) => it.id !== editingPost.id);
           }
+
           return next;
         });
+
         await loadTags();
+
         setComposerStatus({
           loading: false,
           error: "",
           message: "Updated successfully!",
         });
       } else {
-        const data = await postJson(`/api/courses/${courseId}/posts/`, payload);
+        // Create new post
+        await postJson(`/api/courses/${courseId}/posts/`, payload);
 
-        // Clear composer state
         setComposerStatus({
           loading: false,
           error: "",
@@ -865,6 +1051,7 @@ export default function CourseFeedPage() {
         await loadFeed();
       }
 
+      // Reset composer after success
       setComposerContent("");
       setAttachments([]);
       setUploadStatus({ ...initialUploadStatus });
@@ -884,18 +1071,24 @@ export default function CourseFeedPage() {
     }
   };
 
+  // Toggle like / unlike
   const handleToggleLike = async (post) => {
     if (courseReadOnly) return;
     if (likeBusyId === post.id) return;
+
     setLikeBusyId(post.id);
+
     try {
       const endpoint = `/api/courses/${courseId}/posts/${post.id}/like/`;
+
       const data = post.liked_by_me
         ? await deleteJson(endpoint)
         : await postJson(endpoint);
+
       setFeedItems((prev) =>
         prev.map((it) => (it.id === post.id ? data.item : it))
       );
+
       setFeedStatus((prev) => ({ ...prev, error: "" }));
     } catch (error) {
       setFeedStatus((prev) => ({
@@ -907,20 +1100,25 @@ export default function CourseFeedPage() {
     }
   };
 
+  // Start editing a post
   const handleStartEdit = useCallback(
     (post) => {
       if (!post) return;
       if (courseReadOnly) return;
+
       setEditingPost(post);
       setComposerContent(post.content || "");
       setAttachments([]);
       setUploadStatus({ ...initialUploadStatus });
       setComposerStatus({ ...initialComposerStatus });
+
+      // Pre-fill mention selections from existing post
       const preset = {};
       (post.mentions_detail || []).forEach((detail) => {
         const raw =
           detail.username || detail.identifier || detail.display || "";
         if (!raw) return;
+
         const key = raw.toLowerCase();
         preset[key] = {
           id: detail.id ?? null,
@@ -928,37 +1126,47 @@ export default function CourseFeedPage() {
           display: detail.display || detail.username || raw,
         };
       });
+
       setMentionSelections(preset);
       setShowComposer(true);
     },
     [courseReadOnly]
   );
 
+  // Open delete confirmation
   const handleDeletePost = useCallback((post) => {
     if (!post) return;
     setFeedStatus((prev) => ({ ...prev, error: "" }));
     setDeleteState({ open: true, post });
   }, []);
 
+  // Cancel delete
   const cancelDeletePost = useCallback(() => {
     if (deleteBusy) return;
     setDeleteState({ open: false, post: null });
   }, [deleteBusy]);
 
+  // Confirm delete post
   const confirmDeletePost = useCallback(async () => {
     if (!deleteState.post || deleteBusy) return;
+
     setDeleteBusy(true);
+
     try {
       await deleteJson(
         `/api/courses/${courseId}/posts/${deleteState.post.id}/`
       );
+
       setFeedItems((prev) =>
         prev.filter((item) => item.id !== deleteState.post.id)
       );
+
+      // Close composer if currently editing the deleted post
       if (editingPost && editingPost.id === deleteState.post.id) {
         setEditingPost(null);
         setShowComposer(false);
       }
+
       await loadTags();
       setDeleteState({ open: false, post: null });
     } catch (error) {
@@ -971,9 +1179,11 @@ export default function CourseFeedPage() {
     }
   }, [courseId, deleteState.post, deleteBusy, editingPost, loadTags]);
 
+  // Render post content with clickable mentions and hashtags
   const renderPostContent = useCallback(
     (post) => {
       const text = post.content || "";
+
       const postMentions = post.mentions_detail?.length
         ? post.mentions_detail
         : (post.mentions || []).map((v) => ({
@@ -981,25 +1191,34 @@ export default function CourseFeedPage() {
             display: v,
             username: v,
           }));
+
       const lookup = {};
+
       for (const m of postMentions) {
         if (!m) continue;
+
         if (m.id) {
           if (m.username) lookup[(m.username || "").toLowerCase()] = m.id;
           if (m.display) lookup[(m.display || "").toLowerCase()] = m.id;
           if (m.identifier) lookup[(m.identifier || "").toLowerCase()] = m.id;
         }
       }
+
       const parts = [];
       const re = /(@[^\s@#]+|#[^\s@#]+)/g;
+
       let match,
         last = 0;
+
       while ((match = re.exec(text)) !== null) {
         if (match.index > last) parts.push(text.slice(last, match.index));
+
         const token = match[0];
+
         if (token.startsWith("@")) {
           const key = token.slice(1).toLowerCase();
           const id = lookup[key];
+
           parts.push(
             id ? (
               <button
@@ -1016,6 +1235,7 @@ export default function CourseFeedPage() {
           );
         } else if (token.startsWith("#")) {
           const tag = token.slice(1);
+
           parts.push(
             <button
               key={`h-${post.id}-${match.index}`}
@@ -1031,21 +1251,30 @@ export default function CourseFeedPage() {
             </button>
           );
         }
+
         last = re.lastIndex;
       }
+
       if (last < text.length) parts.push(text.slice(last));
+
       return parts;
     },
     [navigate, courseId]
   );
 
   /** ====== Avatar / user card presentation ====== */
+
+  // Build current user avatar info
   const { initials, displayName, photoUrl } = useAvatar(authUser);
   const compactName = displayName || "User";
 
   /** ------------------- UI ------------------- */
+
+  // Shared class for left navigation item
   const leftItemBase =
     "w-full rounded-xl px-3 py-2 text-sm font-medium text-left transition flex items-center justify-between";
+
+  // Left navigation item component
   const LeftItem = ({ active, children, onClick }) => (
     <button
       type="button"
@@ -1060,12 +1289,13 @@ export default function CourseFeedPage() {
     </button>
   );
 
+  // Render feed content area
   const renderFeed = () => {
     if (feedStatus.loading) {
       return <p className="text-sm text-slate-500">Loading...</p>;
     }
 
-    const list = visibleFeedItems; // Result after local filtering
+    const list = visibleFeedItems;
 
     if (list.length === 0) {
       if (keyword.trim()) {
@@ -1075,6 +1305,7 @@ export default function CourseFeedPage() {
           </div>
         );
       }
+
       return (
         <div className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-3 text-sm text-slate-600">
           {leftFilter.type === "following"
@@ -1114,10 +1345,10 @@ export default function CourseFeedPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-accent-50">
-      {/* Header with logo + user card + logout */}
+      {/* Header with logo, user card, and logout */}
       <header className="border-b border-brand-100/70 bg-white/80 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 lg:px-6 lg:py-4">
-          {/* Left: logo */}
+          {/* Logo button */}
           <button
             type="button"
             onClick={() => navigate("/studenthome")}
@@ -1137,13 +1368,14 @@ export default function CourseFeedPage() {
             </span>
           </button>
 
-          {/* Right: user card + logout */}
+          {/* User card and logout button */}
           <div className="flex min-w-0 items-center gap-2 sm:gap-3 lg:gap-5">
             <div
               className="flex min-w-0 items-center gap-2 rounded-full border border-brand-200/80
                          bg-white/95 px-2.5 py-1.5 shadow-soft sm:gap-3 sm:px-4 sm:py-2
                          transition-all duration-200 hover:shadow-brand hover:border-brand-300"
             >
+              {/* User avatar */}
               <div
                 className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full
                            bg-gradient-to-br from-brand-300 via-brand-200 to-accent-200
@@ -1160,6 +1392,8 @@ export default function CourseFeedPage() {
                   initials
                 )}
               </div>
+
+              {/* User text info */}
               <div className="min-w-0 leading-tight">
                 <p className="max-w-[120px] truncate text-xs font-semibold text-slate-800 sm:max-w-[12rem] sm:text-sm">
                   {compactName}
@@ -1170,6 +1404,7 @@ export default function CourseFeedPage() {
               </div>
             </div>
 
+            {/* Logout button */}
             <button
               type="button"
               className="group inline-flex items-center gap-2 rounded-2xl border border-brand-200 bg-white
@@ -1205,11 +1440,11 @@ export default function CourseFeedPage() {
         </div>
       </header>
 
-      {/* Main layout: left navigation + right feed */}
+      {/* Main layout */}
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-3 py-3 sm:gap-4 sm:px-4 sm:py-4 lg:flex-row lg:gap-6 lg:px-6 lg:py-8">
-        {/* Left column */}
+        {/* Left sidebar */}
         <aside className="hidden w-64 flex-shrink-0 rounded-3xl border border-brand-100 bg-white p-4 shadow-lg shadow-brand-100 lg:block">
-          {/* Course title + subtitle at the top */}
+          {/* Course title */}
           <div className="mb-4">
             <h1 className="text-base font-bold text-slate-900 truncate">
               {pageTitle}
@@ -1219,7 +1454,7 @@ export default function CourseFeedPage() {
             </p>
           </div>
 
-          {/* Profile actions */}
+          {/* Profile shortcut */}
           <div className="mb-4">
             <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
               Profile
@@ -1250,7 +1485,7 @@ export default function CourseFeedPage() {
             </a>
           </div>
 
-          {/* Search field (relocated below the profile section) */}
+          {/* Search input */}
           <div className="mb-4">
             <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
               Search
@@ -1268,6 +1503,7 @@ export default function CourseFeedPage() {
             </div>
           </div>
 
+          {/* Filter section */}
           <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
             Filter
           </div>
@@ -1286,6 +1522,7 @@ export default function CourseFeedPage() {
             </LeftItem>
           </div>
 
+          {/* Community tag section */}
           <div className="mt-5 mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
             Community
           </div>
@@ -1298,6 +1535,7 @@ export default function CourseFeedPage() {
                 const count = typeof t === "string" ? undefined : t.count;
                 const active =
                   leftFilter.type === "tag" && leftFilter.tag === value;
+
                 return (
                   <LeftItem
                     key={value}
@@ -1313,6 +1551,7 @@ export default function CourseFeedPage() {
                   </LeftItem>
                 );
               })}
+
               {(tags || []).length === 0 ? (
                 <p className="text-xs text-slate-400">No tag</p>
               ) : null}
@@ -1320,8 +1559,9 @@ export default function CourseFeedPage() {
           )}
         </aside>
 
-        {/* Right column */}
+        {/* Right main content */}
         <main className="flex-1 space-y-4 rounded-2xl border border-brand-100 bg-white/90 p-4 pb-24 shadow-lg shadow-brand-100/80 sm:space-y-5 sm:p-5 lg:space-y-6 lg:rounded-3xl lg:p-6 lg:pb-6 lg:shadow-xl lg:shadow-brand-100">
+          {/* Mobile page title */}
           <div className="space-y-2 lg:hidden">
             <h1 className="break-words text-base font-bold text-slate-900">
               {pageTitle}
@@ -1329,6 +1569,7 @@ export default function CourseFeedPage() {
             <p className="break-words text-xs text-slate-500">{pageSubtitle}</p>
           </div>
 
+          {/* Mobile top controls */}
           <div className="flex flex-wrap items-center gap-2 lg:hidden">
             <button
               type="button"
@@ -1352,7 +1593,6 @@ export default function CourseFeedPage() {
             >
               Refresh
             </button>
-            {/* Course Materials shortcut — prominent on mobile */}
             <a
               href={`/courses/${courseId}/materials`}
               className="inline-flex h-9 items-center gap-1.5 rounded-full border border-brand-400 bg-brand-50 px-4 text-xs font-semibold text-brand-800 transition hover:bg-brand-100 focus:outline-none focus:ring-2 focus:ring-brand-300"
@@ -1361,6 +1601,7 @@ export default function CourseFeedPage() {
             </a>
           </div>
 
+          {/* Read-only notice */}
           {courseReadOnly ? (
             <div className="rounded-2xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-600">
               {courseEndDate
@@ -1369,9 +1610,10 @@ export default function CourseFeedPage() {
             </div>
           ) : null}
 
+          {/* Feed error */}
           {feedStatus.error ? <Feedback error={feedStatus.error} /> : null}
 
-          {/* Sticky control bar positioned above the first post */}
+          {/* Desktop sticky control bar */}
           <div className="sticky top-0 z-20 -mx-6 hidden px-6 pt-2 lg:block">
             <div className="flex items-center justify-end gap-3 rounded-b-2xl border-b border-brand-100/60 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/60 py-3">
               <button
@@ -1415,10 +1657,12 @@ export default function CourseFeedPage() {
             </div>
           </div>
 
+          {/* Feed list */}
           {renderFeed()}
         </main>
       </div>
 
+      {/* Mobile filter drawer */}
       {mobileFilterOpen ? (
         <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true" aria-label="Feed filters">
           <button
@@ -1439,11 +1683,13 @@ export default function CourseFeedPage() {
               </button>
             </div>
 
+            {/* Drawer title */}
             <div className="mb-4 space-y-1">
               <p className="text-sm font-semibold text-slate-900">{pageTitle}</p>
               <p className="text-xs text-slate-500">{pageSubtitle}</p>
             </div>
 
+            {/* Quick links */}
             <div className="mb-4">
               <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
                 Quick Links
@@ -1471,6 +1717,7 @@ export default function CourseFeedPage() {
               </div>
             </div>
 
+            {/* Mobile search */}
             <div className="mb-4">
               <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
                 Search
@@ -1485,6 +1732,7 @@ export default function CourseFeedPage() {
               />
             </div>
 
+            {/* Mobile filter section */}
             <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
               Filter
             </div>
@@ -1500,6 +1748,7 @@ export default function CourseFeedPage() {
               </LeftItem>
             </div>
 
+            {/* Mobile community tags */}
             <div className="mb-2 mt-5 text-xs font-semibold uppercase tracking-wide text-slate-400">
               Community
             </div>
@@ -1512,6 +1761,7 @@ export default function CourseFeedPage() {
                   const count = typeof t === "string" ? undefined : t.count;
                   const active =
                     leftFilter.type === "tag" && leftFilter.tag === value;
+
                   return (
                     <LeftItem
                       key={`mobile-${value}`}
@@ -1525,6 +1775,7 @@ export default function CourseFeedPage() {
                     </LeftItem>
                   );
                 })}
+
                 {(tags || []).length === 0 ? (
                   <p className="text-xs text-slate-400">No tag</p>
                 ) : null}
@@ -1534,6 +1785,7 @@ export default function CourseFeedPage() {
         </div>
       ) : null}
 
+      {/* Mobile floating create button */}
       {!courseReadOnly ? (
         <button
           type="button"
@@ -1563,6 +1815,7 @@ export default function CourseFeedPage() {
             </div>
 
             <form className="space-y-3 sm:space-y-4" onSubmit={handleSubmit}>
+              {/* Hidden file input */}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -1572,10 +1825,12 @@ export default function CourseFeedPage() {
                 onChange={handleSelectFiles}
               />
 
+              {/* Quick tools */}
               <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 sm:gap-3">
                 <span className="font-semibold text-slate-600">
                   Quick tools:
                 </span>
+
                 <div className="flex items-center gap-1">
                   {emojiPalette.map((emoji) => (
                     <button
@@ -1590,6 +1845,7 @@ export default function CourseFeedPage() {
                     </button>
                   ))}
                 </div>
+
                 <button
                   type="button"
                   className="rounded-full border border-accent-100 px-3 py-1 font-semibold transition hover:border-accent-300 hover:text-accent-600"
@@ -1598,6 +1854,7 @@ export default function CourseFeedPage() {
                 >
                   @someone
                 </button>
+
                 <button
                   type="button"
                   className="rounded-full border border-accent-100 px-3 py-1 font-semibold transition hover:border-accent-300 hover:text-accent-600"
@@ -1606,6 +1863,7 @@ export default function CourseFeedPage() {
                 >
                   # tag
                 </button>
+
                 {!isEditing ? (
                   <>
                     <button
@@ -1624,6 +1882,7 @@ export default function CourseFeedPage() {
                 ) : null}
               </div>
 
+              {/* Attachment preview list */}
               {!isEditing && attachments.length > 0 && (
                 <div className="space-y-2 rounded-2xl border border-accent-100 bg-white/85 p-3 sm:p-4">
                   <div className="flex items-center justify-between">
@@ -1641,11 +1900,13 @@ export default function CourseFeedPage() {
                       Clear attachments
                     </button>
                   </div>
+
                   <div className="grid gap-3 sm:grid-cols-2">
                     {attachments.map((a) => {
                       const ct = a.content_type || "";
                       const isImage = ct.startsWith("image/");
                       const isVideo = ct.startsWith("video/");
+
                       return (
                         <div
                           key={a.id}
@@ -1659,6 +1920,7 @@ export default function CourseFeedPage() {
                           >
                             ✕
                           </button>
+
                           {isImage ? (
                             <img
                               src={a.public_url || a.storage_url}
@@ -1682,6 +1944,7 @@ export default function CourseFeedPage() {
                               {a.original_name}
                             </a>
                           )}
+
                           <div className="px-3 py-2 text-xs text-slate-500">
                             {a.original_name}
                           </div>
@@ -1692,6 +1955,7 @@ export default function CourseFeedPage() {
                 </div>
               )}
 
+              {/* Upload status */}
               {uploadStatus.loading && (
                 <p className="text-xs text-slate-500">
                   Uploading attachments...
@@ -1706,6 +1970,7 @@ export default function CourseFeedPage() {
                 </p>
               )}
 
+              {/* Main composer textarea */}
               <textarea
                 rows={4}
                 value={composerContent}
@@ -1718,6 +1983,7 @@ export default function CourseFeedPage() {
               />
               <ProfanityHint message={profanityMsg} />
 
+              {/* Suggestion list */}
               {activeTrigger && (
                 <div className="max-h-60 w-full overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-lg shadow-brand-100">
                   {suggestionsState.loading ? (
@@ -1736,17 +2002,20 @@ export default function CourseFeedPage() {
                     <ul className="divide-y divide-brand-50">
                       {suggestionsState.items.map((item, index) => {
                         const isActive = index === highlightIndex;
+
                         const label =
                           item.display ||
                           (item.type === "hashtag"
                             ? `#${item.insert}`
                             : item.insert);
+
                         const subtitle =
                           item.type === "mention"
                             ? item.meta?.role || item.meta?.email || ""
                             : item.count
                             ? `${item.count} mention(s)`
                             : "";
+
                         return (
                           <li key={`${item.type}-${item.insert}-${index}`}>
                             <button
@@ -1777,6 +2046,7 @@ export default function CourseFeedPage() {
                 </div>
               )}
 
+              {/* Composer feedback */}
               {(composerStatus.error || composerStatus.message) && (
                 <Feedback
                   message={composerStatus.message}
@@ -1784,6 +2054,7 @@ export default function CourseFeedPage() {
                 />
               )}
 
+              {/* Composer action buttons */}
               <div className="flex justify-end gap-2 pb-1">
                 <button
                   type="button"
@@ -1806,6 +2077,7 @@ export default function CourseFeedPage() {
         </div>
       )}
 
+      {/* Delete confirmation dialog */}
       <ConfirmDialog
         open={deleteState.open}
         title="Delete Post"
@@ -1818,6 +2090,7 @@ export default function CourseFeedPage() {
         tone="danger"
       />
 
+      {/* Course profile modal */}
       {profileModal.open ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/70 px-0 py-0 sm:items-start sm:px-4 sm:py-10">
           <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl border border-brand-100 bg-white p-4 shadow-2xl shadow-brand-200 sm:max-h-[85vh] sm:max-w-3xl sm:rounded-3xl sm:p-6">
@@ -1830,6 +2103,8 @@ export default function CourseFeedPage() {
                   {courseProfileTitle}
                 </h2>
               </div>
+
+              {/* Modal action buttons */}
               <div className="flex gap-2">
                 <button
                   type="button"
