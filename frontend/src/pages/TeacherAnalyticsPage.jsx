@@ -36,6 +36,12 @@ function SourceBadge({ sourceKind }) {
 
 function CourseRow({ item, onOpen }) {
   const { course, summary, meta } = item;
+  const statusText =
+    meta.sourceStatus === "refreshed"
+      ? "Snapshot refreshed in this request"
+      : meta.sourceStatus === "fresh"
+      ? "Snapshot served from a fresh backend cache"
+      : "Snapshot not generated yet. Page is showing a safe fallback shape.";
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-brand-100 bg-white px-4 py-4 shadow-soft">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
@@ -57,11 +63,11 @@ function CourseRow({ item, onOpen }) {
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs text-slate-500">
           {meta.calculatedAt
-            ? `Snapshot generated: ${new Date(meta.calculatedAt).toLocaleString(
+            ? `${statusText}: ${new Date(meta.calculatedAt).toLocaleString(
                 "en-AU",
                 { hour12: false }
               )}`
-            : "Snapshot not generated yet. Page is showing a safe fallback shape."}
+            : statusText}
         </p>
         <button
           type="button"

@@ -88,12 +88,23 @@ function normalizeStudent(item, index = 0) {
 }
 
 function buildMeta(data) {
-  const refreshing = Boolean(data?.refreshing);
+  const sourceKind =
+    data?.source_kind === "fallback_placeholder" ? "fallback" : "backend";
+  const sourceStatus =
+    data?.source_status ||
+    (data?.source_kind === "fallback_placeholder"
+      ? "placeholder"
+      : data?.refreshing
+      ? "placeholder"
+      : "fresh");
+  const refreshing = sourceKind === "fallback";
   return {
     refreshing,
     calculatedAt: data?.calculated_at ?? null,
-    sourceKind: refreshing ? "fallback" : "backend",
-    sourceLabel: refreshing ? "Fallback placeholder" : "Backend snapshot",
+    sourceKind,
+    sourceStatus,
+    sourceLabel:
+      sourceKind === "fallback" ? "Fallback placeholder" : "Backend snapshot",
   };
 }
 
