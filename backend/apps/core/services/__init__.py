@@ -61,7 +61,10 @@ from .dashboard_service import (
     get_course_dashboard,
     get_course_hashtag_dashboard,
     get_course_student_dashboard,
+    invalidate_course_metadata_related_snapshots,
     invalidate_course_dashboard_snapshots,
+    invalidate_membership_related_snapshots,
+    invalidate_post_related_snapshots,
     refresh_dashboard_snapshot,
 )
 from .gmail_service import GmailNotConfiguredError, build_gmail_flow, send_demo_email
@@ -174,6 +177,9 @@ __all__ = [
     "get_course_dashboard",
     "get_course_hashtag_dashboard",
     "get_course_student_dashboard",
+    "invalidate_post_related_snapshots",
+    "invalidate_membership_related_snapshots",
+    "invalidate_course_metadata_related_snapshots",
     "invalidate_course_dashboard_snapshots",
     "classify_comment_sentiment",
     "get_course_ai_user",

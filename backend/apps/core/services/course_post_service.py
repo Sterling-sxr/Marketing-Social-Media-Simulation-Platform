@@ -43,7 +43,7 @@ from ..utils import asset_to_dict
 from .ai_user_reaction_service import evaluate_persona_prompt
 from .dashboard_service import (
     classify_comment_sentiment,
-    invalidate_course_dashboard_snapshots,
+    invalidate_post_related_snapshots,
 )
 
 logger = logging.getLogger(__name__)
@@ -175,10 +175,10 @@ def _invalidate_post_related_dashboards(
     author_id: int | None,
     hashtags: Sequence[str] | None = None,
 ) -> None:
-    invalidate_course_dashboard_snapshots(
+    invalidate_post_related_snapshots(
         course_id=course_id,
         hashtags=list(hashtags or []),
-        student_ids=[author_id] if author_id else None,
+        author_id=author_id,
     )
 
 
@@ -733,14 +733,15 @@ def unlike_course_post(*, user, course_id: int, post_id: int) -> dict[str, Any]:
     except CoursePost.DoesNotExist as exc:
         raise CoursePostNotFoundError("The post does not exist in this course.") from exc
 
-    CoursePostLike.objects.filter(post=post, user=user).delete()
-    transaction.on_commit(
-        lambda: _invalidate_post_related_dashboards(
-            course_id=course_id,
-            author_id=post.author_id,
-            hashtags=post.hashtags or [],
+    deleted_count = CoursePostLike.objects.filter(post=post, user=user).delete()[0]
+    if deleted_count:
+        transaction.on_commit(
+            lambda: _invalidate_post_related_dashboards(
+                course_id=course_id,
+                author_id=post.author_id,
+                hashtags=post.hashtags or [],
+            )
         )
-    )
 
     like_count = post.likes.count()
     return _serialize_posts(

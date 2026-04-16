@@ -57,17 +57,25 @@ TEMPLATES = [
 WSGI_APPLICATION = "apps.conf.wsgi.application"
 ASGI_APPLICATION = "apps.conf.asgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("PG_DB"),
-        "USER": os.environ.get("PG_USER"),
-        "PASSWORD": os.environ.get("PG_PASSWORD"),
-        "HOST": os.environ.get("PG_HOST"),
-        "PORT": os.environ.get("PG_PORT"),
-        "CONN_MAX_AGE": 600,
+if os.environ.get("DJANGO_USE_SQLITE", "0") == "1":
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": os.environ.get("SQLITE_NAME", str(BASE_DIR / "test.sqlite3")),
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.environ.get("PG_DB"),
+            "USER": os.environ.get("PG_USER"),
+            "PASSWORD": os.environ.get("PG_PASSWORD"),
+            "HOST": os.environ.get("PG_HOST", "127.0.0.1"),
+            "PORT": os.environ.get("PG_PORT", "15432"),
+            "CONN_MAX_AGE": 600,
+        }
+    }
 
 CACHES = {
     "default": {

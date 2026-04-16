@@ -164,6 +164,31 @@ def invalidate_course_dashboard_snapshots(
         _mark_queryset_stale(student_queryset)
 
 
+def invalidate_post_related_snapshots(
+    *,
+    course_id: int,
+    author_id: int | None,
+    hashtags: list[str] | tuple[str, ...] | set[str] | None = None,
+) -> None:
+    invalidate_course_dashboard_snapshots(
+        course_id=course_id,
+        hashtags=hashtags,
+        student_ids=[author_id] if author_id else None,
+    )
+
+
+def invalidate_membership_related_snapshots(*, course_id: int) -> None:
+    invalidate_course_dashboard_snapshots(course_id=course_id)
+
+
+def invalidate_course_metadata_related_snapshots(*, course_id: int) -> None:
+    invalidate_course_dashboard_snapshots(
+        course_id=course_id,
+        include_all_hashtags=True,
+        include_all_students=True,
+    )
+
+
 def _get_sentiment_pipeline():
     global _sentiment_pipeline
     if _sentiment_pipeline is None:
