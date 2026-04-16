@@ -61,6 +61,10 @@ class CoursePostNotFoundError(ValueError):
     """Raised when the requested post does not exist within the course."""
 
 
+class CourseCommentNotFoundError(ValueError):
+    """Raised when the requested comment does not exist within the course."""
+
+
 class CourseReadOnlyError(PermissionError):
     """Raised when writes are attempted on a course that has ended."""
 
@@ -127,6 +131,24 @@ def _can_delete_post_for_user(user, post) -> bool:
     if not user or not post:
         return False
     if getattr(post, "author_id", None) == getattr(user, "id", None):
+        return True
+    if _user_is_admin(user):
+        return True
+    return False
+
+
+def _can_edit_comment_for_user(user, comment) -> bool:
+    if not user or not comment:
+        return False
+    if getattr(comment, "user_id", None) == getattr(user, "id", None):
+        return True
+    return False
+
+
+def _can_delete_comment_for_user(user, comment) -> bool:
+    if not user or not comment:
+        return False
+    if getattr(comment, "user_id", None) == getattr(user, "id", None):
         return True
     if _user_is_admin(user):
         return True
@@ -795,6 +817,91 @@ def add_comment_to_post(
             "username": getattr(user, "username", ""),
         },
     }
+
+
+def update_comment_on_post(
+    *,
+    user,
+    course_id: int,
+    post_id: int,
+    comment_id: int,
+    content: str,
+) -> dict[str, Any]:
+    course = _get_course(course_id)
+    _ensure_membership(course, user)
+    if _course_is_read_only(course) and not _user_is_admin(user):
+        raise CourseReadOnlyError("This course has ended; posts are read-only.")
+
+    sanitized = (content or "").strip()
+    if not sanitized:
+        raise ValueError("Comment content cannot be empty.")
+
+    try:
+        comment = (
+            CoursePostComment.objects.select_related("post", "post__course", "user")
+            .get(id=comment_id, post_id=post_id, post__course_id=course_id)
+        )
+    except CoursePostComment.DoesNotExist as exc:
+        raise CourseCommentNotFoundError("The comment does not exist in this course.") from exc
+
+    if not _can_edit_comment_for_user(user, comment):
+        raise CourseAccessError("You do not have permission to edit this comment.")
+
+    comment.content = sanitized
+    comment.save(update_fields=["content"])
+    transaction.on_commit(
+        lambda: _invalidate_post_related_dashboards(
+            course_id=course_id,
+            author_id=comment.post.author_id,
+            hashtags=comment.post.hashtags or [],
+        )
+    )
+
+    return {
+        "id": comment.id,
+        "content": comment.content,
+        "created_at": comment.created_at.isoformat(),
+        "user": {
+            "id": comment.user_id,
+            "name": _display_name(comment.user),
+            "username": getattr(comment.user, "username", ""),
+        },
+    }
+
+
+def delete_comment_from_post(
+    *,
+    user,
+    course_id: int,
+    post_id: int,
+    comment_id: int,
+) -> None:
+    course = _get_course(course_id)
+    _ensure_membership(course, user)
+    if _course_is_read_only(course) and not _user_is_admin(user):
+        raise CourseReadOnlyError("This course has ended; posts are read-only.")
+
+    try:
+        comment = (
+            CoursePostComment.objects.select_related("post")
+            .get(id=comment_id, post_id=post_id, post__course_id=course_id)
+        )
+    except CoursePostComment.DoesNotExist as exc:
+        raise CourseCommentNotFoundError("The comment does not exist in this course.") from exc
+
+    if not _can_delete_comment_for_user(user, comment):
+        raise CourseAccessError("You do not have permission to delete this comment.")
+
+    affected_author_id = comment.post.author_id
+    affected_hashtags = list(comment.post.hashtags or [])
+    comment.delete()
+    transaction.on_commit(
+        lambda: _invalidate_post_related_dashboards(
+            course_id=course_id,
+            author_id=affected_author_id,
+            hashtags=affected_hashtags,
+        )
+    )
 
 
 def update_course_post(
@@ -1518,11 +1625,15 @@ def _recency_weight(event_time, now) -> float:
 
 __all__ = [
     "CourseAccessError",
+    "CourseCommentNotFoundError",
     "CoursePostNotFoundError",
     "CourseReadOnlyError",
     "list_course_posts",
     "create_course_post",
     "create_course_post_with_meta",
+    "add_comment_to_post",
+    "update_comment_on_post",
+    "delete_comment_from_post",
     "update_course_post",
     "delete_course_post",
     "like_course_post",

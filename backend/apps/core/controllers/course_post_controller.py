@@ -8,10 +8,12 @@ from django.views.decorators.csrf import csrf_exempt
 from ..services import (
     MAX_POST_ATTACHMENTS,
     CourseAccessError,
+    CourseCommentNotFoundError,
     CoursePostNotFoundError,
     CourseReadOnlyError,
     add_comment_to_post,
     create_course_post_with_meta,
+    delete_comment_from_post,
     delete_course_post,
     get_course_post_analytics,
     get_course_post_detail,
@@ -20,6 +22,7 @@ from ..services import (
     search_course_hashtags,
     search_course_mentions,
     unlike_course_post,
+    update_comment_on_post,
     update_course_post,
 )
 
@@ -161,6 +164,65 @@ def course_post_comments(request: HttpRequest, course_id: int, post_id: int) -> 
     if request.method == "OPTIONS":
         response = JsonResponse({})
         response["Allow"] = "GET, POST, OPTIONS"
+        return response
+
+    return JsonResponse({"error": "Method not allowed"}, status=405)
+
+
+@csrf_exempt
+def course_post_comment_detail(
+    request: HttpRequest,
+    course_id: int,
+    post_id: int,
+    comment_id: int,
+) -> JsonResponse:
+    auth_error = _ensure_authenticated(request)
+    if auth_error:
+        return auth_error
+
+    if request.method == "PATCH":
+        try:
+            payload = json.loads(request.body.decode() or "{}")
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Request body must be valid JSON."}, status=400)
+
+        try:
+            item = update_comment_on_post(
+                user=request.user,
+                course_id=course_id,
+                post_id=post_id,
+                comment_id=comment_id,
+                content=payload.get("content"),
+            )
+        except CourseReadOnlyError as exc:
+            return JsonResponse({"error": str(exc)}, status=403)
+        except CourseAccessError as exc:
+            return JsonResponse({"error": str(exc)}, status=403)
+        except CourseCommentNotFoundError as exc:
+            return JsonResponse({"error": str(exc)}, status=404)
+        except ValueError as exc:
+            return JsonResponse({"error": str(exc)}, status=400)
+        return JsonResponse(item)
+
+    if request.method == "DELETE":
+        try:
+            delete_comment_from_post(
+                user=request.user,
+                course_id=course_id,
+                post_id=post_id,
+                comment_id=comment_id,
+            )
+        except CourseReadOnlyError as exc:
+            return JsonResponse({"error": str(exc)}, status=403)
+        except CourseAccessError as exc:
+            return JsonResponse({"error": str(exc)}, status=403)
+        except CourseCommentNotFoundError as exc:
+            return JsonResponse({"error": str(exc)}, status=404)
+        return JsonResponse({"success": True})
+
+    if request.method == "OPTIONS":
+        response = JsonResponse({})
+        response["Allow"] = "PATCH, DELETE, OPTIONS"
         return response
 
     return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -339,6 +401,7 @@ __all__ = [
     "course_post_like",
     "course_post_suggestions",
     "course_post_comments",
+    "course_post_comment_detail",
     "course_post_detail",
     "course_post_analytics",
 ]

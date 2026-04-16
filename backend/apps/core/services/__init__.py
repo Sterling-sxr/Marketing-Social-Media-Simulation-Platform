@@ -23,11 +23,13 @@ from .course_material_service import (
 from .course_post_service import (
     MAX_POST_ATTACHMENTS,
     CourseAccessError,
+    CourseCommentNotFoundError,
     CoursePostNotFoundError,
     CourseReadOnlyError,
     add_comment_to_post,
     create_course_post,
     create_course_post_with_meta,
+    delete_comment_from_post,
     delete_course_post,
     get_course_post_analytics,
     get_course_post_detail,
@@ -39,6 +41,7 @@ from .course_post_service import (
     search_course_hashtags,
     search_course_mentions,
     unlike_course_post,
+    update_comment_on_post,
     update_course_post,
 )
 from .course_profile_service import (
@@ -157,7 +160,10 @@ __all__ = [
     "like_course_post",
     "unlike_course_post",
     "add_comment_to_post",
+    "update_comment_on_post",
+    "delete_comment_from_post",
     "CourseAccessError",
+    "CourseCommentNotFoundError",
     "CoursePostNotFoundError",
     "CourseReadOnlyError",
     "MAX_POST_ATTACHMENTS",
