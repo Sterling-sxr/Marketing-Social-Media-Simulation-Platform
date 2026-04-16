@@ -1,16 +1,12 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
 import HomePage from '../../frontend/src/pages/HomePage.jsx';
 import { useApp } from '../../frontend/src/context/AppContext';
 
 const navigateMock = vi.fn();
 
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom');
-  return {
-    ...actual,
-    useNavigate: () => navigateMock,
-  };
+vi.mock('react-router-dom', () => {
+  const MemoryRouter = ({ children }) => children;
+  return { MemoryRouter, useNavigate: () => navigateMock };
 });
 
 vi.mock('../../frontend/src/context/AppContext', () => ({
@@ -19,12 +15,7 @@ vi.mock('../../frontend/src/context/AppContext', () => ({
 
 const mockedUseApp = useApp;
 
-const renderHome = () =>
-  render(
-    <MemoryRouter>
-      <HomePage />
-    </MemoryRouter>
-  );
+const renderHome = () => render(<HomePage />);
 
 const getEmailInput = () => screen.getByLabelText(/email/i, { selector: 'input' });
 const getPasswordInput = () => screen.getByLabelText(/password/i, { selector: 'input' });

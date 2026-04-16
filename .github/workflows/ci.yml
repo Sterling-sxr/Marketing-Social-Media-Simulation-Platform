@@ -165,6 +165,7 @@ jobs:
         run: |
           set -e
           files=(
+            "App.test.jsx"
             "AppContext.test.jsx"
             "ToastHost.test.jsx"
             "DigitInput.test.jsx"
