@@ -2,7 +2,7 @@
 target-version = "py311"
 line-length = 150
 src = ["backend"]
-extend-exclude = ["frontend", "docs", "nginx", "node_modules"]
+extend-exclude = ["frontend", "docs", "nginx", "node_modules", "backend/**/migrations"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]

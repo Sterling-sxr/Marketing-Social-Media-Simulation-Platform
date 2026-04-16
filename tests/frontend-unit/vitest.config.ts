@@ -18,7 +18,7 @@ export default defineConfig({
       'react-dom/client': path.resolve(localNodeModules, 'react-dom', 'client'),
       'react-router-dom': path.resolve(localNodeModules, 'react-router-dom'),
       'lucide-react': path.resolve(localNodeModules, 'lucide-react'),
-      recharts: path.resolve(__dirname, 'test-stubs', 'recharts.jsx'),
+      recharts: path.resolve(localNodeModules, 'recharts'),
     },
   },
   test: {
@@ -26,5 +26,13 @@ export default defineConfig({
     setupFiles: ['./setup.ts'],
     globals: true,
     css: true,
+    pool: 'forks',
+    maxWorkers: 1,
+    minWorkers: 1,
+    sequence: {
+      concurrent: false,
+    },
+    testTimeout: 15000,
+    hookTimeout: 15000,
   },
 });
