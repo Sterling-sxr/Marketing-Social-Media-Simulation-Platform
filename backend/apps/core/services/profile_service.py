@@ -170,8 +170,9 @@ def _normalize_interests(value: Any) -> list[str]:
 
     raw_items: list[str]
     if isinstance(value, str):
-        # Split on comma / semicolon for convenience
-        raw_items = [part.strip() for part in value.replace("\n", " ").split(",") if part.strip()]
+        # Split on comma/semicolon/newline for convenience.
+        normalized_text = value.replace("\n", ",").replace(";", ",")
+        raw_items = [part.strip() for part in normalized_text.split(",") if part.strip()]
     elif isinstance(value, (list, tuple, set)):
         raw_items = [str(item).strip() for item in value if str(item).strip()]
     else:
