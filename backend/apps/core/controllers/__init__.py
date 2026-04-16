@@ -43,7 +43,6 @@ from .course_material_controller import (
 )
 from .course_post_controller import (
     course_post_analytics,
-    course_post_comment_detail,
     course_post_comments,
     course_post_detail,
     course_post_like,
@@ -125,7 +124,6 @@ __all__ = [
     "course_post_suggestions",
     "course_post_like",
     "course_post_comments",
-    "course_post_comment_detail",
     "course_post_detail",
     "course_post_analytics",
     "course_ai_users",
