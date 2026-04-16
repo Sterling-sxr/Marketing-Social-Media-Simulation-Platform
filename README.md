@@ -138,3 +138,11 @@ docker compose exec backend python manage.py shell -c \
 - asynchronous 
 docker compose exec backend python manage.py shell -c \
 "from apps.core.services.dashboard_service import refresh_all_dashboards_async; refresh_all_dashboards_async()"
+
+## CI
+- run on push, pull request, and manual trigger:
+GitHub Actions workflow for backend lint and checks, backend tests, frontend lint and build, frontend unit tests, security audit, and Docker build validation.
+- if CI fails:
+Check the failed step in the Actions tab before requesting review.
+- before opening a PR:
+Make sure local backend and frontend checks have been run if possible.
