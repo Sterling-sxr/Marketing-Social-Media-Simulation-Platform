@@ -1,4 +1,4 @@
-# Section summary: this note is rewritten for clearer understanding.
+# Context: This block prepares shared values used by the request branches below.
 
 本文档描述 **`apps/core/urls.py`** 中注册的 HTTP 路由。这些路径在根配置里通过 `path("api/", include("apps.core.urls"))` 挂载，因此对外完整路径前缀为 **`/api/`**（若反向代理另有前缀，需再拼接）。
 
@@ -6,7 +6,7 @@
 
 ---
 
-# Section summary: this note is rewritten for clearer understanding.
+# Context: This block prepares shared values used by the request branches below.
 
 以下路由**没有**尾部斜杠，调用时需与代码一致，否则可能 404：
 
@@ -19,9 +19,9 @@
 
 ---
 
-# Section summary: this note is rewritten for clearer understanding.
+# Context: This block prepares shared values used by the request branches below.
 
-# Section summary: this note is rewritten for clearer understanding.
+# Context: This block prepares shared values used by the request branches below.
 
 | 相对路径 | `name` | HTTP 方法 | 说明 |
 |----------|--------|-----------|------|
@@ -30,7 +30,7 @@
 | `search/suggestions/` | `search-suggestions` | GET | 全站热搜词（来自 `SearchLog` 统计），供搜索页联想。 |
 | `search/myhot/` | `get-search-history` | GET | 当前用户（或匿名 session）的搜索历史字符串数组。 |
 
-# Section summary: this note is rewritten for clearer understanding.
+# Context: This block prepares shared values used by the request branches below.
 
 | 相对路径 | `name` | HTTP 方法 | 说明 |
 |----------|--------|-----------|------|
@@ -44,7 +44,7 @@
 | `auth/reset/verify-code/` | `auth-reset-verify` | POST | 校验重置验证码。 |
 | `auth/reset/complete/` | `auth-reset-complete` | POST | 提交新密码完成重置。 |
 
-# Section summary: this note is rewritten for clearer understanding.
+# Context: This block prepares shared values used by the request branches below.
 
 | 相对路径 | `name` | HTTP 方法 | 说明 |
 |----------|--------|-----------|------|
@@ -55,14 +55,14 @@
 | `profile/avatar/` | `profile-avatar` | POST | 设置头像 URL；JSON：`avatar_url`。 |
 | `profile/display-name/` | `profile-display-name` | POST | 更新显示名（写入 `first_name`）。 |
 
-# Section summary: this note is rewritten for clearer understanding.
+# Context: This block prepares shared values used by the request branches below.
 
 | 相对路径 | `name` | HTTP 方法 | 说明 |
 |----------|--------|-----------|------|
 | `ai/analyze/` | `ai-analyze` | POST | AI 内容分析类接口。 |
 | `ai/tutor/` | `ai-tutor` | POST | AI 导师/对话类接口。 |
 
-# Section summary: this note is rewritten for clearer understanding.
+# Context: This block prepares shared values used by the request branches below.
 
 | 相对路径 | `name` | HTTP 方法 | 说明 |
 |----------|--------|-----------|------|
@@ -75,7 +75,7 @@
 | `users/<user_id>/following/` | `user-following` | GET | 该用户关注列表。 |
 | `users/<user_id>/followers/` | `user-followers` | GET | 该用户粉丝列表。 |
 
-# Section summary: this note is rewritten for clearer understanding.
+# Context: This block prepares shared values used by the request branches below.
 
 | 相对路径 | `name` | HTTP 方法 | 说明 |
 |----------|--------|-----------|------|
@@ -86,7 +86,7 @@
 | `admin/dashboard/courses/<course_id>/students/<student_id>/` | `admin-dashboard-course-student` | GET | 单课下单个学员详情。 |
 | `admin/courses/<course_id>/posts/<post_id>/segmentation` | `admin-course-post-segmentation` | GET | 单帖维度的分群数据（路径无尾斜杠）。 |
 
-# Section summary: this note is rewritten for clearer understanding.
+# Context: This block prepares shared values used by the request branches below.
 
 | 相对路径 | `name` | HTTP 方法 | 说明 |
 |----------|--------|-----------|------|
@@ -97,14 +97,14 @@
 | `courses/<course_id>/profile/` | `courses-profile` | GET, POST, PUT | 读取或保存课程设置/课程侧 profile。 |
 | `courses/managed/` | `courses-managed` | GET | 当前用户作为管理员可管理的课程。 |
 
-# Section summary: this note is rewritten for clearer understanding.
+# Context: This block prepares shared values used by the request branches below.
 
 | 相对路径 | `name` | HTTP 方法 | 说明 |
 |----------|--------|-----------|------|
 | `courses/<course_id>/materials/` | `course-materials` | GET, POST | 资料列表；POST 上传/创建资料。 |
 | `courses/<course_id>/materials/<material_id>/` | `course-material-detail` | DELETE | 删除指定资料。 |
 
-# Section summary: this note is rewritten for clearer understanding.
+# Context: This block prepares shared values used by the request branches below.
 
 | 相对路径 | `name` | HTTP 方法 | 说明 |
 |----------|--------|-----------|------|
@@ -115,7 +115,7 @@
 | `courses/<course_id>/posts/<post_id>/like/` | `course-post-like` | POST, DELETE, OPTIONS | POST 点赞；DELETE 取消赞。 |
 | `courses/<course_id>/posts/<post_id>/comments/` | `course-post-comments` | GET, POST, OPTIONS | 评论列表与发表评论。 |
 
-# Section summary: this note is rewritten for clearer understanding.
+# Context: This block prepares shared values used by the request branches below.
 
 | 相对路径 | `name` | HTTP 方法 | 说明 |
 |----------|--------|-----------|------|
@@ -127,7 +127,7 @@
 | `courses/<course_id>/ai-users/import/` | `course-ai-users-import` | POST | 批量导入（如 CSV）。 |
 | `courses/<course_id>/ai-users/<ai_user_id>/` | `course-ai-user-detail` | GET, PUT, PATCH, DELETE, OPTIONS | 单个 AI 用户读写与删除。 |
 
-# Section summary: this note is rewritten for clearer understanding.
+# Context: This block prepares shared values used by the request branches below.
 
 | 相对路径 | `name` | HTTP 方法 | 说明 |
 |----------|--------|-----------|------|
@@ -139,12 +139,12 @@
 
 ---
 
-# Section summary: this note is rewritten for clearer understanding.
+# Context: This block prepares shared values used by the request branches below.
 
 Django 侧已为每条 `path()` 指定 **`name`**（见上表第三列），可在模板或代码中用 `reverse("auth-login")` 等解析路径（解析结果为去掉 `/api` 前缀的相对路径时，需结合 `FORCE_SCRIPT_NAME` 或项目 URL 配置理解）。
 
 ---
 
-# Section summary: this note is rewritten for clearer understanding.
+# Context: This block prepares shared values used by the request branches below.
 
 新增或变更路由时，请同步更新本文件，并保持与 `apps/core/controllers/` 中视图允许的 HTTP 方法一致。

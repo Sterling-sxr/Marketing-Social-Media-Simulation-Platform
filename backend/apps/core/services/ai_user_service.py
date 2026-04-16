@@ -1,4 +1,4 @@
-"""Module summary: ai_user_service defines backend functionality with clear intent."""
+"""Module summary: this module groups related logic and clarifies design intent."""
 from __future__ import annotations
 
 import csv
@@ -49,7 +49,7 @@ ALL_AI_USER_FIELDS = (
 
 
 class CourseAINotFoundError(ValueError):
-    """Class summary: CourseAINotFoundError groups related behavior in one place."""
+    """Class summary: CourseAINotFoundError keeps related behavior together behind one clear interface."""
 
 
 def _generate_auth_username(course, ai_username: str) -> str:
@@ -198,7 +198,7 @@ def _payload_to_data(payload: dict[str, Any]) -> dict[str, Any]:
         data[field] = _normalize_numeric(payload.get(field), field)
     for field in AI_USER_LIST_FIELDS:
         data[field] = _normalize_interests(payload.get(field))
-        # Section summary: this block is described for easier reading.
+        # Context: This block prepares shared values used by the request branches below.
         allowed = set(PROFILE_OPTIONS.get("interests", []))
         for item in data[field]:
             if item not in allowed:
@@ -454,7 +454,9 @@ def import_course_ai_users(*, user, course_id: int, file_bytes: bytes) -> dict[s
 
 
 def ensure_ai_user_identity(ai_user: CourseAIUser) -> None:
-    """Function summary: ensure_ai_user_identity executes this unit of backend logic."""
+    """Handle the `ensure_ai_user_identity` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     course = CourseRepository.get_by_id(ai_user.course_id)
     if not course:
         return

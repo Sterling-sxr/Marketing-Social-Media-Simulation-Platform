@@ -31,12 +31,12 @@ export default function RegisterPasswordPage() {
     event.preventDefault();
     const success = await completeRegistration();
     if (success) {
-      // Section summary: this block is documented for clarity.
-      // Section summary: this block is documented for clarity.
+      // Context: This block prepares shared values used by the request branches below.
+      // Context: This block prepares shared values used by the request branches below.
       try {
         await login(registerVerifiedEmail, registerPassword);
       } catch {
-        // Section summary: this block is documented for clarity.
+        // Context: This block prepares shared values used by the request branches below.
         resetRegisterFlow();
         navigate("/login", { replace: true });
         return;
@@ -67,13 +67,13 @@ export default function RegisterPasswordPage() {
           >
             ←
           </button>
-          {/* Section summary: this UI block is explained for clarity.
-             * Additional note: details are clarified for readability.
-             * Additional note: details are clarified for readability.
-             * Additional note: details are clarified for readability.
-           * Additional note: details are clarified for readability.
-             * Additional note: details are clarified for readability.
-           */}
+          {/* Context: This section keeps dependent steps together so assumptions, branching rules, and maintenance decisions stay easy to reason about.
+              * Additional detail: each step is annotated to make maintenance and review easier.
+              * Additional detail: each step is annotated to make maintenance and review easier.
+              * Additional detail: each step is annotated to make maintenance and review easier.
+            * Additional detail: each step is annotated to make maintenance and review easier.
+              * Additional detail: each step is annotated to make maintenance and review easier.
+            */}
         </nav>
       </header>
 
@@ -190,7 +190,7 @@ export default function RegisterPasswordPage() {
         </aside>
       </main>
 
-      {/* Section summary: this UI block is explained for clarity. */}
+      {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
       <footer className="py-6 text-center text-xs text-slate-400">
         © {new Date().getFullYear()} Bread Capstone Team. All rights reserved.
       </footer>

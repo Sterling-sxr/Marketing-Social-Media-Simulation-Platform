@@ -26,7 +26,8 @@ from ..services import (
 )
 
 
-# Function summary: _parse_json implements this backend behavior.
+# Purpose: Handle the `_parse_json` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def _parse_json(request: HttpRequest) -> dict:
     if not request.body:
         return {}
@@ -37,7 +38,8 @@ def _parse_json(request: HttpRequest) -> dict:
 
 
 @csrf_exempt
-# Function summary: send_registration_code implements this backend behavior.
+# Purpose: Handle the `send_registration_code` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def send_registration_code(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -64,7 +66,8 @@ def send_registration_code(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Function summary: verify_registration_code_view implements this backend behavior.
+# Purpose: Handle the `verify_registration_code_view` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def verify_registration_code_view(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -87,7 +90,8 @@ def verify_registration_code_view(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Function summary: complete_registration_view implements this backend behavior.
+# Purpose: Handle the `complete_registration_view` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def complete_registration_view(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -121,7 +125,8 @@ def complete_registration_view(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Function summary: login_user implements this backend behavior.
+# Purpose: Handle the `login_user` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def login_user(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -154,9 +159,12 @@ def login_user(request: HttpRequest) -> JsonResponse:
     )
 
 
-# Function summary: check_auth_status implements this backend behavior.
+# Purpose: Handle the `check_auth_status` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def check_auth_status(request: HttpRequest) -> JsonResponse:
-    """Function summary: check_auth_status executes this unit of backend logic."""
+    """Handle the `check_auth_status` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     if not request.user.is_authenticated:
         return JsonResponse({"authenticated": False}, status=200)
     
@@ -177,7 +185,8 @@ def check_auth_status(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Function summary: logout_view implements this backend behavior.
+# Purpose: Handle the `logout_view` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def logout_view(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -187,7 +196,8 @@ def logout_view(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Function summary: send_password_reset_code implements this backend behavior.
+# Purpose: Handle the `send_password_reset_code` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def send_password_reset_code(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -214,7 +224,8 @@ def send_password_reset_code(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Function summary: confirm_password_reset_view implements this backend behavior.
+# Purpose: Handle the `confirm_password_reset_view` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def confirm_password_reset_view(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -238,7 +249,8 @@ def confirm_password_reset_view(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Function summary: complete_password_reset_view implements this backend behavior.
+# Purpose: Handle the `complete_password_reset_view` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def complete_password_reset_view(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)

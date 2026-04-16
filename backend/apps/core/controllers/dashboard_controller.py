@@ -13,7 +13,8 @@ from .course_controller import _ensure_authenticated
 
 
 @csrf_exempt
-# Function summary: dashboard_summary implements this backend behavior.
+# Purpose: Handle the `dashboard_summary` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def dashboard_summary(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -23,8 +24,8 @@ def dashboard_summary(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"error": "Method not allowed"}, status=405)
 
     try:
-        # Section summary: this block is described for easier reading.
-        # Section summary: this block is described for easier reading.
+        # Context: This block prepares shared values used by the request branches below.
+        # Context: This block prepares shared values used by the request branches below.
         data = refresh_dashboard_snapshot(user=request.user)
     except PermissionError as exc:
         return JsonResponse({"error": str(exc)}, status=403)
@@ -33,7 +34,8 @@ def dashboard_summary(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Function summary: dashboard_course_detail implements this backend behavior.
+# Purpose: Handle the `dashboard_course_detail` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def dashboard_course_detail(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -51,7 +53,8 @@ def dashboard_course_detail(request: HttpRequest, course_id: int) -> JsonRespons
 
 
 @csrf_exempt
-# Function summary: dashboard_course_hashtag_detail implements this backend behavior.
+# Purpose: Handle the `dashboard_course_hashtag_detail` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def dashboard_course_hashtag_detail(
     request: HttpRequest, course_id: int, hashtag: str
 ) -> JsonResponse:
@@ -77,7 +80,8 @@ def dashboard_course_hashtag_detail(
 
 
 @csrf_exempt
-# Function summary: dashboard_course_student_detail implements this backend behavior.
+# Purpose: Handle the `dashboard_course_student_detail` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def dashboard_course_student_detail(
     request: HttpRequest, course_id: int, student_id: int
 ) -> JsonResponse:

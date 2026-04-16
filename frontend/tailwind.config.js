@@ -1,10 +1,10 @@
-/* Section summary: this block is documented for clarity. */
+/* Context: This section groups related logic so shared assumptions, control flow, and side effects are easier to understand. */
 export default {
   content: ["./index.html", "./src/**/*.{js,jsx}"],
   theme: {
     extend: {
       colors: {
-        // Section summary: this block is documented for clarity.
+        // Context: This block prepares shared values used by the request branches below.
         brand: {
           50: "#EEF7F9",
           100: "#DCEFF3",
@@ -20,7 +20,7 @@ export default {
           dark: "#1B596E",
           light: "#94C8D8",
         },
-        // Section summary: this block is documented for clarity.
+        // Context: This block prepares shared values used by the request branches below.
         accent: {
           50: "#ECFBF7",
           100: "#D3F5EC",

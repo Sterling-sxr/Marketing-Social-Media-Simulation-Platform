@@ -25,7 +25,8 @@ from ..services import (
 )
 
 
-# Function summary: _ensure_authenticated implements this backend behavior.
+# Purpose: Handle the `_ensure_authenticated` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def _ensure_authenticated(request: HttpRequest) -> JsonResponse | None:
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Unauthorized"}, status=401)
@@ -33,7 +34,8 @@ def _ensure_authenticated(request: HttpRequest) -> JsonResponse | None:
 
 
 @csrf_exempt
-# Function summary: course_posts implements this backend behavior.
+# Purpose: Handle the `course_posts` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def course_posts(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -112,7 +114,8 @@ def course_posts(request: HttpRequest, course_id: int) -> JsonResponse:
 
 
 @csrf_exempt
-# Function summary: course_post_comments implements this backend behavior.
+# Purpose: Handle the `course_post_comments` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def course_post_comments(request: HttpRequest, course_id: int, post_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -159,7 +162,7 @@ def course_post_comments(request: HttpRequest, course_id: int, post_id: int) -> 
             return JsonResponse({"error": "This course has ended; posts are read-only."}, status=403)
         comment = CoursePostComment.objects.create(post=post, user=request.user, content=content)
 
-        # Section summary: this block is described for easier reading.
+        # Context: This block prepares shared values used by the request branches below.
         if post.author_id != request.user.id:
             try:
                 recipient = (
@@ -210,7 +213,8 @@ def course_post_comments(request: HttpRequest, course_id: int, post_id: int) -> 
 
 
 @csrf_exempt
-# Function summary: course_post_like implements this backend behavior.
+# Purpose: Handle the `course_post_like` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def course_post_like(request: HttpRequest, course_id: int, post_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -247,7 +251,8 @@ def course_post_like(request: HttpRequest, course_id: int, post_id: int) -> Json
 
 
 @csrf_exempt
-# Function summary: course_post_detail implements this backend behavior.
+# Purpose: Handle the `course_post_detail` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def course_post_detail(request: HttpRequest, course_id: int, post_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -328,7 +333,8 @@ def course_post_detail(request: HttpRequest, course_id: int, post_id: int) -> Js
 
 
 @csrf_exempt
-# Function summary: course_post_analytics implements this backend behavior.
+# Purpose: Handle the `course_post_analytics` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def course_post_analytics(request: HttpRequest, course_id: int, post_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -357,7 +363,8 @@ def course_post_analytics(request: HttpRequest, course_id: int, post_id: int) ->
 
 
 @csrf_exempt
-# Function summary: course_post_suggestions implements this backend behavior.
+# Purpose: Handle the `course_post_suggestions` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def course_post_suggestions(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:

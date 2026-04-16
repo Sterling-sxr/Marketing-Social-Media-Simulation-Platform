@@ -1,4 +1,4 @@
-"""Module summary: post_analytics_snapshot_repository defines backend functionality with clear intent."""
+"""Module summary: this module groups related logic and clarifies design intent."""
 from __future__ import annotations
 
 from typing import Iterable, Optional

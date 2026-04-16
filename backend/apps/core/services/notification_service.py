@@ -13,7 +13,7 @@ def _parse_optional_course_id(course_id: object) -> int | None:
     if course_id is None:
         return None
     try:
-        # Section summary: this block is described for easier reading.
+        # Context: This block prepares shared values used by the request branches below.
         course_id_int = int(str(course_id).strip())
         return course_id_int
     except (TypeError, ValueError):
@@ -26,7 +26,9 @@ def list_notifications(
     limit: int = 50,
     course_id: object | None = None,
 ) -> tuple[list[Notification], int]:
-    """Function summary: list_notifications executes this unit of backend logic."""
+    """Handle the `list_notifications` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     parsed_course_id = _parse_optional_course_id(course_id)
     queryset = Notification.objects.filter(recipient=recipient)
     if parsed_course_id is not None:
@@ -36,7 +38,9 @@ def list_notifications(
 
 
 def mark_as_read(*, recipient: str, ids: Iterable[int], course_id: object | None = None) -> int:
-    """Function summary: mark_as_read executes this unit of backend logic."""
+    """Handle the `mark_as_read` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     ids = list(ids)
     if not ids:
         return 0
@@ -48,7 +52,9 @@ def mark_as_read(*, recipient: str, ids: Iterable[int], course_id: object | None
 
 
 def mark_all_as_read(*, recipient: str, course_id: object | None = None) -> int:
-    """Function summary: mark_all_as_read executes this unit of backend logic."""
+    """Handle the `mark_all_as_read` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     parsed_course_id = _parse_optional_course_id(course_id)
     qs = Notification.objects.filter(recipient=recipient, is_read=False)
     if parsed_course_id is not None:
@@ -66,7 +72,9 @@ def create_notification(
     link: str,
     metadata: dict | None = None,
 ) -> dict:
-    """Function summary: create_notification executes this unit of backend logic."""
+    """Handle the `create_notification` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     notification = Notification.objects.create(
         recipient=recipient,
         actor=actor,

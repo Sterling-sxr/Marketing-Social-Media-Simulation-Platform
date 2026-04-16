@@ -18,11 +18,11 @@ import {
   Printer,
 } from "lucide-react";
 
-/* Function summary: engagementRate drives this behavior. */
+/* Purpose: `engagementRate` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
 function engagementRate(p) {
   const likes = Number(p.likes || 0);
   const comments = Number(p.comments || 0);
-  const views = Math.max(1, Number(p.views || 0)); // Inline explanation: this statement is clarified for readability.
+  const views = Math.max(1, Number(p.views || 0)); // Inline explanation: This line clarifies an assumption, guard, or transformation.
   return (likes + comments) / views;
 }
 
@@ -119,7 +119,7 @@ function writeStoredBool(key, value) {
   try {
     localStorage.setItem(key, value ? "1" : "0");
   } catch {
-    /* Section summary: this block is documented for clarity. */
+    /* Context: This section groups related logic so shared assumptions, control flow, and side effects are easier to understand. */
   }
 }
 
@@ -172,7 +172,7 @@ function postsToCsv(posts) {
   return lines.join("\r\n");
 }
 
-/* Function summary: computeLocalInsights drives this behavior. */
+/* Purpose: `computeLocalInsights` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
 function computeLocalInsights(posts) {
   if (!posts.length) {
     return [
@@ -371,7 +371,7 @@ function LocalInsightsSection({ lines }) {
   );
 }
 
-/* Function summary: KPI drives this behavior. */
+/* Purpose: `KPI` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
 function KPI({ label, value }) {
   return (
     <div
@@ -397,7 +397,7 @@ function KPI({ label, value }) {
   );
 }
 
-/* Function summary: HourLineChart drives this behavior. */
+/* Purpose: `HourLineChart` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
 function HourLineChart({
   title = "Best Hour to Post",
   values = [],
@@ -417,7 +417,7 @@ function HourLineChart({
     ? `${title}: no engagement data yet.`
     : `${title}: likes plus comments totals by hour from 0 to 23. Peak at hour ${peak.i} with value ${peak.v}.`;
 
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   const H = height;
   const PAD_L = 60,
     PAD_R = 16,
@@ -427,7 +427,7 @@ function HourLineChart({
   const W = innerW + PAD_L + PAD_R;
   const innerH = H - PAD_T - PAD_B;
 
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   const yMax = Math.max(1, ...safe);
   const yTicks = 5;
   const yVals = Array.from({ length: yTicks + 1 }, (_, i) =>
@@ -436,10 +436,10 @@ function HourLineChart({
   const toX = (i) => PAD_L + (i / 23) * innerW;
   const toY = (v) => PAD_T + innerH - (v / yMax) * innerH;
 
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   const pts = safe.map((v, i) => `${toX(i)},${toY(v)}`).join(" ");
 
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   const [hoverIdx, setHoverIdx] = useState(null);
   const onMove = (e) => {
     const svg = e.currentTarget;
@@ -488,7 +488,7 @@ function HourLineChart({
             </filter>
           </defs>
 
-          {/* Section summary: this UI block is explained for clarity. */}
+          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
           {yVals.map((t, i) => (
             <g key={`y-${i}`}>
               <line
@@ -512,7 +512,7 @@ function HourLineChart({
             </g>
           ))}
 
-          {/* Section summary: this UI block is explained for clarity. */}
+          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
           <line
             x1={PAD_L}
             y1={PAD_T + innerH}
@@ -530,7 +530,7 @@ function HourLineChart({
             strokeWidth="1.5"
           />
 
-          {/* Section summary: this UI block is explained for clarity. */}
+          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
           {Array.from({ length: 12 }, (_, k) => k * 2).map((h) => (
             <g key={`xh-${h}`}>
               <line
@@ -553,7 +553,7 @@ function HourLineChart({
             </g>
           ))}
 
-          {/* Section summary: this UI block is explained for clarity. */}
+          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
           <polyline
             points={pts}
             fill="none"
@@ -562,14 +562,14 @@ function HourLineChart({
             strokeLinejoin="round"
           />
 
-          {/* Section summary: this UI block is explained for clarity. */}
+          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
           {safe.map((v, i) => (
             <circle key={i} cx={toX(i)} cy={toY(v)} r="3.5" fill="#fb923c">
               <title>{`Hour ${i}: ${v}`}</title>
             </circle>
           ))}
 
-          {/* Section summary: this UI block is explained for clarity. */}
+          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
           {hoverIdx != null && (
             <>
               <line
@@ -621,7 +621,7 @@ function HourLineChart({
             </>
           )}
 
-          {/* Section summary: this UI block is explained for clarity. */}
+          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
           <text
             x={(PAD_L + (W - PAD_R)) / 2}
             y={H - 8}
@@ -662,13 +662,13 @@ function BarChart({
   xTickStep = 1,
   maxLabelLen = 12,
 
-  // Section summary: this block is documented for clarity.
-  tickFontSize = 16, // Inline explanation: this statement is clarified for readability.
-  labelFontSize = 16, // Inline explanation: this statement is clarified for readability.
-  valueFontSize = 18, // Inline explanation: this statement is clarified for readability.
-  axisTitleFontSize = 16, // Inline explanation: this statement is clarified for readability.
-  gapPx = 24, // Inline explanation: this statement is clarified for readability.
-  barMaxWidth = 28, // Inline explanation: this statement is clarified for readability.
+  // Context: This block prepares shared values used by the request branches below.
+  tickFontSize = 16, // Inline explanation: This line clarifies an assumption, guard, or transformation.
+  labelFontSize = 16, // Inline explanation: This line clarifies an assumption, guard, or transformation.
+  valueFontSize = 18, // Inline explanation: This line clarifies an assumption, guard, or transformation.
+  axisTitleFontSize = 16, // Inline explanation: This line clarifies an assumption, guard, or transformation.
+  gapPx = 24, // Inline explanation: This line clarifies an assumption, guard, or transformation.
+  barMaxWidth = 28, // Inline explanation: This line clarifies an assumption, guard, or transformation.
 }) {
   const [hoverIdx, setHoverIdx] = useState(null);
 
@@ -681,7 +681,7 @@ function BarChart({
     ? `${title}: no data yet.`
     : `${title}: bar chart with one bar per weekday showing engagement totals.`;
 
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   let maxVal;
   if (Number.isFinite(yMax) && yMax > 0) {
     maxVal = yMax;
@@ -707,7 +707,7 @@ function BarChart({
     );
   }
 
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   const H = height;
   const PAD_L = 70,
     PAD_R = 16,
@@ -717,7 +717,7 @@ function BarChart({
   const W = innerW + PAD_L + PAD_R;
   const innerH = H - PAD_T - PAD_B;
 
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   const computed = Math.floor(innerW / Math.max(1, labels.length)) - gapPx;
   const barW = Math.max(8, Math.min(barMaxWidth, computed));
   const gap = gapPx;
@@ -745,7 +745,7 @@ function BarChart({
           role="img"
           aria-label={chartAriaLabel}
         >
-          {/* Section summary: this UI block is explained for clarity. */}
+          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
           {tickVals.map((t, i) => (
             <g key={`g-${i}`}>
               <line
@@ -769,7 +769,7 @@ function BarChart({
             </g>
           ))}
 
-          {/* Section summary: this UI block is explained for clarity. */}
+          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
           <line
             x1={PAD_L}
             y1={PAD_T + innerH}
@@ -787,7 +787,7 @@ function BarChart({
             strokeWidth="1.6"
           />
 
-          {/* Section summary: this UI block is explained for clarity. */}
+          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
           {safeVals.map((v, i) => {
             const x = PAD_L + i * (barW + gap) + gap / 2;
             const y = toY(v);
@@ -815,19 +815,19 @@ function BarChart({
                   </title>
                 </rect>
 
-                {/* Section summary: this UI block is explained for clarity. */}
+                {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
                 <text
                   x={x + barW / 2}
                   y={y - 10}
                   textAnchor="middle"
                   fontSize={valueFontSize}
-                  fill={hovered ? "#7c3aed" : "#ca8a04"} // Inline explanation: this statement is clarified for readability.
+                  fill={hovered ? "#7c3aed" : "#ca8a04"} // Inline explanation: This line clarifies an assumption, guard, or transformation.
                   fontWeight="800"
                 >
                   {allIntegers ? v : valueFormatter(v)}
                 </text>
 
-                {/* Section summary: this UI block is explained for clarity. */}
+                {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
                 {showLabel && (
                   <text
                     x={x + barW / 2}
@@ -844,7 +844,7 @@ function BarChart({
             );
           })}
 
-          {/* Section summary: this UI block is explained for clarity. */}
+          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
           {xLabel ? (
             <text
               x={(PAD_L + (W - PAD_R)) / 2}
@@ -1171,8 +1171,8 @@ function CompareTwoPosts({ posts, navigate }) {
   );
 }
 
-/* Section summary: this block is documented for clarity. */
-// Function summary: TopPostsList drives this unit of behavior.
+/* Context: This section groups related logic so shared assumptions, control flow, and side effects are easier to understand. */
+// Purpose: `TopPostsList` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable.
 function TopPostsList({ posts, onOpenAnalytics, totalDatasetSize }) {
   const top = useMemo(
     () =>
@@ -1297,7 +1297,7 @@ function TopPostsList({ posts, onOpenAnalytics, totalDatasetSize }) {
   );
 }
 
-// Function summary: BestTimeSection drives this unit of behavior.
+// Purpose: `BestTimeSection` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable.
 function BestTimeSection({ posts }) {
   const byHour = useMemo(() => {
     const arr = Array(24).fill(0);
@@ -1334,7 +1334,7 @@ function BestTimeSection({ posts }) {
       </p>
 
       <div className="space-y-8">
-        {/* Section summary: this UI block is explained for clarity. */}
+        {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
         <HourLineChart
           title="Best Hour to Post"
           values={byHour}
@@ -1343,7 +1343,7 @@ function BestTimeSection({ posts }) {
           yLabel="Engagement (likes + comments)"
         />
 
-        {/* Section summary: this UI block is explained for clarity. */}
+        {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
         <BarChart
           title="Best Day to Post"
           labels={["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]}
@@ -1352,22 +1352,22 @@ function BestTimeSection({ posts }) {
           yLabel="Engagement (likes + comments)"
           height={300}
           canvasWidth={400}
-          barColorClass="fill-yellow-300" // Inline explanation: this statement is clarified for readability.
-          hoverBarClass="fill-accent-300" // Inline explanation: this statement is clarified for readability.
-          // Section summary: this block is documented for clarity.
+          barColorClass="fill-yellow-300" // Inline explanation: This line clarifies an assumption, guard, or transformation.
+          hoverBarClass="fill-accent-300" // Inline explanation: This line clarifies an assumption, guard, or transformation.
+          // Context: This block prepares shared values used by the request branches below.
           tickFontSize={15}
           labelFontSize={15}
           valueFontSize={15}
           axisTitleFontSize={15}
-          gapPx={30} // Inline explanation: this statement is clarified for readability.
-          barMaxWidth={80} // Inline explanation: this statement is clarified for readability.
+          gapPx={30} // Inline explanation: This line clarifies an assumption, guard, or transformation.
+          barMaxWidth={80} // Inline explanation: This line clarifies an assumption, guard, or transformation.
         />
       </div>
     </section>
   );
 }
 
-/* Function summary: StudentAnalysisPage drives this behavior. */
+/* Purpose: `StudentAnalysisPage` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
 export default function StudentAnalysisPage() {
   const { authUser, pushToast } = useApp();
   const navigate = useNavigate();
@@ -1422,7 +1422,7 @@ export default function StudentAnalysisPage() {
     setFilterSortKey("engagement_desc");
   };
 
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   useEffect(() => {
     if (!authUser) return;
     let cancelled = false;
@@ -1487,7 +1487,7 @@ export default function StudentAnalysisPage() {
     };
   }, [authUser]);
 
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   const metrics = useMemo(() => {
     const totalPosts = filteredPosts.length;
     const totalLikes = filteredPosts.reduce((s, p) => s + (p.likes || 0), 0);
@@ -1564,7 +1564,7 @@ export default function StudentAnalysisPage() {
             </div>
           ) : null}
 
-          {/* Section summary: this UI block is explained for clarity. */}
+          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <KPI label="Posts" value={metrics.totalPosts} />
             <KPI label="Likes" value={metrics.totalLikes} />
@@ -1580,7 +1580,7 @@ export default function StudentAnalysisPage() {
             <CompareTwoPosts posts={filteredPosts} navigate={navigate} />
           </div>
 
-          {/* Section summary: this UI block is explained for clarity. */}
+          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
           <div className="mt-4">
             <TopPostsList
               posts={filteredPosts}
@@ -1591,7 +1591,7 @@ export default function StudentAnalysisPage() {
             />
           </div>
 
-          {/* Section summary: this UI block is explained for clarity. */}
+          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
           <div className="mt-4">
             <BestTimeSection posts={filteredPosts} />
           </div>

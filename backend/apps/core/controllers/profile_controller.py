@@ -19,14 +19,16 @@ from ..services import (
 )
 
 
-# Function summary: _ensure_authenticated implements this backend behavior.
+# Purpose: Handle the `_ensure_authenticated` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def _ensure_authenticated(request: HttpRequest) -> JsonResponse | None:
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Unauthorized"}, status=401)
     return None
 
 
-# Function summary: _display_user implements this backend behavior.
+# Purpose: Handle the `_display_user` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def _display_user(user) -> str:
     full_name = (user.get_full_name() or "").strip()
     if full_name:
@@ -42,7 +44,8 @@ def _display_user(user) -> str:
     return f"User {user.pk}"
 
 
-# Function summary: _institution_from_email implements this backend behavior.
+# Purpose: Handle the `_institution_from_email` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def _institution_from_email(email: str) -> str:
     if not email:
         return ""
@@ -61,7 +64,8 @@ def _institution_from_email(email: str) -> str:
     return f"{pretty_name} ({domain})"
 
 
-# Function summary: profile_status implements this backend behavior.
+# Purpose: Handle the `profile_status` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def profile_status(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -69,7 +73,8 @@ def profile_status(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"needs_profile": needs_profile(request.user)})
 
 
-# Function summary: profile_options implements this backend behavior.
+# Purpose: Handle the `profile_options` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def profile_options(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -77,9 +82,12 @@ def profile_options(request: HttpRequest) -> JsonResponse:
     return JsonResponse(PROFILE_OPTIONS)
 
 
-# Function summary: get_my_profile implements this backend behavior.
+# Purpose: Handle the `get_my_profile` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def get_my_profile(request: HttpRequest) -> JsonResponse:
-    """Function summary: get_my_profile executes this unit of backend logic."""
+    """Handle the `get_my_profile` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     auth_error = _ensure_authenticated(request)
     if auth_error:
         return auth_error
@@ -92,7 +100,8 @@ def get_my_profile(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Function summary: submit_profile implements this backend behavior.
+# Purpose: Handle the `submit_profile` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def submit_profile(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -106,7 +115,7 @@ def submit_profile(request: HttpRequest) -> JsonResponse:
     except json.JSONDecodeError:
         return JsonResponse({"error": "Request body must be valid JSON."}, status=400)
 
-    # Section summary: this block is described for easier reading.
+    # Context: This block prepares shared values used by the request branches below.
     new_username = (payload.get("username") or "").strip()
     if new_username and new_username != (request.user.username or ""):
         UserModel = get_user_model()
@@ -119,7 +128,8 @@ def submit_profile(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"success": True})
 
 
-# Function summary: profile_detail implements this backend behavior.
+# Purpose: Handle the `profile_detail` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def profile_detail(request: HttpRequest, user_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -158,7 +168,8 @@ def profile_detail(request: HttpRequest, user_id: int) -> JsonResponse:
 
 
 @csrf_exempt
-# Function summary: upload_avatar implements this backend behavior.
+# Purpose: Handle the `upload_avatar` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def upload_avatar(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -181,7 +192,8 @@ def upload_avatar(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Function summary: update_display_name implements this backend behavior.
+# Purpose: Handle the `update_display_name` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def update_display_name(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -209,9 +221,12 @@ def update_display_name(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Function summary: set_user_admin implements this backend behavior.
+# Purpose: Handle the `set_user_admin` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def set_user_admin(request: HttpRequest, user_id: int) -> JsonResponse:
-    """Function summary: set_user_admin executes this unit of backend logic."""
+    """Handle the `set_user_admin` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     auth_error = _ensure_authenticated(request)
     if auth_error:
         return auth_error
@@ -232,7 +247,7 @@ def set_user_admin(request: HttpRequest, user_id: int) -> JsonResponse:
     except UserModel.DoesNotExist:
         return JsonResponse({"error": "User not found."}, status=404)
 
-    # Section summary: this block is described for easier reading.
+    # Context: This block prepares shared values used by the request branches below.
     if target.id != request.user.id and not getattr(request.user, "is_superuser", False):
         return JsonResponse({"error": "Only superusers can change admin roles."}, status=403)
 
@@ -251,7 +266,8 @@ def set_user_admin(request: HttpRequest, user_id: int) -> JsonResponse:
 
 
 @csrf_exempt
-# Function summary: follow_user implements this backend behavior.
+# Purpose: Handle the `follow_user` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def follow_user(request: HttpRequest, user_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -263,7 +279,7 @@ def follow_user(request: HttpRequest, user_id: int) -> JsonResponse:
         if me.id == user_id:
             return JsonResponse({"error": "You cannot follow yourself."}, status=400)
         
-        # Section summary: this block is described for easier reading.
+        # Context: This block prepares shared values used by the request branches below.
         UserModel = get_user_model()
         try:
             target_user = UserModel.objects.get(id=user_id)
@@ -272,9 +288,9 @@ def follow_user(request: HttpRequest, user_id: int) -> JsonResponse:
 
         obj, created = UserFollow.objects.get_or_create(follower_id=me.id, target_id=user_id)
         if created:
-            # Section summary: this block is described for easier reading.
+            # Context: This block prepares shared values used by the request branches below.
             try:
-                # Section summary: this block is described for easier reading.
+                # Context: This block prepares shared values used by the request branches below.
                 recipient = (target_user.username or "").strip() or (target_user.email or "").strip() or str(target_user.id)
                 actor_name = (me.username or "").strip() or (me.email or "").strip() or f"User {me.pk}"
                 import logging
@@ -303,7 +319,8 @@ def follow_user(request: HttpRequest, user_id: int) -> JsonResponse:
     return JsonResponse({"error": "Method not allowed"}, status=405)
 
 
-# Function summary: list_following implements this backend behavior.
+# Purpose: Handle the `list_following` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def list_following(request: HttpRequest, user_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -317,7 +334,8 @@ def list_following(request: HttpRequest, user_id: int) -> JsonResponse:
     return JsonResponse({"items": items})
 
 
-# Function summary: list_followers implements this backend behavior.
+# Purpose: Handle the `list_followers` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def list_followers(request: HttpRequest, user_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -331,7 +349,8 @@ def list_followers(request: HttpRequest, user_id: int) -> JsonResponse:
     return JsonResponse({"items": items})
 
 
-# Function summary: user_posts implements this backend behavior.
+# Purpose: Handle the `user_posts` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def user_posts(request: HttpRequest, user_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -348,7 +367,8 @@ def user_posts(request: HttpRequest, user_id: int) -> JsonResponse:
     return JsonResponse({"items": items})
 
 
-# Function summary: user_posts_analytics implements this backend behavior.
+# Purpose: Handle the `user_posts_analytics` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def user_posts_analytics(request: HttpRequest, user_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:

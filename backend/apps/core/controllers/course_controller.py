@@ -17,14 +17,16 @@ from ..services import (
 )
 
 
-# Function summary: _ensure_authenticated implements this backend behavior.
+# Purpose: Handle the `_ensure_authenticated` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def _ensure_authenticated(request: HttpRequest) -> JsonResponse | None:
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Unauthorized"}, status=401)
     return None
 
 
-# Function summary: list_courses implements this backend behavior.
+# Purpose: Handle the `list_courses` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def list_courses(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -34,7 +36,8 @@ def list_courses(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Function summary: join_course implements this backend behavior.
+# Purpose: Handle the `join_course` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def join_course(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -77,7 +80,8 @@ __all__ = [
 
 
 @csrf_exempt
-# Function summary: create_course_view implements this backend behavior.
+# Purpose: Handle the `create_course_view` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def create_course_view(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -108,7 +112,8 @@ def create_course_view(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"course": item}, status=201)
 
 
-# Function summary: list_managed_courses_view implements this backend behavior.
+# Purpose: Handle the `list_managed_courses_view` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def list_managed_courses_view(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -117,7 +122,8 @@ def list_managed_courses_view(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"items": items})
 
 
-# Function summary: list_user_courses_view implements this backend behavior.
+# Purpose: Handle the `list_user_courses_view` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def list_user_courses_view(request: HttpRequest, user_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -150,7 +156,8 @@ def list_user_courses_view(request: HttpRequest, user_id: int) -> JsonResponse:
 
 
 @csrf_exempt
-# Function summary: update_course_view implements this backend behavior.
+# Purpose: Handle the `update_course_view` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def update_course_view(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -183,7 +190,8 @@ def update_course_view(request: HttpRequest, course_id: int) -> JsonResponse:
 
 
 @csrf_exempt
-# Function summary: course_profile_view implements this backend behavior.
+# Purpose: Handle the `course_profile_view` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def course_profile_view(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:

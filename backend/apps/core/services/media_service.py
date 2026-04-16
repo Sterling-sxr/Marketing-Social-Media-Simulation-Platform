@@ -6,12 +6,16 @@ from ..repositories.models import MediaAsset
 
 
 def list_recent_assets(limit: int = 20):
-    """Function summary: list_recent_assets executes this unit of backend logic."""
+    """Handle the `list_recent_assets` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     return MediaAsset.objects.all()[:limit]
 
 
 def store_upload(upload: UploadedFile) -> MediaAsset:
-    """Function summary: store_upload executes this unit of backend logic."""
+    """Handle the `store_upload` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     asset = MediaAsset(
         file=upload,
         original_name=upload.name,

@@ -1,4 +1,4 @@
-"""Module summary: registration_service defines backend functionality with clear intent."""
+"""Module summary: this module groups related logic and clarifies design intent."""
 from __future__ import annotations
 
 import logging
@@ -34,15 +34,15 @@ PURPOSE = "register"
 
 
 class RegistrationError(Exception):
-    """Class summary: RegistrationError groups related behavior in one place."""
+    """Class summary: RegistrationError keeps related behavior together behind one clear interface."""
 
 
 class VerificationCodeError(RegistrationError):
-    """Class summary: VerificationCodeError groups related behavior in one place."""
+    """Class summary: VerificationCodeError keeps related behavior together behind one clear interface."""
 
 
 class EmailThrottleError(RegistrationError):
-    """Class summary: EmailThrottleError groups related behavior in one place."""
+    """Class summary: EmailThrottleError keeps related behavior together behind one clear interface."""
 
 
 @dataclass
@@ -58,7 +58,7 @@ def _send_code_email(email: str, code: str) -> None:
             recipient=email,
         )
     except GmailNotConfiguredError:
-        # Section summary: this block is described for easier reading.
+        # Context: This block prepares shared values used by the request branches below.
         logger.warning("Gmail not configured; verification code for %s is %s", email, code)
     except Exception as exc:  # pragma: no cover - network path
         logger.exception("Failed to send verification email to %s", email)
@@ -70,7 +70,7 @@ def request_verification_code(email: str) -> VerificationRequest:
     if not EMAIL_REGEX.match(normalised_email):
         raise RegistrationError("Please use an email from a .edu.au domain.")
 
-    # Section summary: this block is described for easier reading.
+    # Context: This block prepares shared values used by the request branches below.
     zid = normalised_email.split("@", 1)[0]
     if get_by_email(normalised_email) or get_by_username(zid):
         raise RegistrationError("This email is already registered. Please sign in.")
@@ -78,10 +78,10 @@ def request_verification_code(email: str) -> VerificationRequest:
     if is_throttled(purpose=PURPOSE, email=normalised_email):
         raise EmailThrottleError("Verification code requested too frequently. Please wait before trying again.")
 
-    # Section summary: this block is described for easier reading.
-    code = "1234"  # Inline explanation: this statement is clarified for maintainability.
+    # Context: This block prepares shared values used by the request branches below.
+    code = "1234"  # Inline explanation: This line clarifies an assumption, guard, or transformation.
     store_code(purpose=PURPOSE, email=normalised_email, code=code)
-    # Section summary: this block is described for easier reading.
+    # Context: This block prepares shared values used by the request branches below.
     logger.info("TEST MODE: mock send verification code %s to %s", code, normalised_email)
 
     return VerificationRequest(email=normalised_email, code=code if settings.DEBUG else "****")

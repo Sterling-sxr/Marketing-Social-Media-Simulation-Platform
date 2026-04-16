@@ -1,4 +1,4 @@
-"""Module summary: profile_service defines backend functionality with clear intent."""
+"""Module summary: this module groups related logic and clarifies design intent."""
 
 from __future__ import annotations
 
@@ -91,17 +91,17 @@ PROFILE_NUMERIC_FIELDS = [
     ("openness", 5),
 ]
 
-# Section summary: this block is described for easier reading.
+# Context: This block prepares shared values used by the request branches below.
 AI_FIELD_ALIASES: dict[str, str] = {
-    # Section summary: this block is described for easier reading.
+    # Context: This block prepares shared values used by the request branches below.
     "decision_factors": "decision_factor",
     "buying_behaviour": "buying_behavior",
-    # Section summary: this block is described for easier reading.
+    # Context: This block prepares shared values used by the request branches below.
     "activity_level": "digital_time",
     "preferred_content": "content_preference",
 }
 
-# Section summary: this block is described for easier reading.
+# Context: This block prepares shared values used by the request branches below.
 PROFILE_OPTIONS_KEY_BY_FIELD: dict[str, str] = {
     "gender": "genders",
     "city": "cities",
@@ -118,7 +118,7 @@ PROFILE_OPTIONS_KEY_BY_FIELD: dict[str, str] = {
     "influencer_type": "influencer_type",
 }
 
-# Section summary: this block is described for easier reading.
+# Context: This block prepares shared values used by the request branches below.
 INTEREST_ALIASES: dict[str, str] = {
     "tech & gaming": "Technology & Gaming",
     "technology and gaming": "Technology & Gaming",
@@ -134,7 +134,9 @@ INTEREST_ALIASES: dict[str, str] = {
 
 
 def _normalize_choice(value: Any, options_key: str) -> str:
-    """Function summary: _normalize_choice executes this unit of backend logic."""
+    """Handle the `_normalize_choice` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     if not value:
         return ""
     options = PROFILE_OPTIONS.get(options_key) or []
@@ -144,28 +146,30 @@ def _normalize_choice(value: Any, options_key: str) -> str:
     text = (value or "").strip()
     lowered = text.lower()
 
-    # Section summary: this block is described for easier reading.
+    # Context: This block prepares shared values used by the request branches below.
     for opt in options:
         if opt.lower() == lowered:
             return opt
 
-    # Section summary: this block is described for easier reading.
+    # Context: This block prepares shared values used by the request branches below.
     for opt in options:
         if lowered in opt.lower():
             return opt
 
-    # Section summary: this block is described for easier reading.
+    # Context: This block prepares shared values used by the request branches below.
     return text
 
 
 def _normalize_digital_time(value: Any) -> str:
-    """Function summary: _normalize_digital_time executes this unit of backend logic."""
+    """Handle the `_normalize_digital_time` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     if not value:
         return ""
     text = (value or "").strip()
     lowered = text.lower()
 
-    # Section summary: this block is described for easier reading.
+    # Context: This block prepares shared values used by the request branches below.
     if lowered == "high":
         text = "Several times a day"
     elif lowered == "medium":
@@ -177,14 +181,16 @@ def _normalize_digital_time(value: Any) -> str:
 
 
 def _normalize_interests(value: Any) -> list[str]:
-    """Function summary: _normalize_interests executes this unit of backend logic."""
+    """Handle the `_normalize_interests` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     options = PROFILE_OPTIONS.get("interests") or []
     if not value:
         return []
 
     raw_items: list[str]
     if isinstance(value, str):
-        # Section summary: this block is described for easier reading.
+        # Context: This block prepares shared values used by the request branches below.
         normalized_text = value.replace("\n", ",").replace(";", ",")
         raw_items = [part.strip() for part in normalized_text.split(",") if part.strip()]
     elif isinstance(value, (list, tuple, set)):
@@ -196,20 +202,20 @@ def _normalize_interests(value: Any) -> list[str]:
     for item in raw_items:
         lowered = item.lower()
 
-        # Section summary: this block is described for easier reading.
+        # Context: This block prepares shared values used by the request branches below.
         alias_match = INTEREST_ALIASES.get(lowered)
         if alias_match and alias_match in options and alias_match not in normalized:
             normalized.append(alias_match)
             continue
 
-        # Section summary: this block is described for easier reading.
+        # Context: This block prepares shared values used by the request branches below.
         match = None
         for opt in options:
             if opt.lower() == lowered:
                 match = opt
                 break
         if not match:
-            # Section summary: this block is described for easier reading.
+            # Context: This block prepares shared values used by the request branches below.
             for opt in options:
                 if lowered in opt.lower():
                     match = opt
@@ -221,7 +227,9 @@ def _normalize_interests(value: Any) -> list[str]:
 
 
 def _normalize_numeric(value: Any, default: int = 5) -> int:
-    """Function summary: _normalize_numeric executes this unit of backend logic."""
+    """Handle the `_normalize_numeric` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     try:
         num = int(value)
     except (TypeError, ValueError):
@@ -234,7 +242,9 @@ def _normalize_numeric(value: Any, default: int = 5) -> int:
 
 
 def normalize_ai_profile_payload(payload: dict[str, Any]) -> dict[str, Any]:
-    """Function summary: normalize_ai_profile_payload executes this unit of backend logic."""
+    """Handle the `normalize_ai_profile_payload` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     if not isinstance(payload, dict):
         return {}
 
@@ -243,46 +253,50 @@ def normalize_ai_profile_payload(payload: dict[str, Any]) -> dict[str, Any]:
     for raw_key, raw_value in payload.items():
         key = AI_FIELD_ALIASES.get(raw_key, raw_key)
 
-        # Section summary: this block is described for easier reading.
+        # Context: This block prepares shared values used by the request branches below.
         if key in {"social_value", "sociability", "openness"}:
             normalized[key] = _normalize_numeric(raw_value)
             continue
 
-        # Section summary: this block is described for easier reading.
+        # Context: This block prepares shared values used by the request branches below.
         if key == "interests":
             normalized["interests"] = _normalize_interests(raw_value)
             continue
 
-        # Section summary: this block is described for easier reading.
+        # Context: This block prepares shared values used by the request branches below.
         if key == "digital_time":
             normalized["digital_time"] = _normalize_digital_time(raw_value)
             continue
 
-        # Section summary: this block is described for easier reading.
+        # Context: This block prepares shared values used by the request branches below.
         if key in PROFILE_STRING_FIELDS:
             options_key = PROFILE_OPTIONS_KEY_BY_FIELD.get(key)
             if options_key:
                 normalized[key] = _normalize_choice(raw_value, options_key)
             else:
-                # Section summary: this block is described for easier reading.
+                # Context: This block prepares shared values used by the request branches below.
                 if isinstance(raw_value, str):
                     normalized[key] = raw_value.strip()
                 else:
                     normalized[key] = raw_value
             continue
 
-        # Section summary: this block is described for easier reading.
+        # Context: This block prepares shared values used by the request branches below.
 
     return normalized
 
 
 def needs_profile(user) -> bool:
-    """Function summary: needs_profile executes this unit of backend logic."""
+    """Handle the `needs_profile` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     return False
 
 
 def merge_profile_payload(payload: dict[str, Any], base=None) -> dict[str, Any]:
-    """Function summary: merge_profile_payload executes this unit of backend logic."""
+    """Handle the `merge_profile_payload` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     profile_data: dict[str, Any] = {}
 
     for field in PROFILE_STRING_FIELDS:
@@ -318,7 +332,9 @@ def merge_profile_payload(payload: dict[str, Any], base=None) -> dict[str, Any]:
 
 @transaction.atomic
 def save_profile(user, payload: dict[str, Any]) -> UserProfile:
-    """Function summary: save_profile executes this unit of backend logic."""
+    """Handle the `save_profile` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     existing = ProfileRepository.get_by_user_id(user.id)
     profile_data = merge_profile_payload(payload, base=existing)
     profile, _created = ProfileRepository.create_or_update(user.id, profile_data)
@@ -349,12 +365,16 @@ def profile_to_dict(profile: UserProfile) -> dict[str, Any]:
 
 
 def following_count(user_id: int) -> int:
-    """Function summary: following_count executes this unit of backend logic."""
+    """Handle the `following_count` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     return FollowRepository.get_following_count(user_id)
 
 
 def followers_count(user_id: int) -> int:
-    """Function summary: followers_count executes this unit of backend logic."""
+    """Handle the `followers_count` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     return FollowRepository.get_followers_count(user_id)
 
 

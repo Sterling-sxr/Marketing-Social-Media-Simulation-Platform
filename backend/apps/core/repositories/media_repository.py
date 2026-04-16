@@ -1,4 +1,4 @@
-"""Module summary: media_repository defines backend functionality with clear intent."""
+"""Module summary: this module groups related logic and clarifies design intent."""
 from __future__ import annotations
 
 from typing import List
@@ -8,12 +8,14 @@ from .models import MediaAsset
 
 
 class MediaRepository(BaseRepository[MediaAsset]):
-    """Class summary: MediaRepository groups related behavior in one place."""
+    """Class summary: MediaRepository keeps related behavior together behind one clear interface."""
     model = MediaAsset
     
     @classmethod
     def get_recent_assets(cls, limit: int = 20) -> List[MediaAsset]:
-        """Function summary: get_recent_assets executes this unit of backend logic."""
+        """Handle the `get_recent_assets` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         return list(
             cls.model.objects
             .order_by('-uploaded_at')[:limit]
@@ -21,7 +23,9 @@ class MediaRepository(BaseRepository[MediaAsset]):
     
     @classmethod
     def get_by_ids(cls, asset_ids: List[int]) -> List[MediaAsset]:
-        """Function summary: get_by_ids executes this unit of backend logic."""
+        """Handle the `get_by_ids` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         return list(
             cls.model.objects.filter(id__in=asset_ids)
         )

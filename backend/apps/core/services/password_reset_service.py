@@ -1,4 +1,4 @@
-"""Module summary: password_reset_service defines backend functionality with clear intent."""
+"""Module summary: this module groups related logic and clarifies design intent."""
 from __future__ import annotations
 
 import logging
@@ -34,15 +34,15 @@ _RESET_TEMPLATE = (
 
 
 class PasswordResetError(Exception):
-    """Class summary: PasswordResetError groups related behavior in one place."""
+    """Class summary: PasswordResetError keeps related behavior together behind one clear interface."""
 
 
 class PasswordResetCodeError(PasswordResetError):
-    """Class summary: PasswordResetCodeError groups related behavior in one place."""
+    """Class summary: PasswordResetCodeError keeps related behavior together behind one clear interface."""
 
 
 class PasswordResetThrottleError(PasswordResetError):
-    """Class summary: PasswordResetThrottleError groups related behavior in one place."""
+    """Class summary: PasswordResetThrottleError keeps related behavior together behind one clear interface."""
 
 
 @dataclass
@@ -77,10 +77,10 @@ def request_password_reset(email: str) -> PasswordResetRequest:
     if is_throttled(purpose=PURPOSE, email=normalised_email):
         raise PasswordResetThrottleError("Verification code requested too frequently. Please wait before trying again.")
 
-    # Section summary: this block is described for easier reading.
-    code = "1234"  # Inline explanation: this statement is clarified for maintainability.
+    # Context: This block prepares shared values used by the request branches below.
+    code = "1234"  # Inline explanation: This line clarifies an assumption, guard, or transformation.
     store_code(purpose=PURPOSE, email=normalised_email, code=code)
-    # Section summary: this block is described for easier reading.
+    # Context: This block prepares shared values used by the request branches below.
     logger.info("TEST MODE: mock send password reset code %s to %s", code, normalised_email)
 
     return PasswordResetRequest(email=normalised_email, code=code if settings.DEBUG else "****")

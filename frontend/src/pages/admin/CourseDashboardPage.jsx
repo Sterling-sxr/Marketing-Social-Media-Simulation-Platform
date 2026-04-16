@@ -12,12 +12,12 @@ const SUMMARY_TILES = [
   { key: "registered_students", label: "Registered Students" },
 ];
 
-/* Function summary: Btn drives this behavior. */
+/* Purpose: `Btn` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
 function Btn({
   children,
   onClick,
   type = "button",
-  variant = "primary", // Inline explanation: this statement is clarified for readability.
+  variant = "primary", // Inline explanation: This line clarifies an assumption, guard, or transformation.
   className = "",
   disabled = false,
 }) {
@@ -46,7 +46,7 @@ function Btn({
     </button>
   );
 }
-/* Function summary: formatPercent drives this behavior. */
+/* Purpose: `formatPercent` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
 
 function formatPercent(value) {
   if (typeof value !== "number" || Number.isNaN(value)) return "—";
@@ -83,7 +83,7 @@ function ChangeBadge({ value }) {
   );
 }
 
-/* Function summary: SummaryCard drives this behavior. */
+/* Purpose: `SummaryCard` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
 function SummaryCard({ item, value, onClick }) {
   const card =
     "group rounded-2xl p-6 text-center select-none border border-accent-400 bg-white " +
@@ -121,7 +121,7 @@ function SummaryCard({ item, value, onClick }) {
     </div>
   );
 }
-/* Function summary: EmptyState drives this behavior. */
+/* Purpose: `EmptyState` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
 
 function EmptyState({ message }) {
   return (
@@ -239,20 +239,20 @@ function SentimentCell({ sentiment }) {
   );
 }
 
-/* Function summary: sortByNumeric drives this behavior. */
+/* Purpose: `sortByNumeric` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
 function sortByNumeric(arr, key, asc) {
   const dir = asc ? 1 : -1;
   return [...arr].sort((a, b) => {
     const va = Number(a?.[key] ?? 0);
     const vb = Number(b?.[key] ?? 0);
     if (Number.isNaN(va) && Number.isNaN(vb)) return 0;
-    if (Number.isNaN(va)) return 1; // Inline explanation: this statement is clarified for readability.
+    if (Number.isNaN(va)) return 1; // Inline explanation: This line clarifies an assumption, guard, or transformation.
     if (Number.isNaN(vb)) return -1;
     if (va === vb) return 0;
     return va > vb ? dir : -dir;
   });
 }
-/* Function summary: CourseDashboardPage drives this behavior. */
+/* Purpose: `CourseDashboardPage` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
 
 export default function CourseDashboardPage() {
   const { courseId: courseIdParam } = useParams();
@@ -271,11 +271,11 @@ export default function CourseDashboardPage() {
   });
   const [refreshing, setRefreshing] = useState(false);
 
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   const [hashtagSortKey] = useState("total_posts");
-  const [hashtagAsc] = useState(false); // Inline explanation: this statement is clarified for readability.
+  const [hashtagAsc] = useState(false); // Inline explanation: This line clarifies an assumption, guard, or transformation.
   const [studentSortKey] = useState("posts_total");
-  const [studentAsc] = useState(false); // Inline explanation: this statement is clarified for readability.
+  const [studentAsc] = useState(false); // Inline explanation: This line clarifies an assumption, guard, or transformation.
 
   const isAdmin = useMemo(() => isTeacher(authUser), [authUser]);
   const loadCourseDashboard = useCallback(() => {
@@ -343,14 +343,14 @@ export default function CourseDashboardPage() {
       }`
     : "Course analytics overview";
 
-  // Function summary: goAllPosts drives this unit of behavior.
+  // Purpose: `goAllPosts` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable.
   const goAllPosts = () => {
     if (courseMeta?.id) {
       navigate(`/courses/${courseMeta.id}`);
     }
   };
 
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   const hashtags = useMemo(() => {
     if (!hashtagsRaw?.length) return [];
     return sortByNumeric(hashtagsRaw, hashtagSortKey, hashtagAsc);
@@ -362,7 +362,7 @@ export default function CourseDashboardPage() {
   }, [studentsRaw, studentSortKey, studentAsc]);
   const topHashtag = hashtags[0]?.hashtag;
 
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   useEffect(() => {
     if (location.hash === "#students-section") {
       const el = document.getElementById("students-section");
@@ -384,7 +384,7 @@ export default function CourseDashboardPage() {
       }
       subtitle={subtitle}
     >
-      {/* Section summary: this UI block is explained for clarity. */}
+      {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
       <div className="flex items-center gap-2">
         <Btn variant="secondary" onClick={() => navigate(-1)}>
           ← Back
@@ -451,7 +451,7 @@ export default function CourseDashboardPage() {
             </p>
           ) : null}
 
-          {/* Section summary: this UI block is explained for clarity. */}
+          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
           <section className="grid gap-4 sm:grid-cols-3">
             {SUMMARY_TILES.map((item) => (
               <SummaryCard
@@ -561,7 +561,7 @@ export default function CourseDashboardPage() {
             ) : null}
           </section>
 
-          {/* Section summary: this UI block is explained for clarity. */}
+          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
           <section
             id="students-section"
             className="space-y-4 rounded-3xl border border-brand-100 bg-white p-6 shadow-sm"
@@ -647,7 +647,7 @@ export default function CourseDashboardPage() {
             )}
           </section>
 
-          {/* Section summary: this UI block is explained for clarity. */}
+          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
           <section className="space-y-4 rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
             <header className="mb-2">
               <h2 className="text-2xl font-bold text-slate-900">

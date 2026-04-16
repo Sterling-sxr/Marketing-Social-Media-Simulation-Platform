@@ -5,7 +5,7 @@ function classNames(...values) {
 }
 
 export default function CourseSecondaryNav({ courseId, showOverview = true }) {
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   const links = [
     ...(showOverview === false
       ? []

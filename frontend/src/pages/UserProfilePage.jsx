@@ -1,4 +1,4 @@
-// Section summary: this block is documented for clarity.
+// Context: This block prepares shared values used by the request branches below.
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { getJson, postJson, deleteJson } from "../lib/api";
@@ -13,7 +13,7 @@ export default function UserProfilePage() {
   const navigate = useNavigate();
   const { authUser, loadMyProfile, setAuthUser } = useApp();
 
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   const showPostsOnly = searchParams.get("tab") === "posts";
   const showLikesOnly = searchParams.get("tab") === "likes";
 
@@ -49,14 +49,14 @@ export default function UserProfilePage() {
     return Boolean(authUser.is_superuser || authUser.is_staff);
   }, [authUser, isSelf]);
 
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   const pageTitle = useMemo(() => {
     if (showLikesOnly) return "Likes";
     if (showPostsOnly) return "Posts";
     return null;
   }, [showPostsOnly, showLikesOnly]);
 
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   useEffect(() => {
     let isMounted = true;
     setStatus({ loading: true, error: "" });
@@ -93,7 +93,7 @@ export default function UserProfilePage() {
     }
   }, [profile]);
 
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   useEffect(() => {
     if (showPostsOnly || showLikesOnly) return;
     const endpoint =
@@ -259,31 +259,31 @@ export default function UserProfilePage() {
     }
   };
 
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   if (showPostsOnly || showLikesOnly) {
     return (
       <AuthenticatedShell title={pageTitle} subtitle={null}>
-        {/* Section summary: this UI block is explained for clarity. */}
+        {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
         <div className="flex items-center justify-between">
-          {/* Section summary: this UI block is explained for clarity.
-             * Additional note: details are clarified for readability.
-             * Additional note: details are clarified for readability.
-             * Additional note: details are clarified for readability.
-           * Additional note: details are clarified for readability.
-             * Additional note: details are clarified for readability.
-           */}
-          {/* Section summary: this UI block is explained for clarity.
-             * Additional note: details are clarified for readability.
-               * Additional note: details are clarified for readability.
-               * Additional note: details are clarified for readability.
-               * Additional note: details are clarified for readability.
-             * Additional note: details are clarified for readability.
-               * Additional note: details are clarified for readability.
-             * Additional note: details are clarified for readability.
-           */}
+          {/* Context: This section keeps dependent steps together so assumptions, branching rules, and maintenance decisions stay easy to reason about.
+              * Additional detail: each step is annotated to make maintenance and review easier.
+              * Additional detail: each step is annotated to make maintenance and review easier.
+              * Additional detail: each step is annotated to make maintenance and review easier.
+            * Additional detail: each step is annotated to make maintenance and review easier.
+              * Additional detail: each step is annotated to make maintenance and review easier.
+            */}
+          {/* Context: This section keeps dependent steps together so assumptions, branching rules, and maintenance decisions stay easy to reason about.
+              * Additional detail: each step is annotated to make maintenance and review easier.
+                * Additional detail: each step is annotated to make maintenance and review easier.
+                * Additional detail: each step is annotated to make maintenance and review easier.
+                * Additional detail: each step is annotated to make maintenance and review easier.
+              * Additional detail: each step is annotated to make maintenance and review easier.
+                * Additional detail: each step is annotated to make maintenance and review easier.
+              * Additional detail: each step is annotated to make maintenance and review easier.
+            */}
         </div>
 
-        {/* Section summary: this UI block is explained for clarity. */}
+        {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
         <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-brand-50 p-1 text-xs">
           <button
             type="button"
@@ -305,7 +305,7 @@ export default function UserProfilePage() {
           </button>
         </div>
 
-        {/* Section summary: this UI block is explained for clarity. */}
+        {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
         {status.loading ? (
           <p className="text-sm text-slate-500">Loading...</p>
         ) : status.error ? (
@@ -338,7 +338,7 @@ export default function UserProfilePage() {
     );
   }
 
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   return (
     <AuthenticatedShell title={null} subtitle={null}>
       <div className="flex items-center justify-between">{/* spacer */}</div>

@@ -1,4 +1,4 @@
-"""Module summary: ai_user_repository defines backend functionality with clear intent."""
+"""Module summary: this module groups related logic and clarifies design intent."""
 from __future__ import annotations
 
 from typing import List, Optional
@@ -10,7 +10,7 @@ from .models import CourseAIUser
 
 
 class CourseAIUserRepository(BaseRepository[CourseAIUser]):
-    """Class summary: CourseAIUserRepository groups related behavior in one place."""
+    """Class summary: CourseAIUserRepository keeps related behavior together behind one clear interface."""
 
     model = CourseAIUser
 

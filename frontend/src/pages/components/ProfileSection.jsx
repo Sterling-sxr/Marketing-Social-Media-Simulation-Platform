@@ -1,4 +1,4 @@
-// Function summary: ProfileSection drives this unit of behavior.
+// Purpose: `ProfileSection` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable.
 export default function ProfileSection({
   icon,
   title,

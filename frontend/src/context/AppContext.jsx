@@ -59,7 +59,7 @@ export function AppProvider({ children }) {
   const [authUser, setAuthUser] = useState(null);
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
 
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerStatus, setRegisterStatus] = useState(makeStatus);
   const [verifyDigits, setVerifyDigits] = useState(["", "", "", ""]);
@@ -71,7 +71,7 @@ export function AppProvider({ children }) {
     useState(makeSimpleStatus);
   const [registerVerifiedEmail, setRegisterVerifiedEmail] = useState("");
 
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   const [resetEmail, setResetEmail] = useState("");
   const [resetStatus, setResetStatus] = useState(makeStatus);
   const [resetVerifiedEmail, setResetVerifiedEmail] = useState("");
@@ -82,12 +82,12 @@ export function AppProvider({ children }) {
   const [resetCompleteStatus, setResetCompleteStatus] =
     useState(makeSimpleStatus);
 
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   const [profileOptions, setProfileOptions] = useState(null);
   const [profileData, setProfileData] = useState(createProfileData);
   const [profileStatus, setProfileStatus] = useState(makeSimpleStatus);
 
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   const [courses, setCourses] = useState({ joined: [], available: [] });
   const [courseStatus, setCourseStatus] = useState(makeSimpleStatus);
   const [joinCode, setJoinCode] = useState("");
@@ -108,7 +108,7 @@ export function AppProvider({ children }) {
     const payload = { id, ...toast };
     setToasts((prev) => [payload, ...prev].slice(0, 5));
 
-    // Section summary: this block is documented for clarity.
+    // Context: This block prepares shared values used by the request branches below.
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 5000);
@@ -120,7 +120,7 @@ export function AppProvider({ children }) {
         (notification, { silent = false } = {}) => {
             if (!notification || notification.id == null) return;
             if (seenNotificationIdsRef.current.has(notification.id)) return;
-            // Section summary: this block is documented for clarity.
+            // Context: This block prepares shared values used by the request branches below.
             if (
               toasts.some(
                 (t) =>
@@ -152,7 +152,7 @@ export function AppProvider({ children }) {
   const isAuthenticated = useMemo(() => Boolean(authUser), [authUser]);
 
 
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -161,7 +161,7 @@ export function AppProvider({ children }) {
           setAuthUser(data.user);
         }
       } catch (error) {
-        // Section summary: this block is documented for clarity.
+        // Context: This block prepares shared values used by the request branches below.
       } finally {
         setAuthCheckComplete(true);
       }
@@ -169,7 +169,7 @@ export function AppProvider({ children }) {
     checkAuth();
   }, []);
 
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   useEffect(() => {
     const userId = authUser?.id;
     if (!userId) return;
@@ -205,7 +205,7 @@ export function AppProvider({ children }) {
           };
         });
       } catch {
-        // Section summary: this block is documented for clarity.
+        // Context: This block prepares shared values used by the request branches below.
       }
     };
 
@@ -563,7 +563,7 @@ export function AppProvider({ children }) {
     try {
       await postJson(AUTH_ENDPOINTS.logout, {});
     } catch (error) {
-      // Section summary: this block is documented for clarity.
+      // Context: This block prepares shared values used by the request branches below.
     } finally {
       setAuthUser(null);
       resetRegisterFlow();
@@ -599,7 +599,7 @@ export function AppProvider({ children }) {
     setProfileStatus((prev) => ({ ...prev, loading: true, error: "" }));
     try {
       const data = await getJson(`${PROFILE_ENDPOINT}/me/`);
-      // Section summary: this block is documented for clarity.
+      // Context: This block prepares shared values used by the request branches below.
       setProfileData({
         gender: data.gender || "",
         city: data.city || "",
@@ -727,7 +727,7 @@ export function AppProvider({ children }) {
       return { items: [], unread: 0 };
     }
 
-    // Section summary: this block is documented for clarity.
+    // Context: This block prepares shared values used by the request branches below.
     const identifier =
       (authUser.username || "").trim() ||
       (authUser.email || "").trim() ||
@@ -751,7 +751,7 @@ export function AppProvider({ children }) {
         items: data.items || [],
         unread: typeof data.unread === "number" ? data.unread : 0,
       });
-      // Section summary: this block is documented for clarity.
+      // Context: This block prepares shared values used by the request branches below.
       if (!silent) {
         (data.items || []).forEach((item) =>
           registerNotification(item, { silent })
@@ -827,7 +827,7 @@ export function AppProvider({ children }) {
     async (ids) => {
       if (!ids || ids.length === 0) return { updated: 0 };
       try {
-        // Section summary: this block is documented for clarity.
+        // Context: This block prepares shared values used by the request branches below.
         const identifier =
           (authUser?.username || "").trim() ||
           (authUser?.email || "").trim() ||
@@ -836,7 +836,7 @@ export function AppProvider({ children }) {
           `/api/messages/notifications/?user=${encodeURIComponent(identifier)}`,
           { ids }
         );
-        // Section summary: this block is documented for clarity.
+        // Context: This block prepares shared values used by the request branches below.
         setNotifications((prev) => {
           const nextItems = prev.items.map((n) =>
             ids.includes(n.id) ? { ...n, is_read: true } : n
@@ -867,7 +867,7 @@ export function AppProvider({ children }) {
         `/api/messages/notifications/?user=${encodeURIComponent(identifier)}`,
         { all: true }
       );
-      // Section summary: this block is documented for clarity.
+      // Context: This block prepares shared values used by the request branches below.
       setNotifications((prev) => {
         const nextItems = prev.items.map((n) => ({ ...n, is_read: true }));
         return { items: nextItems, unread: 0 };
@@ -884,7 +884,7 @@ export function AppProvider({ children }) {
   }, [authUser]);
 
   useEffect(() => {
-    // Section summary: this block is documented for clarity.
+    // Context: This block prepares shared values used by the request branches below.
     if (!authUser) {
       if (wsRef.current) {
         try {
@@ -895,7 +895,7 @@ export function AppProvider({ children }) {
       return undefined;
     }
 
-    // Section summary: this block is documented for clarity.
+    // Context: This block prepares shared values used by the request branches below.
     const identifier =
       (authUser.username || "").trim() ||
       (authUser.email || "").trim() ||
@@ -934,12 +934,12 @@ export function AppProvider({ children }) {
           registerNotification(data, { silent: false });
         }
       } catch (_) {
-        // Section summary: this block is documented for clarity.
+        // Context: This block prepares shared values used by the request branches below.
       }
     };
 
     socket.onerror = () => {
-      // Section summary: this block is documented for clarity.
+      // Context: This block prepares shared values used by the request branches below.
     };
 
     socket.onclose = () => {

@@ -4,7 +4,7 @@ from pathlib import Path
 import dj_database_url
 from dotenv import load_dotenv
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent  # Inline explanation: this statement is clarified for maintainability.
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent  # Inline explanation: This line clarifies an assumption, guard, or transformation.
 env_path = BASE_DIR / ".env"
 load_dotenv(env_path)
 
@@ -82,7 +82,7 @@ else:
             "CONN_MAX_AGE": 600,
         }
     else:
-        # Section summary: this block is described for easier reading.
+        # Context: This block prepares shared values used by the request branches below.
         _default_database = {
             "ENGINE": "django.db.backends.sqlite3",
             "NAME": str(BASE_DIR / "db.sqlite3"),

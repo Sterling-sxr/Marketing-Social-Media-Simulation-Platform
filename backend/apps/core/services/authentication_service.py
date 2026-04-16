@@ -1,4 +1,4 @@
-"""Module summary: authentication_service defines backend functionality with clear intent."""
+"""Module summary: this module groups related logic and clarifies design intent."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -10,7 +10,7 @@ from .verification_helpers import normalise_email
 
 
 class AuthenticationError(Exception):
-    """Class summary: AuthenticationError groups related behavior in one place."""
+    """Class summary: AuthenticationError keeps related behavior together behind one clear interface."""
 
 
 @dataclass

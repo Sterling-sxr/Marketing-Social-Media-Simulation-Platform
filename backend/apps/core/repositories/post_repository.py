@@ -1,4 +1,4 @@
-"""Module summary: post_repository defines backend functionality with clear intent."""
+"""Module summary: this module groups related logic and clarifies design intent."""
 from __future__ import annotations
 
 from typing import List, Optional, Set
@@ -17,12 +17,14 @@ from .models import (
 
 
 class PostRepository(BaseRepository[CoursePost]):
-    """Class summary: PostRepository groups related behavior in one place."""
+    """Class summary: PostRepository keeps related behavior together behind one clear interface."""
     model = CoursePost
     
     @classmethod
     def get_with_details(cls, post_id: int) -> Optional[CoursePost]:
-        """Function summary: get_with_details executes this unit of backend logic."""
+        """Handle the `get_with_details` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         try:
             return (
                 cls.model.objects
@@ -51,7 +53,9 @@ class PostRepository(BaseRepository[CoursePost]):
         following_ids: List[int] = None,
         limit: int = 50
     ) -> List[CoursePost]:
-        """Function summary: get_course_posts executes this unit of backend logic."""
+        """Handle the `get_course_posts` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         queryset = (
             cls.model.objects
             .filter(course_id=course_id)
@@ -69,7 +73,7 @@ class PostRepository(BaseRepository[CoursePost]):
             .order_by('-created_at')
         )
         
-        # Section summary: this block is described for easier reading.
+        # Context: This block prepares shared values used by the request branches below.
         if hashtag:
             normalized = hashtag.lower()
             queryset = queryset.filter(
@@ -77,7 +81,7 @@ class PostRepository(BaseRepository[CoursePost]):
                 Q(hashtags__contains=[hashtag])
             )
         
-        # Section summary: this block is described for easier reading.
+        # Context: This block prepares shared values used by the request branches below.
         if following_only and following_ids:
             queryset = queryset.filter(author_id__in=following_ids)
         
@@ -85,7 +89,9 @@ class PostRepository(BaseRepository[CoursePost]):
     
     @classmethod
     def get_user_posts(cls, user_id: int, course_ids: List[int], limit: int | None = None) -> List[CoursePost]:
-        """Function summary: get_user_posts executes this unit of backend logic."""
+        """Handle the `get_user_posts` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         queryset = (
             cls.model.objects
             .filter(author_id=user_id, course_id__in=course_ids)
@@ -108,7 +114,9 @@ class PostRepository(BaseRepository[CoursePost]):
     
     @classmethod
     def get_liked_posts(cls, user_id: int, course_ids: List[int]) -> List[CoursePost]:
-        """Function summary: get_liked_posts executes this unit of backend logic."""
+        """Handle the `get_liked_posts` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         return list(
             cls.model.objects
             .filter(course_id__in=course_ids, likes__user_id=user_id)
@@ -128,27 +136,35 @@ class PostRepository(BaseRepository[CoursePost]):
 
 
 class PostLikeRepository(BaseRepository[CoursePostLike]):
-    """Class summary: PostLikeRepository groups related behavior in one place."""
+    """Class summary: PostLikeRepository keeps related behavior together behind one clear interface."""
     model = CoursePostLike
     
     @classmethod
     def get_or_create_like(cls, post_id: int, user_id: int) -> tuple[CoursePostLike, bool]:
-        """Function summary: get_or_create_like executes this unit of backend logic."""
+        """Handle the `get_or_create_like` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         return cls.model.objects.get_or_create(post_id=post_id, user_id=user_id)
     
     @classmethod
     def unlike(cls, post_id: int, user_id: int) -> int:
-        """Function summary: unlike executes this unit of backend logic."""
+        """Handle the `unlike` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         return cls.delete_by_filter(post_id=post_id, user_id=user_id)
     
     @classmethod
     def get_like_count(cls, post_id: int) -> int:
-        """Function summary: get_like_count executes this unit of backend logic."""
+        """Handle the `get_like_count` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         return cls.count(post_id=post_id)
     
     @classmethod
     def get_like_counts(cls, post_ids: List[int]) -> dict[int, int]:
-        """Function summary: get_like_counts executes this unit of backend logic."""
+        """Handle the `get_like_counts` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         counts = (
             cls.model.objects
             .filter(post_id__in=post_ids)
@@ -159,7 +175,9 @@ class PostLikeRepository(BaseRepository[CoursePostLike]):
     
     @classmethod
     def get_user_liked_posts(cls, user_id: int, post_ids: List[int]) -> Set[int]:
-        """Function summary: get_user_liked_posts executes this unit of backend logic."""
+        """Handle the `get_user_liked_posts` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         return set(
             cls.model.objects
             .filter(post_id__in=post_ids, user_id=user_id)
@@ -168,12 +186,14 @@ class PostLikeRepository(BaseRepository[CoursePostLike]):
 
 
 class PostCommentRepository(BaseRepository[CoursePostComment]):
-    """Class summary: PostCommentRepository groups related behavior in one place."""
+    """Class summary: PostCommentRepository keeps related behavior together behind one clear interface."""
     model = CoursePostComment
     
     @classmethod
     def get_post_comments(cls, post_id: int) -> List[CoursePostComment]:
-        """Function summary: get_post_comments executes this unit of backend logic."""
+        """Handle the `get_post_comments` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         return list(
             cls.model.objects
             .filter(post_id=post_id)
@@ -183,12 +203,16 @@ class PostCommentRepository(BaseRepository[CoursePostComment]):
     
     @classmethod
     def get_comment_count(cls, post_id: int) -> int:
-        """Function summary: get_comment_count executes this unit of backend logic."""
+        """Handle the `get_comment_count` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         return cls.count(post_id=post_id)
     
     @classmethod
     def get_comment_counts(cls, post_ids: List[int]) -> dict[int, int]:
-        """Function summary: get_comment_counts executes this unit of backend logic."""
+        """Handle the `get_comment_counts` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         counts = (
             cls.model.objects
             .filter(post_id__in=post_ids)
@@ -199,12 +223,14 @@ class PostCommentRepository(BaseRepository[CoursePostComment]):
 
 
 class PostAttachmentRepository(BaseRepository[CoursePostAttachment]):
-    """Class summary: PostAttachmentRepository groups related behavior in one place."""
+    """Class summary: PostAttachmentRepository keeps related behavior together behind one clear interface."""
     model = CoursePostAttachment
     
     @classmethod
     def attach_to_post(cls, post_id: int, asset_ids: List[int]) -> int:
-        """Function summary: attach_to_post executes this unit of backend logic."""
+        """Handle the `attach_to_post` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         attachments = [
             cls.model(post_id=post_id, asset_id=asset_id)
             for asset_id in asset_ids
@@ -214,12 +240,14 @@ class PostAttachmentRepository(BaseRepository[CoursePostAttachment]):
 
 
 class PostMentionRepository(BaseRepository[CoursePostMention]):
-    """Class summary: PostMentionRepository groups related behavior in one place."""
+    """Class summary: PostMentionRepository keeps related behavior together behind one clear interface."""
     model = CoursePostMention
     
     @classmethod
     def create_mentions(cls, post_id: int, mention_entities: List[dict]) -> int:
-        """Function summary: create_mentions executes this unit of backend logic."""
+        """Handle the `create_mentions` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         mentions = [
             cls.model(
                 post_id=post_id,
@@ -233,17 +261,21 @@ class PostMentionRepository(BaseRepository[CoursePostMention]):
 
 
 class PostViewRepository(BaseRepository[CoursePostView]):
-    """Class summary: PostViewRepository groups related behavior in one place."""
+    """Class summary: PostViewRepository keeps related behavior together behind one clear interface."""
     model = CoursePostView
 
     @classmethod
     def create_view(cls, post_id: int, user_id: int | None) -> CoursePostView:
-        """Function summary: create_view executes this unit of backend logic."""
+        """Handle the `create_view` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         return cls.create(post_id=post_id, user_id=user_id)
 
     @classmethod
     def count_views(cls, post_id: int) -> int:
-        """Function summary: count_views executes this unit of backend logic."""
+        """Handle the `count_views` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         return cls.count(post_id=post_id)
 
 

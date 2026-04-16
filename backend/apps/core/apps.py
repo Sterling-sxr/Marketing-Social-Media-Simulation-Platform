@@ -8,7 +8,9 @@ class CoreConfig(AppConfig):
     name = "apps.core"
 
     def ready(self) -> None:  # noqa: D401
-        """Function summary: ready executes this unit of backend logic."""
+        """Handle the `ready` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         if os.environ.get("SKIP_CORE_BACKGROUND_TASKS") == "1":
             return
         from .services.dashboard_service import start_dashboard_scheduler

@@ -30,7 +30,7 @@ export default function ResetVerifyPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-brand-100 text-slate-900 flex flex-col">
-      {/* Section summary: this UI block is explained for clarity. */}
+      {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-3 py-3 sm:px-6 sm:py-5">
         <div className="flex items-center gap-3">
           <img
@@ -53,9 +53,9 @@ export default function ResetVerifyPage() {
         </nav>
       </header>
 
-      {/* Section summary: this UI block is explained for clarity. */}
+      {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-5 px-3 py-4 sm:gap-10 sm:px-6 sm:py-10 lg:flex-row lg:items-center">
-        {/* Section summary: this UI block is explained for clarity. */}
+        {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
         <section className="order-1 lg:order-none relative flex-1 pt-1 lg:pt-6">
           <div className="relative z-10 space-y-4 max-w-[560px] lg:-mt-10">
             <h1 className="text-center text-2xl font-bold sm:text-left sm:text-4xl lg:text-4xl">
@@ -70,7 +70,7 @@ export default function ResetVerifyPage() {
             </p>
           </div>
 
-          {/* Section summary: this UI block is explained for clarity. */}
+          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
           <div className="absolute inset-0 hidden md:block pointer-events-none z-0">
             <CircleImage
               src="/logo.jpg"
@@ -93,7 +93,7 @@ export default function ResetVerifyPage() {
           </div>
         </section>
 
-        {/* Section summary: this UI block is explained for clarity. */}
+        {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
         <aside className="order-2 lg:order-none flex-1">
           <div className="relative w-full max-w-md lg:ml-auto rounded-2xl border border-brand-100 bg-white p-5 shadow-lg shadow-brand-100 text-center sm:rounded-3xl sm:p-8 sm:shadow-xl">
             <div className="absolute right-0 top-0 h-16 w-16 rounded-bl-3xl bg-gradient-to-b from-brand/10 to-brand/0" />
@@ -140,7 +140,7 @@ export default function ResetVerifyPage() {
         </aside>
       </main>
 
-      {/* Section summary: this UI block is explained for clarity. */}
+      {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
       <footer className="py-6 text-center text-xs text-slate-400">
         © {new Date().getFullYear()} Bread Capstone Team. All rights reserved.
       </footer>

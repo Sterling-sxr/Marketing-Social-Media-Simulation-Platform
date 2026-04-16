@@ -7,7 +7,7 @@ from .models import CourseProfile
 
 
 class CourseProfileRepository(BaseRepository[CourseProfile]):
-    """Class summary: CourseProfileRepository groups related behavior in one place."""
+    """Class summary: CourseProfileRepository keeps related behavior together behind one clear interface."""
 
     model = CourseProfile
 

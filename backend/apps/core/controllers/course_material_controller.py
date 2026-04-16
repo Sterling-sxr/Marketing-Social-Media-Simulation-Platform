@@ -11,7 +11,8 @@ from ..services.course_material_service import (
 )
 
 
-# Function summary: _ensure_authenticated implements this backend behavior.
+# Purpose: Handle the `_ensure_authenticated` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def _ensure_authenticated(request: HttpRequest) -> JsonResponse | None:
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Unauthorized"}, status=401)
@@ -19,9 +20,12 @@ def _ensure_authenticated(request: HttpRequest) -> JsonResponse | None:
 
 
 @csrf_exempt
-# Function summary: course_materials_view implements this backend behavior.
+# Purpose: Handle the `course_materials_view` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def course_materials_view(request: HttpRequest, course_id: int) -> JsonResponse:
-    """Function summary: course_materials_view executes this unit of backend logic."""
+    """Handle the `course_materials_view` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     auth_error = _ensure_authenticated(request)
     if auth_error:
         return auth_error
@@ -66,11 +70,14 @@ def course_materials_view(request: HttpRequest, course_id: int) -> JsonResponse:
 
 
 @csrf_exempt
-# Function summary: course_material_detail_view implements this backend behavior.
+# Purpose: Handle the `course_material_detail_view` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def course_material_detail_view(
     request: HttpRequest, course_id: int, material_id: int
 ) -> JsonResponse:
-    """Function summary: course_material_detail_view executes this unit of backend logic."""
+    """Handle the `course_material_detail_view` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     auth_error = _ensure_authenticated(request)
     if auth_error:
         return auth_error

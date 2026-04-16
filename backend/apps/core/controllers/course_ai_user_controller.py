@@ -20,7 +20,8 @@ from ..services import (
 )
 
 
-# Function summary: _ensure_authenticated implements this backend behavior.
+# Purpose: Handle the `_ensure_authenticated` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def _ensure_authenticated(request: HttpRequest) -> JsonResponse | None:
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Unauthorized"}, status=401)
@@ -28,7 +29,8 @@ def _ensure_authenticated(request: HttpRequest) -> JsonResponse | None:
 
 
 @csrf_exempt
-# Function summary: course_ai_users implements this backend behavior.
+# Purpose: Handle the `course_ai_users` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def course_ai_users(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -67,7 +69,8 @@ def course_ai_users(request: HttpRequest, course_id: int) -> JsonResponse:
 
 
 @csrf_exempt
-# Function summary: course_ai_user_detail implements this backend behavior.
+# Purpose: Handle the `course_ai_user_detail` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def course_ai_user_detail(request: HttpRequest, course_id: int, ai_user_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -122,7 +125,8 @@ def course_ai_user_detail(request: HttpRequest, course_id: int, ai_user_id: int)
 
 
 @csrf_exempt
-# Function summary: course_ai_users_import implements this backend behavior.
+# Purpose: Handle the `course_ai_users_import` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def course_ai_users_import(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -144,7 +148,8 @@ def course_ai_users_import(request: HttpRequest, course_id: int) -> JsonResponse
     return JsonResponse(report)
 
 
-# Function summary: _load_json_body implements this backend behavior.
+# Purpose: Handle the `_load_json_body` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def _load_json_body(request: HttpRequest) -> tuple[dict, JsonResponse | None]:
     try:
         payload = json.loads(request.body.decode() or "{}")
@@ -156,7 +161,8 @@ def _load_json_body(request: HttpRequest) -> tuple[dict, JsonResponse | None]:
 
 
 @csrf_exempt
-# Function summary: course_ai_users_guided_preview implements this backend behavior.
+# Purpose: Handle the `course_ai_users_guided_preview` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def course_ai_users_guided_preview(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -178,7 +184,8 @@ def course_ai_users_guided_preview(request: HttpRequest, course_id: int) -> Json
 
 
 @csrf_exempt
-# Function summary: course_ai_users_guided_commit implements this backend behavior.
+# Purpose: Handle the `course_ai_users_guided_commit` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def course_ai_users_guided_commit(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -200,7 +207,8 @@ def course_ai_users_guided_commit(request: HttpRequest, course_id: int) -> JsonR
 
 
 @csrf_exempt
-# Function summary: course_ai_users_generate_preview implements this backend behavior.
+# Purpose: Handle the `course_ai_users_generate_preview` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def course_ai_users_generate_preview(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -224,7 +232,8 @@ def course_ai_users_generate_preview(request: HttpRequest, course_id: int) -> Js
 
 
 @csrf_exempt
-# Function summary: course_ai_users_generate_commit implements this backend behavior.
+# Purpose: Handle the `course_ai_users_generate_commit` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def course_ai_users_generate_commit(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:

@@ -1,4 +1,4 @@
-"""Module summary: asgi defines backend functionality with clear intent."""
+"""Module summary: this module groups related logic and clarifies design intent."""
 import os
 
 from channels.auth import AuthMiddlewareStack

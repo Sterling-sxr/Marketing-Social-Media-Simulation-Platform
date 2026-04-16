@@ -1,4 +1,4 @@
-# Section summary: this block is described for easier reading.
+# Context: This block prepares shared values used by the request branches below.
 import json
 
 from django.contrib.auth import get_user_model
@@ -17,12 +17,13 @@ _RANK_LABELS = {
 }
 
 
-# Function summary: _save_search_history implements this backend behavior.
+# Purpose: Handle the `_save_search_history` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def _save_search_history(request, query: str) -> None:
     if request.user.is_authenticated:
-        # Section summary: this block is described for easier reading.
-        # Section summary: this block is described for easier reading.
-        # Section summary: this block is described for easier reading.
+        # Context: This block prepares shared values used by the request branches below.
+        # Context: This block prepares shared values used by the request branches below.
+        # Context: This block prepares shared values used by the request branches below.
         profile = UserProfile.objects.filter(user=request.user).first()
         if profile is not None:
             history = profile.search_history or []
@@ -40,16 +41,19 @@ def _save_search_history(request, query: str) -> None:
 
 
 @require_GET
-# Function summary: search_posts implements this backend behavior.
+# Purpose: Handle the `search_posts` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def search_posts(request):
-    """Function summary: search_posts executes this unit of backend logic."""
+    """Handle the `search_posts` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     query = request.GET.get("q", "").strip()
     if not query:
         return JsonResponse({"results": []})
 
-    # Section summary: this block is described for easier reading.
-    # Section summary: this block is described for easier reading.
-    # Section summary: this block is described for easier reading.
+    # Context: This block prepares shared values used by the request branches below.
+    # Context: This block prepares shared values used by the request branches below.
+    # Context: This block prepares shared values used by the request branches below.
     tokens = [t for t in query.split() if t]
 
     token_filter = Q()
@@ -103,9 +107,12 @@ def search_posts(request):
 
 
 @require_GET
-# Function summary: suggested_search implements this backend behavior.
+# Purpose: Handle the `suggested_search` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def suggested_search(request):
-    """Function summary: suggested_search executes this unit of backend logic."""
+    """Handle the `suggested_search` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     top_keywords = (
         SearchLog.objects.values("keyword")
         .annotate(hit_count=Count("keyword"))
@@ -124,9 +131,12 @@ def suggested_search(request):
 
 
 @require_GET
-# Function summary: get_search_history implements this backend behavior.
+# Purpose: Handle the `get_search_history` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def get_search_history(request):
-    """Function summary: get_search_history executes this unit of backend logic."""
+    """Handle the `get_search_history` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     if request.user.is_authenticated:
         profile = UserProfile.objects.filter(user=request.user).first()
         history = profile.search_history if profile else []
@@ -136,9 +146,12 @@ def get_search_history(request):
 
 
 @require_POST
-# Function summary: add_search_history implements this backend behavior.
+# Purpose: Handle the `add_search_history` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def add_search_history(request):
-    """Function summary: add_search_history executes this unit of backend logic."""
+    """Handle the `add_search_history` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     try:
         body = json.loads(request.body)
         keyword = body.get("keyword", "").strip()

@@ -1,11 +1,11 @@
-// Section summary: this block is documented for clarity.
-// Section summary: this block is documented for clarity.
-// Section summary: this block is documented for clarity.
-// Section summary: this block is documented for clarity.
+// Context: This block prepares shared values used by the request branches below.
+// Context: This block prepares shared values used by the request branches below.
+// Context: This block prepares shared values used by the request branches below.
+// Context: This block prepares shared values used by the request branches below.
 
-// Section summary: this block is documented for clarity.
+// Context: This block prepares shared values used by the request branches below.
 const BASE_LIST = [
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   "fuck",
   "f*ck",
   "f**k",
@@ -73,7 +73,7 @@ const BASE_LIST = [
   "fk u",
   "fk off",
   "f off",
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   "傻逼",
   "煞笔",
   "傻b",
@@ -91,12 +91,12 @@ const BASE_LIST = [
   "SB",
 ];
 
-// Function summary: normalizeForMatch drives this unit of behavior.
+// Purpose: `normalizeForMatch` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable.
 function normalizeForMatch(s) {
   return (
     s
       .toLowerCase()
-      // Section summary: this block is documented for clarity.
+      // Context: This block prepares shared values used by the request branches below.
       .replace(/[¡!]|1|l|\|/g, "i")
       .replace(/[@4]/g, "a")
       .replace(/3/g, "e")
@@ -104,16 +104,16 @@ function normalizeForMatch(s) {
       .replace(/[$5]/g, "s")
       .replace(/7/g, "t")
       .replace(/8/g, "b")
-      // Section summary: this block is documented for clarity.
+      // Context: This block prepares shared values used by the request branches below.
       .replace(/\s+/g, " ")
-      // Section summary: this block is documented for clarity.
+      // Context: This block prepares shared values used by the request branches below.
       .replace(/(.)\1{2,}/g, "$1$1")
   );
 }
 
-// Function summary: makeLooseWordRegex drives this unit of behavior.
+// Purpose: `makeLooseWordRegex` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable.
 function makeLooseWordRegex(word) {
-  // Section summary: this block is documented for clarity.
+  // Context: This block prepares shared values used by the request branches below.
   if (!/^[a-z]+$/i.test(word)) return null;
   const letters = word
     .split("")
@@ -122,17 +122,17 @@ function makeLooseWordRegex(word) {
   return new RegExp(`\\b${body}\\b`, "i");
 }
 
-// Function summary: hasChineseBadWord drives this unit of behavior.
+// Purpose: `hasChineseBadWord` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable.
 function hasChineseBadWord(text, term) {
   return text.includes(term);
 }
 
-/* Section summary: this block is documented for clarity.
-  * Additional note: details are clarified for readability.
-  * Additional note: details are clarified for readability.
-  * Additional note: details are clarified for readability.
-  * Additional note: details are clarified for readability.
-  */
+/* Context: This section keeps dependent steps together so assumptions, branching rules, and maintenance decisions stay easy to reason about.
+   * Additional detail: this explanation keeps assumptions and intent explicit.
+   * Additional detail: this explanation keeps assumptions and intent explicit.
+   * Additional detail: this explanation keeps assumptions and intent explicit.
+   * Additional detail: this explanation keeps assumptions and intent explicit.
+   */
 export function hasProfanity(input, extraList = []) {
   if (!input || !input.trim()) return { ok: true, hits: [] };
 
@@ -144,13 +144,13 @@ export function hasProfanity(input, extraList = []) {
     const term = normalizeForMatch(termRaw);
     if (!term) continue;
 
-    // Section summary: this block is documented for clarity.
+    // Context: This block prepares shared values used by the request branches below.
     if (/[^\x00-\x7F]/.test(term)) {
       if (hasChineseBadWord(src, term)) hits.push(termRaw);
       continue;
     }
 
-    // Section summary: this block is documented for clarity.
+    // Context: This block prepares shared values used by the request branches below.
     const m = makeLooseWordRegex(term);
     if (m && m.test(src)) hits.push(termRaw);
   }

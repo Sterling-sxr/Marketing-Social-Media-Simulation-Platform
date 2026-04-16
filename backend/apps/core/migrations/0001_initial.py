@@ -1,4 +1,4 @@
-# Section summary: this block is described for easier reading.
+# Context: This block prepares shared values used by the request branches below.
 
 from django.conf import settings
 from django.db import migrations, models
