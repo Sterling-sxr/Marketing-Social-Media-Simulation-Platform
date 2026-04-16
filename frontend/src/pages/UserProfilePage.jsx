@@ -8,57 +8,103 @@ import { useApp } from "../context/AppContext";
 import { Edit3 } from "lucide-react";
 
 export default function UserProfilePage() {
+  // Get user id from route params
   const { userId } = useParams();
+
+  // Read and update URL query params
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // Router navigation
   const navigate = useNavigate();
+
+  // Global app context
   const { authUser, loadMyProfile, setAuthUser } = useApp();
 
-  // URL tabs
+  // Check current URL tab
   const showPostsOnly = searchParams.get("tab") === "posts";
   const showLikesOnly = searchParams.get("tab") === "likes";
 
+  // Profile data
   const [profile, setProfile] = useState(null);
+
+  // Posts list
   const [posts, setPosts] = useState([]);
+
+  // Current post tab
+  // This is set once from URL
   const [postTab] = useState(showLikesOnly ? "likes" : "posts");
+
+  // General page loading and error state
   const [status, setStatus] = useState({ loading: true, error: "" });
+
+  // Avatar upload state
   const [avatarUploading, setAvatarUploading] = useState(false);
+
+  // Follow button loading state
   const [followBusy, setFollowBusy] = useState(false);
+
+  // Current post id being liked
   const [likeBusyId, setLikeBusyId] = useState(null);
+
+  // Courses available for student analytics
   const [studentCourses, setStudentCourses] = useState([]);
+
+  // Loading and error state for course list
   const [studentCourseStatus, setStudentCourseStatus] = useState({
     loading: false,
     error: "",
   });
+
+  // Course selection modal state
   const [showCourseModal, setShowCourseModal] = useState(false);
+
+  // Draft value for display name
   const [nameDraft, setNameDraft] = useState("");
+
+  // Save status for display name
   const [nameStatus, setNameStatus] = useState({
     loading: false,
     error: "",
     message: "",
   });
+
+  // Whether name edit modal is open
   const [nameEditing, setNameEditing] = useState(false);
+
+  // Current display name
   const currentDisplayName = profile?.display_name || "";
+
+  // Trimmed display name draft
   const trimmedNameDraft = (nameDraft || "").trim();
+
+  // Disable save when loading
+  // Or empty
+  // Or unchanged
   const disableNameSave =
     nameStatus.loading || !trimmedNameDraft || trimmedNameDraft === currentDisplayName;
 
+  // Check whether current page is the logged-in user's own page
   const isSelf = authUser && String(authUser.id) === String(userId);
+
+  // Check whether current user can view student analytics
   const canViewStudentAnalytics = useMemo(() => {
     if (!authUser) return false;
     if (isSelf) return true;
     return Boolean(authUser.is_superuser || authUser.is_staff);
   }, [authUser, isSelf]);
 
-  // page title for posts/likes pages
+  // Page title for posts-only or likes-only mode
   const pageTitle = useMemo(() => {
     if (showLikesOnly) return "Likes";
     if (showPostsOnly) return "Posts";
     return null;
   }, [showPostsOnly, showLikesOnly]);
 
-  // initial fetch: profile + posts/likes depending on URL
+  // Initial fetch
+  // Load profile and either posts or liked posts
   useEffect(() => {
     let isMounted = true;
+
     setStatus({ loading: true, error: "" });
 
     const postsUrl = showLikesOnly
@@ -68,23 +114,27 @@ export default function UserProfilePage() {
     Promise.all([getJson(`/api/users/${userId}/profile/`), getJson(postsUrl)])
       .then(([profileData, postsData]) => {
         if (!isMounted) return;
+
         setProfile(profileData);
         setPosts(postsData?.items || []);
         setStatus({ loading: false, error: "" });
       })
       .catch((error) => {
         if (!isMounted) return;
+
         setStatus({
           loading: false,
           error: error.message || "Failed to load user.",
         });
       });
 
+    // Prevent state update after unmount
     return () => {
       isMounted = false;
     };
   }, [userId, showLikesOnly]);
 
+  // Sync name edit state with loaded profile
   useEffect(() => {
     if (profile) {
       setNameDraft(profile.display_name || "");
@@ -93,42 +143,58 @@ export default function UserProfilePage() {
     }
   }, [profile]);
 
-  // refetch when switching internal tab on full profile page
+  // Refetch posts when switching internal tab
+  // Skip when page is already in posts-only or likes-only mode
   useEffect(() => {
     if (showPostsOnly || showLikesOnly) return;
+
     const endpoint =
       postTab === "likes"
         ? `/api/users/${userId}/posts/?tab=likes`
         : `/api/users/${userId}/posts/`;
+
     getJson(endpoint)
       .then((postsData) => setPosts(postsData?.items || []))
       .catch(() => {});
   }, [postTab, userId, showPostsOnly, showLikesOnly]);
 
+  // Load courses for student analytics
   useEffect(() => {
     if (!canViewStudentAnalytics) return;
+
     let cancelled = false;
+
     setStudentCourseStatus((prev) => ({ ...prev, loading: true, error: "" }));
+
     getJson(`/api/users/${userId}/courses/`)
       .then((data) => {
         if (cancelled) return;
+
         setStudentCourses(data.items || []);
         setStudentCourseStatus({ loading: false, error: "" });
       })
       .catch((error) => {
         if (cancelled) return;
+
         setStudentCourseStatus({
           loading: false,
           error: error.message || "Failed to load courses.",
         });
       });
+
+    // Prevent state update after unmount
     return () => {
       cancelled = true;
     };
   }, [canViewStudentAnalytics, userId]);
 
+  // Render post content
+  // Convert mentions and hashtags into clickable buttons
   const renderPostContent = (post) => {
     const text = post.content || "";
+
+    // Prefer detailed mention data
+    // Fall back to simple mention list
     const postMentions = post.mentions_detail?.length
       ? post.mentions_detail
       : (post.mentions || []).map((v) => ({
@@ -137,9 +203,13 @@ export default function UserProfilePage() {
           username: v,
         }));
 
+    // Build lookup map
+    // Key: mention text in lowercase
+    // Value: user id
     const lookup = {};
     for (const m of postMentions) {
       if (!m) continue;
+
       if (m.id) {
         if (m.username) lookup[(m.username || "").toLowerCase()] = m.id;
         if (m.display) lookup[(m.display || "").toLowerCase()] = m.id;
@@ -148,15 +218,24 @@ export default function UserProfilePage() {
     }
 
     const parts = [];
+
+    // Match @mention or #hashtag
     const re = /(@[^\s@#]+|#[^\s@#]+)/g;
+
     let match,
       last = 0;
+
     while ((match = re.exec(text)) !== null) {
+      // Push plain text before token
       if (match.index > last) parts.push(text.slice(last, match.index));
+
       const token = match[0];
+
       if (token.startsWith("@")) {
+        // Mention token
         const key = token.slice(1).toLowerCase();
         const id = lookup[key];
+
         parts.push(
           id ? (
             <button
@@ -172,7 +251,9 @@ export default function UserProfilePage() {
           )
         );
       } else {
+        // Hashtag token
         const tag = token.slice(1);
+
         parts.push(
           <button
             key={`h-${post.id}-${match.index}`}
@@ -188,20 +269,31 @@ export default function UserProfilePage() {
           </button>
         );
       }
+
       last = re.lastIndex;
     }
+
+    // Push remaining plain text
     if (last < text.length) parts.push(text.slice(last));
+
     return parts;
   };
 
+  // Like or unlike a post
   const handleToggleLike = async (post) => {
+    // Prevent duplicate request
     if (likeBusyId === post.id) return;
+
     setLikeBusyId(post.id);
+
     try {
       const endpoint = `/api/courses/${post.course_id}/posts/${post.id}/like/`;
+
       const data = post.liked_by_me
         ? await deleteJson(endpoint)
         : await postJson(endpoint);
+
+      // Replace updated post in list
       setPosts((prev) => prev.map((p) => (p.id === post.id ? data.item : p)));
     } catch {
     } finally {
@@ -209,10 +301,17 @@ export default function UserProfilePage() {
     }
   };
 
+  // Save edited display name
   const handleSaveDisplayName = async () => {
+    // Only self can edit name
     if (!isSelf) return;
+
+    // Only save when edit mode is open
     if (!nameEditing) return;
+
     const trimmed = (nameDraft || "").trim();
+
+    // Reject empty name
     if (!trimmed) {
       setNameStatus({
         loading: false,
@@ -221,6 +320,8 @@ export default function UserProfilePage() {
       });
       return;
     }
+
+    // Reject unchanged name
     if (profile && trimmed === (profile.display_name || "")) {
       setNameStatus({
         loading: false,
@@ -229,14 +330,20 @@ export default function UserProfilePage() {
       });
       return;
     }
+
     setNameStatus({ loading: true, error: "", message: "" });
+
     try {
       const data = await postJson("/api/profile/display-name/", {
         display_name: trimmed,
       });
+
+      // Update local profile state
       setProfile((prev) =>
         prev ? { ...prev, display_name: data.display_name } : prev
       );
+
+      // Sync global auth user state
       if (data?.display_name && setAuthUser) {
         setAuthUser((prev) =>
           prev
@@ -248,6 +355,7 @@ export default function UserProfilePage() {
             : prev
         );
       }
+
       setNameStatus({ loading: false, error: "", message: "Saved" });
       setNameEditing(false);
     } catch (error) {
@@ -265,25 +373,10 @@ export default function UserProfilePage() {
       <AuthenticatedShell title={pageTitle} subtitle={null}>
         {/* Top actions */}
         <div className="flex items-center justify-between">
-          {/* <button
-            type="button"
-            className="rounded-full border border-brand-200 px-3 py-1 text-xs font-semibold text-brand transition hover:border-brand"
-            onClick={() => navigate("/courses")}
-          >
-            ← Back to Courses
-          </button> */}
-          {/* {isSelf && (
-            <button
-              type="button"
-              className="rounded-full border border-brand-200 px-3 py-1 text-xs font-semibold text-brand transition hover:border-brand"
-              onClick={() => navigate("/profile/edit")}
-            >
-              Edit Profile
-            </button>
-          )} */}
+          {/* Reserved for future buttons */}
         </div>
 
-        {/* Tabs: Posts / Likes */}
+        {/* Posts / Likes tab switcher */}
         <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-brand-50 p-1 text-xs">
           <button
             type="button"
@@ -305,7 +398,7 @@ export default function UserProfilePage() {
           </button>
         </div>
 
-        {/* List */}
+        {/* Posts list */}
         {status.loading ? (
           <p className="text-sm text-slate-500">Loading...</p>
         ) : status.error ? (
@@ -341,10 +434,12 @@ export default function UserProfilePage() {
   // ---------- full profile ----------
   return (
     <AuthenticatedShell title={null} subtitle={null}>
+      {/* Spacer row */}
       <div className="flex items-center justify-between">{/* spacer */}</div>
 
       {profile && (
         <div className="mt-4 flex items-center gap-4">
+          {/* Avatar block */}
           <div className="relative">
             <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-brand-100 text-lg font-bold text-brand">
               {profile.profile?.avatar_url ? (
@@ -358,9 +453,11 @@ export default function UserProfilePage() {
               )}
             </div>
 
+            {/* Avatar upload button for self */}
             {isSelf && (
               <label className="absolute -bottom-1 -right-1 inline-flex cursor-pointer items-center rounded-full bg-white px-2 py-1 text-[10px] font-semibold text-brand shadow">
                 {avatarUploading ? "Uploading..." : "Change"}
+
                 <input
                   type="file"
                   accept="image/*"
@@ -368,20 +465,28 @@ export default function UserProfilePage() {
                   onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
+
                     setAvatarUploading(true);
+
                     try {
+                      // Upload image file
                       const form = new FormData();
                       form.append("file", file);
+
                       const res = await fetch("/api/messages/files/", {
                         method: "POST",
                         body: form,
                         credentials: "include",
                       });
+
                       const data = await res.json();
+
                       if (!res.ok)
                         throw new Error(data?.error || "Upload failed");
+
                       const publicUrl = data.public_url || data.storage_url;
 
+                      // Save avatar URL to profile
                       await fetch("/api/profile/avatar/", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -389,14 +494,19 @@ export default function UserProfilePage() {
                         body: JSON.stringify({ avatar_url: publicUrl }),
                       });
 
+                      // Refresh profile data
                       const refreshed = await getJson(
                         `/api/users/${userId}/profile/`
                       );
                       setProfile(refreshed);
+
+                      // Sync global auth user state
                       if (isSelf && refreshed?.profile?.avatar_url) {
                         await loadMyProfile().catch(() => {});
+
                         setAuthUser((prev) => {
                           if (!prev) return prev;
+
                           return {
                             ...prev,
                             avatar_url: refreshed.profile.avatar_url,
@@ -417,12 +527,14 @@ export default function UserProfilePage() {
             )}
           </div>
 
+          {/* Basic profile info */}
           <div>
             <p className="text-lg font-semibold text-slate-900">
               {profile.display_name}
             </p>
             <p className="text-xs text-slate-500">@{profile.username}</p>
 
+            {/* Follow / follower counts */}
             <div className="mt-2 inline-flex items-center gap-4 text-xs text-slate-600">
               <button
                 type="button"
@@ -444,6 +556,7 @@ export default function UserProfilePage() {
               </button>
             </div>
 
+            {/* Student analytics button */}
             {canViewStudentAnalytics ? (
               <div className="mt-3 flex flex-col gap-2 text-xs">
                 <button
@@ -458,12 +571,14 @@ export default function UserProfilePage() {
                     ? "No courses to analyse"
                     : "View course analytics"}
                 </button>
+
                 {studentCourseStatus.error ? (
                   <span className="text-red-500">{studentCourseStatus.error}</span>
                 ) : null}
               </div>
             ) : null}
 
+            {/* Follow / unfollow button */}
             {!isSelf && (
               <div className="mt-2">
                 <button
@@ -476,9 +591,12 @@ export default function UserProfilePage() {
                   disabled={followBusy}
                   onClick={async () => {
                     setFollowBusy(true);
+
                     try {
                       if (profile.is_following) {
+                        // Unfollow user
                         await deleteJson(`/api/users/${userId}/follow/`);
+
                         setProfile((p) => ({
                           ...p,
                           is_following: false,
@@ -488,7 +606,9 @@ export default function UserProfilePage() {
                           ),
                         }));
                       } else {
+                        // Follow user
                         await postJson(`/api/users/${userId}/follow/`, {});
+
                         setProfile((p) => ({
                           ...p,
                           is_following: true,
@@ -515,6 +635,7 @@ export default function UserProfilePage() {
         </div>
       )}
 
+      {/* Main profile status */}
       {status.loading ? (
         <p className="text-sm text-slate-500">Loading...</p>
       ) : status.error ? (
@@ -523,14 +644,19 @@ export default function UserProfilePage() {
         </p>
       ) : profile ? (
         <div className="space-y-5">
+          {/* Account details card */}
           <section className="rounded-3xl border border-brand-100 bg-white p-5 shadow-sm">
             <h3 className="text-sm font-semibold text-slate-800">
               Account details
             </h3>
+
             <div className="mt-3 space-y-3">
+              {/* Name row */}
               <div className="rounded-2xl border border-brand-50 bg-brand-50/30 px-3 py-2">
                 <div className="mb-1 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-slate-400">
                   <span>Name</span>
+
+                  {/* Edit name button for self */}
                   {isSelf && (
                     <button
                       type="button"
@@ -545,11 +671,13 @@ export default function UserProfilePage() {
                     </button>
                   )}
                 </div>
+
                 <p className="text-sm text-slate-800">
                   {profile.display_name || "—"}
                 </p>
               </div>
 
+              {/* Email and institution */}
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl border border-brand-50 bg-brand-50/30 px-3 py-2">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
@@ -557,6 +685,7 @@ export default function UserProfilePage() {
                   </p>
                   <p className="text-sm text-slate-800">{profile.email || "—"}</p>
                 </div>
+
                 <div className="rounded-2xl border border-brand-50 bg-brand-50/30 px-3 py-2">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
                     Institution
@@ -571,6 +700,7 @@ export default function UserProfilePage() {
         </div>
       ) : null}
 
+      {/* Edit display name modal */}
       {nameEditing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
           <div className="w-full max-w-md rounded-3xl border border-brand-100 bg-white p-5 shadow-2xl">
@@ -580,7 +710,9 @@ export default function UserProfilePage() {
             <p className="text-xs text-slate-500">
               This name appears on your posts and profile.
             </p>
+
             <div className="mt-4 space-y-3">
+              {/* Name input */}
               <input
                 type="text"
                 value={nameDraft}
@@ -589,11 +721,15 @@ export default function UserProfilePage() {
                 placeholder="Enter your name"
                 autoFocus
               />
+
+              {/* Error or success message */}
               {nameStatus.error ? (
                 <p className="text-xs text-red-600">{nameStatus.error}</p>
               ) : nameStatus.message ? (
                 <p className="text-xs text-emerald-600">{nameStatus.message}</p>
               ) : null}
+
+              {/* Modal action buttons */}
               <div className="flex flex-wrap items-center gap-3 text-xs">
                 <button
                   type="button"
@@ -603,6 +739,7 @@ export default function UserProfilePage() {
                 >
                   {nameStatus.loading ? "Saving..." : "Save"}
                 </button>
+
                 <button
                   type="button"
                   className="rounded-full border border-slate-200 px-4 py-1.5 font-semibold text-slate-500 transition hover:border-slate-300"
@@ -621,9 +758,11 @@ export default function UserProfilePage() {
         </div>
       )}
 
+      {/* Course selection modal */}
       {showCourseModal ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="max-h-[80vh] w-full max-w-xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+            {/* Modal header */}
             <div className="flex items-center justify-between border-b border-brand-100 px-5 py-4">
               <div>
                 <h3 className="text-lg font-semibold text-slate-800">
@@ -633,6 +772,7 @@ export default function UserProfilePage() {
                   Choose a course to view this student's analytics.
                 </p>
               </div>
+
               <button
                 type="button"
                 className="rounded-full border border-brand-200 px-3 py-1 text-xs font-semibold text-slate-500 transition hover:border-brand hover:text-brand"
@@ -641,6 +781,8 @@ export default function UserProfilePage() {
                 Close
               </button>
             </div>
+
+            {/* Modal content */}
             <div className="max-h-[60vh] overflow-y-auto">
               {studentCourseStatus.loading ? (
                 <p className="px-5 py-4 text-sm text-slate-500">
