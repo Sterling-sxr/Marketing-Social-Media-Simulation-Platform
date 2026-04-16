@@ -1,5 +1,4 @@
-"""Services for per-course profile management."""
-
+"""Module summary: Collect related domain logic and document the intended design boundaries."""
 from __future__ import annotations
 
 from typing import Any

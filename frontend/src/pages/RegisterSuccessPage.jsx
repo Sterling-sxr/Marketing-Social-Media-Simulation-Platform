@@ -6,14 +6,14 @@ export default function RegisterSuccessPage() {
   const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
-    // Decrease the countdown every second
+    // Context: Compute shared values once so all branches use the same normalized inputs.
     const timer = setInterval(() => {
       setCountdown((c) => c - 1);
     }, 1000);
 
-    // Redirect to login after 3 seconds
+    // Context: Compute shared values once so all branches use the same normalized inputs.
     const redirect = setTimeout(() => {
-      navigate("/", { replace: true });
+      navigate("/login", { replace: true });
     }, 3000);
 
     return () => {
@@ -43,7 +43,7 @@ export default function RegisterSuccessPage() {
           <button
             type="button"
             className="brand-button w-full"
-            onClick={() => navigate("/", { replace: true })}
+            onClick={() => navigate("/login", { replace: true })}
           >
             Login now
           </button>

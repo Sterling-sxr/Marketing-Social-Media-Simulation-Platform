@@ -1,5 +1,4 @@
-"""Repository helpers around Django's built-in auth_user table."""
-
+"""Module summary: Collect related domain logic and document the intended design boundaries."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -19,17 +18,23 @@ class UserCreationResult:
 
 
 def get_by_email(email: str) -> Optional[AbstractBaseUser]:
-    """Fetch a user by email ignoring casing."""
+    """Execute the `get_by_email` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
+    """
     return UserModel.objects.filter(email__iexact=email).first()
 
 
 def get_by_username(username: str) -> Optional[AbstractBaseUser]:
-    """Fetch a user by username (zid)."""
+    """Execute the `get_by_username` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
+    """
     return UserModel.objects.filter(username__iexact=username).first()
 
 
 def create_user(*, username: str, email: str, password: str) -> UserCreationResult:
-    """Create a user; returns existing user if username collision occurs."""
+    """Execute the `create_user` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
+    """
     try:
         user = UserModel.objects.create_user(
             username=username.lower(),
@@ -38,7 +43,7 @@ def create_user(*, username: str, email: str, password: str) -> UserCreationResu
         )
         return UserCreationResult(user=user, created=True)
     except IntegrityError:
-        # Re-fetch in case of race, return as not created.
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         existing = get_by_username(username)
         if existing is None:
             raise

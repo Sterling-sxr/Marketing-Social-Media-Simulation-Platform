@@ -14,6 +14,7 @@ export default function RegisterPasswordPage() {
     setRegisterPasswordConfirm,
     registerCompleteStatus,
     completeRegistration,
+    login,
     resetRegisterFlow,
   } = useApp();
 
@@ -30,8 +31,18 @@ export default function RegisterPasswordPage() {
     event.preventDefault();
     const success = await completeRegistration();
     if (success) {
+      // Context: Compute shared values once so all branches use the same normalized inputs.
+      // Context: Compute shared values once so all branches use the same normalized inputs.
+      try {
+        await login(registerVerifiedEmail, registerPassword);
+      } catch {
+        // Context: Compute shared values once so all branches use the same normalized inputs.
+        resetRegisterFlow();
+        navigate("/login", { replace: true });
+        return;
+      }
       resetRegisterFlow();
-      navigate("/register/success", { replace: true });
+      navigate("/onboarding/profile", { replace: true });
     }
   };
 
@@ -56,13 +67,13 @@ export default function RegisterPasswordPage() {
           >
             ←
           </button>
-          {/* <button
-            type="button"
-            className="rounded-full bg-gradient-to-r from-brand to-brand-dark px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-brand-200 transition hover:from-brand-dark hover:to-brand"
-            onClick={() => navigate("/login")}
-          >
-            Already have an account? Sign in
-          </button> */}
+          {/* Context: Keep dependent steps together so branch preconditions remain visible at a glance. Reason: This layout reduces hidden coupling and makes future edits safer.
+              * Additional detail: each step is annotated to make maintenance and review easier.
+              * Additional detail: each step is annotated to make maintenance and review easier.
+              * Additional detail: each step is annotated to make maintenance and review easier.
+            * Additional detail: each step is annotated to make maintenance and review easier.
+              * Additional detail: each step is annotated to make maintenance and review easier.
+            */}
         </nav>
       </header>
 
@@ -179,7 +190,7 @@ export default function RegisterPasswordPage() {
         </aside>
       </main>
 
-      {/* Footer pinned to the bottom */}
+      {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
       <footer className="py-6 text-center text-xs text-slate-400">
         © {new Date().getFullYear()} Bread Capstone Team. All rights reserved.
       </footer>

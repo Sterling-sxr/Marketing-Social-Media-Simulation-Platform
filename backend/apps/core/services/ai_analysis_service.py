@@ -1,5 +1,4 @@
-"""Generic helpers for DeepSeek-driven analysis outputs."""
-
+"""Module summary: Collect related domain logic and document the intended design boundaries."""
 from __future__ import annotations
 
 import json
@@ -8,7 +7,7 @@ from typing import Any
 
 from django.conf import settings
 
-try:  # optional dependency (same as ai_user_reaction_service)
+try:  # Inline explanation: Keep normalization explicit.
     from openai import OpenAI
 except ImportError:  # pragma: no cover - optional
     OpenAI = None  # type: ignore
@@ -43,7 +42,10 @@ def _build_prompt(context: str, payload: dict[str, Any]) -> str:
             "posts": summary.get("total_posts"),
             "interactions": summary.get("total_interactions"),
         }
-        totals_text = ", ".join(f"{label}={value if value is not None else 0}" for label, value in totals.items())
+        totals_text = ", ".join(
+            f"{label}={value if value is not None else 0}"
+            for label, value in totals.items()
+        )
         dataset = json.dumps(summary, indent=2, ensure_ascii=False)
         return (
             "You are an insightful but concise data storyteller for a university learning platform. "
@@ -68,7 +70,10 @@ def generate_ai_analysis(*, context: str, payload: dict[str, Any]) -> str:
         messages=[
             {
                 "role": "system",
-                "content": ("You craft short analytical summaries for dashboards. Respond with plain text; no JSON, no markdown, no emoji."),
+                "content": (
+                    "You craft short analytical summaries for dashboards. Respond with plain text; "
+                    "no JSON, no markdown, no emoji."
+                ),
             },
             {"role": "user", "content": prompt},
         ],
@@ -82,37 +87,33 @@ def generate_ai_analysis(*, context: str, payload: dict[str, Any]) -> str:
     return text
 
 
-_TUTOR_SYSTEM_PROMPT = """You are an intelligent tutoring assistant for university students. 
-                          Your goal is to help students genuinely understand concepts, not just receive answers.
-
-Always respond in English, regardless of the language the question is asked in.
-Adjust the depth of your explanation to match the complexity of the question:
-- For basic questions, use an introductory approach.
-- For advanced questions, provide a more systematic analysis.
-
-Follow these rules strictly:
-1. Lead with a direct answer.
-2. Use clear, plain language for abstract concepts.
-3. Structure your response with logical steps or points where applicable.
-4. Include a brief, concrete example when helpful.
-5. If the question has multiple cases or interpretations, address each one.
-6. If you are unsure, say so clearly — never fabricate information.
-7. Do not pretend to reference specific textbooks or internal course materials.
-
-You MUST respond with the following JSON format exactly — no extra text, no markdown code fences, no surrounding whitespace:
-{"short_answer":"1-2 sentence direct answer to the core question","detailed_explanation":"expanded explanation of the reason, principle, or steps","example":"a concrete example, or empty string if not applicable","key_points":["key point 1","key point 2"]}"""
+_TUTOR_SYSTEM_PROMPT = (
+    "You are an intelligent tutoring assistant for university students. "
+    "Your goal is to help students genuinely understand concepts, not just receive answers.\n\n"
+    "Always respond in English, regardless of the language the question is asked in.\n"
+    "Adjust the depth of your explanation to match the complexity of the question:\n"
+    "- For basic questions, use an introductory approach.\n"
+    "- For advanced questions, provide a more systematic analysis.\n\n"
+    "Follow these rules strictly:\n"
+    "1. Lead with a direct answer.\n"
+    "2. Use clear, plain language for abstract concepts.\n"
+    "3. Structure your response with logical steps or points where applicable.\n"
+    "4. Include a brief, concrete example when helpful.\n"
+    "5. If the question has multiple cases or interpretations, address each one.\n"
+    "6. If you are unsure, say so clearly - never fabricate information.\n"
+    "7. Do not pretend to reference specific textbooks or internal course materials.\n\n"
+    "You MUST respond with the following JSON format exactly - no extra text, "
+    "no markdown code fences, no surrounding whitespace:\n"
+    '{"short_answer":"1-2 sentence direct answer to the core question",'
+    '"detailed_explanation":"expanded explanation of the reason, principle, or steps",'
+    '"example":"a concrete example, or empty string if not applicable",'
+    '"key_points":["key point 1","key point 2"]}'
+)
 
 
 def generate_tutor_response(*, question: str, history: list[dict] | None = None) -> dict[str, Any]:
-    """
-    Teaching-assistant endpoint.
-
-    Args:
-        question: The student's current question.
-        history:  Optional list of prior turns, each {"role": "user"|"assistant", "content": str}.
-
-    Returns:
-        Parsed dict with keys: short_answer, detailed_explanation, example, key_points.
+    """Execute the `generate_tutor_response` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     client = _get_client()
     if client is None:
@@ -122,7 +123,7 @@ def generate_tutor_response(*, question: str, history: list[dict] | None = None)
 
     messages: list[dict[str, str]] = [{"role": "system", "content": _TUTOR_SYSTEM_PROMPT}]
 
-    for turn in history or []:
+    for turn in (history or []):
         role = turn.get("role", "")
         content = turn.get("content", "")
         if role in ("user", "assistant") and content:
@@ -140,7 +141,7 @@ def generate_tutor_response(*, question: str, history: list[dict] | None = None)
     if not raw:
         raise RuntimeError("DeepSeek returned an empty response.")
 
-    # Strip markdown code fences if model adds them
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     if raw.startswith("```"):
         raw = raw.split("```")[1]
         if raw.startswith("json"):
@@ -161,3 +162,4 @@ def generate_tutor_response(*, question: str, history: list[dict] | None = None)
 
 
 __all__ = ["generate_ai_analysis", "generate_tutor_response"]
+

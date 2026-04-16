@@ -8,7 +8,6 @@ from apps.core.controllers import gmail_oauth_callback, gmail_oauth_start
 def health(_):
     return JsonResponse({"ok": True})
 
-
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/health", health),

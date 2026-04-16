@@ -1,5 +1,4 @@
-"""Authentication helpers for login/logout."""
-
+"""Module summary: Collect related domain logic and document the intended design boundaries."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -11,7 +10,7 @@ from .verification_helpers import normalise_email
 
 
 class AuthenticationError(Exception):
-    """Base error for authentication failures."""
+    """Class summary: AuthenticationError keeps related behavior together behind one clear interface."""
 
 
 @dataclass

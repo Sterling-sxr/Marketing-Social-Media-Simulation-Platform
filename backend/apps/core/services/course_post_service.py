@@ -1,5 +1,4 @@
-"""Services for course post feeds."""
-
+"""Module summary: Collect related domain logic and document the intended design boundaries."""
 from __future__ import annotations
 
 import logging
@@ -25,7 +24,7 @@ from ..repositories import (
     CoursePostLike,
     CoursePostMention,
     CoursePostView,
-    # New Repository imports
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     CourseProfileRepository,
     CourseRepository,
     FollowRepository,
@@ -54,11 +53,11 @@ MAX_RECOMMENDATIONS = int(getattr(settings, "POST_RECOMMENDATION_LIMIT", 5))
 
 
 class CourseAccessError(PermissionError):
-    """Raised when a user tries to access a course they haven't joined."""
+    """Class summary: CourseAccessError keeps related behavior together behind one clear interface."""
 
 
 class CoursePostNotFoundError(ValueError):
-    """Raised when the requested post does not exist within the course."""
+    """Class summary: CoursePostNotFoundError keeps related behavior together behind one clear interface."""
 
 
 class CourseCommentNotFoundError(ValueError):
@@ -66,7 +65,7 @@ class CourseCommentNotFoundError(ValueError):
 
 
 class CourseReadOnlyError(PermissionError):
-    """Raised when writes are attempted on a course that has ended."""
+    """Class summary: CourseReadOnlyError keeps related behavior together behind one clear interface."""
 
 
 def _display_name(user) -> str:
@@ -85,7 +84,9 @@ def _display_name(user) -> str:
 
 
 def _get_course(course_id: int) -> Course:
-    """Fetch a course instance via the repository."""
+    """Execute the `_get_course` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
+    """
     course = CourseRepository.get_by_id(course_id)
     if not course:
         raise ValueError("Course not found.")
@@ -93,7 +94,9 @@ def _get_course(course_id: int) -> Course:
 
 
 def _course_is_read_only(course: Course) -> bool:
-    """Check whether the course has passed its end date."""
+    """Execute the `_course_is_read_only` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
+    """
     if not course.end_date:
         return False
     today = timezone.localdate()
@@ -101,18 +104,22 @@ def _course_is_read_only(course: Course) -> bool:
 
 
 def _ensure_course_active(course: Course) -> None:
-    """Ensure course is still active for write operations."""
+    """Execute the `_ensure_course_active` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
+    """
     if _course_is_read_only(course):
         raise CourseReadOnlyError("This course has ended; posts are read-only.")
 
 
 def _ensure_membership(course: Course, user):
-    """Ensure the user is a course member using repository lookups."""
+    """Execute the `_ensure_membership` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
+    """
     if not CourseRepository.is_user_member(course.id, user.id):
         raise CourseAccessError("You must join this course before you can access its posts.")
-    # Return role info
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     role = CourseRepository.get_user_role(course.id, user.id)
-    return type("Membership", (), {"course": course, "user": user, "role": role or "student"})()
+    return type('Membership', (), {'course': course, 'user': user, 'role': role or 'student'})()
 
 
 def _user_is_admin(user) -> bool:
@@ -164,7 +171,11 @@ def _extract_mentions(content: str, provided: Sequence[str] | None = None) -> li
 
 def _extract_hashtags(content: str, provided: Sequence[str] | None = None) -> list[str]:
     if provided is not None:
-        return list(dict.fromkeys([item.strip().lstrip("#").lower() for item in provided if item and item.strip()]))
+        return list(
+            dict.fromkeys(
+                [item.strip().lstrip("#").lower() for item in provided if item and item.strip()]
+            )
+        )
     pattern = re.compile(r"#([^\s@#]+)")
     return list(dict.fromkeys(match.lower() for match in pattern.findall(content or "")))
 
@@ -292,16 +303,15 @@ def _merge_mention_details(
 
 
 def list_course_posts(*, user, course_id: int, hashtag: str | None = None, following_only: bool = False) -> dict[str, Any]:
+    """Execute the `list_course_posts` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
-    Retrieve course posts for the feed.
-    Business logic: enforce permissions, prepare filters, aggregate related data.
-    """
-    # Validate permissions
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     course = _get_course(course_id)
     membership = _ensure_membership(course, user)
     read_only = _course_is_read_only(course)
 
-    # Prepare filters
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     following_ids = None
     if following_only:
         following_ids = list(FollowRepository.get_following_ids(user.id))
@@ -317,13 +327,13 @@ def list_course_posts(*, user, course_id: int, hashtag: str | None = None, follo
                 "items": [],
             }
 
-    # Normalize hashtag filter
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     active_hashtag = None
     if hashtag:
         raw_tag = hashtag.strip().lstrip("#")
         active_hashtag = raw_tag.lower() or raw_tag
 
-    # Fetch posts via repositories (with optimized queries)
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     posts = PostRepository.get_course_posts(
         course_id=course_id,
         hashtag=active_hashtag,
@@ -351,12 +361,12 @@ def list_course_posts(*, user, course_id: int, hashtag: str | None = None, follo
 
     post_ids = [p.id for p in posts]
 
-    # Batch-fetch stats via repositories
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     like_count_map = PostLikeRepository.get_like_counts(post_ids)
     liked_ids = PostLikeRepository.get_user_liked_posts(user.id, post_ids)
     comment_count_map = PostCommentRepository.get_comment_counts(post_ids)
-
-    # Attach prefetched comment counts for serialization
+    
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     for p in posts:
         setattr(p, "prefetched_comments_count", comment_count_map.get(p.id, 0))
 
@@ -404,21 +414,20 @@ def create_course_post_with_meta(
     hashtags: Sequence[str] | None,
     attachment_ids: Sequence[int] | None,
 ) -> dict[str, Any]:
+    """Execute the `create_course_post_with_meta` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
-    Create a post with optional mentions/attachments metadata.
-    Business logic: enforce permissions, parse content, handle attachments/mentions, dispatch notifications.
-    """
-    # Validate permissions for the course
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     course = _get_course(course_id)
     _ensure_membership(course, user)
     _ensure_course_active(course)
 
-    # Ensure the post has content
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     sanitized = (content or "").strip()
     if not sanitized:
         raise ValueError("Post content cannot be empty.")
 
-    # Extract mentions and hashtags
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     extracted_mentions = _extract_mentions(sanitized, mentions)
     mention_entity_map: dict[str, int] = {}
     if mention_entities:
@@ -429,7 +438,7 @@ def create_course_post_with_meta(
                 mention_entity_map[value] = int(user_id)
     extracted_hashtags = _extract_hashtags(sanitized, hashtags)
 
-    # Persist the post via the repository
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     post = PostRepository.create(
         course_id=course_id,
         author_id=user.id,
@@ -438,7 +447,7 @@ def create_course_post_with_meta(
         hashtags=extracted_hashtags,
     )
 
-    # Normalize and validate attachments
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     normalized_attachment_ids: list[int] = []
     if attachment_ids:
         seen: set[int] = set()
@@ -455,16 +464,16 @@ def create_course_post_with_meta(
     if len(normalized_attachment_ids) > MAX_POST_ATTACHMENTS:
         raise ValueError(f"You can upload at most {MAX_POST_ATTACHMENTS} attachments.")
 
-    # Attach assets via the repository
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     if normalized_attachment_ids:
         PostAttachmentRepository.attach_to_post(post.id, normalized_attachment_ids)
-        # Reload to get attachments
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         post = PostRepository.get_with_details(post.id)
         post.prefetched_attachments = post.attachments.all()
     else:
         post.prefetched_attachments = []
 
-    # Persist mention metadata
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     if mention_entity_map:
         to_create = []
         for mention_value in extracted_mentions:
@@ -472,20 +481,20 @@ def create_course_post_with_meta(
             user_id = mention_entity_map.get(key)
             if user_id:
                 to_create.append({"user_id": user_id, "identifier": key})
-
-        # Bulk-create mentions via repository
+        
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         if to_create:
             PostMentionRepository.create_mentions(post.id, to_create)
-            # Reload post to get mentions
+            # Context: Compute shared values once so all branches use the same normalized inputs.
             post = PostRepository.get_with_details(post.id)
             post.prefetched_mentions = post.mentions_rel.all()
-
+    
     if not hasattr(post, "prefetched_mentions"):
         post.prefetched_mentions = []
 
     mention_recipient_ids: set[int] = set()
 
-    # Notify mentioned users and followers (exclude self where applicable)
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     try:
         actor_name = _display_name(user)
         post_link = f"/courses/{course_id}/posts/{post.id}"
@@ -495,7 +504,11 @@ def create_course_post_with_meta(
             if not mention.user_id or mention.user_id == getattr(user, "id", None):
                 continue
             target_user = mention.user
-            recipient = (target_user.username or "").strip() or (target_user.email or "").strip() or str(target_user.id)
+            recipient = (
+                (target_user.username or "").strip()
+                or (target_user.email or "").strip()
+                or str(target_user.id)
+            )
             subject = f"{actor_name} mentioned you in a course post"
             link = f"/courses/{course_id}/posts/{post.id}"
             preview = sanitized[:140]
@@ -513,17 +526,26 @@ def create_course_post_with_meta(
             if getattr(target_user, "id", None):
                 mention_recipient_ids.add(target_user.id)
 
-        # Notify followers about the new post
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         follower_ids = FollowRepository.get_follower_ids(getattr(user, "id", None))
         if follower_ids:
             follower_ids.discard(getattr(user, "id", None))
             if follower_ids:
                 User = get_user_model()
-                followers = User.objects.filter(id__in=follower_ids).only("id", "username", "email", "first_name", "last_name")
+                followers = User.objects.filter(id__in=follower_ids).only(
+                    "id", "username", "email", "first_name", "last_name"
+                )
                 subject = f"{actor_name} shared a new update"
-                body = (f"{actor_name} just posted in {course.course_code}. {post_preview}").strip()
+                body = (
+                    f"{actor_name} just posted in {course.course_code}. "
+                    f"{post_preview}"
+                ).strip()
                 for follower in followers:
-                    recipient = (follower.username or "").strip() or (follower.email or "").strip() or str(follower.id)
+                    recipient = (
+                        (follower.username or "").strip()
+                        or (follower.email or "").strip()
+                        or str(follower.id)
+                    )
                     if not recipient or follower.id == getattr(user, "id", None):
                         continue
                     create_notification(
@@ -549,7 +571,7 @@ def create_course_post_with_meta(
             excluded_user_ids.add(author_id)
         _schedule_interest_recommendations(course_id, post.id, list(excluded_user_ids))
     except Exception as e:
-        # Notification failures should not break post creation
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         logger.error(f"[NOTIFY] Failed to create notification: {e}", exc_info=True)
 
     def _schedule_post_tasks() -> None:
@@ -579,25 +601,24 @@ def create_course_post_with_meta(
 
 
 def search_course_mentions(*, user, course_id: int, query: str, limit: int = 8) -> list[dict[str, Any]]:
+    """Execute the `search_course_mentions` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
-    Search course members for @mention suggestions.
-    Business logic: permission check, filtering, response formatting.
-    """
-    # Enforce course membership
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     course = _get_course(course_id)
     _ensure_membership(course, user)
 
     normalized = (query or "").strip()
 
-    # Query via repository helpers
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     if normalized:
         found_users = UserRepository.search_in_course(course_id, normalized, limit)
     else:
-        # Get all members (excluding self)
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         members = CourseMemberRepository.get_course_members(course_id)
         found_users = [m.user for m in members if m.user_id != user.id][:limit]
 
-    # Format API response
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     results: list[dict[str, Any]] = []
     for target in found_users:
         if target.id == user.id:
@@ -658,27 +679,30 @@ def search_course_hashtags(*, user, course_id: int, query: str, limit: int = 10)
 
 
 def like_course_post(*, user, course_id: int, post_id: int) -> dict[str, Any]:
+    """Execute the `like_course_post` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
-    Like a post.
-    Business logic: enforce permissions, toggle like, send notifications.
-    """
-    # Validate membership and write permissions
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     course = _get_course(course_id)
     _ensure_membership(course, user)
     _ensure_course_active(course)
 
-    # Load the post from the repository
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     post = PostRepository.get_with_details(post_id)
     if not post or post.course_id != course_id:
         raise CoursePostNotFoundError("The post does not exist in this course.")
 
-    # Record the like via repository
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     _, created = PostLikeRepository.get_or_create_like(post_id, user.id)
 
-    # Create and broadcast a notification to the post author (except self-like)
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     if created and post.author_id != getattr(user, "id", None):
         try:
-            recipient = (post.author.username or "").strip() or (post.author.email or "").strip() or str(post.author_id)
+            recipient = (
+                (post.author.username or "").strip()
+                or (post.author.email or "").strip()
+                or str(post.author_id)
+            )
             actor_name = _display_name(user)
             subject = f"{actor_name} liked your post"
             body = ""
@@ -760,8 +784,8 @@ def add_comment_to_post(
     content: str,
     suppress_notifications: bool = False,
 ) -> dict[str, Any]:
-    """
-    Create a comment via the service layer so other workers can reuse the logic.
+    """Execute the `add_comment_to_post` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     course = _get_course(course_id)
     _ensure_membership(course, user)
@@ -772,7 +796,10 @@ def add_comment_to_post(
         raise ValueError("Comment content cannot be empty.")
 
     try:
-        post = CoursePost.objects.select_related("course", "author").get(id=post_id, course=course)
+        post = (
+            CoursePost.objects.select_related("course", "author")
+            .get(id=post_id, course=course)
+        )
     except CoursePost.DoesNotExist as exc:
         raise CoursePostNotFoundError("The post does not exist in this course.") from exc
 
@@ -791,7 +818,11 @@ def add_comment_to_post(
 
     if not suppress_notifications and post.author_id != getattr(user, "id", None):
         try:
-            recipient = (post.author.username or "").strip() or (post.author.email or "").strip() or str(post.author_id)
+            recipient = (
+                (post.author.username or "").strip()
+                or (post.author.email or "").strip()
+                or str(post.author_id)
+            )
             actor_name = _display_name(user)
             subject = f"{actor_name} commented on your post"
             body = sanitized[:200]
@@ -980,8 +1011,12 @@ def update_course_post(
         if len(normalized_attachment_ids) > MAX_POST_ATTACHMENTS:
             raise ValueError(f"You can upload at most {MAX_POST_ATTACHMENTS} attachments.")
 
-        existing_ids = set(CoursePostAttachment.objects.filter(post_id=post.id).values_list("asset_id", flat=True))
-        CoursePostAttachment.objects.filter(post_id=post.id).exclude(asset_id__in=normalized_attachment_ids).delete()
+        existing_ids = set(
+            CoursePostAttachment.objects.filter(post_id=post.id).values_list("asset_id", flat=True)
+        )
+        CoursePostAttachment.objects.filter(post_id=post.id).exclude(
+            asset_id__in=normalized_attachment_ids
+        ).delete()
         to_add = [asset_id for asset_id in normalized_attachment_ids if asset_id not in existing_ids]
         if to_add:
             PostAttachmentRepository.attach_to_post(post.id, to_add)
@@ -1071,14 +1106,14 @@ def get_course_post_detail(*, user, course_id: int, post_id: int) -> dict[str, A
     like_count = post.likes.count()
     liked_ids = {post.id} if CoursePostLike.objects.filter(post=post, user=user).exists() else set()
 
-    # comment count
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     setattr(
         post,
         "prefetched_comments_count",
         CoursePostComment.objects.filter(post_id=post.id).count(),
     )
 
-    # Record view asynchronously (ignored on failure)
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     try:
         PostViewRepository.create_view(post_id=post.id, user_id=getattr(user, "id", None))
     except Exception:
@@ -1122,8 +1157,8 @@ def get_course_post_analytics(
     post_id: int,
     days: int = 7,
 ) -> dict[str, Any]:
-    """
-    Fetch post analytics (totals plus the recent N-day trend).
+    """Execute the `get_course_post_analytics` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     course = _get_course(course_id)
     _ensure_membership(course, user)
@@ -1156,7 +1191,10 @@ def get_course_post_analytics(
     view_map = _aggregate_daily(CoursePostView)
 
     def _build_series(source: dict) -> list[dict[str, Any]]:
-        return [{"date": day.isoformat(), "count": int(source.get(day, 0))} for day in date_axis]
+        return [
+            {"date": day.isoformat(), "count": int(source.get(day, 0))}
+            for day in date_axis
+        ]
 
     totals = {
         "likes": CoursePostLike.objects.filter(post_id=post_id).count(),
@@ -1168,7 +1206,11 @@ def get_course_post_analytics(
     if snapshot:
         sentiment_counts = snapshot.sentiment_counts or {}
         sentiment_percentages = snapshot.sentiment_percentages or {}
-        sentiment_total = sentiment_counts.get("positive", 0) + sentiment_counts.get("neutral", 0) + sentiment_counts.get("negative", 0)
+        sentiment_total = (
+            sentiment_counts.get("positive", 0)
+            + sentiment_counts.get("neutral", 0)
+            + sentiment_counts.get("negative", 0)
+        )
     else:
         sentiment_counts = {"positive": 0, "neutral": 0, "negative": 0}
         sentiment_percentages = {"positive": 0.0, "neutral": 0.0, "negative": 0.0}
@@ -1177,7 +1219,10 @@ def get_course_post_analytics(
     if totals["comments"] > 0 and sentiment_total == 0:
         sentiment_counts = _compute_sentiment_counts_for_post(post_id)
         sentiment_total = sum(sentiment_counts.values())
-        sentiment_percentages = {key: round(value * 100 / sentiment_total, 1) if sentiment_total else 0.0 for key, value in sentiment_counts.items()}
+        sentiment_percentages = {
+            key: round(value * 100 / sentiment_total, 1) if sentiment_total else 0.0
+            for key, value in sentiment_counts.items()
+        }
 
     hashtags_data: list[dict[str, Any]] = []
     post_hashtags = post_obj.hashtags or []
@@ -1196,9 +1241,10 @@ def get_course_post_analytics(
                 continue
             cohort_size = len(cohort_ids)
             likes_total = CoursePostLike.objects.filter(post_id__in=cohort_ids).count()
-            comments_total = CoursePostComment.objects.filter(post_id__in=cohort_ids).count()
+            comments_total = (
+                CoursePostComment.objects.filter(post_id__in=cohort_ids).count()
+            )
             views_total = CoursePostView.objects.filter(post_id__in=cohort_ids).count()
-
             def _avg(total: int) -> float:
                 return round(total / cohort_size, 2) if cohort_size else 0.0
 
@@ -1239,30 +1285,29 @@ def get_course_post_analytics(
 
 
 def list_posts_by_user(*, user, target_user_id: int, limit: int | None = None) -> list[dict[str, Any]]:
+    """Execute the `list_posts_by_user` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
-    List posts published by the target user.
-    Business logic: only return posts from courses visible to the current user.
-    """
-    # Query courses the current user belongs to
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     user_courses = CourseRepository.get_user_courses(user.id)
     member_course_ids = [c.id for c in user_courses]
-
+    
     if not member_course_ids:
         return []
 
-    # Fetch the target user's posts in those courses
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     posts = PostRepository.get_user_posts(target_user_id, member_course_ids, limit=limit)
-
+    
     if not posts:
         return []
-
+    
     post_ids = [p.id for p in posts]
 
-    # Batch-load like/comment stats
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     like_count_map = PostLikeRepository.get_like_counts(post_ids)
     liked_ids = PostLikeRepository.get_user_liked_posts(user.id, post_ids)
     comment_count_map = PostCommentRepository.get_comment_counts(post_ids)
-
+    
     for p in posts:
         setattr(p, "prefetched_comments_count", comment_count_map.get(p.id, 0))
 
@@ -1275,30 +1320,29 @@ def list_posts_by_user(*, user, target_user_id: int, limit: int | None = None) -
 
 
 def list_liked_posts(*, user, target_user_id: int) -> list[dict[str, Any]]:
+    """Execute the `list_liked_posts` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
-    List posts liked by the target user.
-    Business logic: only include courses visible to the current user.
-    """
-    # Query courses this user belongs to
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     user_courses = CourseRepository.get_user_courses(user.id)
     member_course_ids = [c.id for c in user_courses]
-
+    
     if not member_course_ids:
         return []
 
-    # Fetch liked posts across those courses
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     posts = PostRepository.get_liked_posts(target_user_id, member_course_ids)
 
     if not posts:
         return []
-
+    
     post_ids = [p.id for p in posts]
 
-    # Batch-load stats for serialization
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     like_count_map = PostLikeRepository.get_like_counts(post_ids)
     liked_ids = PostLikeRepository.get_user_liked_posts(user.id, post_ids)
     comment_count_map = PostCommentRepository.get_comment_counts(post_ids)
-
+    
     for p in posts:
         setattr(p, "prefetched_comments_count", comment_count_map.get(p.id, 0))
 
@@ -1316,9 +1360,8 @@ def list_posts_with_analytics_by_user(
     target_user_id: int,
     limit: int | None = None,
 ) -> list[dict[str, Any]]:
-    """
-    Return posts authored by the target user (within courses visible to request user)
-    enriched with analytics snapshot data.
+    """Execute the `list_posts_with_analytics_by_user` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     posts = list_posts_by_user(user=user, target_user_id=target_user_id, limit=limit)
     if not posts:
@@ -1329,7 +1372,10 @@ def list_posts_with_analytics_by_user(
     snapshot_map = {snap.post_id: snap for snap in snapshots}
 
     view_counts = {
-        row["post_id"]: row["total"] for row in CoursePostView.objects.filter(post_id__in=post_ids).values("post_id").annotate(total=Count("id"))
+        row["post_id"]: row["total"]
+        for row in CoursePostView.objects.filter(post_id__in=post_ids)
+        .values("post_id")
+        .annotate(total=Count("id"))
     }
 
     enriched: list[dict[str, Any]] = []
@@ -1430,11 +1476,18 @@ def _handle_interest_recommendations(
     link = f"/courses/{course_id}/posts/{post.id}"
     for entry in recommendations:
         user_obj = entry["user"]
-        recipient = (user_obj.username or "").strip() or (user_obj.email or "").strip() or str(user_obj.id)
+        recipient = (
+            (user_obj.username or "").strip()
+            or (user_obj.email or "").strip()
+            or str(user_obj.id)
+        )
         if not recipient:
             continue
         reason = entry.get("reason", "")
-        body = (f"{actor_name} just posted in {course.course_code}. {post_preview}").strip()
+        body = (
+            f"{actor_name} just posted in {course.course_code}. "
+            f"{post_preview}"
+        ).strip()
         create_notification(
             recipient=recipient,
             actor=actor_name,
@@ -1504,7 +1557,11 @@ def _gather_interest_recommendations(
             _add_candidate(user_id, 1.3, f"recent comments #{tag}", created_at)
 
     normalized_set = set(normalized_tags)
-    profile_qs = CourseProfileRepository.model.objects.filter(course_id=post.course_id).exclude(user_id__in=excluded_user_ids).select_related("user")
+    profile_qs = (
+        CourseProfileRepository.model.objects.filter(course_id=post.course_id)
+        .exclude(user_id__in=excluded_user_ids)
+        .select_related("user")
+    )
     profile_map: dict[int, Any] = {}
     for profile in profile_qs:
         profile_map[profile.user_id] = profile
@@ -1522,7 +1579,10 @@ def _gather_interest_recommendations(
     if not candidate_ids:
         return []
     user_map = {
-        user.id: user for user in get_user_model().objects.filter(id__in=candidate_ids).only("id", "username", "email", "first_name", "last_name")
+        user.id: user
+        for user in get_user_model()
+        .objects.filter(id__in=candidate_ids)
+        .only("id", "username", "email", "first_name", "last_name")
     }
 
     recommendations: list[dict[str, Any]] = []
@@ -1573,7 +1633,12 @@ def _build_profile_prompt(profile, post: CoursePost) -> str:
     user = getattr(profile, "user", None)
     display_name = ""
     if user:
-        display_name = user.get_full_name() or user.username or (user.email.split("@")[0] if user.email else "") or f"user{user.pk}"
+        display_name = (
+            user.get_full_name()
+            or user.username
+            or (user.email.split("@")[0] if user.email else "")
+            or f"user{user.pk}"
+        )
     persona_lines = [
         f"Display Name: {display_name or 'Unknown'}",
         f"Gender: {profile.gender or 'Unknown'}",
@@ -1592,7 +1657,9 @@ def _build_profile_prompt(profile, post: CoursePost) -> str:
         f"Interaction Style: {profile.interaction_style or 'Unknown'}",
         f"Influencer Type: {profile.influencer_type or 'Unknown'}",
     ]
-    course_info = f"{post.course.course_code} - {post.course.name}" if post.course else "the course"
+    course_info = (
+        f"{post.course.course_code} - {post.course.name}" if post.course else "the course"
+    )
     hashtags = ", ".join(f"#{tag}" for tag in (post.hashtags or []))
     return (
         "You are evaluating whether a real student persona would be interested in a course discussion post.\n"

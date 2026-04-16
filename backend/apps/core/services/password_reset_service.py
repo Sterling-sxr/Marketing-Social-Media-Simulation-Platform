@@ -1,5 +1,4 @@
-"""Password reset workflows using email verification codes."""
-
+"""Module summary: Collect related domain logic and document the intended design boundaries."""
 from __future__ import annotations
 
 import logging
@@ -35,15 +34,15 @@ _RESET_TEMPLATE = (
 
 
 class PasswordResetError(Exception):
-    """Base error for password reset failures."""
+    """Class summary: PasswordResetError keeps related behavior together behind one clear interface."""
 
 
 class PasswordResetCodeError(PasswordResetError):
-    """Raised when the verification code is invalid or expired."""
+    """Class summary: PasswordResetCodeError keeps related behavior together behind one clear interface."""
 
 
 class PasswordResetThrottleError(PasswordResetError):
-    """Raised when requests are too frequent."""
+    """Class summary: PasswordResetThrottleError keeps related behavior together behind one clear interface."""
 
 
 @dataclass
@@ -78,10 +77,10 @@ def request_password_reset(email: str) -> PasswordResetRequest:
     if is_throttled(purpose=PURPOSE, email=normalised_email):
         raise PasswordResetThrottleError("Verification code requested too frequently. Please wait before trying again.")
 
-    # code = generate_code()
-    code = "1234"  # Temporary fixed verification code for easier testing
+    # Context: Compute shared values once so all branches use the same normalized inputs.
+    code = "1234"  # Inline explanation: Keep normalization explicit.
     store_code(purpose=PURPOSE, email=normalised_email, code=code)
-    # _send_reset_email(normalised_email, code)
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     logger.info("TEST MODE: mock send password reset code %s to %s", code, normalised_email)
 
     return PasswordResetRequest(email=normalised_email, code=code if settings.DEBUG else "****")

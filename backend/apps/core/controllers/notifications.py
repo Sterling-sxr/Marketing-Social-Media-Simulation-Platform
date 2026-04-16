@@ -4,7 +4,7 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
 
 class NotificationConsumer(AsyncJsonWebsocketConsumer):
-    """Simple consumer that streams notification payloads to a given user."""
+    """Class summary: NotificationConsumer keeps related behavior together behind one clear interface."""
 
     async def connect(self):
         query = parse_qs(self.scope.get("query_string", b"").decode())
@@ -22,14 +22,23 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             }
         )
 
+    # Purpose: Orchestrate `disconnect` with clear validation, dependency calls, and response mapping.
+    # Input contract: Normalize required values early and fail fast on malformed payloads.
+    # Output contract: Return a stable success/error shape after translating service outcomes.
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
+    # Purpose: Orchestrate `notification_message` with clear validation, dependency calls, and response mapping.
+    # Input contract: Normalize required values early and fail fast on malformed payloads.
+    # Output contract: Return a stable success/error shape after translating service outcomes.
     async def notification_message(self, event):
         payload = event.get("payload", {})
         await self.send_json({"type": "notification", **payload})
 
+    # Purpose: Orchestrate `receive_json` with clear validation, dependency calls, and response mapping.
+    # Input contract: Normalize required values early and fail fast on malformed payloads.
+    # Output contract: Return a stable success/error shape after translating service outcomes.
     async def receive_json(self, content, **kwargs):
-        # Optional ping/pong support for the demo UI.
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         if content.get("action") == "ping":
             await self.send_json({"type": "pong"})

@@ -44,7 +44,7 @@ export default function NotificationsPage() {
       ? `${notifications.unread} Unread`
       : "All Notifications";
 
-  // Consistent "slim pill" button style with mobile-friendly tap target and focus ring
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const SLIM_PILL =
     "inline-flex h-9 items-center justify-center rounded-full border border-brand-200 bg-white px-4 " +
     "text-xs font-semibold text-brand-500 leading-none transition whitespace-nowrap " +
@@ -162,7 +162,7 @@ export default function NotificationsPage() {
                     type="button"
                     className={SLIM_PILL}
                     onClick={() => {
-                      // Mark as read before navigating
+                      // Context: Compute shared values once so all branches use the same normalized inputs.
                       if (!item.is_read) {
                         markNotificationsRead([item.id]).catch(() => {});
                       }

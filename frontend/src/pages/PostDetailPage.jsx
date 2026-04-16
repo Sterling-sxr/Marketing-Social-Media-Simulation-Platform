@@ -7,6 +7,7 @@ import ConfirmDialog from "./components/ConfirmDialog";
 import PostCard from "./components/PostCard";
 import { hasProfanity } from "../lib/profanity";
 import ProfanityHint from "./components/ProfanityHint";
+import AuthenticatedShell from "./components/AuthenticatedShell";
 
 export default function PostDetailPage() {
   const { courseId: courseIdParam, postId: postIdParam } = useParams();
@@ -55,12 +56,12 @@ export default function PostDetailPage() {
   const courseEndDate = courseInfo?.end_date || null;
   const authorName = authUser?.full_name || authUser?.username || "User";
 
-  // —— Owner detection: tolerate different backend field names —— //
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const isOwner = useMemo(() => {
     if (!authUser || !post) return false;
     const uid = Number(authUser.id);
 
-    // Direct author ID fields
+    // Context: Compute shared values once so all branches use the same normalized inputs.
     const possibleIds = [
       post.author_id,
       post?.author?.id,
@@ -72,7 +73,7 @@ export default function PostDetailPage() {
 
     if (possibleIds.some((v) => Number(v) === uid)) return true;
 
-    // Fall back to username/email matching
+    // Context: Compute shared values once so all branches use the same normalized inputs.
     const meUname = String(authUser.username || "").toLowerCase();
     const meEmail = String(authUser.email || "").toLowerCase();
 
@@ -150,12 +151,12 @@ export default function PostDetailPage() {
     }
   };
 
-  // —— Reuse the Bread header pattern —— //
+  // Purpose: `HeaderBar` owns one cohesive concern so state transitions and side effects remain easy to trace.
   const HeaderBar = () => (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-accent-100/60 bg-white/95 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 lg:px-6 lg:py-4">
         <div className="flex items-center gap-2">
-          {/* Back to course feed button — always visible on mobile */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <button
             type="button"
             onClick={() => navigate(`/courses/${courseId}`)}
@@ -217,13 +218,18 @@ export default function PostDetailPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-accent-50 via-white to-accent-100">
-      <HeaderBar />
-
-      {/* Main content */}
-      <main className="mx-auto w-full max-w-6xl space-y-4 px-3 pb-28 pt-[72px] sm:px-4 sm:pb-28 sm:pt-[96px] lg:px-6 lg:pb-8">
-        {/* Sticky toolbar: title + right-side actions (Analyze button is conditional) */}
-        <div className="sticky top-[72px] z-20 sm:top-[96px]">
+    <AuthenticatedShell
+      title="Post Detail"
+      subtitle={
+        courseInfo
+          ? `${courseInfo.course_code || ""} · ${courseInfo.name || ""}`.trim()
+          : "Post Detail"
+      }
+    >
+      {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
+      <main className="space-y-4">
+        {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
+        <div className="z-20">
           <div className="rounded-2xl border border-brand-100 bg-white px-3 py-3 shadow-sm sm:px-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
               <h1 className="text-lg sm:text-xl font-semibold text-slate-900">
@@ -298,7 +304,7 @@ export default function PostDetailPage() {
           </div>
         )}
 
-        {/* Comments */}
+        {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
         <section className="space-y-3">
           <h3 className="text-sm font-semibold text-slate-700">Comments</h3>
           <ul className="divide-y divide-brand-50 rounded-2xl border border-brand-100 bg-white">
@@ -397,6 +403,6 @@ export default function PostDetailPage() {
         processing={deleteBusy}
         tone="danger"
       />
-    </div>
+    </AuthenticatedShell>
   );
 }

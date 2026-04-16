@@ -22,6 +22,10 @@ from .auth_controller import (
 from .course_ai_user_controller import (
     course_ai_user_detail,
     course_ai_users,
+    course_ai_users_generate_commit,
+    course_ai_users_generate_preview,
+    course_ai_users_guided_commit,
+    course_ai_users_guided_preview,
     course_ai_users_import,
 )
 from .course_controller import (
@@ -74,6 +78,10 @@ from .search import (
     search_posts,
     suggested_search,
 )
+from .segmentation_controller import (
+    admin_course_post_segmentation,
+    dashboard_course_segmentation,
+)
 
 __all__ = [
     "files_endpoint",
@@ -123,10 +131,16 @@ __all__ = [
     "course_ai_users",
     "course_ai_user_detail",
     "course_ai_users_import",
+    "course_ai_users_guided_preview",
+    "course_ai_users_guided_commit",
+    "course_ai_users_generate_preview",
+    "course_ai_users_generate_commit",
     "dashboard_summary",
     "dashboard_course_detail",
     "dashboard_course_hashtag_detail",
     "dashboard_course_student_detail",
+    "dashboard_course_segmentation",
+    "admin_course_post_segmentation",
     "ai_analyze",
     "ai_tutor",
     "course_materials_view",

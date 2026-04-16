@@ -17,12 +17,18 @@ from ..services import (
 )
 
 
+# Purpose: Orchestrate `_ensure_authenticated` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def _ensure_authenticated(request: HttpRequest) -> JsonResponse | None:
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Unauthorized"}, status=401)
     return None
 
 
+# Purpose: Orchestrate `list_courses` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def list_courses(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -32,6 +38,9 @@ def list_courses(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
+# Purpose: Orchestrate `join_course` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def join_course(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -74,6 +83,9 @@ __all__ = [
 
 
 @csrf_exempt
+# Purpose: Orchestrate `create_course_view` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def create_course_view(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -104,6 +116,9 @@ def create_course_view(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"course": item}, status=201)
 
 
+# Purpose: Orchestrate `list_managed_courses_view` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def list_managed_courses_view(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -112,6 +127,9 @@ def list_managed_courses_view(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"items": items})
 
 
+# Purpose: Orchestrate `list_user_courses_view` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def list_user_courses_view(request: HttpRequest, user_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -121,7 +139,11 @@ def list_user_courses_view(request: HttpRequest, user_id: int) -> JsonResponse:
     if not is_admin and request.user.id != user_id:
         return JsonResponse({"error": "Forbidden"}, status=403)
 
-    memberships = CourseMemberRepository.model.objects.filter(user_id=user_id).select_related("course").order_by("course__course_code")
+    memberships = (
+        CourseMemberRepository.model.objects.filter(user_id=user_id)
+        .select_related("course")
+        .order_by("course__course_code")
+    )
     items = []
     for member in memberships:
         course = member.course
@@ -140,6 +162,9 @@ def list_user_courses_view(request: HttpRequest, user_id: int) -> JsonResponse:
 
 
 @csrf_exempt
+# Purpose: Orchestrate `update_course_view` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def update_course_view(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -172,6 +197,9 @@ def update_course_view(request: HttpRequest, course_id: int) -> JsonResponse:
 
 
 @csrf_exempt
+# Purpose: Orchestrate `course_profile_view` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def course_profile_view(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:

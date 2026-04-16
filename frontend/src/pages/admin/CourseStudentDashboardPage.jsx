@@ -220,48 +220,50 @@ export default function CourseStudentDashboardPage() {
               </div>
             ) : (
               <div className="overflow-hidden rounded-2xl border border-brand-100">
-                <table className="min-w-full divide-y divide-brand-100 text-sm">
-                  <thead className="bg-brand-50/60 text-left text-xs uppercase tracking-wide text-slate-500">
-                    <tr>
-                      <th className="px-4 py-3 font-semibold">Post</th>
-                      <th className="px-4 py-3 font-semibold">Likes</th>
-                      <th className="px-4 py-3 font-semibold">Comments</th>
-                      <th className="px-4 py-3 font-semibold">Views</th>
-                      <th className="px-4 py-3 font-semibold">Total Interactions</th>
-                      <th className="px-4 py-3 font-semibold">Created</th>
-                      <th className="px-4 py-3 font-semibold text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-brand-50 bg-white/80">
-                    {topPosts.map((post) => (
-                      <tr key={post.post_id}>
-                        <td className="px-4 py-3 text-slate-700">
-                          {post.preview || "No content"}
-                        </td>
-                        <td className="px-4 py-3 text-slate-600">{post.likes}</td>
-                        <td className="px-4 py-3 text-slate-600">{post.comments}</td>
-                        <td className="px-4 py-3 text-slate-600">{post.views}</td>
-                        <td className="px-4 py-3 font-semibold text-slate-800">
-                          {post.interactions}
-                        </td>
-                        <td className="px-4 py-3 text-xs text-slate-500">
-                          {formatDate(post.created_at)}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <button
-                            type="button"
-                            className="rounded-full border border-brand bg-brand-100 px-3 py-1 text-xs font-semibold text-brand transition hover:bg-brand-200"
-                            onClick={() =>
-                              navigate(`/courses/${courseId}/posts/${post.post_id}`)
-                            }
-                          >
-                            View
-                          </button>
-                        </td>
+                <div className="max-h-[70vh] overflow-x-auto overflow-y-auto">
+                  <table className="min-w-full divide-y divide-brand-100 text-sm">
+                    <thead className="bg-brand-50/60 text-left text-xs uppercase tracking-wide text-slate-500">
+                      <tr>
+                        <th className="sticky top-0 z-10 bg-brand-50/60 px-4 py-3 font-semibold">Post</th>
+                        <th className="sticky top-0 z-10 bg-brand-50/60 px-4 py-3 font-semibold">Likes</th>
+                        <th className="sticky top-0 z-10 bg-brand-50/60 px-4 py-3 font-semibold">Comments</th>
+                        <th className="sticky top-0 z-10 bg-brand-50/60 px-4 py-3 font-semibold">Views</th>
+                        <th className="sticky top-0 z-10 bg-brand-50/60 px-4 py-3 font-semibold">Total Interactions</th>
+                        <th className="sticky top-0 z-10 bg-brand-50/60 px-4 py-3 font-semibold">Created</th>
+                        <th className="sticky top-0 z-10 bg-brand-50/60 px-4 py-3 font-semibold text-right">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-brand-50 bg-white/80">
+                      {topPosts.map((post) => (
+                        <tr key={post.post_id}>
+                          <td className="px-4 py-3 text-slate-700">
+                            {post.preview || "No content"}
+                          </td>
+                          <td className="px-4 py-3 text-slate-600">{post.likes}</td>
+                          <td className="px-4 py-3 text-slate-600">{post.comments}</td>
+                          <td className="px-4 py-3 text-slate-600">{post.views}</td>
+                          <td className="px-4 py-3 font-semibold text-slate-800">
+                            {post.interactions}
+                          </td>
+                          <td className="px-4 py-3 text-xs text-slate-500">
+                            {formatDate(post.created_at)}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <button
+                              type="button"
+                              className="rounded-full border border-brand bg-brand-100 px-3 py-1 text-xs font-semibold text-brand transition hover:bg-brand-200"
+                              onClick={() =>
+                                navigate(`/courses/${courseId}/posts/${post.post_id}`)
+                              }
+                            >
+                              View
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </section>

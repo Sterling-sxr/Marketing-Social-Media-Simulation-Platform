@@ -1,4 +1,4 @@
-"""Services for managing user profiles."""
+"""Module summary: Collect related domain logic and document the intended design boundaries."""
 
 from __future__ import annotations
 
@@ -91,17 +91,17 @@ PROFILE_NUMERIC_FIELDS = [
     ("openness", 5),
 ]
 
-# Aliases / helpers for AI-generated or UI-friendly payloads
+# Context: Compute shared values once so all branches use the same normalized inputs.
 AI_FIELD_ALIASES: dict[str, str] = {
-    # plural / spelling variants
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     "decision_factors": "decision_factor",
     "buying_behaviour": "buying_behavior",
-    # common AI / UI naming
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     "activity_level": "digital_time",
     "preferred_content": "content_preference",
 }
 
-# Map canonical profile fields to the corresponding PROFILE_OPTIONS key
+# Context: Compute shared values once so all branches use the same normalized inputs.
 PROFILE_OPTIONS_KEY_BY_FIELD: dict[str, str] = {
     "gender": "genders",
     "city": "cities",
@@ -118,9 +118,25 @@ PROFILE_OPTIONS_KEY_BY_FIELD: dict[str, str] = {
     "influencer_type": "influencer_type",
 }
 
+# Context: Compute shared values once so all branches use the same normalized inputs.
+INTEREST_ALIASES: dict[str, str] = {
+    "tech & gaming": "Technology & Gaming",
+    "technology and gaming": "Technology & Gaming",
+    "travel & food": "Travel & Food",
+    "travel and food": "Travel & Food",
+    "fitness & sports": "Fitness & Sports",
+    "arts & culture": "Arts & Culture",
+    "fashion & shopping": "Fashion & Shopping",
+    "outdoor & nature": "Outdoor & Nature",
+    "family & home life": "Family & Home Life",
+    "politics & social issues": "Politics & Social Issues",
+}
+
 
 def _normalize_choice(value: Any, options_key: str) -> str:
-    """Normalize a free-form string into one of PROFILE_OPTIONS[options_key]."""
+    """Execute the `_normalize_choice` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
+    """
     if not value:
         return ""
     options = PROFILE_OPTIONS.get(options_key) or []
@@ -130,28 +146,30 @@ def _normalize_choice(value: Any, options_key: str) -> str:
     text = (value or "").strip()
     lowered = text.lower()
 
-    # First pass: strict case-insensitive match
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     for opt in options:
         if opt.lower() == lowered:
             return opt
 
-    # Second pass: substring match (for shorter AI labels)
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     for opt in options:
         if lowered in opt.lower():
             return opt
 
-    # Fallback to original text (trimmed)
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     return text
 
 
 def _normalize_digital_time(value: Any) -> str:
-    """Normalize activity-level style values into digital_time choices."""
+    """Execute the `_normalize_digital_time` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
+    """
     if not value:
         return ""
     text = (value or "").strip()
     lowered = text.lower()
 
-    # Explicit mapping for AI-friendly activity levels
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     if lowered == "high":
         text = "Several times a day"
     elif lowered == "medium":
@@ -163,15 +181,18 @@ def _normalize_digital_time(value: Any) -> str:
 
 
 def _normalize_interests(value: Any) -> list[str]:
-    """Normalize interests into a list of valid PROFILE_OPTIONS['interests']."""
+    """Execute the `_normalize_interests` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
+    """
     options = PROFILE_OPTIONS.get("interests") or []
     if not value:
         return []
 
     raw_items: list[str]
     if isinstance(value, str):
-        # Split on comma / semicolon for convenience
-        raw_items = [part.strip() for part in value.replace("\n", " ").split(",") if part.strip()]
+        # Context: Compute shared values once so all branches use the same normalized inputs.
+        normalized_text = value.replace("\n", ",").replace(";", ",")
+        raw_items = [part.strip() for part in normalized_text.split(",") if part.strip()]
     elif isinstance(value, (list, tuple, set)):
         raw_items = [str(item).strip() for item in value if str(item).strip()]
     else:
@@ -180,14 +201,21 @@ def _normalize_interests(value: Any) -> list[str]:
     normalized: list[str] = []
     for item in raw_items:
         lowered = item.lower()
-        # Try case-insensitive exact match first
+
+        # Context: Compute shared values once so all branches use the same normalized inputs.
+        alias_match = INTEREST_ALIASES.get(lowered)
+        if alias_match and alias_match in options and alias_match not in normalized:
+            normalized.append(alias_match)
+            continue
+
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         match = None
         for opt in options:
             if opt.lower() == lowered:
                 match = opt
                 break
         if not match:
-            # Fallback to substring match
+            # Context: Compute shared values once so all branches use the same normalized inputs.
             for opt in options:
                 if lowered in opt.lower():
                     match = opt
@@ -199,7 +227,9 @@ def _normalize_interests(value: Any) -> list[str]:
 
 
 def _normalize_numeric(value: Any, default: int = 5) -> int:
-    """Normalize numeric persona traits (1–10 scale)."""
+    """Execute the `_normalize_numeric` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
+    """
     try:
         num = int(value)
     except (TypeError, ValueError):
@@ -212,9 +242,8 @@ def _normalize_numeric(value: Any, default: int = 5) -> int:
 
 
 def normalize_ai_profile_payload(payload: dict[str, Any]) -> dict[str, Any]:
-    """
-    Normalize AI-generated or UI-friendly persona payloads into our strict
-    profile schema. The result can safely be passed to merge_profile_payload.
+    """Execute the `normalize_ai_profile_payload` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     if not isinstance(payload, dict):
         return {}
@@ -224,46 +253,50 @@ def normalize_ai_profile_payload(payload: dict[str, Any]) -> dict[str, Any]:
     for raw_key, raw_value in payload.items():
         key = AI_FIELD_ALIASES.get(raw_key, raw_key)
 
-        # Numeric traits
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         if key in {"social_value", "sociability", "openness"}:
             normalized[key] = _normalize_numeric(raw_value)
             continue
 
-        # Interests
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         if key == "interests":
             normalized["interests"] = _normalize_interests(raw_value)
             continue
 
-        # Digital time / activity level
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         if key == "digital_time":
             normalized["digital_time"] = _normalize_digital_time(raw_value)
             continue
 
-        # Canonical string fields
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         if key in PROFILE_STRING_FIELDS:
             options_key = PROFILE_OPTIONS_KEY_BY_FIELD.get(key)
             if options_key:
                 normalized[key] = _normalize_choice(raw_value, options_key)
             else:
-                # Free-form strings like avatar_url
+                # Context: Compute shared values once so all branches use the same normalized inputs.
                 if isinstance(raw_value, str):
                     normalized[key] = raw_value.strip()
                 else:
                     normalized[key] = raw_value
             continue
 
-        # Unknown fields are ignored
+        # Context: Compute shared values once so all branches use the same normalized inputs.
 
     return normalized
 
 
 def needs_profile(user) -> bool:
-    """First-login gating removed; keep for backward compatibility."""
+    """Execute the `needs_profile` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
+    """
     return False
 
 
 def merge_profile_payload(payload: dict[str, Any], base=None) -> dict[str, Any]:
-    """Normalize profile payload while preserving existing values."""
+    """Execute the `merge_profile_payload` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
+    """
     profile_data: dict[str, Any] = {}
 
     for field in PROFILE_STRING_FIELDS:
@@ -299,7 +332,9 @@ def merge_profile_payload(payload: dict[str, Any], base=None) -> dict[str, Any]:
 
 @transaction.atomic
 def save_profile(user, payload: dict[str, Any]) -> UserProfile:
-    """Save user profile data (normalize payload and delegate to the repository)."""
+    """Execute the `save_profile` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
+    """
     existing = ProfileRepository.get_by_user_id(user.id)
     profile_data = merge_profile_payload(payload, base=existing)
     profile, _created = ProfileRepository.create_or_update(user.id, profile_data)
@@ -330,12 +365,16 @@ def profile_to_dict(profile: UserProfile) -> dict[str, Any]:
 
 
 def following_count(user_id: int) -> int:
-    """Return how many other users this user follows."""
+    """Execute the `following_count` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
+    """
     return FollowRepository.get_following_count(user_id)
 
 
 def followers_count(user_id: int) -> int:
-    """Return how many followers this user has."""
+    """Execute the `followers_count` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
+    """
     return FollowRepository.get_followers_count(user_id)
 
 

@@ -8,14 +8,15 @@ import {
   patchJson,
   uploadFile,
 } from "../lib/api";
-import { isTeacherLike } from "../lib/authRole";
 import PostCard from "./components/PostCard";
 import ConfirmDialog from "./components/ConfirmDialog";
 import Feedback from "./components/Feedback";
 import { hasProfanity } from "../lib/profanity";
 import ProfanityHint from "./components/ProfanityHint";
+import AuthenticatedShell from "./components/AuthenticatedShell";
+import { isTeacher } from "../lib/access";
 
-/** ===== Utilities and constants ===== */
+/* Context: Keep related logic in one section so assumptions and control flow stay explicit. Reason: Localizing side effects lowers review cost and reduces accidental regressions. */
 const initialComposerStatus = { loading: false, error: "", message: "" };
 const initialUploadStatus = { loading: false, error: "", message: "" };
 const MAX_ATTACHMENTS = 4;
@@ -55,7 +56,7 @@ function findTrigger(value, caret) {
   return null;
 }
 
-/** Avatar helper that falls back to initials */
+/* Purpose: `useAvatar` owns one cohesive concern so state transitions and side effects remain easy to trace. */
 function useAvatar(user) {
   if (!user) return { initials: "?", displayName: "un login", photoUrl: "" };
   const photoUrl =
@@ -84,13 +85,12 @@ export default function CourseFeedPage() {
     logout,
     loadCourseProfile,
   } = useApp();
-  const isTeacherOrAdmin = isTeacherLike(authUser);
 
-  // Left navigation filter: all | tag | following
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const searchParams = new URLSearchParams(location.search);
   const followingFromUrl = searchParams.get("tab") === "following";
 
-  // Local keyword filter for posts
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const [keyword, setKeyword] = useState("");
 
   const [leftFilter, setLeftFilter] = useState(() =>
@@ -104,16 +104,16 @@ export default function CourseFeedPage() {
       : { type: "all" }
   );
 
-  // Tag suggestions pulled from API/feed
-  const [tags, setTags] = useState([]); // [{value:'xxx', count: 12}] or strings
+  // Context: Compute shared values once so all branches use the same normalized inputs.
+  const [tags, setTags] = useState([]); // Inline explanation: Keep this non-obvious normalization rule explicit.
   const [tagsStatus, setTagsStatus] = useState({ loading: false, error: "" });
 
-  // Post feed state
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const [feedItems, setFeedItems] = useState([]);
   const [feedStatus, setFeedStatus] = useState({ loading: true, error: "" });
   const [courseSummary, setCourseSummary] = useState(null);
 
-  // Composer modal state
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const [showComposer, setShowComposer] = useState(false);
   const [composerContent, setComposerContent] = useState("");
   const [composerStatus, setComposerStatus] = useState(initialComposerStatus);
@@ -136,7 +136,7 @@ export default function CourseFeedPage() {
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
 
-  // Mention / hashtag autocompletion
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const [activeTrigger, setActiveTrigger] = useState(null);
   const [suggestionsState, setSuggestionsState] = useState(
     initialSuggestionsState
@@ -150,20 +150,31 @@ export default function CourseFeedPage() {
     []
   );
 
-  // Build header title/subtitle
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const contextCourse = useMemo(() => {
     if (!Number.isFinite(courseId)) return null;
     return courses.joined.find((c) => c.id === courseId) || null;
   }, [courses.joined, courseId]);
 
   const headerCourse = courseSummary || contextCourse;
-  const courseReadOnly = Boolean(headerCourse?.read_only);
+  const normalizeBool = (v) => {
+    if (v === true) return true;
+    if (v === false || v == null) return false;
+    const s = String(v).trim().toLowerCase();
+    return s === "true" || s === "1" || s === "yes" || s === "y";
+  };
+  const courseReadOnly = normalizeBool(headerCourse?.read_only);
   const courseEndDate = headerCourse?.end_date || null;
+  const createPostDisabledTitle = courseReadOnly
+    ? courseEndDate
+      ? `This course ended on ${courseEndDate}. Posting is disabled.`
+      : "This course has ended. Posting is disabled."
+    : undefined;
   const pageTitle = headerCourse
-    ? `${headerCourse.course_code} · ${headerCourse.name}`
-    : "Course Dynamics";
+    ? `${headerCourse.course_code} · ${headerCourse.name} · Community`
+    : "Course Community";
 
-  // Subtitle excludes roles; only term/end date plus filters
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const subtitleParts = [];
   if (headerCourse) {
     if (headerCourse.term) subtitleParts.push(`${headerCourse.term}`);
@@ -184,6 +195,12 @@ export default function CourseFeedPage() {
     ? subtitleParts.join(" · ")
     : "Catch up with the latest class discussions.";
 
+  const postsActive =
+    location.pathname === `/courses/${courseId}/community` ||
+    location.pathname.startsWith(`/courses/${courseId}/hashtags/`);
+  const materialsActive = location.pathname === `/courses/${courseId}/materials`;
+  const messagesActive = location.pathname === `/courses/${courseId}/messages`;
+
   const courseProfileTitle = useMemo(() => {
     if (headerCourse) {
       return `${headerCourse.course_code || ""} ${
@@ -193,7 +210,7 @@ export default function CourseFeedPage() {
     return courseId ? `Course ${courseId}` : "Course profile";
   }, [headerCourse, courseId]);
 
-  // Auth/course gating
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   useEffect(() => {
     if (!authCheckComplete) return;
     if (!authUser) navigate("/login", { replace: true });
@@ -203,7 +220,7 @@ export default function CourseFeedPage() {
     if (authUser) fetchCourses().catch(() => {});
   }, [authUser, fetchCourses]);
 
-  // Sync left filter when the route (or shared link) changes
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   useEffect(() => {
     const following =
       new URLSearchParams(location.search).get("tab") === "following";
@@ -225,14 +242,24 @@ export default function CourseFeedPage() {
     if (
       !authCheckComplete ||
       !authUser ||
-      isTeacherOrAdmin ||
       !Number.isFinite(courseId) ||
       !courses.joined.length
     ) {
       return;
     }
     const membership = courses.joined.find((c) => c.id === courseId);
-    if (membership && membership.profile_completed === false) {
+    const roleFromCourse = (membership?.role || "")
+      .toString()
+      .toLowerCase();
+    const isCourseTeacher =
+      roleFromCourse === "teacher" || roleFromCourse === "instructor";
+    // Context: Compute shared values once so all branches use the same normalized inputs.
+    // Context: Compute shared values once so all branches use the same normalized inputs.
+    if (
+      membership &&
+      membership.profile_completed === false &&
+      !(isTeacher(authUser) || isCourseTeacher)
+    ) {
       navigate(`/courses/${courseId}/profile`, {
         replace: true,
         state: { from: location.pathname + location.search },
@@ -246,10 +273,9 @@ export default function CourseFeedPage() {
     navigate,
     location.pathname,
     location.search,
-    isTeacherOrAdmin,
   ]);
 
-  // Load posts based on the current left-hand filter
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const loadFeed = useCallback(async () => {
     if (!Number.isFinite(courseId)) {
       setFeedStatus({ loading: false, error: "Course not found." });
@@ -269,7 +295,7 @@ export default function CourseFeedPage() {
       setFeedItems(data.items || []);
       setFeedStatus({ loading: false, error: "" });
 
-      // If the backend provides no tags, derive them from the feed
+      // Context: Compute shared values once so all branches use the same normalized inputs.
       if (leftFilter.type === "all") {
         try {
           const tagCounts = {};
@@ -298,7 +324,17 @@ export default function CourseFeedPage() {
     if (!authUser) return;
     const membership = courses.joined.find((c) => c.id === courseId);
     if (!membership) return;
-    if (membership.profile_completed === false) return;
+    const roleFromCourse = (membership?.role || "")
+      .toString()
+      .toLowerCase();
+    const isCourseTeacher =
+      roleFromCourse === "teacher" || roleFromCourse === "instructor";
+    if (
+      membership.profile_completed === false &&
+      !(isTeacher(authUser) || isCourseTeacher)
+    ) {
+      return;
+    }
     loadFeed();
   }, [authUser, courses.joined, courseId, loadFeed]);
 
@@ -309,7 +345,7 @@ export default function CourseFeedPage() {
     }
   }, [courseReadOnly]);
 
-  // Load tag list (prefer dedicated suggestion endpoint)
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const loadTags = useCallback(async () => {
     if (!Number.isFinite(courseId)) return;
     setTagsStatus({ loading: true, error: "" });
@@ -336,7 +372,7 @@ export default function CourseFeedPage() {
     setMobileFilterOpen(false);
   }, [location.pathname, location.search]);
 
-  // Toolbar actions (top right)
+  // Purpose: `handleRefresh` owns one cohesive concern so state transitions and side effects remain easy to trace.
   const handleRefresh = () => loadFeed();
 
   const openProfileModal = useCallback(async () => {
@@ -366,14 +402,14 @@ export default function CourseFeedPage() {
 
   const handleEditProfile = () => {
     closeProfileModal();
-    if (Number.isFinite(courseId) && !isTeacherOrAdmin) {
+    if (Number.isFinite(courseId)) {
       navigate(`/courses/${courseId}/profile`);
     }
   };
 
   const handleFilterAll = useCallback(() => {
     setLeftFilter({ type: "all" });
-    navigate(`/courses/${courseId}`, { replace: true });
+    navigate(`/courses/${courseId}/community`, { replace: true });
     setMobileFilterOpen(false);
   }, [courseId, navigate]);
 
@@ -415,7 +451,7 @@ export default function CourseFeedPage() {
     fetchSeqRef.current += 1;
   };
 
-  // —— Composer suggestion logic ——
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const clearSuggestions = useCallback(() => {
     setSuggestionsState({ ...initialSuggestionsState });
     setHighlightIndex(0);
@@ -727,7 +763,7 @@ export default function CourseFeedPage() {
     ]
   );
 
-  // —— Local search: filter feedItems on the client ——
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const visibleFeedItems = useMemo(() => {
     if (!keyword.trim()) return feedItems;
     const kw = keyword.trim().toLowerCase();
@@ -787,7 +823,7 @@ export default function CourseFeedPage() {
     setComposerStatus({ loading: true, error: "", message: "" });
 
     try {
-      // Build mention / hashtag arrays
+      // Context: Compute shared values once so all branches use the same normalized inputs.
       const mentions = Array.from(
         new Set(
           (trimmed.match(/@([^\s@#]+)/g) || []).map((i) => i.replace(/^@+/, ""))
@@ -799,7 +835,7 @@ export default function CourseFeedPage() {
         )
       );
 
-      // Ensure the current tag filter is present in the payload when posting within that tag
+      // Context: Compute shared values once so all branches use the same normalized inputs.
       if (
         leftFilter.type === "tag" &&
         leftFilter.tag &&
@@ -859,7 +895,7 @@ export default function CourseFeedPage() {
       } else {
         const data = await postJson(`/api/courses/${courseId}/posts/`, payload);
 
-        // Clear composer state
+        // Context: Compute shared values once so all branches use the same normalized inputs.
         setComposerStatus({
           loading: false,
           error: "",
@@ -1043,11 +1079,11 @@ export default function CourseFeedPage() {
     [navigate, courseId]
   );
 
-  /** ====== Avatar / user card presentation ====== */
+  /* Context: Keep related logic in one section so assumptions and control flow stay explicit. Reason: Localizing side effects lowers review cost and reduces accidental regressions. */
   const { initials, displayName, photoUrl } = useAvatar(authUser);
   const compactName = displayName || "User";
 
-  /** ------------------- UI ------------------- */
+  /* Context: Keep related logic in one section so assumptions and control flow stay explicit. Reason: Localizing side effects lowers review cost and reduces accidental regressions. */
   const leftItemBase =
     "w-full rounded-xl px-3 py-2 text-sm font-medium text-left transition flex items-center justify-between";
   const LeftItem = ({ active, children, onClick }) => (
@@ -1069,7 +1105,7 @@ export default function CourseFeedPage() {
       return <p className="text-sm text-slate-500">Loading...</p>;
     }
 
-    const list = visibleFeedItems; // Result after local filtering
+    const list = visibleFeedItems; // Inline explanation: Keep this non-obvious normalization rule explicit.
 
     if (list.length === 0) {
       if (keyword.trim()) {
@@ -1117,11 +1153,11 @@ export default function CourseFeedPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-accent-50">
-      {/* Header with logo + user card + logout */}
-      <header className="border-b border-brand-100/70 bg-white/80 backdrop-blur">
+    <AuthenticatedShell title={pageTitle} subtitle={pageSubtitle}>
+      {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
+      <header className="hidden">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 lg:px-6 lg:py-4">
-          {/* Left: logo */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <button
             type="button"
             onClick={() => navigate("/studenthome")}
@@ -1141,7 +1177,7 @@ export default function CourseFeedPage() {
             </span>
           </button>
 
-          {/* Right: user card + logout */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <div className="flex min-w-0 items-center gap-2 sm:gap-3 lg:gap-5">
             <div
               className="flex min-w-0 items-center gap-2 rounded-full border border-brand-200/80
@@ -1209,122 +1245,12 @@ export default function CourseFeedPage() {
         </div>
       </header>
 
-      {/* Main layout: left navigation + right feed */}
+      {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-3 py-3 sm:gap-4 sm:px-4 sm:py-4 lg:flex-row lg:gap-6 lg:px-6 lg:py-8">
-        {/* Left column */}
-        <aside className="hidden w-64 flex-shrink-0 rounded-3xl border border-brand-100 bg-white p-4 shadow-lg shadow-brand-100 lg:block">
-          {/* Course title + subtitle at the top */}
-          <div className="mb-4">
-            <h1 className="text-base font-bold text-slate-900 truncate">
-              {pageTitle}
-            </h1>
-            <p className="mt-0.5 text-xs text-slate-500 truncate">
-              {pageSubtitle}
-            </p>
-          </div>
+        {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend.
+              */}
 
-          {/* Profile actions */}
-          <div className="mb-4">
-            <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Profile
-            </label>
-            <div className="relative rounded-full p-[2px] bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200">
-              <button
-                type="button"
-                onClick={openProfileModal}
-                className="flex h-10 w-full items-center justify-between rounded-full bg-white px-4 text-sm font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200"
-              >
-                <span>View course profile</span>
-                <span className="text-slate-400">↗</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Materials shortcut */}
-          <div className="mb-4">
-            <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Resources
-            </label>
-            <a
-              href={`/courses/${courseId}/materials`}
-              className="flex h-10 w-full items-center justify-between rounded-full border border-brand-200 bg-brand-50/60 px-4 text-sm font-semibold text-brand-700 transition hover:bg-brand-100"
-            >
-              <span>📂 Course Materials</span>
-              <span className="text-brand-400">↗</span>
-            </a>
-          </div>
-
-          {/* Search field (relocated below the profile section) */}
-          <div className="mb-4">
-            <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Search
-            </label>
-            <div className="relative rounded-full p-[2px] bg-gradient-to-r from-brand-400 via-accent-300 to-accent-500">
-              <input
-                type="text"
-                placeholder="🔍  Search posts"
-                className="h-10 w-full rounded-full border-2 border-white bg-white px-5 text-sm text-slate-800 placeholder-slate-400 shadow-sm
-                           focus:outline-none focus:ring-2 focus:ring-accent-400 focus:border-accent-400 transition-all duration-200"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                aria-label="Search posts"
-              />
-            </div>
-          </div>
-
-          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-            Filter
-          </div>
-          <div className="space-y-2">
-            <LeftItem
-              active={leftFilter.type === "all"}
-              onClick={handleFilterAll}
-            >
-              <span>All</span>
-            </LeftItem>
-            <LeftItem
-              active={leftFilter.type === "following"}
-              onClick={handleFilterFollowing}
-            >
-              <span>Followed</span>
-            </LeftItem>
-          </div>
-
-          <div className="mt-5 mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-            Community
-          </div>
-          {tagsStatus.loading ? (
-            <p className="text-xs text-slate-400">Load Community...</p>
-          ) : (
-            <div className="space-y-1">
-              {(tags || []).map((t) => {
-                const value = typeof t === "string" ? t : t.value;
-                const count = typeof t === "string" ? undefined : t.count;
-                const active =
-                  leftFilter.type === "tag" && leftFilter.tag === value;
-                return (
-                  <LeftItem
-                    key={value}
-                    active={active}
-                    onClick={() => handleFilterTag(value)}
-                  >
-                    <span>#{value}</span>
-                    {count ? (
-                      <span className="text-[10px] text-slate-400">
-                        {count}
-                      </span>
-                    ) : null}
-                  </LeftItem>
-                );
-              })}
-              {(tags || []).length === 0 ? (
-                <p className="text-xs text-slate-400">No tag</p>
-              ) : null}
-            </div>
-          )}
-        </aside>
-
-        {/* Right column */}
+        {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
         <main className="flex-1 space-y-4 rounded-2xl border border-brand-100 bg-white/90 p-4 pb-24 shadow-lg shadow-brand-100/80 sm:space-y-5 sm:p-5 lg:space-y-6 lg:rounded-3xl lg:p-6 lg:pb-6 lg:shadow-xl lg:shadow-brand-100">
           <div className="space-y-2 lg:hidden">
             <h1 className="break-words text-base font-bold text-slate-900">
@@ -1332,6 +1258,26 @@ export default function CourseFeedPage() {
             </h1>
             <p className="break-words text-xs text-slate-500">{pageSubtitle}</p>
           </div>
+
+        {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
+        <div className="hidden lg:block mb-4">
+          <div className="flex flex-col gap-2">
+            <label className="block text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Search
+            </label>
+            <div className="relative rounded-full p-[2px] bg-gradient-to-r from-brand-400 via-accent-300 to-accent-500">
+              <input
+                type="text"
+                placeholder="🔍  Search posts"
+                className="h-10 w-full rounded-full border-2 border-white bg-white px-5 text-sm text-slate-800 placeholder-slate-400 shadow-sm
+                               focus:outline-none focus:ring-2 focus:ring-accent-400 focus:border-accent-400 transition-all duration-200"
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                aria-label="Search posts"
+              />
+            </div>
+          </div>
+        </div>
 
           <div className="flex flex-wrap items-center gap-2 lg:hidden">
             <button
@@ -1356,7 +1302,7 @@ export default function CourseFeedPage() {
             >
               Refresh
             </button>
-            {/* Course Materials shortcut — prominent on mobile */}
+            {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
             <a
               href={`/courses/${courseId}/materials`}
               className="inline-flex h-9 items-center gap-1.5 rounded-full border border-brand-400 bg-brand-50 px-4 text-xs font-semibold text-brand-800 transition hover:bg-brand-100 focus:outline-none focus:ring-2 focus:ring-brand-300"
@@ -1365,34 +1311,11 @@ export default function CourseFeedPage() {
             </a>
           </div>
 
-          {courseReadOnly ? (
-            <div className="rounded-2xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-600">
-              {courseEndDate
-                ? `This course ended on ${courseEndDate}. Posts are read-only.`
-                : "This course has ended. Posts are read-only."}
-            </div>
-          ) : null}
-
           {feedStatus.error ? <Feedback error={feedStatus.error} /> : null}
 
-          {/* Sticky control bar positioned above the first post */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <div className="sticky top-0 z-20 -mx-6 hidden px-6 pt-2 lg:block">
             <div className="flex items-center justify-end gap-3 rounded-b-2xl border-b border-brand-100/60 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/60 py-3">
-              <button
-                type="button"
-                onClick={() => navigate("/studenthome")}
-                className="inline-flex h-10 items-center gap-2 rounded-full border-2 bg-white px-5 text-sm font-semibold
-                 text-brand-600 border-brand-400/80 transition-all duration-200 hover:bg-brand-50 hover:shadow-md"
-              >
-                <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4">
-                  <path
-                    fill="currentColor"
-                    d="M11.7 5.3 5 12l6.7 6.7 1.4-1.4L8.8 13H20v-2H8.8l4.3-4.3-1.4-1.4z"
-                  />
-                </svg>
-                Back to homepage
-              </button>
-
               <button
                 type="button"
                 onClick={handleRefresh}
@@ -1410,9 +1333,12 @@ export default function CourseFeedPage() {
                   bg-gradient-to-r from-brand-500 via-accent-400 to-accent-500
                   hover:from-brand-600 hover:via-accent-500 hover:to-accent-500
                   transition-all duration-200 hover:shadow-[0_8px_24px_-6px_rgba(236,72,153,0.45)] active:scale-[0.97]
-                  border-2 border-white/40 ${
-                    !showComposer ? "animate-pulse" : ""
+                  border-2 border-white/40 ${courseReadOnly ? "cursor-not-allowed opacity-70" : ""} ${
+                    !showComposer && !courseReadOnly ? "animate-pulse" : ""
                   }`}
+                disabled={courseReadOnly}
+                title={createPostDisabledTitle}
+                aria-disabled={courseReadOnly}
               >
                 Create Post
               </button>
@@ -1549,7 +1475,7 @@ export default function CourseFeedPage() {
         </button>
       ) : null}
 
-      {/* Composer modal */}
+      {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
       {showComposer && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/35 p-0 sm:grid sm:place-items-center sm:p-4">
           <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl border border-accent-100/70 bg-white/95 p-4 shadow-[0_32px_90px_-32px_rgba(91,33,182,0.45)] backdrop-blur sm:max-h-[86vh] sm:max-w-2xl sm:rounded-3xl sm:p-6">
@@ -1842,15 +1768,13 @@ export default function CourseFeedPage() {
                 >
                   Close
                 </button>
-                {!isTeacherOrAdmin ? (
-                  <button
-                    type="button"
-                    className="rounded-full bg-brand px-4 py-2 text-xs font-semibold text-white shadow hover:bg-brand-dark"
-                    onClick={handleEditProfile}
-                  >
-                    {profileModal.profile ? "Edit profile" : "Complete profile"}
-                  </button>
-                ) : null}
+                <button
+                  type="button"
+                  className="rounded-full bg-brand px-4 py-2 text-xs font-semibold text-white shadow hover:bg-brand-dark"
+                  onClick={handleEditProfile}
+                >
+                  {profileModal.profile ? "Edit profile" : "Complete profile"}
+                </button>
               </div>
             </header>
 
@@ -1960,15 +1884,17 @@ export default function CourseFeedPage() {
                 </div>
               ) : (
                 <div className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-5 text-sm text-slate-600">
-                  {isTeacherOrAdmin
-                    ? "This course profile has not been completed yet."
-                    : "You have not completed this course profile yet. Click Complete profile to fill it in now."}
+                  You have not completed this course profile yet. Click{" "}
+                  <span className="font-semibold text-brand">
+                    Complete profile
+                  </span>{" "}
+                  to fill it in now.
                 </div>
               )}
             </section>
           </div>
         </div>
       ) : null}
-    </div>
+    </AuthenticatedShell>
   );
 }

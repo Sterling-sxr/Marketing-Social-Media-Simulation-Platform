@@ -1,4 +1,4 @@
-// src/components/ProfanityHint.jsx
+// Purpose: `ProfanityHint` owns one cohesive concern so state transitions and side effects remain easy to trace.
 export default function ProfanityHint({ message }) {
   if (!message) return null;
   return (

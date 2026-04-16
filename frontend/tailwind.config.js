@@ -1,10 +1,10 @@
-/** @type {import('tailwindcss').Config} */
+/* Context: Keep related logic in one section so assumptions and control flow stay explicit. Reason: Localizing side effects lowers review cost and reduces accidental regressions. */
 export default {
   content: ["./index.html", "./src/**/*.{js,jsx}"],
   theme: {
     extend: {
       colors: {
-        // Primary brand palette: deep-sea blue
+        // Context: Compute shared values once so all branches use the same normalized inputs.
         brand: {
           50: "#EEF7F9",
           100: "#DCEFF3",
@@ -20,7 +20,7 @@ export default {
           dark: "#1B596E",
           light: "#94C8D8",
         },
-        // Accent palette: clear teal
+        // Context: Compute shared values once so all branches use the same normalized inputs.
         accent: {
           50: "#ECFBF7",
           100: "#D3F5EC",

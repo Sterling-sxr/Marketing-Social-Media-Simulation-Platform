@@ -9,29 +9,57 @@ from ..repositories.models import Notification
 from ..utils.serializers import notification_to_dict
 
 
-def list_notifications(*, recipient: str, limit: int = 50) -> tuple[list[Notification], int]:
-    """Return notifications for a recipient and the unread count."""
+def _parse_optional_course_id(course_id: object) -> int | None:
+    if course_id is None:
+        return None
+    try:
+        # Context: Compute shared values once so all branches use the same normalized inputs.
+        course_id_int = int(str(course_id).strip())
+        return course_id_int
+    except (TypeError, ValueError):
+        return None
+
+
+def list_notifications(
+    *,
+    recipient: str,
+    limit: int = 50,
+    course_id: object | None = None,
+) -> tuple[list[Notification], int]:
+    """Execute the `list_notifications` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
+    """
+    parsed_course_id = _parse_optional_course_id(course_id)
     queryset = Notification.objects.filter(recipient=recipient)
+    if parsed_course_id is not None:
+        queryset = queryset.filter(metadata__course_id=parsed_course_id)
     unread_count = queryset.filter(is_read=False).count()
     return list(queryset[:limit]), unread_count
 
 
-def mark_as_read(*, recipient: str, ids: Iterable[int]) -> int:
-    """Mark supplied notification ids as read for the recipient."""
+def mark_as_read(*, recipient: str, ids: Iterable[int], course_id: object | None = None) -> int:
+    """Execute the `mark_as_read` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
+    """
     ids = list(ids)
     if not ids:
         return 0
-    return Notification.objects.filter(recipient=recipient, id__in=ids).update(is_read=True)
+    parsed_course_id = _parse_optional_course_id(course_id)
+    qs = Notification.objects.filter(recipient=recipient, id__in=ids)
+    if parsed_course_id is not None:
+        qs = qs.filter(metadata__course_id=parsed_course_id)
+    return qs.update(is_read=True)
 
 
-def mark_all_as_read(*, recipient: str) -> int:
+def mark_all_as_read(*, recipient: str, course_id: object | None = None) -> int:
+    """Execute the `mark_all_as_read` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
-    Mark all notifications for the given recipient as read.
-
-    Used by the "Mark all read" action in the UI so that the badge
-    count truly drops to zero, not just for the first page of results.
-    """
-    return Notification.objects.filter(recipient=recipient, is_read=False).update(is_read=True)
+    parsed_course_id = _parse_optional_course_id(course_id)
+    qs = Notification.objects.filter(recipient=recipient, is_read=False)
+    if parsed_course_id is not None:
+        qs = qs.filter(metadata__course_id=parsed_course_id)
+    return qs.update(is_read=True)
 
 
 def create_notification(
@@ -44,7 +72,9 @@ def create_notification(
     link: str,
     metadata: dict | None = None,
 ) -> dict:
-    """Create and broadcast a notification returning the payload."""
+    """Execute the `create_notification` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
+    """
     notification = Notification.objects.create(
         recipient=recipient,
         actor=actor,

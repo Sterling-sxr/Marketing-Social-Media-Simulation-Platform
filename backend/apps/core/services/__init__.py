@@ -1,4 +1,12 @@
 from .ai_analysis_service import generate_ai_analysis, generate_tutor_response
+from .ai_persona_creation_service import (
+    GUIDED_TEMPLATES,
+    MAX_PERSONA_PREVIEW_COUNT,
+    commit_generated_personas,
+    commit_guided_personas,
+    preview_generated_personas,
+    preview_guided_personas,
+)
 from .ai_user_reaction_service import (
     handle_post_reactions,
     schedule_ai_reactions,
@@ -102,6 +110,22 @@ from .registration_service import (
     request_verification_code,
     verify_registration_code,
 )
+from .registration_service import (
+    EmailThrottleError,
+    RegistrationError,
+    VerificationCodeError,
+    VerificationRequest,
+    complete_registration,
+    request_verification_code,
+    verify_registration_code,
+)
+
+from .segmentation_analytics_service import (
+    LENS_CONFIG,
+    get_admin_course_segmentation,
+    get_admin_post_segmentation,
+)
+
 from .student_analytics_service import build_student_analytics_payload
 
 __all__ = [
@@ -142,13 +166,12 @@ __all__ = [
     "profile_to_dict",
     "following_count",
     "followers_count",
+    "LENS_CONFIG",
     "list_courses_for_user",
     "join_course_by_code",
     "create_course",
     "list_managed_courses",
     "update_course",
-    "get_course_profile",
-    "save_course_profile",
     "get_course_profile",
     "save_course_profile",
     "list_course_posts",
@@ -184,6 +207,8 @@ __all__ = [
     "invalidate_course_metadata_related_snapshots",
     "invalidate_course_dashboard_snapshots",
     "classify_comment_sentiment",
+    "get_admin_course_segmentation",
+    "get_admin_post_segmentation",
     "get_course_ai_user",
     "list_course_ai_users",
     "create_course_ai_user",
@@ -197,4 +222,10 @@ __all__ = [
     "handle_post_reactions",
     "generate_ai_analysis",
     "generate_tutor_response",
+    "preview_guided_personas",
+    "commit_guided_personas",
+    "preview_generated_personas",
+    "commit_generated_personas",
+    "GUIDED_TEMPLATES",
+    "MAX_PERSONA_PREVIEW_COUNT",
 ]

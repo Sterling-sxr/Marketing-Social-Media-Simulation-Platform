@@ -1,4 +1,4 @@
-// src/pages/components/ProfileSection.jsx
+// Purpose: `ProfileSection` owns one cohesive concern so state transitions and side effects remain easy to trace.
 export default function ProfileSection({
   icon,
   title,

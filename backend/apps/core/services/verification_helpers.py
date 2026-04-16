@@ -1,5 +1,4 @@
-"""Shared helpers for email verification flows."""
-
+"""Module summary: Collect related domain logic and document the intended design boundaries."""
 from __future__ import annotations
 
 import random

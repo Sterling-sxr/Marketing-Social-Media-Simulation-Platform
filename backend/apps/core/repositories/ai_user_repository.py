@@ -1,7 +1,4 @@
-"""
-Course AI User Repository
-"""
-
+"""Module summary: Collect related domain logic and document the intended design boundaries."""
 from __future__ import annotations
 
 from typing import List, Optional
@@ -13,7 +10,7 @@ from .models import CourseAIUser
 
 
 class CourseAIUserRepository(BaseRepository[CourseAIUser]):
-    """Data-access helpers for course AI users."""
+    """Class summary: CourseAIUserRepository keeps related behavior together behind one clear interface."""
 
     model = CourseAIUser
 
@@ -26,7 +23,11 @@ class CourseAIUserRepository(BaseRepository[CourseAIUser]):
 
     @classmethod
     def list_for_course(cls, course_id: int) -> List[CourseAIUser]:
-        return list(cls._base_queryset().filter(course_id=course_id).order_by("username"))
+        return list(
+            cls._base_queryset()
+            .filter(course_id=course_id)
+            .order_by("username")
+        )
 
     @classmethod
     def get_for_course(cls, course_id: int, ai_user_id: int) -> Optional[CourseAIUser]:
@@ -46,7 +47,11 @@ class CourseAIUserRepository(BaseRepository[CourseAIUser]):
     def search(cls, course_id: int, keyword: str) -> List[CourseAIUser]:
         qs = cls._base_queryset().filter(course_id=course_id)
         if keyword:
-            qs = qs.filter(Q(username__icontains=keyword) | Q(display_name__icontains=keyword) | Q(city__icontains=keyword))
+            qs = qs.filter(
+                Q(username__icontains=keyword)
+                | Q(display_name__icontains=keyword)
+                | Q(city__icontains=keyword)
+            )
         return list(qs.order_by("username"))
 
 

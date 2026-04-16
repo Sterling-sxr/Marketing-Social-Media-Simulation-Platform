@@ -1,26 +1,28 @@
-// Keep the top imports unchanged
+// Context: Compute shared values once so all branches use the same normalized inputs.
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
-import { isTeacherLike } from "../lib/authRole";
 import AuthenticatedShell from "./components/AuthenticatedShell";
 import Feedback from "./components/Feedback";
+import { isTeacher } from "../lib/access";
 
-// Centralized badge renderer for TEACHER / STUDENT
+// Purpose: `RoleBadge` owns one cohesive concern so state transitions and side effects remain easy to trace.
 function RoleBadge({ courseRole, isStaff, isSuperuser }) {
-  const isTeacher = isTeacherLike({
-    role: courseRole,
-    is_staff: isStaff,
-    is_superuser: isSuperuser,
-  });
+  const roleFromCourse = (courseRole || "").toString().toLowerCase();
+
+  const isTeacher =
+    roleFromCourse === "teacher" ||
+    roleFromCourse === "instructor" ||
+    isStaff ||
+    isSuperuser;
 
   const text = isTeacher ? "TEACHER" : "STUDENT";
 
-  // Soft gradient capsule badge
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const cls = isTeacher
-    ? // Teacher badge: amber/orange gradient
+    ? // Inline explanation: Keep this non-obvious normalization rule explicit.
       "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide text-accent-800 shadow-sm border border-accent-200 bg-gradient-to-r from-accent-50 via-accent-100 to-brand-50"
-    : // Student badge: pastel purple to peach gradient
+    : // Inline explanation: Keep this non-obvious normalization rule explicit.
       "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide text-accent-700 shadow-sm border border-accent-200 bg-gradient-to-r from-accent-50 via-accent-50 to-brand-50";
 
   return <span className={cls}>{text}</span>;
@@ -40,10 +42,6 @@ export default function CoursesPage() {
     setJoinCode,
     joinCourse,
   } = useApp();
-  const [availableExpanded, setAvailableExpanded] = useState(() => {
-    if (typeof window === "undefined") return true;
-    return window.matchMedia("(min-width: 1024px)").matches;
-  });
 
   useEffect(() => {
     if (!authCheckComplete) return;
@@ -54,23 +52,23 @@ export default function CoursesPage() {
     fetchCourses().catch(() => {});
   }, [authUser, authCheckComplete, fetchCourses, navigate]);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return undefined;
-    const media = window.matchMedia("(min-width: 1024px)");
-    const handleChange = (event) => {
-      setAvailableExpanded(event.matches);
-    };
-    if (typeof media.addEventListener === "function") {
-      media.addEventListener("change", handleChange);
-      return () => media.removeEventListener("change", handleChange);
-    }
-    media.addListener(handleChange);
-    return () => media.removeListener(handleChange);
-  }, []);
-
   if (!authCheckComplete || !authUser) {
     return null;
   }
+
+  const handleEnterCourse = (course) => {
+    if (!course) return;
+    const roleFromCourse = (course?.role || "").toString().toLowerCase();
+    const isCourseTeacher =
+      roleFromCourse === "teacher" || roleFromCourse === "instructor";
+    // Context: Compute shared values once so all branches use the same normalized inputs.
+    // Context: Compute shared values once so all branches use the same normalized inputs.
+    if (course.profile_completed || isTeacher(authUser) || isCourseTeacher) {
+      navigate(`/courses/${course.id}`);
+    } else {
+      navigate(`/courses/${course.id}/profile`);
+    }
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -78,24 +76,14 @@ export default function CoursesPage() {
   };
 
   const enrolledCount = courses.joined.length;
-  const availableCount = courses.available.length;
-  const isTeacherOrAdmin = isTeacherLike(authUser);
-
-  const handleEnterCourse = (course) => {
-    if (!course) return;
-    if (isTeacherOrAdmin || course.profile_completed) {
-      navigate(`/courses/${course.id}`);
-    } else {
-      navigate(`/courses/${course.id}/profile`);
-    }
-  };
+  const isAdmin = !!authUser?.is_staff || !!authUser?.is_superuser;
 
   return (
     <AuthenticatedShell
       title="Course Center"
       subtitle="Join a course to access the class community"
     >
-      {isTeacherOrAdmin ? (
+      {isAdmin ? (
         <section className="lg:hidden" aria-label="Admin quick actions">
           <div className="grid grid-cols-2 divide-x divide-slate-200 rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
             <button
@@ -146,19 +134,19 @@ export default function CoursesPage() {
                       {course.course_code} · {course.name}
                     </p>
                     <p className="text-xs text-slate-400">{course.term}</p>
-                    {!isTeacherOrAdmin && !course.profile_completed ? (
+                    {!course.profile_completed ? (
                       <p className="mt-1 rounded-lg bg-brand-50 px-2 py-1 text-xs font-medium text-brand-600">
                         Complete your course profile to enter
                       </p>
                     ) : null}
                   </div>
 
-                  {/* Replaced raw {course.role} with RoleBadge for consistent rendering */}
+                  {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
                   <div className="self-end sm:self-center">
                     <RoleBadge
-                      courseRole={course.role} // Role returned from the course payload (if any)
-                      isStaff={!!authUser?.is_staff} // Boolean flags from Django auth user
-                      isSuperuser={!!authUser?.is_superuser} // Boolean flags from Django auth user
+                      courseRole={course.role} // Inline explanation: Keep this non-obvious normalization rule explicit.
+                      isStaff={!!authUser?.is_staff} // Inline explanation: Keep this non-obvious normalization rule explicit.
+                      isSuperuser={!!authUser?.is_superuser} // Inline explanation: Keep this non-obvious normalization rule explicit.
                     />
                   </div>
                 </button>
@@ -207,53 +195,6 @@ export default function CoursesPage() {
         </div>
       </section>
 
-      <section className="space-y-3 sm:space-y-4">
-        <button
-          type="button"
-          onClick={() => setAvailableExpanded((prev) => !prev)}
-          className="flex w-full items-center justify-between rounded-2xl border border-brand-100 bg-white px-4 py-3 text-left transition hover:border-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-          aria-expanded={availableExpanded}
-          aria-controls="available-courses-list"
-        >
-          <span>
-            <span className="block text-base font-semibold text-slate-800 sm:text-lg">
-              Courses You Can Enroll
-            </span>
-            <span className="block text-xs text-slate-500 sm:text-sm">
-              {availableCount} available
-            </span>
-          </span>
-          <span
-            aria-hidden="true"
-            className={`inline-flex h-7 w-7 items-center justify-center rounded-full bg-brand-50 text-slate-500 transition ${
-              availableExpanded ? "rotate-180" : ""
-            }`}
-          >
-            <svg viewBox="0 0 20 20" className="h-4 w-4 fill-current">
-              <path d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.12l3.71-3.89a.75.75 0 1 1 1.08 1.04l-4.25 4.45a.75.75 0 0 1-1.08 0L5.21 8.27a.75.75 0 0 1 .02-1.06z" />
-            </svg>
-          </span>
-        </button>
-        {courses.available.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-3 text-sm text-slate-500">
-            No more courses available.
-          </p>
-        ) : availableExpanded ? (
-          <ul id="available-courses-list" className="space-y-2.5 sm:space-y-3">
-            {courses.available.map((course) => (
-              <li
-                key={course.id}
-                className="rounded-2xl border border-brand-100 bg-white px-4 py-3 shadow-sm"
-              >
-                <p className="break-words text-sm font-semibold text-slate-800">
-                  {course.course_code} · {course.name}
-                </p>
-                <p className="mt-1 text-xs text-slate-400">{course.term}</p>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-      </section>
     </AuthenticatedShell>
   );
 }

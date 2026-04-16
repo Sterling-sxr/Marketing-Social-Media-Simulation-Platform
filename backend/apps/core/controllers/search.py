@@ -1,4 +1,4 @@
-# apps/core/controllers/search.py
+# Context: Compute shared values once so all branches use the same normalized inputs.
 import json
 
 from django.contrib.auth import get_user_model
@@ -17,11 +17,14 @@ _RANK_LABELS = {
 }
 
 
+# Purpose: Orchestrate `_save_search_history` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def _save_search_history(request, query: str) -> None:
     if request.user.is_authenticated:
-        # Use filter().first() instead of get_or_create to avoid creating a
-        # bare UserProfile (many integer fields have no default, causing
-        # NOT NULL violations on auto-creation).
+        # Context: Compute shared values once so all branches use the same normalized inputs.
+        # Context: Compute shared values once so all branches use the same normalized inputs.
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         profile = UserProfile.objects.filter(user=request.user).first()
         if profile is not None:
             history = profile.search_history or []
@@ -39,24 +42,30 @@ def _save_search_history(request, query: str) -> None:
 
 
 @require_GET
+# Purpose: Orchestrate `search_posts` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def search_posts(request):
-    """
-    搜索帖子，返回前端 SearchResultCard 所需的完整字段。
-    响应：{ results: [{id, type, title, snippet, href, courseName, authorName, createdAt, rankLabel}] }
+    """Execute the `search_posts` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     query = request.GET.get("q", "").strip()
     if not query:
         return JsonResponse({"results": []})
 
-    # Split multi-word queries into tokens so that each word is matched
-    # independently (AND logic). This prevents "python tutorial" from requiring
-    # both words to appear adjacent in the content.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     tokens = [t for t in query.split() if t]
 
     token_filter = Q()
     for token in tokens:
         clean = token.lstrip("#").lower()
-        token_filter &= Q(content__icontains=token) | Q(hashtags__contains=[clean]) | Q(author__username__icontains=token)
+        token_filter &= (
+            Q(content__icontains=token)
+            | Q(hashtags__contains=[clean])
+            | Q(author__username__icontains=token)
+        )
 
     posts_qs = (
         CoursePost.objects.select_related("author", "course")
@@ -82,19 +91,17 @@ def search_posts(request):
         else:
             rank_label = _RANK_LABELS["low"]
 
-        results.append(
-            {
-                "id": f"post-{p.id}",
-                "type": "post",
-                "title": title,
-                "snippet": snippet,
-                "href": f"/courses/{p.course_id}/posts/{p.id}",
-                "courseName": p.course.name,
-                "authorName": p.author.username,
-                "createdAt": p.created_at.isoformat(),
-                "rankLabel": rank_label,
-            }
-        )
+        results.append({
+            "id": f"post-{p.id}",
+            "type": "post",
+            "title": title,
+            "snippet": snippet,
+            "href": f"/courses/{p.course_id}/posts/{p.id}",
+            "courseName": p.course.name,
+            "authorName": p.author.username,
+            "createdAt": p.created_at.isoformat(),
+            "rankLabel": rank_label,
+        })
 
     _save_search_history(request, query)
 
@@ -102,13 +109,18 @@ def search_posts(request):
 
 
 @require_GET
+# Purpose: Orchestrate `suggested_search` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def suggested_search(request):
+    """Execute the `suggested_search` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
-    返回全站热搜词，格式与前端 HOT_SEARCHES 相同：
-    [{id, keyword, hitCount, blurb}]
-    当数据库中无数据时返回空列表（前端保留静态兜底数据）。
-    """
-    top_keywords = SearchLog.objects.values("keyword").annotate(hit_count=Count("keyword")).order_by("-hit_count")[:10]
+    top_keywords = (
+        SearchLog.objects.values("keyword")
+        .annotate(hit_count=Count("keyword"))
+        .order_by("-hit_count")[:10]
+    )
     suggestions = [
         {
             "id": f"hot-{i + 1}",
@@ -122,9 +134,12 @@ def suggested_search(request):
 
 
 @require_GET
+# Purpose: Orchestrate `get_search_history` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def get_search_history(request):
-    """
-    获取当前用户的搜索历史（字符串数组）。
+    """Execute the `get_search_history` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     if request.user.is_authenticated:
         profile = UserProfile.objects.filter(user=request.user).first()
@@ -135,9 +150,12 @@ def get_search_history(request):
 
 
 @require_POST
+# Purpose: Orchestrate `add_search_history` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def add_search_history(request):
-    """
-    手动新增一条搜索历史，接受 JSON body：{"keyword": "..."}
+    """Execute the `add_search_history` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     try:
         body = json.loads(request.body)

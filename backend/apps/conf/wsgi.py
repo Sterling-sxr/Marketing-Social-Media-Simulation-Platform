@@ -1,5 +1,4 @@
-"""WSGI config for Django."""
-
+"""Module summary: Collect related domain logic and document the intended design boundaries."""
 import os
 
 from django.core.wsgi import get_wsgi_application

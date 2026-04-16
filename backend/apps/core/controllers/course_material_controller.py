@@ -11,6 +11,9 @@ from ..services.course_material_service import (
 )
 
 
+# Purpose: Orchestrate `_ensure_authenticated` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def _ensure_authenticated(request: HttpRequest) -> JsonResponse | None:
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Unauthorized"}, status=401)
@@ -18,10 +21,12 @@ def _ensure_authenticated(request: HttpRequest) -> JsonResponse | None:
 
 
 @csrf_exempt
+# Purpose: Orchestrate `course_materials_view` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def course_materials_view(request: HttpRequest, course_id: int) -> JsonResponse:
-    """
-    GET  /api/courses/<course_id>/materials/          — list materials
-    POST /api/courses/<course_id>/materials/          — upload a new material
+    """Execute the `course_materials_view` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -67,9 +72,14 @@ def course_materials_view(request: HttpRequest, course_id: int) -> JsonResponse:
 
 
 @csrf_exempt
-def course_material_detail_view(request: HttpRequest, course_id: int, material_id: int) -> JsonResponse:
-    """
-    DELETE /api/courses/<course_id>/materials/<material_id>/  — delete a material
+# Purpose: Orchestrate `course_material_detail_view` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
+def course_material_detail_view(
+    request: HttpRequest, course_id: int, material_id: int
+) -> JsonResponse:
+    """Execute the `course_material_detail_view` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     auth_error = _ensure_authenticated(request)
     if auth_error:

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
-import { isTeacherLike } from "../lib/authRole";
 import Feedback from "./components/Feedback";
 import CircleImage from "./components/CircleImage";
 import { Eye, EyeOff } from "lucide-react";
@@ -11,7 +10,7 @@ export default function HomePage() {
   const navigate = useNavigate();
   const { authUser, login, logout } = useApp();
 
-  // ===== Login form state (reuse LoginPage logic) =====
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState({
@@ -25,13 +24,9 @@ export default function HomePage() {
     e.preventDefault();
     setStatus({ loading: true, message: "", error: "" });
     try {
-      const { user } = await login(email, password);
+      await login(email, password);
       setStatus({ loading: false, message: "Login Success!", error: "" });
-      if (isTeacherLike(user)) {
-        navigate("/teacherhome");
-      } else {
-        navigate("/studenthome");
-      }
+      navigate("/studenthome");
     } catch (error) {
       setStatus({ loading: false, message: "", error: error.message });
     }
@@ -44,7 +39,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-brand-100 text-slate-900 flex flex-col">
-      {/* Header */}
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-3 py-3 sm:px-6 sm:py-5">
         <div className="flex items-center gap-3">
           <img
@@ -56,30 +50,18 @@ export default function HomePage() {
             Bread campus social simulation platform
           </span>
         </div>
-
-        <nav className="flex items-center gap-3">
-          {authUser ? (
-            <>
-              {}
-            </>
-          ) : null}
-        </nav>
       </header>
 
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-5 px-3 py-4 sm:gap-10 sm:px-6 sm:py-10 lg:flex-row lg:items-center">
         <section className="order-1 lg:order-none relative flex-1 md:min-h-[460px] lg:min-h-[520px] pt-1 lg:pt-6">
-          <div className="relative z-10 max-w-[520px] space-y-4 sm:space-y-6 lg:-mt-10">
+          <div className="relative z-10 max-w-[560px] space-y-4 sm:space-y-6 lg:-mt-10">
             <h1 className="text-2xl font-bold sm:text-4xl lg:text-4xl">
               Join us and explore a new campus social platform
             </h1>
-          </div>
-
-          <div className="absolute inset-0 pointer-events-none z-0 md:hidden">
-            <CircleImage
-              src="/logo.jpg"
-              alt="circle-mobile"
-              className="absolute right-2 top-2 h-20 w-20 opacity-40"
-            />
+            <p className="text-sm text-slate-600 sm:text-base">
+              Create posts, follow classmates, and explore engagement analytics
+              through simulation.
+            </p>
           </div>
 
           <div className="absolute inset-0 hidden md:block pointer-events-none z-0">
@@ -105,33 +87,30 @@ export default function HomePage() {
         </section>
 
         <aside className="order-2 lg:order-none flex-1">
-          <div className="relative w-full max-w-md rounded-2xl border border-brand-100 bg-white p-5 text-center shadow-lg shadow-brand-100 sm:rounded-3xl sm:p-8 sm:shadow-xl lg:ml-auto">
+          <div className="relative w-full max-w-md rounded-2xl border border-brand-100 bg-white/85 p-5 text-center shadow-[0_24px_70px_rgba(15,23,42,0.12)] ring-1 ring-brand-100 backdrop-blur sm:rounded-3xl sm:p-8 lg:ml-auto">
             <div className="absolute right-0 top-0 h-16 w-16 rounded-bl-3xl bg-gradient-to-b from-brand/10 to-brand/0" />
 
             <h2 className="mb-6 text-lg font-semibold text-slate-800">Login</h2>
-            {/* <p className="mb-6 text-sm text-slate-500">Student Portal</p> */}
 
             {!authUser ? (
               <>
                 <form className="space-y-4 text-left" onSubmit={handleSubmit}>
-                  <label className="block text-sm font-medium text-slate-600">
+                  <label className="field-label text-sm">
                     Email
-                    <div className="input-shell mt-2">
-                      <input
-                        type="email"
-                        value={email}
-                        placeholder="Enter your university email"
-                        onChange={(e) => setEmail(e.target.value)}
-                        autoComplete="email"
-                        required
-                        className="w-full bg-transparent text-base text-slate-800 placeholder:text-slate-400 focus:outline-none"
-                      />
-                    </div>
+                    <input
+                      type="email"
+                      value={email}
+                      placeholder="Enter your university email"
+                      onChange={(e) => setEmail(e.target.value)}
+                      autoComplete="email"
+                      required
+                      className="field-input"
+                    />
                   </label>
 
-                  <label className="block text-sm font-medium text-slate-600">
+                  <label className="field-label text-sm">
                     Password
-                    <div className="input-shell mt-2">
+                    <div className="relative">
                       <input
                         type={showPassword ? "text" : "password"}
                         value={password}
@@ -139,19 +118,19 @@ export default function HomePage() {
                         onChange={(e) => setPassword(e.target.value)}
                         autoComplete="current-password"
                         required
-                        className="w-full bg-transparent text-base text-slate-800 placeholder:text-slate-400 focus:outline-none"
+                        className="field-input pr-10"
                       />
                       <button
                         type="button"
                         aria-label="Show or hide password"
-                        className="text-slate-400"
+                        className="focus-ring absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-brand-50 px-2 py-1 text-slate-500 hover:bg-brand-100"
                         onClick={() => setShowPassword((v) => !v)}
                       >
-                              {showPassword ? (
-        <EyeOff size={18} strokeWidth={2} />
-      ) : (
-        <Eye size={18} strokeWidth={2} />
-      )}
+                        {showPassword ? (
+                          <EyeOff size={18} strokeWidth={2} />
+                        ) : (
+                          <Eye size={18} strokeWidth={2} />
+                        )}
                       </button>
                     </div>
                   </label>
@@ -161,7 +140,7 @@ export default function HomePage() {
                     className="brand-button w-full"
                     disabled={status.loading}
                   >
-                    {status.loading ? "Login..." : "Login"}
+                    {status.loading ? "Signing in..." : "Sign in"}
                   </button>
                 </form>
 
@@ -173,49 +152,43 @@ export default function HomePage() {
                     onClick={() => navigate("/reset/email")}
                     className="font-semibold text-brand hover:text-brand-dark"
                   >
-                    Forget Password?
+                    Forgot password?
                   </button>
                   <p className="mt-2 break-words">
-                    Not have an account?
+                    New here?
                     <button
                       type="button"
                       onClick={() => navigate("/register/email")}
                       className="ml-1 font-semibold text-brand hover:text-brand-dark"
                     >
-                      Register now
+                      Create an account
                     </button>
                   </p>
                 </div>
               </>
             ) : (
-              <>
-                <div className="space-y-4 text-left">
-                  <button
-                    type="button"
-                    className="w-full rounded-xl bg-gradient-to-r from-brand to-brand-dark py-3 text-sm font-semibold text-white shadow-lg shadow-brand-200 transition hover:from-brand-dark hover:to-brand"
-                    onClick={() =>
-                      isTeacherLike(authUser)
-                        ? navigate("/teacherhome")
-                        : navigate("/studenthome")
-                    }
-                  >
-                    Enter Bread
-                  </button>
-                  <button
-                    type="button"
-                    className="w-full rounded-xl border border-brand-200 py-3 text-sm font-semibold text-brand transition hover:border-brand hover:text-brand-dark"
-                    onClick={handleLogout}
-                  >
-                    Logout
-                  </button>
-                </div>
-              </>
+              <div className="space-y-3 text-left">
+                <div className="alert alert-info">You’re already signed in.</div>
+                <button
+                  type="button"
+                  className="brand-button w-full"
+                  onClick={() => navigate("/courses")}
+                >
+                  Enter courses
+                </button>
+                <button
+                  type="button"
+                  className="secondary-button w-full"
+                  onClick={handleLogout}
+                >
+                  Log out
+                </button>
+              </div>
             )}
           </div>
         </aside>
       </main>
 
-      {/* Footer pinned to the bottom */}
       <footer className="py-6 text-center text-xs text-slate-400">
         © {new Date().getFullYear()} Bread Capstone Team. All rights reserved.
       </footer>

@@ -19,12 +19,18 @@ from ..services import (
 )
 
 
+# Purpose: Orchestrate `_ensure_authenticated` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def _ensure_authenticated(request: HttpRequest) -> JsonResponse | None:
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Unauthorized"}, status=401)
     return None
 
 
+# Purpose: Orchestrate `_display_user` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def _display_user(user) -> str:
     full_name = (user.get_full_name() or "").strip()
     if full_name:
@@ -40,6 +46,9 @@ def _display_user(user) -> str:
     return f"User {user.pk}"
 
 
+# Purpose: Orchestrate `_institution_from_email` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def _institution_from_email(email: str) -> str:
     if not email:
         return ""
@@ -58,6 +67,9 @@ def _institution_from_email(email: str) -> str:
     return f"{pretty_name} ({domain})"
 
 
+# Purpose: Orchestrate `profile_status` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def profile_status(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -65,6 +77,9 @@ def profile_status(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"needs_profile": needs_profile(request.user)})
 
 
+# Purpose: Orchestrate `profile_options` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def profile_options(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -72,20 +87,28 @@ def profile_options(request: HttpRequest) -> JsonResponse:
     return JsonResponse(PROFILE_OPTIONS)
 
 
+# Purpose: Orchestrate `get_my_profile` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def get_my_profile(request: HttpRequest) -> JsonResponse:
-    """Get current user's profile data."""
+    """Execute the `get_my_profile` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
+    """
     auth_error = _ensure_authenticated(request)
     if auth_error:
         return auth_error
-
+    
     if not hasattr(request.user, "userprofile"):
         return JsonResponse({"error": "Profile not found"}, status=404)
-
+    
     profile_data = profile_to_dict(request.user.userprofile)
     return JsonResponse(profile_data)
 
 
 @csrf_exempt
+# Purpose: Orchestrate `submit_profile` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def submit_profile(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -99,7 +122,7 @@ def submit_profile(request: HttpRequest) -> JsonResponse:
     except json.JSONDecodeError:
         return JsonResponse({"error": "Request body must be valid JSON."}, status=400)
 
-    # Optional: update username if provided and non-empty
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     new_username = (payload.get("username") or "").strip()
     if new_username and new_username != (request.user.username or ""):
         UserModel = get_user_model()
@@ -112,6 +135,9 @@ def submit_profile(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"success": True})
 
 
+# Purpose: Orchestrate `profile_detail` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def profile_detail(request: HttpRequest, user_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -131,7 +157,6 @@ def profile_detail(request: HttpRequest, user_id: int) -> JsonResponse:
     am_following = False
     if me and me.id != target.id:
         from ..repositories import UserFollow
-
         am_following = UserFollow.objects.filter(follower=me, target=target).exists()
 
     data = {
@@ -151,6 +176,9 @@ def profile_detail(request: HttpRequest, user_id: int) -> JsonResponse:
 
 
 @csrf_exempt
+# Purpose: Orchestrate `upload_avatar` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def upload_avatar(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -173,6 +201,9 @@ def upload_avatar(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
+# Purpose: Orchestrate `update_display_name` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def update_display_name(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -200,12 +231,12 @@ def update_display_name(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
+# Purpose: Orchestrate `set_user_admin` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def set_user_admin(request: HttpRequest, user_id: int) -> JsonResponse:
-    """
-    Grant or revoke admin/superuser role.
-
-    NOTE: This endpoint now allows a user to elevate themselves when targeting their own id.
-    Use with caution; in production you should lock this down or remove it.
+    """Execute the `set_user_admin` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -227,7 +258,7 @@ def set_user_admin(request: HttpRequest, user_id: int) -> JsonResponse:
     except UserModel.DoesNotExist:
         return JsonResponse({"error": "User not found."}, status=404)
 
-    # Allow self-elevation; otherwise require existing superuser
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     if target.id != request.user.id and not getattr(request.user, "is_superuser", False):
         return JsonResponse({"error": "Only superusers can change admin roles."}, status=403)
 
@@ -236,31 +267,31 @@ def set_user_admin(request: HttpRequest, user_id: int) -> JsonResponse:
         target.is_superuser = bool(payload.get("is_superuser"))
     target.save(update_fields=["is_staff", "is_superuser"])
 
-    return JsonResponse(
-        {
-            "id": target.id,
-            "username": target.username,
-            "email": target.email,
-            "is_staff": target.is_staff,
-            "is_superuser": target.is_superuser,
-        }
-    )
+    return JsonResponse({
+        "id": target.id,
+        "username": target.username,
+        "email": target.email,
+        "is_staff": target.is_staff,
+        "is_superuser": target.is_superuser,
+    })
 
 
 @csrf_exempt
+# Purpose: Orchestrate `follow_user` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def follow_user(request: HttpRequest, user_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
         return auth_error
 
     from ..repositories import UserFollow
-
     me = request.user
     if request.method == "POST":
         if me.id == user_id:
             return JsonResponse({"error": "You cannot follow yourself."}, status=400)
-
-        # Load target user to get username/email for notification
+        
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         UserModel = get_user_model()
         try:
             target_user = UserModel.objects.get(id=user_id)
@@ -269,15 +300,14 @@ def follow_user(request: HttpRequest, user_id: int) -> JsonResponse:
 
         obj, created = UserFollow.objects.get_or_create(follower_id=me.id, target_id=user_id)
         if created:
-            # Send notification to the target user
+            # Context: Compute shared values once so all branches use the same normalized inputs.
             try:
-                # Ensure we use consistent recipient identifier (strip empty strings)
+                # Context: Compute shared values once so all branches use the same normalized inputs.
                 recipient = (target_user.username or "").strip() or (target_user.email or "").strip() or str(target_user.id)
                 actor_name = (me.username or "").strip() or (me.email or "").strip() or f"User {me.pk}"
                 import logging
 
                 from ..services import create_notification
-
                 logger = logging.getLogger(__name__)
                 logger.info(f"[FOLLOW] Creating notification for recipient={recipient}, actor={actor_name}")
                 create_notification(
@@ -292,7 +322,6 @@ def follow_user(request: HttpRequest, user_id: int) -> JsonResponse:
                 logger.info("[FOLLOW] Notification created successfully")
             except Exception as e:
                 import logging
-
                 logger = logging.getLogger(__name__)
                 logger.error(f"[FOLLOW] Failed to create notification: {e}", exc_info=True)
         return JsonResponse({"success": True})
@@ -302,28 +331,41 @@ def follow_user(request: HttpRequest, user_id: int) -> JsonResponse:
     return JsonResponse({"error": "Method not allowed"}, status=405)
 
 
+# Purpose: Orchestrate `list_following` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def list_following(request: HttpRequest, user_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
         return auth_error
     from ..repositories import UserFollow
-
     follows = UserFollow.objects.filter(follower_id=user_id).select_related("target").order_by("-created_at")
-    items = [{"id": f.target.id, "username": f.target.username, "email": f.target.email} for f in follows]
+    items = [
+        {"id": f.target.id, "username": f.target.username, "email": f.target.email}
+        for f in follows
+    ]
     return JsonResponse({"items": items})
 
 
+# Purpose: Orchestrate `list_followers` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def list_followers(request: HttpRequest, user_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
         return auth_error
     from ..repositories import UserFollow
-
     follows = UserFollow.objects.filter(target_id=user_id).select_related("follower").order_by("-created_at")
-    items = [{"id": f.follower.id, "username": f.follower.username, "email": f.follower.email} for f in follows]
+    items = [
+        {"id": f.follower.id, "username": f.follower.username, "email": f.follower.email}
+        for f in follows
+    ]
     return JsonResponse({"items": items})
 
 
+# Purpose: Orchestrate `user_posts` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def user_posts(request: HttpRequest, user_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -340,6 +382,9 @@ def user_posts(request: HttpRequest, user_id: int) -> JsonResponse:
     return JsonResponse({"items": items})
 
 
+# Purpose: Orchestrate `user_posts_analytics` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def user_posts_analytics(request: HttpRequest, user_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:

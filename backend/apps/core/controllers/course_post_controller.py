@@ -27,6 +27,9 @@ from ..services import (
 )
 
 
+# Purpose: Orchestrate `_ensure_authenticated` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def _ensure_authenticated(request: HttpRequest) -> JsonResponse | None:
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Unauthorized"}, status=401)
@@ -34,6 +37,9 @@ def _ensure_authenticated(request: HttpRequest) -> JsonResponse | None:
 
 
 @csrf_exempt
+# Purpose: Orchestrate `course_posts` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def course_posts(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -112,6 +118,9 @@ def course_posts(request: HttpRequest, course_id: int) -> JsonResponse:
 
 
 @csrf_exempt
+# Purpose: Orchestrate `course_post_comments` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def course_post_comments(request: HttpRequest, course_id: int, post_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -119,8 +128,11 @@ def course_post_comments(request: HttpRequest, course_id: int, post_id: int) -> 
 
     if request.method == "GET":
         from ..repositories import CoursePostComment
-
-        comments = CoursePostComment.objects.select_related("user", "post").filter(post_id=post_id, post__course_id=course_id).order_by("id")
+        comments = (
+            CoursePostComment.objects.select_related("user", "post")
+            .filter(post_id=post_id, post__course_id=course_id)
+            .order_by("id")
+        )
         items = [
             {
                 "id": c.id,
@@ -265,6 +277,9 @@ def course_post_like(request: HttpRequest, course_id: int, post_id: int) -> Json
 
 
 @csrf_exempt
+# Purpose: Orchestrate `course_post_detail` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def course_post_detail(request: HttpRequest, course_id: int, post_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -345,6 +360,9 @@ def course_post_detail(request: HttpRequest, course_id: int, post_id: int) -> Js
 
 
 @csrf_exempt
+# Purpose: Orchestrate `course_post_analytics` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def course_post_analytics(request: HttpRequest, course_id: int, post_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -373,6 +391,9 @@ def course_post_analytics(request: HttpRequest, course_id: int, post_id: int) ->
 
 
 @csrf_exempt
+# Purpose: Orchestrate `course_post_suggestions` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def course_post_suggestions(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:

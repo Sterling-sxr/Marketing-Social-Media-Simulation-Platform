@@ -2,6 +2,7 @@ from django.urls import path
 
 from .controllers import (
     add_search_history,
+    admin_course_post_segmentation,
     ai_analyze,
     ai_tutor,
     check_auth_status,
@@ -10,6 +11,10 @@ from .controllers import (
     confirm_password_reset_view,
     course_ai_user_detail,
     course_ai_users,
+    course_ai_users_generate_commit,
+    course_ai_users_generate_preview,
+    course_ai_users_guided_commit,
+    course_ai_users_guided_preview,
     course_ai_users_import,
     course_material_detail_view,
     course_materials_view,
@@ -24,6 +29,7 @@ from .controllers import (
     create_course_view,
     dashboard_course_detail,
     dashboard_course_hashtag_detail,
+    dashboard_course_segmentation,
     dashboard_course_student_detail,
     dashboard_summary,
     files_endpoint,
@@ -101,9 +107,19 @@ urlpatterns = [
         name="admin-dashboard-course-hashtag",
     ),
     path(
+        "admin/dashboard/courses/<int:course_id>/segmentation",
+        dashboard_course_segmentation,
+        name="admin-dashboard-course-segmentation",
+    ),
+    path(
         "admin/dashboard/courses/<int:course_id>/students/<int:student_id>/",
         dashboard_course_student_detail,
         name="admin-dashboard-course-student",
+    ),
+    path(
+        "admin/courses/<int:course_id>/posts/<int:post_id>/segmentation",
+        admin_course_post_segmentation,
+        name="admin-course-post-segmentation",
     ),
     path("courses/", list_courses, name="courses-list"),
     path("courses/join/", join_course, name="courses-join"),
@@ -119,6 +135,26 @@ urlpatterns = [
     ),
     path("courses/<int:course_id>/posts/", course_posts, name="course-posts"),
     path("courses/<int:course_id>/ai-users/", course_ai_users, name="course-ai-users"),
+    path(
+        "courses/<int:course_id>/ai-users/guided-preview/",
+        course_ai_users_guided_preview,
+        name="course-ai-users-guided-preview",
+    ),
+    path(
+        "courses/<int:course_id>/ai-users/guided-commit/",
+        course_ai_users_guided_commit,
+        name="course-ai-users-guided-commit",
+    ),
+    path(
+        "courses/<int:course_id>/ai-users/generate-preview/",
+        course_ai_users_generate_preview,
+        name="course-ai-users-generate-preview",
+    ),
+    path(
+        "courses/<int:course_id>/ai-users/generate-commit/",
+        course_ai_users_generate_commit,
+        name="course-ai-users-generate-commit",
+    ),
     path(
         "courses/<int:course_id>/ai-users/import/",
         course_ai_users_import,

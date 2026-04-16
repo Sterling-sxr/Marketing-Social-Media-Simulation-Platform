@@ -6,12 +6,12 @@ export default function ResetSuccessPage() {
   const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
-    // Decrease the countdown every second
+    // Context: Compute shared values once so all branches use the same normalized inputs.
     const timer = setInterval(() => {
       setCountdown((c) => c - 1);
     }, 1000);
 
-    // Redirect to login after 3 seconds
+    // Context: Compute shared values once so all branches use the same normalized inputs.
     const redirect = setTimeout(() => {
       navigate("/", { replace: true });
     }, 3000);

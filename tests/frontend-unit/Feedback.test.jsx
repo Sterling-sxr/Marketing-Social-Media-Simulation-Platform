@@ -5,7 +5,7 @@ describe("Feedback component", () => {
   test("renders error state", () => {
     render(<Feedback error="Oops" />);
     const wrapper = screen.getByText("Oops").closest("div");
-    expect(wrapper).toHaveClass("bg-red-50");
+    expect(wrapper).toHaveClass("alert-danger");
   });
 
   test("renders success state without exposing dev code", () => {

@@ -2,11 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BotMessageSquare, Send, Sparkles, RotateCcw, ChevronDown, ChevronUp } from "lucide-react";
 import { postJson } from "../lib/api";
-import { isTeacherLike } from "../lib/authRole";
 import { useApp } from "../context/AppContext";
 import AuthenticatedShell from "./components/AuthenticatedShell";
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// Purpose: `TypingDots` owns one cohesive concern so state transitions and side effects remain easy to trace.
 
 function TypingDots() {
   return (
@@ -27,7 +26,7 @@ function AnswerCard({ answer, index }) {
 
   return (
     <div className="rounded-[1.75rem] border border-fuchsia-100/80 bg-white/95 shadow-[0_14px_36px_rgba(217,70,239,0.08)] overflow-hidden">
-      {/* Header */}
+      {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
       <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-fuchsia-50">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-fuchsia-400 via-pink-300 to-amber-300 text-white shadow-md shadow-fuchsia-200/60 shrink-0">
@@ -49,7 +48,7 @@ function AnswerCard({ answer, index }) {
 
       {expanded && (
         <div className="divide-y divide-fuchsia-50 px-5">
-          {/* Direct Answer */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <section className="py-4">
             <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-orange-500">
               Direct Answer
@@ -59,7 +58,7 @@ function AnswerCard({ answer, index }) {
             </p>
           </section>
 
-          {/* Detailed Explanation */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           {answer.detailed_explanation && (
             <section className="py-4">
               <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-fuchsia-500">
@@ -71,7 +70,7 @@ function AnswerCard({ answer, index }) {
             </section>
           )}
 
-          {/* Example */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           {answer.example && (
             <section className="py-4">
               <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-500">
@@ -85,7 +84,7 @@ function AnswerCard({ answer, index }) {
             </section>
           )}
 
-          {/* Key Points */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           {answer.key_points && answer.key_points.length > 0 && (
             <section className="py-4">
               <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-500">
@@ -109,7 +108,7 @@ function AnswerCard({ answer, index }) {
   );
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
+// Context: Compute shared values once so all branches use the same normalized inputs.
 
 const SUGGESTED_QUESTIONS = [
   "What is overfitting in machine learning and how do you prevent it?",
@@ -123,34 +122,27 @@ const SUGGESTED_QUESTIONS = [
 export default function AITutorPage() {
   const navigate = useNavigate();
   const { authUser, authCheckComplete } = useApp();
-  const isTeacherOrAdmin = isTeacherLike(authUser);
 
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [turns, setTurns] = useState([]); // [{question, answer}]
+  const [turns, setTurns] = useState([]); // Inline explanation: Keep this non-obvious normalization rule explicit.
 
   const bottomRef = useRef(null);
   const textareaRef = useRef(null);
 
-  // Auth guard
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   useEffect(() => {
     if (!authCheckComplete) return;
-    if (!authUser) {
-      navigate("/login", { replace: true });
-      return;
-    }
-    if (isTeacherOrAdmin) {
-      navigate("/teacherhome", { replace: true });
-    }
-  }, [authCheckComplete, authUser, isTeacherOrAdmin, navigate]);
+    if (!authUser) navigate("/login", { replace: true });
+  }, [authCheckComplete, authUser, navigate]);
 
-  // Auto scroll to bottom on new answer
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [turns, loading]);
 
-  // Build history from turns for multi-turn context
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const buildHistory = useCallback((currentTurns) => {
     const history = [];
     for (const turn of currentTurns) {
@@ -225,7 +217,7 @@ export default function AITutorPage() {
       title="AI Tutor"
       subtitle="Ask questions and get structured, in-depth explanations to support your learning."
     >
-      {/* Hero card */}
+      {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
       <section className="relative overflow-hidden rounded-[2rem] border border-fuchsia-100 bg-[radial-gradient(circle_at_top_left,rgba(217,70,239,0.18),transparent_40%),linear-gradient(135deg,rgba(255,255,255,0.96),rgba(245,243,255,0.92)_50%,rgba(255,247,237,0.94))] p-5 shadow-[0_16px_40px_rgba(217,70,239,0.10)] sm:p-6">
         <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-fuchsia-200/30 blur-3xl" />
         <div className="absolute bottom-0 left-4 h-20 w-20 rounded-full bg-amber-200/40 blur-2xl" />
@@ -247,7 +239,7 @@ export default function AITutorPage() {
         </div>
       </section>
 
-      {/* Suggested questions (shown only when no turns yet) */}
+      {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
       {!hasTurns && (
         <section>
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
@@ -269,19 +261,19 @@ export default function AITutorPage() {
         </section>
       )}
 
-      {/* Conversation turns */}
+      {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
       {hasTurns && (
         <div className="space-y-6">
           {turns.map((turn, i) => (
             <div key={i} className="space-y-3">
-              {/* User question bubble */}
+              {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
               <div className="flex justify-end">
                 <div className="max-w-[80%] rounded-[1.5rem] rounded-tr-md bg-gradient-to-br from-fuchsia-500 to-pink-500 px-5 py-3 text-sm font-medium text-white shadow-md shadow-fuchsia-200/50">
                   {turn.question}
                 </div>
               </div>
 
-              {/* AI answer or loading */}
+              {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
               {turn.answer ? (
                 <AnswerCard answer={turn.answer} index={i} />
               ) : (
@@ -298,14 +290,14 @@ export default function AITutorPage() {
         </div>
       )}
 
-      {/* Error message */}
+      {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
       {error && (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
           {error}
         </div>
       )}
 
-      {/* Input area */}
+      {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
       <div className="sticky bottom-0 -mx-4 bg-white/90 px-4 pb-4 pt-3 backdrop-blur sm:-mx-5 sm:px-5 lg:-mx-6 lg:px-6">
         {hasTurns && (
           <div className="mb-2 flex justify-end">

@@ -19,6 +19,16 @@ for path in (BACKEND_DIR, PROJECT_ROOT):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
+from apps.conf import settings as project_settings
+
+TEST_DB_PATH = (THIS_DIR / "test.sqlite3").resolve()
+project_settings.DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": str(TEST_DB_PATH),
+    }
+}
+
 # Pre-inject lightweight stubs to avoid heavy imports (e.g. torch) during Django app setup
 # apps.core.apps.CoreConfig.ready imports these; we provide no-op replacements
 ds_mod = types.ModuleType("apps.core.services.dashboard_service")

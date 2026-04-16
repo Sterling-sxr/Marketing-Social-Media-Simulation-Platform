@@ -1,24 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
-import { isTeacherLike } from "../lib/authRole";
 import AuthenticatedShell from "./components/AuthenticatedShell";
 
 export default function StudentHomePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { authUser, authCheckComplete } = useApp();
-
-  useEffect(() => {
-    if (!authCheckComplete) return;
-    if (!authUser) {
-      navigate("/login", { replace: true });
-      return;
-    }
-    if (isTeacherLike(authUser)) {
-      navigate("/teacherhome", { replace: true });
-    }
-  }, [authUser, authCheckComplete, navigate]);
+  const { authUser } = useApp();
 
   const queryTab = new URLSearchParams(location.search).get("tab");
   const [active, setActive] = useState(null);
@@ -48,7 +36,7 @@ export default function StudentHomePage() {
     <AuthenticatedShell>
       {active ? (
         <>
-          {/* User information */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <div className="mb-6 flex items-center gap-3">
             <div className="grid h-10 w-10 place-items-center rounded-full 
                             bg-gradient-to-br from-accent-300 via-accent-200 to-accent-200 
@@ -114,9 +102,9 @@ export default function StudentHomePage() {
           </div>
         </>
       ) : (
-        // Default Bread welcome panel
+        // Context: Compute shared values once so all branches use the same normalized inputs.
         <div className="relative flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-brand-50 via-white to-accent-50 px-4 py-16 shadow-inner">
-          {/* Background glow orbs */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <div className="absolute top-6 right-6 h-24 w-24 animate-pulse rounded-full bg-gradient-to-br from-brand-200 to-accent-200 opacity-60 blur-3xl" />
           <div className="absolute bottom-10 left-8 h-20 w-20 rounded-full bg-gradient-to-br from-brand-200 to-accent-200 opacity-40 blur-2xl" />
 
@@ -154,7 +142,7 @@ export default function StudentHomePage() {
             . Manage your courses, update your profile, and stay connected.
           </p>
 
-          {/* Quick entry shortcuts */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-2xl">
             <CardRow
               title="Courses"
@@ -181,7 +169,7 @@ export default function StudentHomePage() {
   );
 }
 
-/* Card component with the pastel orange/pink theme */
+/* Purpose: `CardRow` owns one cohesive concern so state transitions and side effects remain easy to trace. */
 function CardRow({ title, desc, actionLabel, onAction }) {
   return (
     <div
