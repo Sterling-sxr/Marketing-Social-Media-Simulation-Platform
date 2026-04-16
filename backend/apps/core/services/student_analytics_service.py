@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter, defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from .course_post_service import list_posts_with_analytics_by_user
@@ -76,18 +76,56 @@ def _format_hour_label(hour: int) -> str:
     return f"{display} {suffix}"
 
 
-def _post_interaction_score(item: dict[str, Any]) -> int:
-    likes = _safe_int(item.get("likes"))
-    comments = _safe_int(item.get("comments"))
-    views = _safe_int(item.get("views"))
-    return likes + comments * 2 + views
+def _post_interactions(item: dict[str, Any]) -> int:
+    return _safe_int(item.get("likes")) + _safe_int(item.get("comments"))
+
+
+def _post_engagement_score(item: dict[str, Any]) -> int:
+    return _post_interactions(item) + _safe_int(item.get("views"))
+
+
+def _sort_key_for_top_post(item: dict[str, Any]) -> tuple[int, int, int, int, str]:
+    return (
+        _post_engagement_score(item),
+        _post_interactions(item),
+        _safe_int(item.get("likes")),
+        _safe_int(item.get("comments")),
+        str(item.get("created_at") or ""),
+    )
+
+
+def _recent_window_cutoff(items: list[dict[str, Any]]) -> datetime | None:
+    parsed = [_parse_created_at(item.get("created_at")) for item in items]
+    valid = [value for value in parsed if value is not None]
+    if not valid:
+        return None
+    return max(valid) - timedelta(days=7)
+
+
+def _recent_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    cutoff = _recent_window_cutoff(items)
+    if cutoff is None:
+        return list(items)
+    recent = [
+        item
+        for item in items
+        if (_parse_created_at(item.get("created_at")) or datetime.min) >= cutoff
+    ]
+    return recent or list(items)
 
 
 def _build_summary(items: list[dict[str, Any]]) -> dict[str, int]:
+    total_likes = sum(_safe_int(item.get("likes")) for item in items)
+    total_comments = sum(_safe_int(item.get("comments")) for item in items)
+    total_views = sum(_safe_int(item.get("views")) for item in items)
+    total_interactions = total_likes + total_comments
     return {
         "totalPosts": len(items),
-        "totalLikes": sum(_safe_int(item.get("likes")) for item in items),
-        "totalComments": sum(_safe_int(item.get("comments")) for item in items),
+        "totalLikes": total_likes,
+        "totalComments": total_comments,
+        "totalViews": total_views,
+        "totalInteractions": total_interactions,
+        "totalEngagement": total_interactions + total_views,
         "totalShares": 0,
     }
 
@@ -96,20 +134,7 @@ def _build_top_posts(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     if not items:
         return []
 
-    scored = []
-    for item in items:
-        raw_score = (
-            _safe_int(item.get("likes"))
-            + _safe_int(item.get("comments")) * 2
-            + _safe_int(item.get("views")) * 0.1
-        )
-        scored.append((item, raw_score))
-
-    scored.sort(key=lambda pair: pair[1], reverse=True)
-    top = scored[:3]
-    max_score = top[0][1] if top else 1
-    if max_score <= 0:
-        max_score = 1
+    scored = sorted(items, key=_sort_key_for_top_post, reverse=True)[:3]
 
     return [
         {
@@ -118,10 +143,12 @@ def _build_top_posts(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
             "createdAt": item.get("created_at"),
             "likes": _safe_int(item.get("likes")),
             "comments": _safe_int(item.get("comments")),
+            "views": _safe_int(item.get("views")),
+            "interactions": _post_interactions(item),
             "shares": 0,
-            "engagementScore": round((raw_score / max_score) * 10, 1),
+            "engagementScore": _post_engagement_score(item),
         }
-        for item, raw_score in top
+        for item in scored
     ]
 
 
@@ -133,44 +160,63 @@ def _build_engagement_trend(items: list[dict[str, Any]]) -> dict[str, Any]:
         items,
         key=lambda item: _parse_created_at(item.get("created_at")) or datetime.min,
     )
-    half = max(1, len(sorted_items) // 2)
-    older = sorted_items[:half]
-    recent = sorted_items[-half:]
+    latest = max((_parse_created_at(item.get("created_at")) for item in sorted_items), default=None)
+    if latest is None:
+        return dict(_EMPTY_ANALYTICS["engagementTrend"])
 
-    older_score = sum(_post_interaction_score(item) for item in older)
-    recent_score = sum(_post_interaction_score(item) for item in recent)
+    current_start = latest - timedelta(days=7)
+    previous_start = latest - timedelta(days=14)
+    current = []
+    previous = []
+    for item in sorted_items:
+        created_at = _parse_created_at(item.get("created_at"))
+        if created_at is None:
+            continue
+        if created_at >= current_start:
+            current.append(item)
+        elif previous_start <= created_at < current_start:
+            previous.append(item)
 
-    if older_score > 0:
-        delta = round(((recent_score - older_score) * 100) / older_score)
-    elif recent_score > 0:
+    if not current:
+        current = _recent_items(sorted_items)
+
+    previous_score = sum(_post_engagement_score(item) for item in previous)
+    current_score = sum(_post_engagement_score(item) for item in current)
+
+    if previous_score > 0:
+        delta = round(((current_score - previous_score) * 100) / previous_score)
+    elif current_score > 0:
         delta = 100
     else:
         delta = 0
 
     direction = "up" if delta >= 0 else "down"
     abs_delta = abs(delta)
-    narrative = "Engagement is stable compared with your earlier posts."
+    narrative = "Engagement is stable compared with the previous 7 days."
     if abs_delta > 0:
         narrative = (
-            "Your recent posts are generating more interactions than older ones."
+            "Your recent posts are generating more total engagement than the previous 7 days."
             if direction == "up"
-            else "Your recent posts are generating fewer interactions than older ones."
+            else "Your recent posts are generating less total engagement than the previous 7 days."
         )
 
-    top_recent = max((_post_interaction_score(item) for item in recent), default=0)
+    recent_views = sum(_safe_int(item.get("views")) for item in current)
+    recent_interactions = sum(_post_interactions(item) for item in current)
     extra_insight = (
-        "Recent posts with comments are driving most of the lift."
-        if top_recent and any(_safe_int(item.get("comments")) > 0 for item in recent)
-        else "Views are contributing more than comments right now."
+        "Views are contributing most of your recent engagement volume."
+        if recent_views > recent_interactions
+        else "Likes and comments are contributing most of your recent engagement volume."
     )
 
     return {
         "changePercent": abs_delta,
         "direction": direction,
-        "windowLabel": "Recent posts vs previous posts",
+        "windowLabel": "Last 7 days vs previous 7 days",
         "narrative": narrative,
         "extraInsight": extra_insight,
-        "series": [_post_interaction_score(item) for item in sorted_items[-7:]],
+        "series": [_post_engagement_score(item) for item in sorted_items[-7:]],
+        "currentWindowEngagement": current_score,
+        "previousWindowEngagement": previous_score,
     }
 
 
@@ -178,15 +224,23 @@ def _build_best_time_to_post(items: list[dict[str, Any]]) -> dict[str, Any]:
     if not items:
         return dict(_EMPTY_ANALYTICS["bestTimeToPost"])
 
-    buckets = [0] * 24
-    for item in items:
+    recent_items = _recent_items(items)
+    buckets = [defaultdict(int) for _ in range(24)]
+    for item in recent_items:
         created_at = _parse_created_at(item.get("created_at"))
         if not created_at:
             continue
-        buckets[created_at.hour] += _post_interaction_score(item)
+        hour_bucket = buckets[created_at.hour]
+        hour_bucket["engagement"] += _post_engagement_score(item)
+        hour_bucket["posts"] += 1
 
-    best_hour = max(range(24), key=lambda hour: buckets[hour])
-    if buckets[best_hour] <= 0:
+    average_scores = [
+        (bucket["engagement"] / bucket["posts"]) if bucket["posts"] else 0
+        for bucket in buckets
+    ]
+
+    best_hour = max(range(24), key=lambda hour: average_scores[hour])
+    if average_scores[best_hour] <= 0:
         return dict(_EMPTY_ANALYTICS["bestTimeToPost"])
 
     if best_hour >= 18 or best_hour < 5:
@@ -206,6 +260,9 @@ def _build_best_time_to_post(items: list[dict[str, Any]]) -> dict[str, Any]:
             f"{_format_hour_label(primary_start)}–{_format_hour_label(primary_end)}",
             f"{_format_hour_label(best_hour)}–{_format_hour_label(secondary_end)}",
         ],
+        "windowLabel": "Recent 7-day posting hours",
+        "averageEngagement": round(average_scores[best_hour], 1),
+        "sampleSize": buckets[best_hour]["posts"],
     }
 
 
@@ -242,7 +299,7 @@ def _build_audience_data(items: list[dict[str, Any]]) -> tuple[dict[str, Any], l
     hashtag_counter = Counter()
 
     for item in items:
-        score = max(_post_interaction_score(item), 1)
+        score = max(_post_engagement_score(item), 1)
         text = " ".join(
             [
                 str(item.get("content") or ""),
@@ -307,7 +364,7 @@ def _build_content_patterns(items: list[dict[str, Any]]) -> list[dict[str, Any]]
     if not items:
         return []
 
-    baseline = sum(_post_interaction_score(item) for item in items) / max(len(items), 1)
+    baseline = sum(_post_engagement_score(item) for item in items) / max(len(items), 1)
     categories = {
         "Short, example-driven posts": [],
         "Question-led posts": [],
@@ -317,7 +374,7 @@ def _build_content_patterns(items: list[dict[str, Any]]) -> list[dict[str, Any]]
     for item in items:
         content = str(item.get("content") or "")
         hashtags = item.get("hashtags") or []
-        score = _post_interaction_score(item)
+        score = _post_engagement_score(item)
         if len(content.split()) <= 40:
             categories["Short, example-driven posts"].append(score)
         if "?" in content:

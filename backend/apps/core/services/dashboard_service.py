@@ -340,6 +340,153 @@ def _change_percentage(current: int, previous: int) -> float:
     return round((current - previous) * 100 / previous, 1)
 
 
+def _post_engagement_score(*, likes: int, comments: int, views: int) -> int:
+    return max(int(likes or 0), 0) + max(int(comments or 0), 0) + max(int(views or 0), 0)
+
+
+def _build_student_engagement_trend(student_posts: list[dict[str, Any]], course_data: dict[str, Any]) -> dict[str, Any]:
+    if not student_posts:
+        return {
+            "change_percent": 0.0,
+            "direction": "up",
+            "window_label": "Last 7 days vs previous 7 days",
+            "current_window_engagement": 0,
+            "previous_window_engagement": 0,
+            "series": [],
+        }
+
+    latest = max((record.get("created_at") for record in student_posts), default=None)
+    if latest is None:
+        return {
+            "change_percent": 0.0,
+            "direction": "up",
+            "window_label": "Last 7 days vs previous 7 days",
+            "current_window_engagement": 0,
+            "previous_window_engagement": 0,
+            "series": [],
+        }
+
+    current_start = latest - timedelta(days=7)
+    previous_start = latest - timedelta(days=14)
+    like_counts = course_data["like_counts"]
+    comment_counts = course_data["comment_counts"]
+    view_counts = course_data["view_counts"]
+
+    current_window_engagement = 0
+    previous_window_engagement = 0
+    ordered_posts = sorted(
+        student_posts,
+        key=lambda record: record.get("created_at") or timezone.make_aware(timezone.datetime.min),
+    )
+    series = []
+
+    for record in ordered_posts[-7:]:
+        pid = record["id"]
+        series.append(
+            _post_engagement_score(
+                likes=like_counts.get(pid, 0),
+                comments=comment_counts.get(pid, 0),
+                views=view_counts.get(pid, 0),
+            )
+        )
+
+    for record in student_posts:
+        created_at = record.get("created_at")
+        if created_at is None:
+            continue
+        pid = record["id"]
+        engagement = _post_engagement_score(
+            likes=like_counts.get(pid, 0),
+            comments=comment_counts.get(pid, 0),
+            views=view_counts.get(pid, 0),
+        )
+        if created_at >= current_start:
+            current_window_engagement += engagement
+        elif previous_start <= created_at < current_start:
+            previous_window_engagement += engagement
+
+    delta = _change_percentage(current_window_engagement, previous_window_engagement)
+    return {
+        "change_percent": abs(delta),
+        "direction": "up" if delta >= 0 else "down",
+        "window_label": "Last 7 days vs previous 7 days",
+        "current_window_engagement": current_window_engagement,
+        "previous_window_engagement": previous_window_engagement,
+        "series": series,
+    }
+
+
+def _build_best_time_to_post(student_posts: list[dict[str, Any]], course_data: dict[str, Any]) -> dict[str, Any]:
+    if not student_posts:
+        return {
+            "best_hour_label": "—",
+            "window_label": "Recent 7-day posting hours",
+            "average_engagement": 0.0,
+            "sample_size": 0,
+            "slots": [],
+        }
+
+    latest = max((record.get("created_at") for record in student_posts), default=None)
+    if latest is None:
+        return {
+            "best_hour_label": "—",
+            "window_label": "Recent 7-day posting hours",
+            "average_engagement": 0.0,
+            "sample_size": 0,
+            "slots": [],
+        }
+
+    cutoff = latest - timedelta(days=7)
+    like_counts = course_data["like_counts"]
+    comment_counts = course_data["comment_counts"]
+    view_counts = course_data["view_counts"]
+    hourly_totals: list[dict[str, float]] = [{"engagement": 0.0, "posts": 0} for _ in range(24)]
+
+    for record in student_posts:
+        created_at = record.get("created_at")
+        if created_at is None or created_at < cutoff:
+            continue
+        pid = record["id"]
+        hour_bucket = hourly_totals[created_at.hour]
+        hour_bucket["engagement"] += _post_engagement_score(
+            likes=like_counts.get(pid, 0),
+            comments=comment_counts.get(pid, 0),
+            views=view_counts.get(pid, 0),
+        )
+        hour_bucket["posts"] += 1
+
+    averages = [
+        (bucket["engagement"] / bucket["posts"]) if bucket["posts"] else 0.0
+        for bucket in hourly_totals
+    ]
+    best_hour = max(range(24), key=lambda hour: averages[hour])
+    if averages[best_hour] <= 0:
+        return {
+            "best_hour_label": "—",
+            "window_label": "Recent 7-day posting hours",
+            "average_engagement": 0.0,
+            "sample_size": 0,
+            "slots": [],
+        }
+
+    def _format_hour_label(hour: int) -> str:
+        normalized = ((hour % 24) + 24) % 24
+        suffix = "PM" if normalized >= 12 else "AM"
+        display = 12 if normalized % 12 == 0 else normalized % 12
+        return f"{display} {suffix}"
+
+    return {
+        "best_hour_label": _format_hour_label(best_hour),
+        "window_label": "Recent 7-day posting hours",
+        "average_engagement": round(averages[best_hour], 1),
+        "sample_size": int(hourly_totals[best_hour]["posts"]),
+        "slots": [
+            f"{_format_hour_label(best_hour - 1)}–{_format_hour_label(best_hour + 1)}",
+            f"{_format_hour_label(best_hour)}–{_format_hour_label(best_hour + 3)}",
+        ],
+    }
+
+
 def _get_post_interactions(
     post_ids: list[int],
 ) -> tuple[dict[int, int], int, dict[int, int], dict[int, int]]:
@@ -1081,25 +1228,33 @@ def _calculate_course_hashtag_metrics_from_data(
         interactions = interactions_per_post.get(pid, 0)
         content = (record.get("content") or "").strip()
         preview = content[:117].rstrip() + "..." if len(content) > 120 else content
+        likes = like_counts.get(pid, 0)
+        comments = comment_counts.get(pid, 0)
+        views = view_counts.get(pid, 0)
         top_posts.append(
             {
                 "post_id": pid,
                 "author_id": author_id,
                 "author_name": name,
                 "preview": preview,
-                "likes": like_counts.get(pid, 0),
-                "comments": comment_counts.get(pid, 0),
-                "views": view_counts.get(pid, 0),
+                "likes": likes,
+                "comments": comments,
+                "views": views,
                 "interactions": interactions,
+                "engagement_score": _post_engagement_score(
+                    likes=likes,
+                    comments=comments,
+                    views=views,
+                ),
                 "created_at": (record.get("created_at").isoformat() if hasattr(record.get("created_at"), "isoformat") else None),
             }
         )
     top_posts.sort(
         key=lambda item: (
+            item["engagement_score"],
             item["interactions"],
             item["likes"],
             item["comments"],
-            item["views"],
             item["created_at"] or "",
         ),
         reverse=True,
@@ -1121,6 +1276,7 @@ def _calculate_course_hashtag_metrics_from_data(
         "total_comments": total_comments,
         "total_views": total_views,
         "total_interactions": total_interactions,
+        "total_engagement": total_interactions + total_views,
     }
 
     return {
@@ -1167,26 +1323,34 @@ def _calculate_course_student_metrics_from_data(
         interactions = interactions_per_post.get(pid, 0)
         content = (record.get("content") or "").strip()
         preview = content[:117].rstrip() + "..." if len(content) > 120 else content
+        likes = like_counts.get(pid, 0)
+        comments = comment_counts.get(pid, 0)
+        views = view_counts.get(pid, 0)
         top_posts.append(
             {
                 "post_id": pid,
                 "author_id": student_id,
                 "author_name": student_name,
                 "preview": preview,
-                "likes": like_counts.get(pid, 0),
-                "comments": comment_counts.get(pid, 0),
-                "views": view_counts.get(pid, 0),
+                "likes": likes,
+                "comments": comments,
+                "views": views,
                 "interactions": interactions,
+                "engagement_score": _post_engagement_score(
+                    likes=likes,
+                    comments=comments,
+                    views=views,
+                ),
                 "created_at": (record.get("created_at").isoformat() if hasattr(record.get("created_at"), "isoformat") else None),
             }
         )
 
     top_posts.sort(
         key=lambda item: (
+            item["engagement_score"],
             item["interactions"],
             item["likes"],
             item["comments"],
-            item["views"],
             item["created_at"] or "",
         ),
         reverse=True,
@@ -1208,6 +1372,7 @@ def _calculate_course_student_metrics_from_data(
         "total_comments": total_comments,
         "total_views": total_views,
         "total_interactions": total_interactions,
+        "total_engagement": total_interactions + total_views,
     }
 
     student_info = {
@@ -1215,6 +1380,8 @@ def _calculate_course_student_metrics_from_data(
         "name": student_name,
         "email": student.email if student else "",
     }
+    engagement_trend = _build_student_engagement_trend(student_posts, course_data)
+    best_time_to_post = _build_best_time_to_post(student_posts, course_data)
 
     return {
         "refreshing": False,
@@ -1223,6 +1390,8 @@ def _calculate_course_student_metrics_from_data(
         "summary": summary,
         "sentiment": sentiment_summary,
         "top_posts": top_posts,
+        "engagement_trend": engagement_trend,
+        "best_time_to_post": best_time_to_post,
     }
 
 

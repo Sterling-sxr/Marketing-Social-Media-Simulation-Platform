@@ -76,10 +76,22 @@ def test_student_analytics_payload_returns_complete_backend_shape():
     assert payload["summary"]["totalPosts"] == 2
     assert payload["summary"]["totalLikes"] == 5
     assert payload["summary"]["totalComments"] == 2
+    assert payload["summary"]["totalViews"] == 10
+    assert payload["summary"]["totalInteractions"] == 7
+    assert payload["summary"]["totalEngagement"] == 17
     assert len(payload["items"]) == 2
     assert len(payload["topPosts"]) >= 1
-    assert payload["engagementTrend"]["windowLabel"] == "Recent posts vs previous posts"
+    assert payload["topPosts"][0]["id"] == second_post.id
+    assert payload["topPosts"][0]["engagementScore"] == 9
+    assert payload["topPosts"][0]["interactions"] == 3
+    assert payload["engagementTrend"]["windowLabel"] == "Last 7 days vs previous 7 days"
+    assert payload["engagementTrend"]["direction"] == "up"
+    assert payload["engagementTrend"]["changePercent"] == 100
+    assert payload["engagementTrend"]["currentWindowEngagement"] == 17
+    assert payload["engagementTrend"]["previousWindowEngagement"] == 0
     assert payload["bestTimeToPost"]["bestHourLabel"] != "—"
+    assert payload["bestTimeToPost"]["windowLabel"] == "Recent 7-day posting hours"
+    assert payload["bestTimeToPost"]["sampleSize"] == 1
     assert payload["audienceInsights"]["strongestEngagedAudience"]
     assert isinstance(payload["audienceInsights"]["breakdown"], list)
     assert payload["aiInsight"]["title"] == "AI Insight"
@@ -111,6 +123,8 @@ def test_student_analytics_payload_returns_safe_empty_shapes_without_posts():
 
     assert payload["items"] == []
     assert payload["summary"]["totalPosts"] == 0
+    assert payload["summary"]["totalViews"] == 0
+    assert payload["summary"]["totalEngagement"] == 0
     assert payload["topPosts"] == []
     assert payload["engagementTrend"]["series"] == []
     assert payload["bestTimeToPost"]["bestHourLabel"] == "—"
