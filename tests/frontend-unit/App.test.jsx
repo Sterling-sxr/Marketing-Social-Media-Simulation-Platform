@@ -1,26 +1,29 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import HomePage from '../../frontend/src/pages/HomePage.jsx';
-import { useApp } from '../../frontend/src/context/AppContext';
 
-const navigateMock = vi.fn();
-
-vi.mock('react-router-dom', () => {
-  const MemoryRouter = ({ children }) => children;
-  return { MemoryRouter, useNavigate: () => navigateMock };
-});
-
-vi.mock('../../frontend/src/context/AppContext', () => ({
-  useApp: vi.fn(),
+const { navigateMock, useAppMock } = vi.hoisted(() => ({
+  navigateMock: vi.fn(),
+  useAppMock: vi.fn(),
 }));
 
-const mockedUseApp = useApp;
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => navigateMock,
+  };
+});
+
+vi.mock('../../frontend/src/context/AppContext.jsx', () => ({
+  useApp: useAppMock,
+}));
 
 const renderHome = () => render(<HomePage />);
 
 const getEmailInput = () => screen.getByLabelText(/email/i, { selector: 'input' });
 const getPasswordInput = () => screen.getByLabelText(/password/i, { selector: 'input' });
 
-describe('HomePage landing experience', () => {
+describe.sequential('HomePage landing experience', () => {
   let loginMock;
   let logoutMock;
 
@@ -28,7 +31,7 @@ describe('HomePage landing experience', () => {
     loginMock = vi.fn().mockResolvedValue({});
     logoutMock = vi.fn().mockResolvedValue({});
     navigateMock.mockReset();
-    mockedUseApp.mockReturnValue({
+    useAppMock.mockReturnValue({
       authUser: null,
       login: loginMock,
       logout: logoutMock,

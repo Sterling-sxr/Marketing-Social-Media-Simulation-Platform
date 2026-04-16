@@ -158,10 +158,12 @@ jobs:
 
       - name: Install frontend runtime deps required by unit tests
         working-directory: tests/frontend-unit
-        run: npm install --no-save lucide-react recharts
+        run: npm install --no-save lucide-react recharts baseline-browser-mapping@latest
 
       - name: Run frontend unit tests (file-by-file)
         working-directory: tests/frontend-unit
+        env:
+          BROWSERSLIST_IGNORE_OLD_DATA: "1"
         run: |
           set -e
           files=(
@@ -174,7 +176,8 @@ jobs:
           )
           for file in "${files[@]}"; do
             echo "Running $file ..."
-            timeout 180s npx vitest run "$file" \
+            timeout 180s npx vitest run \
+              --include "$file" \
               --pool=forks \
               --maxWorkers=1 \
               --minWorkers=1 \
