@@ -44,7 +44,7 @@ export default function NotificationsPage() {
       ? `${notifications.unread} Unread`
       : "All Notifications";
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const SLIM_PILL =
     "inline-flex h-9 items-center justify-center rounded-full border border-brand-200 bg-white px-4 " +
     "text-xs font-semibold text-brand-500 leading-none transition whitespace-nowrap " +
@@ -162,7 +162,7 @@ export default function NotificationsPage() {
                     type="button"
                     className={SLIM_PILL}
                     onClick={() => {
-                      // Context: This block prepares shared values used by the request branches below.
+                      // Context: Compute shared values once so all branches use the same normalized inputs.
                       if (!item.is_read) {
                         markNotificationsRead([item.id]).catch(() => {});
                       }

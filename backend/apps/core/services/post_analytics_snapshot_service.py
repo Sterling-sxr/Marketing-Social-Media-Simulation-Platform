@@ -1,4 +1,4 @@
-"""Module summary: this module groups related logic and clarifies design intent."""
+"""Module summary: Collect related domain logic and document the intended design boundaries."""
 from __future__ import annotations
 
 import logging
@@ -25,7 +25,7 @@ _scheduler_started = False
 
 
 def _calculate_post_snapshot(post: CoursePost, *, days: int = 7) -> PostAnalyticsSnapshot:
-    course = post.course  # Inline explanation: This line clarifies an assumption, guard, or transformation.
+    course = post.course  # Inline explanation: Keep normalization explicit.
     end_date = timezone.localdate()
     start_date = end_date - timedelta(days=days - 1)
 

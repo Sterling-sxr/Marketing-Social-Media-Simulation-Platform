@@ -1,4 +1,4 @@
-"""Module summary: this module groups related logic and clarifies design intent."""
+"""Module summary: Collect related domain logic and document the intended design boundaries."""
 from __future__ import annotations
 
 import json
@@ -7,7 +7,7 @@ from typing import Any
 
 from django.conf import settings
 
-try:  # Inline explanation: This line clarifies an assumption, guard, or transformation.
+try:  # Inline explanation: Keep normalization explicit.
     from openai import OpenAI
 except ImportError:  # pragma: no cover - optional
     OpenAI = None  # type: ignore
@@ -112,8 +112,8 @@ _TUTOR_SYSTEM_PROMPT = (
 
 
 def generate_tutor_response(*, question: str, history: list[dict] | None = None) -> dict[str, Any]:
-    """Handle the `generate_tutor_response` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `generate_tutor_response` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     client = _get_client()
     if client is None:
@@ -141,7 +141,7 @@ def generate_tutor_response(*, question: str, history: list[dict] | None = None)
     if not raw:
         raise RuntimeError("DeepSeek returned an empty response.")
 
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     if raw.startswith("```"):
         raw = raw.split("```")[1]
         if raw.startswith("json"):

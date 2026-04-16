@@ -8,8 +8,8 @@ class CoreConfig(AppConfig):
     name = "apps.core"
 
     def ready(self) -> None:  # noqa: D401
-        """Handle the `ready` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `ready` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         if os.environ.get("SKIP_CORE_BACKGROUND_TASKS") == "1":
             return

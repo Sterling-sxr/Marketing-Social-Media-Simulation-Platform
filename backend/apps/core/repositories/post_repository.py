@@ -1,4 +1,4 @@
-"""Module summary: this module groups related logic and clarifies design intent."""
+"""Module summary: Collect related domain logic and document the intended design boundaries."""
 from __future__ import annotations
 
 from typing import List, Optional, Set
@@ -22,8 +22,8 @@ class PostRepository(BaseRepository[CoursePost]):
     
     @classmethod
     def get_with_details(cls, post_id: int) -> Optional[CoursePost]:
-        """Handle the `get_with_details` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `get_with_details` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         try:
             return (
@@ -53,8 +53,8 @@ class PostRepository(BaseRepository[CoursePost]):
         following_ids: List[int] = None,
         limit: int = 50
     ) -> List[CoursePost]:
-        """Handle the `get_course_posts` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `get_course_posts` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         queryset = (
             cls.model.objects
@@ -73,7 +73,7 @@ class PostRepository(BaseRepository[CoursePost]):
             .order_by('-created_at')
         )
         
-        # Context: This block prepares shared values used by the request branches below.
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         if hashtag:
             normalized = hashtag.lower()
             queryset = queryset.filter(
@@ -81,7 +81,7 @@ class PostRepository(BaseRepository[CoursePost]):
                 Q(hashtags__contains=[hashtag])
             )
         
-        # Context: This block prepares shared values used by the request branches below.
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         if following_only and following_ids:
             queryset = queryset.filter(author_id__in=following_ids)
         
@@ -89,8 +89,8 @@ class PostRepository(BaseRepository[CoursePost]):
     
     @classmethod
     def get_user_posts(cls, user_id: int, course_ids: List[int], limit: int | None = None) -> List[CoursePost]:
-        """Handle the `get_user_posts` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `get_user_posts` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         queryset = (
             cls.model.objects
@@ -114,8 +114,8 @@ class PostRepository(BaseRepository[CoursePost]):
     
     @classmethod
     def get_liked_posts(cls, user_id: int, course_ids: List[int]) -> List[CoursePost]:
-        """Handle the `get_liked_posts` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `get_liked_posts` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         return list(
             cls.model.objects
@@ -141,29 +141,29 @@ class PostLikeRepository(BaseRepository[CoursePostLike]):
     
     @classmethod
     def get_or_create_like(cls, post_id: int, user_id: int) -> tuple[CoursePostLike, bool]:
-        """Handle the `get_or_create_like` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `get_or_create_like` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         return cls.model.objects.get_or_create(post_id=post_id, user_id=user_id)
     
     @classmethod
     def unlike(cls, post_id: int, user_id: int) -> int:
-        """Handle the `unlike` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `unlike` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         return cls.delete_by_filter(post_id=post_id, user_id=user_id)
     
     @classmethod
     def get_like_count(cls, post_id: int) -> int:
-        """Handle the `get_like_count` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `get_like_count` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         return cls.count(post_id=post_id)
     
     @classmethod
     def get_like_counts(cls, post_ids: List[int]) -> dict[int, int]:
-        """Handle the `get_like_counts` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `get_like_counts` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         counts = (
             cls.model.objects
@@ -175,8 +175,8 @@ class PostLikeRepository(BaseRepository[CoursePostLike]):
     
     @classmethod
     def get_user_liked_posts(cls, user_id: int, post_ids: List[int]) -> Set[int]:
-        """Handle the `get_user_liked_posts` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `get_user_liked_posts` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         return set(
             cls.model.objects
@@ -191,8 +191,8 @@ class PostCommentRepository(BaseRepository[CoursePostComment]):
     
     @classmethod
     def get_post_comments(cls, post_id: int) -> List[CoursePostComment]:
-        """Handle the `get_post_comments` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `get_post_comments` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         return list(
             cls.model.objects
@@ -203,15 +203,15 @@ class PostCommentRepository(BaseRepository[CoursePostComment]):
     
     @classmethod
     def get_comment_count(cls, post_id: int) -> int:
-        """Handle the `get_comment_count` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `get_comment_count` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         return cls.count(post_id=post_id)
     
     @classmethod
     def get_comment_counts(cls, post_ids: List[int]) -> dict[int, int]:
-        """Handle the `get_comment_counts` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `get_comment_counts` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         counts = (
             cls.model.objects
@@ -228,8 +228,8 @@ class PostAttachmentRepository(BaseRepository[CoursePostAttachment]):
     
     @classmethod
     def attach_to_post(cls, post_id: int, asset_ids: List[int]) -> int:
-        """Handle the `attach_to_post` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `attach_to_post` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         attachments = [
             cls.model(post_id=post_id, asset_id=asset_id)
@@ -245,8 +245,8 @@ class PostMentionRepository(BaseRepository[CoursePostMention]):
     
     @classmethod
     def create_mentions(cls, post_id: int, mention_entities: List[dict]) -> int:
-        """Handle the `create_mentions` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `create_mentions` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         mentions = [
             cls.model(
@@ -266,15 +266,15 @@ class PostViewRepository(BaseRepository[CoursePostView]):
 
     @classmethod
     def create_view(cls, post_id: int, user_id: int | None) -> CoursePostView:
-        """Handle the `create_view` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `create_view` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         return cls.create(post_id=post_id, user_id=user_id)
 
     @classmethod
     def count_views(cls, post_id: int) -> int:
-        """Handle the `count_views` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `count_views` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         return cls.count(post_id=post_id)
 

@@ -12,12 +12,12 @@ const SUMMARY_TILES = [
   { key: "registered_students", label: "Registered Students" },
 ];
 
-/* Purpose: `Btn` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
+/* Purpose: `Btn` owns one cohesive concern so state transitions and side effects remain easy to trace. */
 function Btn({
   children,
   onClick,
   type = "button",
-  variant = "primary", // Inline explanation: This line clarifies an assumption, guard, or transformation.
+  variant = "primary", // Inline explanation: Keep this non-obvious normalization rule explicit.
   className = "",
   disabled = false,
 }) {
@@ -46,7 +46,7 @@ function Btn({
     </button>
   );
 }
-/* Purpose: `formatPercent` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
+/* Purpose: `formatPercent` owns one cohesive concern so state transitions and side effects remain easy to trace. */
 
 function formatPercent(value) {
   if (typeof value !== "number" || Number.isNaN(value)) return "—";
@@ -83,7 +83,7 @@ function ChangeBadge({ value }) {
   );
 }
 
-/* Purpose: `SummaryCard` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
+/* Purpose: `SummaryCard` owns one cohesive concern so state transitions and side effects remain easy to trace. */
 function SummaryCard({ item, value, onClick }) {
   const card =
     "group rounded-2xl p-6 text-center select-none border border-accent-400 bg-white " +
@@ -121,7 +121,7 @@ function SummaryCard({ item, value, onClick }) {
     </div>
   );
 }
-/* Purpose: `EmptyState` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
+/* Purpose: `EmptyState` owns one cohesive concern so state transitions and side effects remain easy to trace. */
 
 function EmptyState({ message }) {
   return (
@@ -239,20 +239,20 @@ function SentimentCell({ sentiment }) {
   );
 }
 
-/* Purpose: `sortByNumeric` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
+/* Purpose: `sortByNumeric` owns one cohesive concern so state transitions and side effects remain easy to trace. */
 function sortByNumeric(arr, key, asc) {
   const dir = asc ? 1 : -1;
   return [...arr].sort((a, b) => {
     const va = Number(a?.[key] ?? 0);
     const vb = Number(b?.[key] ?? 0);
     if (Number.isNaN(va) && Number.isNaN(vb)) return 0;
-    if (Number.isNaN(va)) return 1; // Inline explanation: This line clarifies an assumption, guard, or transformation.
+    if (Number.isNaN(va)) return 1; // Inline explanation: Keep this non-obvious normalization rule explicit.
     if (Number.isNaN(vb)) return -1;
     if (va === vb) return 0;
     return va > vb ? dir : -dir;
   });
 }
-/* Purpose: `CourseDashboardPage` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
+/* Purpose: `CourseDashboardPage` owns one cohesive concern so state transitions and side effects remain easy to trace. */
 
 export default function CourseDashboardPage() {
   const { courseId: courseIdParam } = useParams();
@@ -271,11 +271,11 @@ export default function CourseDashboardPage() {
   });
   const [refreshing, setRefreshing] = useState(false);
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const [hashtagSortKey] = useState("total_posts");
-  const [hashtagAsc] = useState(false); // Inline explanation: This line clarifies an assumption, guard, or transformation.
+  const [hashtagAsc] = useState(false); // Inline explanation: Keep this non-obvious normalization rule explicit.
   const [studentSortKey] = useState("posts_total");
-  const [studentAsc] = useState(false); // Inline explanation: This line clarifies an assumption, guard, or transformation.
+  const [studentAsc] = useState(false); // Inline explanation: Keep this non-obvious normalization rule explicit.
 
   const isAdmin = useMemo(() => isTeacher(authUser), [authUser]);
   const loadCourseDashboard = useCallback(() => {
@@ -343,14 +343,14 @@ export default function CourseDashboardPage() {
       }`
     : "Course analytics overview";
 
-  // Purpose: `goAllPosts` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable.
+  // Purpose: `goAllPosts` owns one cohesive concern so state transitions and side effects remain easy to trace.
   const goAllPosts = () => {
     if (courseMeta?.id) {
       navigate(`/courses/${courseMeta.id}`);
     }
   };
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const hashtags = useMemo(() => {
     if (!hashtagsRaw?.length) return [];
     return sortByNumeric(hashtagsRaw, hashtagSortKey, hashtagAsc);
@@ -362,7 +362,7 @@ export default function CourseDashboardPage() {
   }, [studentsRaw, studentSortKey, studentAsc]);
   const topHashtag = hashtags[0]?.hashtag;
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   useEffect(() => {
     if (location.hash === "#students-section") {
       const el = document.getElementById("students-section");
@@ -384,7 +384,7 @@ export default function CourseDashboardPage() {
       }
       subtitle={subtitle}
     >
-      {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+      {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
       <div className="flex items-center gap-2">
         <Btn variant="secondary" onClick={() => navigate(-1)}>
           ← Back
@@ -451,7 +451,7 @@ export default function CourseDashboardPage() {
             </p>
           ) : null}
 
-          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <section className="grid gap-4 sm:grid-cols-3">
             {SUMMARY_TILES.map((item) => (
               <SummaryCard
@@ -561,7 +561,7 @@ export default function CourseDashboardPage() {
             ) : null}
           </section>
 
-          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <section
             id="students-section"
             className="space-y-4 rounded-3xl border border-brand-100 bg-white p-6 shadow-sm"
@@ -647,7 +647,7 @@ export default function CourseDashboardPage() {
             )}
           </section>
 
-          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <section className="space-y-4 rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
             <header className="mb-2">
               <h2 className="text-2xl font-bold text-slate-900">

@@ -6,12 +6,12 @@ export default function ResetSuccessPage() {
   const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
-    // Context: This block prepares shared values used by the request branches below.
+    // Context: Compute shared values once so all branches use the same normalized inputs.
     const timer = setInterval(() => {
       setCountdown((c) => c - 1);
     }, 1000);
 
-    // Context: This block prepares shared values used by the request branches below.
+    // Context: Compute shared values once so all branches use the same normalized inputs.
     const redirect = setTimeout(() => {
       navigate("/", { replace: true });
     }, 3000);

@@ -1,4 +1,4 @@
-// Purpose: `KV` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable.
+// Purpose: `KV` owns one cohesive concern so state transitions and side effects remain easy to trace.
 export default function KV({ label, value }) {
   const empty =
     value === undefined || value === null || value === "" || value === "—";

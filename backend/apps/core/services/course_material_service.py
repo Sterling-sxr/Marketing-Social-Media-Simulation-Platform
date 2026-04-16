@@ -8,7 +8,7 @@ from django.core.files.uploadedfile import UploadedFile
 
 from ..repositories.models import Course, CourseMaterial, CourseMember
 
-MAX_FILE_SIZE = 50 * 1024 * 1024  # Inline explanation: This line clarifies an assumption, guard, or transformation.
+MAX_FILE_SIZE = 50 * 1024 * 1024  # Inline explanation: Keep normalization explicit.
 
 ALLOWED_EXTENSIONS = {
     ".pdf", ".doc", ".docx", ".ppt", ".pptx",
@@ -68,18 +68,18 @@ def upload_course_material(
 
     _get_course_or_raise(course_id)
 
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     title = title.strip()
     if not title:
         raise ValidationError("Title is required.")
 
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     if uploaded_file.size > MAX_FILE_SIZE:
         raise ValidationError(
             f"File size exceeds the 50 MB limit ({uploaded_file.size // (1024 * 1024)} MB)."
         )
 
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     _, ext = os.path.splitext(uploaded_file.name or "")
     if ext.lower() not in ALLOWED_EXTENSIONS:
         raise ValidationError(
@@ -87,7 +87,7 @@ def upload_course_material(
             f"Allowed: {', '.join(sorted(ALLOWED_EXTENSIONS))}"
         )
 
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     if category not in CATEGORY_CHOICES:
         category = "other"
 
@@ -116,7 +116,7 @@ def delete_course_material(user, course_id: int, material_id: int) -> None:
     if not is_uploader and not _is_teacher_or_admin(user, course_id):
         raise PermissionError("You do not have permission to delete this material.")
 
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     if material.file:
         try:
             storage = material.file.storage
@@ -131,8 +131,8 @@ def delete_course_material(user, course_id: int, material_id: int) -> None:
 def _serialize(m: CourseMaterial) -> dict:
     try:
         if m.file:
-            # Context: This block prepares shared values used by the request branches below.
-            # Context: This block prepares shared values used by the request branches below.
+            # Context: Compute shared values once so all branches use the same normalized inputs.
+            # Context: Compute shared values once so all branches use the same normalized inputs.
             public_base = getattr(settings, "PUBLIC_MEDIA_URL", "").rstrip("/")
             if public_base:
                 file_url = f"{public_base}/{m.file.name}"

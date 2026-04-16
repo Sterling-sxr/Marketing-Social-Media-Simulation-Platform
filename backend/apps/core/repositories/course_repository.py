@@ -1,4 +1,4 @@
-"""Module summary: this module groups related logic and clarifies design intent."""
+"""Module summary: Collect related domain logic and document the intended design boundaries."""
 from __future__ import annotations
 
 from typing import List, Optional
@@ -15,15 +15,15 @@ class CourseRepository(BaseRepository[Course]):
     
     @classmethod
     def get_by_join_code(cls, join_code: str) -> Optional[Course]:
-        """Handle the `get_by_join_code` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `get_by_join_code` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         return cls.model.objects.filter(join_code=join_code).first()
     
     @classmethod
     def get_user_courses(cls, user_id: int) -> List[Course]:
-        """Handle the `get_user_courses` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `get_user_courses` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         return list(
             cls.model.objects
@@ -34,8 +34,8 @@ class CourseRepository(BaseRepository[Course]):
     
     @classmethod
     def get_available_courses(cls, user_id: int) -> List[Course]:
-        """Handle the `get_available_courses` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `get_available_courses` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         return list(
             cls.model.objects
@@ -45,8 +45,8 @@ class CourseRepository(BaseRepository[Course]):
     
     @classmethod
     def get_created_by_user(cls, user_id: int) -> List[Course]:
-        """Handle the `get_created_by_user` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `get_created_by_user` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         return list(
             cls.model.objects
@@ -56,8 +56,8 @@ class CourseRepository(BaseRepository[Course]):
     
     @classmethod
     def is_user_member(cls, course_id: int, user_id: int) -> bool:
-        """Handle the `is_user_member` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `is_user_member` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         return CourseMember.objects.filter(
             course_id=course_id,
@@ -66,8 +66,8 @@ class CourseRepository(BaseRepository[Course]):
     
     @classmethod
     def get_user_role(cls, course_id: int, user_id: int) -> Optional[str]:
-        """Handle the `get_user_role` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `get_user_role` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         member = CourseMember.objects.filter(
             course_id=course_id,
@@ -77,8 +77,8 @@ class CourseRepository(BaseRepository[Course]):
     
     @classmethod
     def get_with_stats(cls, course_id: int) -> Optional[dict]:
-        """Handle the `get_with_stats` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `get_with_stats` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         try:
             course = (
@@ -107,15 +107,15 @@ class CourseMemberRepository(BaseRepository[CourseMember]):
     
     @classmethod
     def add_member(cls, course_id: int, user_id: int, role: str = 'student') -> CourseMember:
-        """Handle the `add_member` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `add_member` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         return cls.create(course_id=course_id, user_id=user_id, role=role)
     
     @classmethod
     def get_or_create_member(cls, course_id: int, user_id: int, role: str = 'student') -> tuple[CourseMember, bool]:
-        """Handle the `get_or_create_member` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `get_or_create_member` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         return cls.model.objects.get_or_create(
             course_id=course_id,
@@ -125,8 +125,8 @@ class CourseMemberRepository(BaseRepository[CourseMember]):
     
     @classmethod
     def get_course_members(cls, course_id: int) -> List[CourseMember]:
-        """Handle the `get_course_members` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `get_course_members` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         return list(
             cls.model.objects

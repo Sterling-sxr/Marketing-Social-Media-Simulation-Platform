@@ -1,4 +1,4 @@
-// Context: This block prepares shared values used by the request branches below.
+// Context: Compute shared values once so all branches use the same normalized inputs.
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { getJson, postJson, deleteJson } from "../lib/api";
@@ -13,7 +13,7 @@ export default function UserProfilePage() {
   const navigate = useNavigate();
   const { authUser, loadMyProfile, setAuthUser } = useApp();
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const showPostsOnly = searchParams.get("tab") === "posts";
   const showLikesOnly = searchParams.get("tab") === "likes";
 
@@ -49,14 +49,14 @@ export default function UserProfilePage() {
     return Boolean(authUser.is_superuser || authUser.is_staff);
   }, [authUser, isSelf]);
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const pageTitle = useMemo(() => {
     if (showLikesOnly) return "Likes";
     if (showPostsOnly) return "Posts";
     return null;
   }, [showPostsOnly, showLikesOnly]);
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   useEffect(() => {
     let isMounted = true;
     setStatus({ loading: true, error: "" });
@@ -93,7 +93,7 @@ export default function UserProfilePage() {
     }
   }, [profile]);
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   useEffect(() => {
     if (showPostsOnly || showLikesOnly) return;
     const endpoint =
@@ -259,20 +259,20 @@ export default function UserProfilePage() {
     }
   };
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   if (showPostsOnly || showLikesOnly) {
     return (
       <AuthenticatedShell title={pageTitle} subtitle={null}>
-        {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+        {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
         <div className="flex items-center justify-between">
-          {/* Context: This section keeps dependent steps together so assumptions, branching rules, and maintenance decisions stay easy to reason about.
+          {/* Context: Keep dependent steps together so branch preconditions remain visible at a glance. Reason: This layout reduces hidden coupling and makes future edits safer.
               * Additional detail: each step is annotated to make maintenance and review easier.
               * Additional detail: each step is annotated to make maintenance and review easier.
               * Additional detail: each step is annotated to make maintenance and review easier.
             * Additional detail: each step is annotated to make maintenance and review easier.
               * Additional detail: each step is annotated to make maintenance and review easier.
             */}
-          {/* Context: This section keeps dependent steps together so assumptions, branching rules, and maintenance decisions stay easy to reason about.
+          {/* Context: Keep dependent steps together so branch preconditions remain visible at a glance. Reason: This layout reduces hidden coupling and makes future edits safer.
               * Additional detail: each step is annotated to make maintenance and review easier.
                 * Additional detail: each step is annotated to make maintenance and review easier.
                 * Additional detail: each step is annotated to make maintenance and review easier.
@@ -283,7 +283,7 @@ export default function UserProfilePage() {
             */}
         </div>
 
-        {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+        {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
         <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-brand-50 p-1 text-xs">
           <button
             type="button"
@@ -305,7 +305,7 @@ export default function UserProfilePage() {
           </button>
         </div>
 
-        {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+        {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
         {status.loading ? (
           <p className="text-sm text-slate-500">Loading...</p>
         ) : status.error ? (
@@ -338,7 +338,7 @@ export default function UserProfilePage() {
     );
   }
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   return (
     <AuthenticatedShell title={null} subtitle={null}>
       <div className="flex items-center justify-between">{/* spacer */}</div>

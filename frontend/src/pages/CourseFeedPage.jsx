@@ -16,7 +16,7 @@ import ProfanityHint from "./components/ProfanityHint";
 import AuthenticatedShell from "./components/AuthenticatedShell";
 import { isTeacher } from "../lib/access";
 
-/* Context: This section groups related logic so shared assumptions, control flow, and side effects are easier to understand. */
+/* Context: Keep related logic in one section so assumptions and control flow stay explicit. Reason: Localizing side effects lowers review cost and reduces accidental regressions. */
 const initialComposerStatus = { loading: false, error: "", message: "" };
 const initialUploadStatus = { loading: false, error: "", message: "" };
 const MAX_ATTACHMENTS = 4;
@@ -56,7 +56,7 @@ function findTrigger(value, caret) {
   return null;
 }
 
-/* Purpose: `useAvatar` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
+/* Purpose: `useAvatar` owns one cohesive concern so state transitions and side effects remain easy to trace. */
 function useAvatar(user) {
   if (!user) return { initials: "?", displayName: "un login", photoUrl: "" };
   const photoUrl =
@@ -86,11 +86,11 @@ export default function CourseFeedPage() {
     loadCourseProfile,
   } = useApp();
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const searchParams = new URLSearchParams(location.search);
   const followingFromUrl = searchParams.get("tab") === "following";
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const [keyword, setKeyword] = useState("");
 
   const [leftFilter, setLeftFilter] = useState(() =>
@@ -104,16 +104,16 @@ export default function CourseFeedPage() {
       : { type: "all" }
   );
 
-  // Context: This block prepares shared values used by the request branches below.
-  const [tags, setTags] = useState([]); // Inline explanation: This line clarifies an assumption, guard, or transformation.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
+  const [tags, setTags] = useState([]); // Inline explanation: Keep this non-obvious normalization rule explicit.
   const [tagsStatus, setTagsStatus] = useState({ loading: false, error: "" });
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const [feedItems, setFeedItems] = useState([]);
   const [feedStatus, setFeedStatus] = useState({ loading: true, error: "" });
   const [courseSummary, setCourseSummary] = useState(null);
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const [showComposer, setShowComposer] = useState(false);
   const [composerContent, setComposerContent] = useState("");
   const [composerStatus, setComposerStatus] = useState(initialComposerStatus);
@@ -136,7 +136,7 @@ export default function CourseFeedPage() {
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const [activeTrigger, setActiveTrigger] = useState(null);
   const [suggestionsState, setSuggestionsState] = useState(
     initialSuggestionsState
@@ -150,7 +150,7 @@ export default function CourseFeedPage() {
     []
   );
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const contextCourse = useMemo(() => {
     if (!Number.isFinite(courseId)) return null;
     return courses.joined.find((c) => c.id === courseId) || null;
@@ -174,7 +174,7 @@ export default function CourseFeedPage() {
     ? `${headerCourse.course_code} · ${headerCourse.name} · Community`
     : "Course Community";
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const subtitleParts = [];
   if (headerCourse) {
     if (headerCourse.term) subtitleParts.push(`${headerCourse.term}`);
@@ -210,7 +210,7 @@ export default function CourseFeedPage() {
     return courseId ? `Course ${courseId}` : "Course profile";
   }, [headerCourse, courseId]);
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   useEffect(() => {
     if (!authCheckComplete) return;
     if (!authUser) navigate("/login", { replace: true });
@@ -220,7 +220,7 @@ export default function CourseFeedPage() {
     if (authUser) fetchCourses().catch(() => {});
   }, [authUser, fetchCourses]);
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   useEffect(() => {
     const following =
       new URLSearchParams(location.search).get("tab") === "following";
@@ -253,8 +253,8 @@ export default function CourseFeedPage() {
       .toLowerCase();
     const isCourseTeacher =
       roleFromCourse === "teacher" || roleFromCourse === "instructor";
-    // Context: This block prepares shared values used by the request branches below.
-    // Context: This block prepares shared values used by the request branches below.
+    // Context: Compute shared values once so all branches use the same normalized inputs.
+    // Context: Compute shared values once so all branches use the same normalized inputs.
     if (
       membership &&
       membership.profile_completed === false &&
@@ -275,7 +275,7 @@ export default function CourseFeedPage() {
     location.search,
   ]);
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const loadFeed = useCallback(async () => {
     if (!Number.isFinite(courseId)) {
       setFeedStatus({ loading: false, error: "Course not found." });
@@ -295,7 +295,7 @@ export default function CourseFeedPage() {
       setFeedItems(data.items || []);
       setFeedStatus({ loading: false, error: "" });
 
-      // Context: This block prepares shared values used by the request branches below.
+      // Context: Compute shared values once so all branches use the same normalized inputs.
       if (leftFilter.type === "all") {
         try {
           const tagCounts = {};
@@ -345,7 +345,7 @@ export default function CourseFeedPage() {
     }
   }, [courseReadOnly]);
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const loadTags = useCallback(async () => {
     if (!Number.isFinite(courseId)) return;
     setTagsStatus({ loading: true, error: "" });
@@ -372,7 +372,7 @@ export default function CourseFeedPage() {
     setMobileFilterOpen(false);
   }, [location.pathname, location.search]);
 
-  // Purpose: `handleRefresh` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable.
+  // Purpose: `handleRefresh` owns one cohesive concern so state transitions and side effects remain easy to trace.
   const handleRefresh = () => loadFeed();
 
   const openProfileModal = useCallback(async () => {
@@ -451,7 +451,7 @@ export default function CourseFeedPage() {
     fetchSeqRef.current += 1;
   };
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const clearSuggestions = useCallback(() => {
     setSuggestionsState({ ...initialSuggestionsState });
     setHighlightIndex(0);
@@ -763,7 +763,7 @@ export default function CourseFeedPage() {
     ]
   );
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const visibleFeedItems = useMemo(() => {
     if (!keyword.trim()) return feedItems;
     const kw = keyword.trim().toLowerCase();
@@ -823,7 +823,7 @@ export default function CourseFeedPage() {
     setComposerStatus({ loading: true, error: "", message: "" });
 
     try {
-      // Context: This block prepares shared values used by the request branches below.
+      // Context: Compute shared values once so all branches use the same normalized inputs.
       const mentions = Array.from(
         new Set(
           (trimmed.match(/@([^\s@#]+)/g) || []).map((i) => i.replace(/^@+/, ""))
@@ -835,7 +835,7 @@ export default function CourseFeedPage() {
         )
       );
 
-      // Context: This block prepares shared values used by the request branches below.
+      // Context: Compute shared values once so all branches use the same normalized inputs.
       if (
         leftFilter.type === "tag" &&
         leftFilter.tag &&
@@ -895,7 +895,7 @@ export default function CourseFeedPage() {
       } else {
         const data = await postJson(`/api/courses/${courseId}/posts/`, payload);
 
-        // Context: This block prepares shared values used by the request branches below.
+        // Context: Compute shared values once so all branches use the same normalized inputs.
         setComposerStatus({
           loading: false,
           error: "",
@@ -1079,11 +1079,11 @@ export default function CourseFeedPage() {
     [navigate, courseId]
   );
 
-  /* Context: This section groups related logic so shared assumptions, control flow, and side effects are easier to understand. */
+  /* Context: Keep related logic in one section so assumptions and control flow stay explicit. Reason: Localizing side effects lowers review cost and reduces accidental regressions. */
   const { initials, displayName, photoUrl } = useAvatar(authUser);
   const compactName = displayName || "User";
 
-  /* Context: This section groups related logic so shared assumptions, control flow, and side effects are easier to understand. */
+  /* Context: Keep related logic in one section so assumptions and control flow stay explicit. Reason: Localizing side effects lowers review cost and reduces accidental regressions. */
   const leftItemBase =
     "w-full rounded-xl px-3 py-2 text-sm font-medium text-left transition flex items-center justify-between";
   const LeftItem = ({ active, children, onClick }) => (
@@ -1105,7 +1105,7 @@ export default function CourseFeedPage() {
       return <p className="text-sm text-slate-500">Loading...</p>;
     }
 
-    const list = visibleFeedItems; // Inline explanation: This line clarifies an assumption, guard, or transformation.
+    const list = visibleFeedItems; // Inline explanation: Keep this non-obvious normalization rule explicit.
 
     if (list.length === 0) {
       if (keyword.trim()) {
@@ -1154,10 +1154,10 @@ export default function CourseFeedPage() {
 
   return (
     <AuthenticatedShell title={pageTitle} subtitle={pageSubtitle}>
-      {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+      {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
       <header className="hidden">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 lg:px-6 lg:py-4">
-          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <button
             type="button"
             onClick={() => navigate("/studenthome")}
@@ -1177,7 +1177,7 @@ export default function CourseFeedPage() {
             </span>
           </button>
 
-          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <div className="flex min-w-0 items-center gap-2 sm:gap-3 lg:gap-5">
             <div
               className="flex min-w-0 items-center gap-2 rounded-full border border-brand-200/80
@@ -1245,12 +1245,12 @@ export default function CourseFeedPage() {
         </div>
       </header>
 
-      {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+      {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-3 py-3 sm:gap-4 sm:px-4 sm:py-4 lg:flex-row lg:gap-6 lg:px-6 lg:py-8">
-        {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow.
+        {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend.
               */}
 
-        {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+        {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
         <main className="flex-1 space-y-4 rounded-2xl border border-brand-100 bg-white/90 p-4 pb-24 shadow-lg shadow-brand-100/80 sm:space-y-5 sm:p-5 lg:space-y-6 lg:rounded-3xl lg:p-6 lg:pb-6 lg:shadow-xl lg:shadow-brand-100">
           <div className="space-y-2 lg:hidden">
             <h1 className="break-words text-base font-bold text-slate-900">
@@ -1259,7 +1259,7 @@ export default function CourseFeedPage() {
             <p className="break-words text-xs text-slate-500">{pageSubtitle}</p>
           </div>
 
-        {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+        {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
         <div className="hidden lg:block mb-4">
           <div className="flex flex-col gap-2">
             <label className="block text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -1302,7 +1302,7 @@ export default function CourseFeedPage() {
             >
               Refresh
             </button>
-            {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+            {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
             <a
               href={`/courses/${courseId}/materials`}
               className="inline-flex h-9 items-center gap-1.5 rounded-full border border-brand-400 bg-brand-50 px-4 text-xs font-semibold text-brand-800 transition hover:bg-brand-100 focus:outline-none focus:ring-2 focus:ring-brand-300"
@@ -1313,7 +1313,7 @@ export default function CourseFeedPage() {
 
           {feedStatus.error ? <Feedback error={feedStatus.error} /> : null}
 
-          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <div className="sticky top-0 z-20 -mx-6 hidden px-6 pt-2 lg:block">
             <div className="flex items-center justify-end gap-3 rounded-b-2xl border-b border-brand-100/60 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/60 py-3">
               <button
@@ -1475,7 +1475,7 @@ export default function CourseFeedPage() {
         </button>
       ) : null}
 
-      {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+      {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
       {showComposer && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/35 p-0 sm:grid sm:place-items-center sm:p-4">
           <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl border border-accent-100/70 bg-white/95 p-4 shadow-[0_32px_90px_-32px_rgba(91,33,182,0.45)] backdrop-blur sm:max-h-[86vh] sm:max-w-2xl sm:rounded-3xl sm:p-6">

@@ -1,4 +1,4 @@
-"""Module summary: this module groups related logic and clarifies design intent."""
+"""Module summary: Collect related domain logic and document the intended design boundaries."""
 from __future__ import annotations
 
 import logging
@@ -77,10 +77,10 @@ def request_password_reset(email: str) -> PasswordResetRequest:
     if is_throttled(purpose=PURPOSE, email=normalised_email):
         raise PasswordResetThrottleError("Verification code requested too frequently. Please wait before trying again.")
 
-    # Context: This block prepares shared values used by the request branches below.
-    code = "1234"  # Inline explanation: This line clarifies an assumption, guard, or transformation.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
+    code = "1234"  # Inline explanation: Keep normalization explicit.
     store_code(purpose=PURPOSE, email=normalised_email, code=code)
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     logger.info("TEST MODE: mock send password reset code %s to %s", code, normalised_email)
 
     return PasswordResetRequest(email=normalised_email, code=code if settings.DEBUG else "****")

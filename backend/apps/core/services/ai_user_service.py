@@ -1,4 +1,4 @@
-"""Module summary: this module groups related logic and clarifies design intent."""
+"""Module summary: Collect related domain logic and document the intended design boundaries."""
 from __future__ import annotations
 
 import csv
@@ -198,7 +198,7 @@ def _payload_to_data(payload: dict[str, Any]) -> dict[str, Any]:
         data[field] = _normalize_numeric(payload.get(field), field)
     for field in AI_USER_LIST_FIELDS:
         data[field] = _normalize_interests(payload.get(field))
-        # Context: This block prepares shared values used by the request branches below.
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         allowed = set(PROFILE_OPTIONS.get("interests", []))
         for item in data[field]:
             if item not in allowed:
@@ -454,8 +454,8 @@ def import_course_ai_users(*, user, course_id: int, file_bytes: bytes) -> dict[s
 
 
 def ensure_ai_user_identity(ai_user: CourseAIUser) -> None:
-    """Handle the `ensure_ai_user_identity` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `ensure_ai_user_identity` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     course = CourseRepository.get_by_id(ai_user.course_id)
     if not course:

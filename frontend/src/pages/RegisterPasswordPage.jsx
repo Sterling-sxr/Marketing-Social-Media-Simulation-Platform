@@ -31,12 +31,12 @@ export default function RegisterPasswordPage() {
     event.preventDefault();
     const success = await completeRegistration();
     if (success) {
-      // Context: This block prepares shared values used by the request branches below.
-      // Context: This block prepares shared values used by the request branches below.
+      // Context: Compute shared values once so all branches use the same normalized inputs.
+      // Context: Compute shared values once so all branches use the same normalized inputs.
       try {
         await login(registerVerifiedEmail, registerPassword);
       } catch {
-        // Context: This block prepares shared values used by the request branches below.
+        // Context: Compute shared values once so all branches use the same normalized inputs.
         resetRegisterFlow();
         navigate("/login", { replace: true });
         return;
@@ -67,7 +67,7 @@ export default function RegisterPasswordPage() {
           >
             ←
           </button>
-          {/* Context: This section keeps dependent steps together so assumptions, branching rules, and maintenance decisions stay easy to reason about.
+          {/* Context: Keep dependent steps together so branch preconditions remain visible at a glance. Reason: This layout reduces hidden coupling and makes future edits safer.
               * Additional detail: each step is annotated to make maintenance and review easier.
               * Additional detail: each step is annotated to make maintenance and review easier.
               * Additional detail: each step is annotated to make maintenance and review easier.
@@ -190,7 +190,7 @@ export default function RegisterPasswordPage() {
         </aside>
       </main>
 
-      {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+      {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
       <footer className="py-6 text-center text-xs text-slate-400">
         © {new Date().getFullYear()} Bread Capstone Team. All rights reserved.
       </footer>

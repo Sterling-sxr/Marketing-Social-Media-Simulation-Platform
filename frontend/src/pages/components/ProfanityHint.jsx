@@ -1,4 +1,4 @@
-// Purpose: `ProfanityHint` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable.
+// Purpose: `ProfanityHint` owns one cohesive concern so state transitions and side effects remain easy to trace.
 export default function ProfanityHint({ message }) {
   if (!message) return null;
   return (

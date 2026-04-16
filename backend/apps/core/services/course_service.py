@@ -1,4 +1,4 @@
-"""Module summary: this module groups related logic and clarifies design intent."""
+"""Module summary: Collect related domain logic and document the intended design boundaries."""
 from __future__ import annotations
 
 import random
@@ -17,10 +17,10 @@ from ..repositories import (
 
 
 def list_courses_for_user(user) -> dict[str, Any]:
-    """Handle the `list_courses_for_user` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `list_courses_for_user` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     joined_courses = CourseRepository.get_user_courses(user.id)
     course_ids = [course.id for course in joined_courses]
     completion_map = (
@@ -30,7 +30,7 @@ def list_courses_for_user(user) -> dict[str, Any]:
     )
     available_courses = CourseRepository.get_available_courses(user.id)
     
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     joined = []
     for course in joined_courses:
         role = CourseRepository.get_user_role(course.id, user.id)
@@ -66,24 +66,24 @@ def list_courses_for_user(user) -> dict[str, Any]:
 
 @transaction.atomic
 def join_course_by_code(*, user, join_code: str):
-    """Handle the `join_course_by_code` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `join_course_by_code` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     normalized_code = (join_code or "").strip().upper()
     if not normalized_code:
         raise ValueError("Please enter the course join code.")
 
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     course = CourseRepository.get_by_join_code(normalized_code)
     if not course:
         raise ValueError("No course was found for that join code.")
 
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     if CourseRepository.is_user_member(course.id, user.id):
         raise ValueError("You have already joined this course.")
     
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     membership, _created = CourseMemberRepository.get_or_create_member(
         course.id, user.id, role="student"
     )
@@ -107,32 +107,33 @@ def create_course(
     start_date: str | None = None,
     end_date: str | None = None,
 ) -> dict[str, Any]:
-    """Handle the `create_course` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `create_course` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     if not (getattr(user, "is_superuser", False) or getattr(user, "is_staff", False)):
         raise PermissionError("Only administrators can create courses.")
 
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     code = (course_code or "").strip().upper()
     name = (course_name or "").strip()
     term_val = (term or "").strip().upper()
     if not code or not name or not term_val:
         raise ValueError("Please provide the course code, name, and term.")
 
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     existing = CourseRepository.filter(course_code__iexact=code, term__iexact=term_val)
     if existing:
         raise ValueError("A course with this code already exists for the selected term.")
 
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     join_code = _generate_join_code(8)
     while CourseRepository.get_by_join_code(join_code):
         join_code = _generate_join_code(8)
 
-    # Purpose: Handle the `_parse_date` workflow and keep behavior predictable.
-    # Details: Validate incoming data, call dependent services, and return a stable response.
+    # Purpose: Orchestrate `_parse_date` with clear validation, dependency calls, and response mapping.
+    # Input contract: Normalize required values early and fail fast on malformed payloads.
+    # Output contract: Return a stable success/error shape after translating service outcomes.
     def _parse_date(value: str | None, *, label: str) -> date:
         if not value:
             raise ValueError(f"Please provide the course {label}.")
@@ -145,7 +146,7 @@ def create_course(
     if end_dt < start_dt:
         raise ValueError("Course end date must be on or after the start date.")
 
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     course = CourseRepository.create(
         course_code=code,
         name=name,
@@ -156,7 +157,7 @@ def create_course(
         created_by=user,
     )
     
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     payload = {
         "id": course.id,
         "name": course.name,
@@ -170,17 +171,17 @@ def create_course(
 
 
 def list_managed_courses(*, user) -> list[dict[str, Any]]:
-    """Handle the `list_managed_courses` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `list_managed_courses` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     if not (getattr(user, "is_superuser", False) or getattr(user, "is_staff", False)):
         return []
     
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     courses = CourseRepository.get_created_by_user(user.id)
     
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     return [
         {
             "id": c.id,

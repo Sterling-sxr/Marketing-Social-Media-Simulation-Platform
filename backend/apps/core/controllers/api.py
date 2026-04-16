@@ -21,7 +21,7 @@ from ..services import (
     mark_all_as_read,
     mark_as_read,
     store_upload,
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
 )
 from ..services import (
     send_demo_email as send_demo_email_via_gmail,
@@ -35,8 +35,9 @@ from ..utils import (
 
 
 @csrf_exempt
-# Purpose: Handle the `messages_endpoint` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `messages_endpoint` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def messages_endpoint(request: HttpRequest) -> JsonResponse:
     if request.method == "GET":
         data = [message_to_dict(msg) for msg in list_recent_messages()]
@@ -64,8 +65,9 @@ def messages_endpoint(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Purpose: Handle the `send_demo_email` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `send_demo_email` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def send_demo_email(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -92,8 +94,9 @@ def send_demo_email(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Purpose: Handle the `files_endpoint` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `files_endpoint` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def files_endpoint(request: HttpRequest) -> JsonResponse:
     if request.method == "GET":
         assets = [asset_to_dict(asset) for asset in list_recent_assets()]
@@ -111,15 +114,16 @@ def files_endpoint(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Purpose: Handle the `notifications_endpoint` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `notifications_endpoint` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def notifications_endpoint(request: HttpRequest) -> JsonResponse:
     user = resolve_user_from_request(request)
     if not user:
         return JsonResponse({"error": "Specify a user via `user` query parameter or X-User header."}, status=400)
 
-    # Context: This block prepares shared values used by the request branches below.
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     course_id = request.GET.get("course_id") or request.GET.get("courseId")
 
     if request.method == "GET":
@@ -148,8 +152,9 @@ def notifications_endpoint(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Purpose: Handle the `simulate_activity` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `simulate_activity` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def simulate_activity(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -185,8 +190,9 @@ def simulate_activity(request: HttpRequest) -> JsonResponse:
     return JsonResponse(notification_payload, status=201)
 
 
-# Purpose: Handle the `gmail_oauth_start` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `gmail_oauth_start` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def gmail_oauth_start(request: HttpRequest):
     try:
         flow = build_gmail_flow()
@@ -202,8 +208,9 @@ def gmail_oauth_start(request: HttpRequest):
     return HttpResponseRedirect(authorization_url)
 
 
-# Purpose: Handle the `gmail_oauth_callback` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `gmail_oauth_callback` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def gmail_oauth_callback(request: HttpRequest):
     try:
         flow = build_gmail_flow()

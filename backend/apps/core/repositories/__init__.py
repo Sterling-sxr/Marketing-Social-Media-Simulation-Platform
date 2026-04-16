@@ -1,4 +1,4 @@
-# Context: This block prepares shared values used by the request branches below.
+# Context: Compute shared values once so all branches use the same normalized inputs.
 from .ai_user_identity_repository import CourseAIUserIdentityRepository
 from .ai_user_repository import CourseAIUserRepository
 from .auth_user import (
@@ -8,7 +8,7 @@ from .auth_user import (
     get_by_username,
 )
 
-# Context: This block prepares shared values used by the request branches below.
+# Context: Compute shared values once so all branches use the same normalized inputs.
 from .base import BaseRepository
 from .course_profile_repository import CourseProfileRepository
 from .course_repository import CourseMemberRepository, CourseRepository
@@ -51,7 +51,7 @@ from .profile_repository import ProfileRepository
 from .user_repository import UserRepository
 
 __all__ = [
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     "MediaAsset",
     "Message",
     "Notification",
@@ -79,7 +79,7 @@ __all__ = [
     "get_by_email",
     "get_by_username",
     "UserCreationResult",
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     "BaseRepository",
     "UserRepository",
     "ProfileRepository",

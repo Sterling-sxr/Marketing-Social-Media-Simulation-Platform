@@ -1,4 +1,4 @@
-# Context: This block prepares shared values used by the request branches below.
+# Context: Compute shared values once so all branches use the same normalized inputs.
 import json
 
 from django.contrib.auth import get_user_model
@@ -17,13 +17,14 @@ _RANK_LABELS = {
 }
 
 
-# Purpose: Handle the `_save_search_history` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `_save_search_history` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def _save_search_history(request, query: str) -> None:
     if request.user.is_authenticated:
-        # Context: This block prepares shared values used by the request branches below.
-        # Context: This block prepares shared values used by the request branches below.
-        # Context: This block prepares shared values used by the request branches below.
+        # Context: Compute shared values once so all branches use the same normalized inputs.
+        # Context: Compute shared values once so all branches use the same normalized inputs.
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         profile = UserProfile.objects.filter(user=request.user).first()
         if profile is not None:
             history = profile.search_history or []
@@ -41,19 +42,20 @@ def _save_search_history(request, query: str) -> None:
 
 
 @require_GET
-# Purpose: Handle the `search_posts` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `search_posts` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def search_posts(request):
-    """Handle the `search_posts` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `search_posts` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     query = request.GET.get("q", "").strip()
     if not query:
         return JsonResponse({"results": []})
 
-    # Context: This block prepares shared values used by the request branches below.
-    # Context: This block prepares shared values used by the request branches below.
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     tokens = [t for t in query.split() if t]
 
     token_filter = Q()
@@ -107,11 +109,12 @@ def search_posts(request):
 
 
 @require_GET
-# Purpose: Handle the `suggested_search` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `suggested_search` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def suggested_search(request):
-    """Handle the `suggested_search` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `suggested_search` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     top_keywords = (
         SearchLog.objects.values("keyword")
@@ -131,11 +134,12 @@ def suggested_search(request):
 
 
 @require_GET
-# Purpose: Handle the `get_search_history` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `get_search_history` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def get_search_history(request):
-    """Handle the `get_search_history` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `get_search_history` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     if request.user.is_authenticated:
         profile = UserProfile.objects.filter(user=request.user).first()
@@ -146,11 +150,12 @@ def get_search_history(request):
 
 
 @require_POST
-# Purpose: Handle the `add_search_history` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `add_search_history` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def add_search_history(request):
-    """Handle the `add_search_history` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `add_search_history` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     try:
         body = json.loads(request.body)

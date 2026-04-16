@@ -1,4 +1,4 @@
-// Purpose: `ChipList` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable.
+// Purpose: `ChipList` owns one cohesive concern so state transitions and side effects remain easy to trace.
 export default function ChipList({ items }) {
   const list = items || [];
   if (!list.length) return <span className="text-xs text-slate-400">None</span>;

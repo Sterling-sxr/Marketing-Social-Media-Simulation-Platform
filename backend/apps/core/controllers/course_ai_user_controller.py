@@ -20,8 +20,9 @@ from ..services import (
 )
 
 
-# Purpose: Handle the `_ensure_authenticated` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `_ensure_authenticated` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def _ensure_authenticated(request: HttpRequest) -> JsonResponse | None:
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Unauthorized"}, status=401)
@@ -29,8 +30,9 @@ def _ensure_authenticated(request: HttpRequest) -> JsonResponse | None:
 
 
 @csrf_exempt
-# Purpose: Handle the `course_ai_users` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `course_ai_users` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def course_ai_users(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -69,8 +71,9 @@ def course_ai_users(request: HttpRequest, course_id: int) -> JsonResponse:
 
 
 @csrf_exempt
-# Purpose: Handle the `course_ai_user_detail` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `course_ai_user_detail` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def course_ai_user_detail(request: HttpRequest, course_id: int, ai_user_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -125,8 +128,9 @@ def course_ai_user_detail(request: HttpRequest, course_id: int, ai_user_id: int)
 
 
 @csrf_exempt
-# Purpose: Handle the `course_ai_users_import` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `course_ai_users_import` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def course_ai_users_import(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -148,8 +152,9 @@ def course_ai_users_import(request: HttpRequest, course_id: int) -> JsonResponse
     return JsonResponse(report)
 
 
-# Purpose: Handle the `_load_json_body` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `_load_json_body` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def _load_json_body(request: HttpRequest) -> tuple[dict, JsonResponse | None]:
     try:
         payload = json.loads(request.body.decode() or "{}")
@@ -161,8 +166,9 @@ def _load_json_body(request: HttpRequest) -> tuple[dict, JsonResponse | None]:
 
 
 @csrf_exempt
-# Purpose: Handle the `course_ai_users_guided_preview` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `course_ai_users_guided_preview` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def course_ai_users_guided_preview(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -184,8 +190,9 @@ def course_ai_users_guided_preview(request: HttpRequest, course_id: int) -> Json
 
 
 @csrf_exempt
-# Purpose: Handle the `course_ai_users_guided_commit` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `course_ai_users_guided_commit` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def course_ai_users_guided_commit(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -207,8 +214,9 @@ def course_ai_users_guided_commit(request: HttpRequest, course_id: int) -> JsonR
 
 
 @csrf_exempt
-# Purpose: Handle the `course_ai_users_generate_preview` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `course_ai_users_generate_preview` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def course_ai_users_generate_preview(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -232,8 +240,9 @@ def course_ai_users_generate_preview(request: HttpRequest, course_id: int) -> Js
 
 
 @csrf_exempt
-# Purpose: Handle the `course_ai_users_generate_commit` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `course_ai_users_generate_commit` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def course_ai_users_generate_commit(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:

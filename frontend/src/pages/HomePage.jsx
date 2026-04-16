@@ -10,7 +10,7 @@ export default function HomePage() {
   const navigate = useNavigate();
   const { authUser, login, logout } = useApp();
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState({

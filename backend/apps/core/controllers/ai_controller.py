@@ -10,8 +10,9 @@ from .profile_controller import _ensure_authenticated
 
 
 @csrf_exempt
-# Purpose: Handle the `ai_analyze` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `ai_analyze` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def ai_analyze(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -45,8 +46,9 @@ def ai_analyze(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Purpose: Handle the `ai_tutor` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `ai_tutor` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def ai_tutor(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:

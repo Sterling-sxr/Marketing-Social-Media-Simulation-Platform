@@ -1,4 +1,4 @@
-// Context: This block prepares shared values used by the request branches below.
+// Context: Compute shared values once so all branches use the same normalized inputs.
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
@@ -6,7 +6,7 @@ import AuthenticatedShell from "./components/AuthenticatedShell";
 import Feedback from "./components/Feedback";
 import { isTeacher } from "../lib/access";
 
-// Purpose: `RoleBadge` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable.
+// Purpose: `RoleBadge` owns one cohesive concern so state transitions and side effects remain easy to trace.
 function RoleBadge({ courseRole, isStaff, isSuperuser }) {
   const roleFromCourse = (courseRole || "").toString().toLowerCase();
 
@@ -18,11 +18,11 @@ function RoleBadge({ courseRole, isStaff, isSuperuser }) {
 
   const text = isTeacher ? "TEACHER" : "STUDENT";
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const cls = isTeacher
-    ? // Inline explanation: This line clarifies an assumption, guard, or transformation.
+    ? // Inline explanation: Keep this non-obvious normalization rule explicit.
       "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide text-accent-800 shadow-sm border border-accent-200 bg-gradient-to-r from-accent-50 via-accent-100 to-brand-50"
-    : // Inline explanation: This line clarifies an assumption, guard, or transformation.
+    : // Inline explanation: Keep this non-obvious normalization rule explicit.
       "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide text-accent-700 shadow-sm border border-accent-200 bg-gradient-to-r from-accent-50 via-accent-50 to-brand-50";
 
   return <span className={cls}>{text}</span>;
@@ -61,8 +61,8 @@ export default function CoursesPage() {
     const roleFromCourse = (course?.role || "").toString().toLowerCase();
     const isCourseTeacher =
       roleFromCourse === "teacher" || roleFromCourse === "instructor";
-    // Context: This block prepares shared values used by the request branches below.
-    // Context: This block prepares shared values used by the request branches below.
+    // Context: Compute shared values once so all branches use the same normalized inputs.
+    // Context: Compute shared values once so all branches use the same normalized inputs.
     if (course.profile_completed || isTeacher(authUser) || isCourseTeacher) {
       navigate(`/courses/${course.id}`);
     } else {
@@ -141,12 +141,12 @@ export default function CoursesPage() {
                     ) : null}
                   </div>
 
-                  {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+                  {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
                   <div className="self-end sm:self-center">
                     <RoleBadge
-                      courseRole={course.role} // Inline explanation: This line clarifies an assumption, guard, or transformation.
-                      isStaff={!!authUser?.is_staff} // Inline explanation: This line clarifies an assumption, guard, or transformation.
-                      isSuperuser={!!authUser?.is_superuser} // Inline explanation: This line clarifies an assumption, guard, or transformation.
+                      courseRole={course.role} // Inline explanation: Keep this non-obvious normalization rule explicit.
+                      isStaff={!!authUser?.is_staff} // Inline explanation: Keep this non-obvious normalization rule explicit.
+                      isSuperuser={!!authUser?.is_superuser} // Inline explanation: Keep this non-obvious normalization rule explicit.
                     />
                   </div>
                 </button>
