@@ -23,6 +23,11 @@ from .ai_user_service import (
     update_course_ai_user,
 )
 from .authentication_service import AuthenticationError, authenticate_user, logout_user
+from .course_material_service import (
+    delete_course_material,
+    list_course_materials,
+    upload_course_material,
+)
 from .course_post_service import (
     MAX_POST_ATTACHMENTS,
     CourseAccessError,
@@ -64,11 +69,6 @@ from .dashboard_service import (
     refresh_dashboard_snapshot,
 )
 from .gmail_service import GmailNotConfiguredError, build_gmail_flow, send_demo_email
-from .course_material_service import (
-    delete_course_material,
-    list_course_materials,
-    upload_course_material,
-)
 from .media_service import list_recent_assets, store_upload
 from .message_service import create_message, list_recent_messages
 from .notification_service import (
