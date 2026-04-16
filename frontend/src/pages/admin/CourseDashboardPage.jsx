@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
-import { getJson } from "../../lib/api";
+import { isTeacherLike } from "../../lib/authRole";
+import { fetchCourseDashboard } from "../../lib/teacherAnalytics";
 import AuthenticatedShell from "../components/AuthenticatedShell";
 import Feedback from "../components/Feedback";
 
@@ -153,17 +154,6 @@ function SentimentCell({ sentiment }) {
       ? `${topPercent.toFixed(1)}%`
       : topPercent ?? "";
 
-  const breakdownText = ["positive", "neutral", "negative"]
-    .map((label) => {
-      const value = breakdown[label] ?? 0;
-      const formatted =
-        typeof value === "number"
-          ? `${value.toFixed(1)}%`
-          : `${Number(value || 0).toFixed(1)}%`;
-      return `${capitalize(label)} ${formatted}`;
-    })
-    .join(" · ");
-
   if (!hasComments) {
     return <div className="text-xs text-slate-400">No comments yet</div>;
   }
@@ -215,8 +205,8 @@ export default function CourseDashboardPage() {
   const [studentSortKey] = useState("posts_total");
   const [studentAsc] = useState(false); // Desc by post count
 
-  const isAdmin = useMemo(
-    () => Boolean(authUser && (authUser.is_superuser || authUser.is_staff)),
+  const canManageAnalytics = useMemo(
+    () => Boolean(authUser && isTeacherLike(authUser)),
     [authUser]
   );
 
@@ -226,7 +216,7 @@ export default function CourseDashboardPage() {
       navigate("/login", { replace: true });
       return;
     }
-    if (!isAdmin) {
+    if (!canManageAnalytics) {
       navigate("/courses", { replace: true });
       return;
     }
@@ -236,9 +226,9 @@ export default function CourseDashboardPage() {
     }
 
     setStatus({ loading: true, error: "" });
-    getJson(`/api/admin/dashboard/courses/${courseId}/`)
+    fetchCourseDashboard(courseId)
       .then((payload) => {
-        setData(payload.course || null);
+        setData(payload);
         setStatus({ loading: false, error: "" });
       })
       .catch((error) => {
@@ -247,9 +237,9 @@ export default function CourseDashboardPage() {
           error: error.message || "Failed to load course dashboard.",
         });
       });
-  }, [authCheckComplete, authUser, isAdmin, courseId, navigate]);
+  }, [authCheckComplete, authUser, canManageAnalytics, courseId, navigate]);
 
-  if (authCheckComplete && authUser && !isAdmin) {
+  if (authCheckComplete && authUser && !canManageAnalytics) {
     return <Navigate to="/courses" replace />;
   }
 
@@ -257,7 +247,8 @@ export default function CourseDashboardPage() {
   const summary = data?.summary || {};
   const hashtagsRaw = data?.hashtags || [];
   const studentsRaw = data?.students || [];
-  const lastUpdated = data?.calculated_at ? new Date(data.calculated_at) : null;
+  const meta = data?.meta;
+  const lastUpdated = meta?.calculatedAt ? new Date(meta.calculatedAt) : null;
 
   const subtitle = courseMeta
     ? `${courseMeta.course_code} · ${courseMeta.name}${
@@ -315,6 +306,12 @@ export default function CourseDashboardPage() {
       {status.error ? <Feedback error={status.error} /> : null}
       {status.loading ? (
         <p className="text-sm text-slate-500">Loading course analytics...</p>
+      ) : null}
+      {data?.meta?.sourceKind === "fallback" ? (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          This course is currently rendering the fallback analytics contract.
+          Snapshot-backed data has not been generated yet.
+        </div>
       ) : null}
 
       {data ? (

@@ -45,6 +45,33 @@ def _is_admin(user) -> bool:
     return bool(getattr(user, "is_superuser", False) or getattr(user, "is_staff", False))
 
 
+def _is_teacher_for_course(user, course_id: int) -> bool:
+    user_id = getattr(user, "id", None)
+    if user_id is None:
+        return False
+    return CourseMemberRepository.model.objects.filter(
+        course_id=course_id,
+        user_id=user_id,
+        role="teacher",
+    ).exists()
+
+
+def _get_accessible_course(user, course_id: int):
+    course = CourseRepository.model.objects.filter(id=course_id).first()
+    if not course:
+        return None
+
+    if _is_admin(user):
+        if course.created_by_id == user.id or getattr(user, "is_superuser", False):
+            return course
+        return None
+
+    if _is_teacher_for_course(user, course_id):
+        return course
+
+    return None
+
+
 def _get_sentiment_pipeline():
     global _sentiment_pipeline
     if _sentiment_pipeline is None:
@@ -704,8 +731,7 @@ def get_admin_dashboard(*, user) -> dict[str, Any]:
 
 
 def get_course_dashboard(*, user, course_id: int) -> dict[str, Any]:
-    _ensure_admin(user)
-    course = CourseRepository.model.objects.filter(id=course_id, created_by_id=user.id).first()
+    course = _get_accessible_course(user, course_id)
     if not course:
         raise PermissionError("Course not found or not managed by current user.")
 
@@ -718,11 +744,7 @@ def get_course_dashboard(*, user, course_id: int) -> dict[str, Any]:
 
 
 def get_course_hashtag_dashboard(*, user, course_id: int, hashtag: str) -> dict[str, Any]:
-    _ensure_admin(user)
-    course = CourseRepository.model.objects.filter(
-        id=course_id,
-        created_by_id=user.id,
-    ).first()
+    course = _get_accessible_course(user, course_id)
     if not course:
         raise PermissionError("Course not found or not managed by current user.")
     normalized = _normalize_hashtag(hashtag)
@@ -748,12 +770,10 @@ def get_course_student_dashboard(*, user, course_id: int, student_id: int) -> di
         if course.created_by_id != user.id and not getattr(user, "is_superuser", False):
             raise PermissionError("Course not managed by current user.")
     else:
-        if user.id != student_id:
+        is_teacher = _is_teacher_for_course(user, course_id)
+        if not is_teacher and user.id != student_id:
             raise PermissionError("You can only view your own analytics.")
-        is_member = CourseMemberRepository.model.objects.filter(
-            course_id=course_id,
-            user_id=user.id,
-        ).exists()
+        is_member = CourseMemberRepository.model.objects.filter(course_id=course_id, user_id=user.id).exists()
         if not is_member:
             raise PermissionError("You are not a member of this course.")
 
