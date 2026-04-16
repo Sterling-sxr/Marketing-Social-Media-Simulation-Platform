@@ -144,3 +144,5 @@ docker compose exec backend python manage.py shell -c \
 GitHub Actions workflow for backend lint and checks, backend tests, frontend lint and build, frontend unit tests, security audit, and Docker build validation.
 - if CI fails:
 Check the failed step in the Actions tab before requesting review.
+- before opening a PR:
+Make sure local backend and frontend checks have been run if possible.
