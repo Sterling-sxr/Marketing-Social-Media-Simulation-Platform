@@ -177,7 +177,7 @@ jobs:
           for file in "${files[@]}"; do
             echo "Running $file ..."
             timeout 180s npx vitest run \
-              --include "$file" \
+              "./$file" \
               --pool=forks \
               --maxWorkers=1 \
               --minWorkers=1 \
