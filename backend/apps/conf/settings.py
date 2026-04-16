@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+import dj_database_url
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent  # 指向 capstone-project-26t1-9900-f09d-bread-1
@@ -57,15 +58,17 @@ TEMPLATES = [
 WSGI_APPLICATION = "apps.conf.wsgi.application"
 ASGI_APPLICATION = "apps.conf.asgi.application"
 
-_pg_db = os.environ.get("PG_DB")
-_pg_user = os.environ.get("PG_USER")
-_pg_password = os.environ.get("PG_PASSWORD")
-_pg_host = os.environ.get("PG_HOST")
-_pg_port = os.environ.get("PG_PORT")
-
-if _pg_db and _pg_user and _pg_password and _pg_host and _pg_port:
-    DATABASES = {
-        "default": {
+_database_url = os.environ.get("DATABASE_URL")
+if _database_url:
+    _default_database = dj_database_url.parse(_database_url, conn_max_age=600)
+else:
+    _pg_db = os.environ.get("PG_DB")
+    _pg_user = os.environ.get("PG_USER")
+    _pg_password = os.environ.get("PG_PASSWORD")
+    _pg_host = os.environ.get("PG_HOST")
+    _pg_port = os.environ.get("PG_PORT")
+    if _pg_db and _pg_user and _pg_password and _pg_host and _pg_port:
+        _default_database = {
             "ENGINE": "django.db.backends.postgresql",
             "NAME": _pg_db,
             "USER": _pg_user,
@@ -74,15 +77,14 @@ if _pg_db and _pg_user and _pg_password and _pg_host and _pg_port:
             "PORT": _pg_port,
             "CONN_MAX_AGE": 600,
         }
-    }
-else:
-    # CI (and local dev) may not provide Postgres env vars. Fall back to SQLite so tests can run.
-    DATABASES = {
-        "default": {
+    else:
+        # CI (and local dev) may not provide Postgres env vars. Fall back to SQLite so tests can run.
+        _default_database = {
             "ENGINE": "django.db.backends.sqlite3",
             "NAME": str(BASE_DIR / "db.sqlite3"),
         }
-    }
+
+DATABASES = {"default": _default_database}
 
 CACHES = {
     "default": {
