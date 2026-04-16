@@ -71,11 +71,11 @@ from .profile_controller import (
     user_posts,
     user_posts_analytics,
 )
-from .search import (
-    add_search_history,
-    get_search_history,
+from .search import(
     search_posts,
+    add_search_history,
     suggested_search,
+    get_search_history,
 )
 from .segmentation_controller import (
     admin_course_post_segmentation,

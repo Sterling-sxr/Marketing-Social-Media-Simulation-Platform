@@ -1,5 +1,4 @@
 """Repository for PostAnalyticsSnapshot."""
-
 from __future__ import annotations
 
 from typing import Iterable, Optional
@@ -20,4 +19,7 @@ class PostAnalyticsSnapshotRepository(BaseRepository[PostAnalyticsSnapshot]):
 
     @classmethod
     def get_many_by_posts(cls, post_ids: Iterable[int]):
-        return list(cls.model.objects.select_related("post", "course").filter(post_id__in=list(post_ids)))
+        return list(
+            cls.model.objects.select_related("post", "course").filter(post_id__in=list(post_ids))
+        )
+
