@@ -1,13 +1,16 @@
 # Use the Jira ticket ID for this change.
 # Example: W16B-42
 # Keep the summary short and in imperative mood.
+# Focus on what changed, not the whole background.
 
 # Ticket: W16B-XX
 
 # Summary (imperative):
+# Example: add CI section to README
 
 # Details (optional):
 # Briefly explain why this change was made.
 # Mention any risk, follow-up work, or notes if needed.
+# You can also mention the main files affected if useful.
 
 # Lines starting with '#' are ignored by git.
