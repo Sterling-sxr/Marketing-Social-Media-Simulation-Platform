@@ -1,13 +1,129 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { postJson } from "../../lib/api";
-import { useApp } from "../../context/AppContext";
+import { useEffect, useMemo, useState } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
 import AuthenticatedShell from "../components/AuthenticatedShell";
 import Feedback from "../components/Feedback";
+import { postJson } from "../../lib/api";
+import { useAuth } from "../../context/AuthContext";
+import { isTeacher } from "../../lib/access";
+
+function isIsoDate(value) {
+  if (typeof value !== "string") return false;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const d = new Date(value);
+  return !Number.isNaN(d.getTime());
+}
+
+function parseIsoDateParts(value) {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return { year: "", month: "", day: "" };
+  }
+  const [year, month, day] = value.split("-");
+  return { year, month, day };
+}
+
+function buildIsoDate(year, month, day) {
+  if (!year || !month || !day) return "";
+  return `${year}-${month}-${day}`;
+}
+
+function getDaysInMonth(year, month) {
+  if (!year || !month) return 31;
+  return new Date(Number(year), Number(month), 0).getDate();
+}
+
+function DatePartsInput({ label, value, onChange }) {
+  const currentYear = new Date().getFullYear();
+  const monthOptions = [
+    { value: "01", label: "Jan" },
+    { value: "02", label: "Feb" },
+    { value: "03", label: "Mar" },
+    { value: "04", label: "Apr" },
+    { value: "05", label: "May" },
+    { value: "06", label: "Jun" },
+    { value: "07", label: "Jul" },
+    { value: "08", label: "Aug" },
+    { value: "09", label: "Sep" },
+    { value: "10", label: "Oct" },
+    { value: "11", label: "Nov" },
+    { value: "12", label: "Dec" },
+  ];
+
+  const [parts, setParts] = useState(() => parseIsoDateParts(value));
+
+  useEffect(() => {
+    setParts(parseIsoDateParts(value));
+  }, [value]);
+
+  const effectiveYear = /^\d{4}$/.test(parts.year)
+    ? parts.year
+    : String(currentYear);
+  const dayCount = getDaysInMonth(effectiveYear, parts.month);
+  const dayOptions = Array.from({ length: dayCount }, (_, idx) =>
+    String(idx + 1).padStart(2, "0")
+  );
+
+  const updatePart = (key, next) => {
+    const nextParts = { ...parts, [key]: next };
+    if (key === "year" || key === "month") {
+      const maxDay = getDaysInMonth(nextParts.year, nextParts.month);
+      if (nextParts.day && Number(nextParts.day) > maxDay) {
+        nextParts.day = "";
+      }
+    }
+    setParts(nextParts);
+    onChange(buildIsoDate(nextParts.year, nextParts.month, nextParts.day));
+  };
+
+  return (
+    <label className="block text-xs font-semibold text-slate-600">
+      {label}
+      <div className="mt-1 grid grid-cols-3 gap-2">
+        <input
+          type="text"
+          value={parts.year}
+          onChange={(e) => updatePart("year", e.target.value)}
+          placeholder="Year"
+          inputMode="numeric"
+          maxLength={4}
+          className="w-full rounded-xl border border-brand-200 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
+          required
+        />
+        <select
+          value={parts.month}
+          onChange={(e) => updatePart("month", e.target.value)}
+          className="w-full rounded-xl border border-brand-200 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
+          required
+        >
+          <option value="">Month</option>
+          {monthOptions.map((month) => (
+            <option key={month.value} value={month.value}>
+              {month.label}
+            </option>
+          ))}
+        </select>
+        <select
+          value={parts.day}
+          onChange={(e) => updatePart("day", e.target.value)}
+          className="w-full rounded-xl border border-brand-200 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
+          required
+        >
+          <option value="">Day</option>
+          {dayOptions.map((day) => (
+            <option key={day} value={day}>
+              {day}
+            </option>
+          ))}
+        </select>
+      </div>
+    </label>
+  );
+}
 
 export default function CreateCoursePage() {
   const navigate = useNavigate();
-  const { authUser, authCheckComplete } = useApp();
+  const { authUser, authCheckComplete } = useAuth();
+  const canCreateCourse = isTeacher(authUser);
+
   const [form, setForm] = useState({
     course_code: "",
     course_name: "",
@@ -15,30 +131,65 @@ export default function CreateCoursePage() {
     start_date: "",
     end_date: "",
   });
-  const [status, setStatus] = useState({ loading: false, error: "", message: "" });
+  const [status, setStatus] = useState({
+    loading: false,
+    error: "",
+    message: "",
+  });
+  const [createdCourse, setCreatedCourse] = useState(null);
+  const [termYear, setTermYear] = useState(String(new Date().getFullYear()));
+  const [termPart, setTermPart] = useState("T1");
 
   useEffect(() => {
     if (!authCheckComplete) return;
-
     if (!authUser) {
       navigate("/login", { replace: true });
       return;
     }
-    if (!authUser.is_superuser) {
+    if (!canCreateCourse) {
       navigate("/courses", { replace: true });
     }
-  }, [authUser, authCheckComplete, navigate]);
+  }, [authCheckComplete, authUser, canCreateCourse, navigate]);
 
-  if (!authCheckComplete || !authUser || !authUser.is_superuser) return null;
+  if (authCheckComplete && !authUser) return <Navigate to="/login" replace />;
+  if (!authCheckComplete || !authUser || !canCreateCourse) return null;
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleCreateCourse = async () => {
+    const normalizedYear = String(termYear || "").trim();
+    if (!/^\d{4}$/.test(normalizedYear)) {
+      setStatus({
+        loading: false,
+        error: "Please enter a valid 4-digit year for term (e.g. 2026).",
+        message: "",
+      });
+      return;
+    }
+    const normalizedTerm = `${normalizedYear}${termPart}`;
+    const payloadForm = { ...form, term: normalizedTerm };
     setStatus({ loading: true, error: "", message: "" });
+
+    if (!payloadForm.course_code.trim() || !payloadForm.course_name.trim()) {
+      setStatus({
+        loading: false,
+        error: "Course code and course name are required.",
+        message: "",
+      });
+      return;
+    }
 
     if (!form.start_date || !form.end_date) {
       setStatus({
         loading: false,
-        error: "Please provide both the start and end date.",
+        error: "Please provide both start and end date.",
+        message: "",
+      });
+      return;
+    }
+
+    if (!isIsoDate(form.start_date) || !isIsoDate(form.end_date)) {
+      setStatus({
+        loading: false,
+        error: "Please enter dates in YYYY-MM-DD format.",
         message: "",
       });
       return;
@@ -47,139 +198,167 @@ export default function CreateCoursePage() {
     if (new Date(form.end_date) < new Date(form.start_date)) {
       setStatus({
         loading: false,
-        error: "The course end date must be on or after the start date.",
+        error: "End date must be on or after start date.",
         message: "",
       });
       return;
     }
 
     try {
-      await postJson("/api/courses/create/", form);
-      setStatus({ loading: false, error: "", message: "Course created successfully 🎉" });
-      navigate("/courses");
+      const payload = await postJson("/api/courses/create/", payloadForm);
+      const course = payload?.course || payload?.item || payload || null;
+      setCreatedCourse(course);
+      setForm((prev) => ({ ...prev, term: normalizedTerm }));
+      setStatus({
+        loading: false,
+        error: "",
+        message: "Course created successfully.",
+      });
     } catch (error) {
-      setStatus({ loading: false, error: error.message, message: "" });
+      setStatus({
+        loading: false,
+        error: error.message || "Failed to create course.",
+        message: "",
+      });
     }
   };
 
   return (
-    <AuthenticatedShell title="Create New Course 🍩" subtitle="Only accessible by superusers">
-      <main className="flex flex-col items-center justify-start py-10 px-6 bg-gradient-to-b from-brand-50 to-white rounded-2xl min-h-[calc(100vh-8rem)]">
-        <div className="w-full max-w-lg bg-white rounded-2xl shadow-md border border-brand-100 p-8">
-          {/* Header */}
-          <div className="flex items-center justify-center mb-6">
-            <div className="w-10 h-10 bg-gradient-to-tr from-accent-400 to-brand-400 rounded-full flex items-center justify-center shadow-md">
-              <span className="text-white text-lg">🍩</span>
+    <AuthenticatedShell
+      title="Create Course"
+      subtitle="Create a new course for teaching and community activities."
+    >
+      <section className="space-y-4 rounded-3xl border border-brand-100 bg-white p-5 shadow-soft">
+        <header className="space-y-1">
+          <h2 className="text-lg font-semibold text-slate-900">Course Details</h2>
+          <p className="text-sm text-slate-500">
+            Fill in basic details. You can edit them later in Course Management.
+          </p>
+        </header>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="block text-xs font-semibold text-slate-600">
+            Course Code
+            <input
+              type="text"
+              value={form.course_code}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, course_code: e.target.value }))
+              }
+              placeholder="e.g. COMP9900"
+              className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
+              required
+            />
+          </label>
+          <label className="block text-xs font-semibold text-slate-600">
+            Term
+            <div className="mt-1 flex items-center gap-2">
+              <input
+                type="text"
+                value={termYear}
+                onChange={(e) => setTermYear(e.target.value)}
+                placeholder="YYYY"
+                maxLength={4}
+                className="w-28 rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
+                required
+              />
+              <select
+                value={termPart}
+                onChange={(e) => setTermPart(e.target.value)}
+                className="w-28 rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
+              >
+                <option value="T1">T1</option>
+                <option value="T2">T2</option>
+                <option value="T3">T3</option>
+              </select>
+              <span className="text-xs text-slate-500">
+                Preview: {termYear || "YYYY"}
+                {termPart}
+              </span>
             </div>
-            <h2 className="text-xl font-semibold text-gray-800 ml-3">
-              Create a Bread Course
-            </h2>
+          </label>
+          <label className="block text-xs font-semibold text-slate-600 sm:col-span-2">
+            Course Name
+            <input
+              type="text"
+              value={form.course_name}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, course_name: e.target.value }))
+              }
+              placeholder="e.g. Capstone Project"
+              className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
+              required
+            />
+          </label>
+          <DatePartsInput
+            label="Start Date"
+            value={form.start_date}
+            onChange={(next) => setForm((prev) => ({ ...prev, start_date: next }))}
+          />
+          <DatePartsInput
+            label="End Date"
+            value={form.end_date}
+            onChange={(next) => setForm((prev) => ({ ...prev, end_date: next }))}
+          />
+        </div>
+
+        <Feedback message={status.message} error={status.error} />
+
+        {createdCourse ? (
+          <div className="rounded-2xl border border-brand-100 bg-brand-50/50 px-4 py-3 text-sm text-slate-700">
+            <p>
+              Created:{" "}
+              <span className="font-semibold">
+                {createdCourse.course_code} · {createdCourse.name || createdCourse.course_name}
+              </span>
+            </p>
+            <p className="mt-1">
+              Join code:{" "}
+              <span className="font-semibold">{createdCourse.join_code || "—"}</span>
+            </p>
           </div>
+        ) : null}
 
-          {/* Form */}
-          <form className="space-y-5" onSubmit={handleSubmit}>
-            {/* Course Code */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Course Code
-              </label>
-              <input
-                type="text"
-                value={form.course_code}
-                onChange={(e) => setForm({ ...form, course_code: e.target.value })}
-                placeholder="e.g. COMP9900"
-                required
-                className="w-full rounded-md border border-brand-200 bg-white px-4 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:border-accent-400 focus:ring-2 focus:ring-accent-200 outline-none transition-all"
-              />
-            </div>
-
-            {/* Course Name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Course Name
-              </label>
-              <input
-                type="text"
-                value={form.course_name}
-                onChange={(e) => setForm({ ...form, course_name: e.target.value })}
-                placeholder="e.g. Capstone Project"
-                required
-                className="w-full rounded-md border border-brand-200 bg-white px-4 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:border-accent-400 focus:ring-2 focus:ring-accent-200 outline-none transition-all"
-              />
-            </div>
-
-            {/* Term */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Term
-              </label>
-              <input
-                type="text"
-                value={form.term}
-                onChange={(e) => setForm({ ...form, term: e.target.value })}
-                placeholder="e.g. 2025T3"
-                required
-                className="w-full rounded-md border border-brand-200 bg-white px-4 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:border-accent-400 focus:ring-2 focus:ring-accent-200 outline-none transition-all"
-              />
-            </div>
-
-            {/* Start Date */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Start Date
-              </label>
-              <input
-                type="date"
-                value={form.start_date}
-                onChange={(e) => setForm({ ...form, start_date: e.target.value })}
-                required
-                className="w-full rounded-md border border-brand-200 bg-white px-4 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:border-accent-400 focus:ring-2 focus:ring-accent-200 outline-none transition-all"
-              />
-            </div>
-
-            {/* End Date */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                End Date
-              </label>
-              <input
-                type="date"
-                value={form.end_date}
-                min={form.start_date || undefined}
-                onChange={(e) => setForm({ ...form, end_date: e.target.value })}
-                required
-                className="w-full rounded-md border border-brand-200 bg-white px-4 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:border-accent-400 focus:ring-2 focus:ring-accent-200 outline-none transition-all"
-              />
-            </div>
-
-            {/* Buttons */}
-            <div className="flex items-center justify-between pt-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+          <button
+            type="button"
+            className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 transition hover:border-brand hover:text-brand"
+            onClick={() => navigate("/courses/manage")}
+            disabled={status.loading}
+          >
+            Back
+          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            {createdCourse?.id ? (
+              <>
+                <button
+                  type="button"
+                  className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
+                  onClick={() => navigate(`/courses/${createdCourse.id}`)}
+                >
+                  View Course
+                </button>
+                <button
+                  type="button"
+                  className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
+                  onClick={() => navigate("/courses/manage")}
+                >
+                  Back to Course Management
+                </button>
+              </>
+            ) : (
               <button
-                type="submit"
+                type="button"
+                className="rounded-full border border-brand bg-brand px-4 py-2 text-xs font-semibold text-white transition hover:bg-brand/90 disabled:opacity-60"
+                onClick={handleCreateCourse}
                 disabled={status.loading}
-                className="rounded-md bg-gradient-to-r from-brand-500 to-accent-500 text-white px-5 py-2 text-sm font-medium shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200 disabled:opacity-60"
               >
                 {status.loading ? "Creating..." : "Create Course"}
               </button>
-
-              <button
-                type="button"
-                className="rounded-md border border-gray-200 px-5 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-all"
-                onClick={() => navigate("/courses")}
-              >
-                Cancel
-              </button>
-            </div>
-
-            <Feedback message={status.message} error={status.error} />
-          </form>
+            )}
+          </div>
         </div>
-
-        {/* Subtle footer tip */}
-        <p className="mt-6 text-xs text-gray-400">
-          🍩 Bread System · Making learning sweet and fun.
-        </p>
-      </main>
+      </section>
     </AuthenticatedShell>
   );
 }

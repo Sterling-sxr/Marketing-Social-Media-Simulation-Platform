@@ -7,6 +7,7 @@ import ConfirmDialog from "./components/ConfirmDialog";
 import PostCard from "./components/PostCard";
 import { hasProfanity } from "../lib/profanity";
 import ProfanityHint from "./components/ProfanityHint";
+import AuthenticatedShell from "./components/AuthenticatedShell";
 
 export default function PostDetailPage() {
   const { courseId: courseIdParam, postId: postIdParam } = useParams();
@@ -217,13 +218,18 @@ export default function PostDetailPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-accent-50 via-white to-accent-100">
-      <HeaderBar />
-
+    <AuthenticatedShell
+      title="Post Detail"
+      subtitle={
+        courseInfo
+          ? `${courseInfo.course_code || ""} · ${courseInfo.name || ""}`.trim()
+          : "Post Detail"
+      }
+    >
       {/* Main content */}
-      <main className="mx-auto w-full max-w-6xl space-y-4 px-3 pb-28 pt-[72px] sm:px-4 sm:pb-28 sm:pt-[96px] lg:px-6 lg:pb-8">
+      <main className="space-y-4">
         {/* Sticky toolbar: title + right-side actions (Analyze button is conditional) */}
-        <div className="sticky top-[72px] z-20 sm:top-[96px]">
+        <div className="z-20">
           <div className="rounded-2xl border border-brand-100 bg-white px-3 py-3 shadow-sm sm:px-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
               <h1 className="text-lg sm:text-xl font-semibold text-slate-900">
@@ -397,6 +403,6 @@ export default function PostDetailPage() {
         processing={deleteBusy}
         tone="danger"
       />
-    </div>
+    </AuthenticatedShell>
   );
 }

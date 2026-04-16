@@ -1,13 +1,122 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getJson, patchJson } from "../../lib/api";
+import { deleteJson, getJson, patchJson } from "../../lib/api";
 import { useApp } from "../../context/AppContext";
+import { useAuth } from "../../context/AuthContext";
 import AuthenticatedShell from "../components/AuthenticatedShell";
 import Feedback from "../components/Feedback";
+import { isTeacher } from "../../lib/access";
+
+function parseIsoDateParts(value) {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return { year: "", month: "", day: "" };
+  }
+  const [year, month, day] = value.split("-");
+  return { year, month, day };
+}
+
+function buildIsoDate(year, month, day) {
+  if (!year || !month || !day) return "";
+  return `${year}-${month}-${day}`;
+}
+
+function getDaysInMonth(year, month) {
+  if (!year || !month) return 31;
+  return new Date(Number(year), Number(month), 0).getDate();
+}
+
+function DatePartsField({ label, value, onChange }) {
+  const currentYear = new Date().getFullYear();
+  const monthOptions = [
+    { value: "01", label: "Jan" },
+    { value: "02", label: "Feb" },
+    { value: "03", label: "Mar" },
+    { value: "04", label: "Apr" },
+    { value: "05", label: "May" },
+    { value: "06", label: "Jun" },
+    { value: "07", label: "Jul" },
+    { value: "08", label: "Aug" },
+    { value: "09", label: "Sep" },
+    { value: "10", label: "Oct" },
+    { value: "11", label: "Nov" },
+    { value: "12", label: "Dec" },
+  ];
+  const [parts, setParts] = useState(() => parseIsoDateParts(value));
+
+  useEffect(() => {
+    setParts(parseIsoDateParts(value));
+  }, [value]);
+
+  const effectiveYear = /^\d{4}$/.test(parts.year)
+    ? parts.year
+    : String(currentYear);
+  const dayCount = getDaysInMonth(effectiveYear, parts.month);
+  const dayOptions = Array.from({ length: dayCount }, (_, idx) =>
+    String(idx + 1).padStart(2, "0")
+  );
+
+  const updatePart = (key, next) => {
+    const nextParts = { ...parts, [key]: next };
+    if (key === "year" || key === "month") {
+      const maxDay = getDaysInMonth(nextParts.year, nextParts.month);
+      if (nextParts.day && Number(nextParts.day) > maxDay) {
+        nextParts.day = "";
+      }
+    }
+    setParts(nextParts);
+    onChange(buildIsoDate(nextParts.year, nextParts.month, nextParts.day));
+  };
+
+  return (
+    <label className="block text-xs font-semibold text-slate-600">
+      {label}
+      <div className="mt-1 grid grid-cols-3 gap-2">
+        <input
+          type="text"
+          value={parts.year}
+          onChange={(e) => updatePart("year", e.target.value)}
+          placeholder="Year"
+          inputMode="numeric"
+          maxLength={4}
+          className="w-full rounded-xl border border-brand-200 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
+          required
+        />
+        <select
+          value={parts.month}
+          onChange={(e) => updatePart("month", e.target.value)}
+          className="w-full rounded-xl border border-brand-200 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
+          required
+        >
+          <option value="">Month</option>
+          {monthOptions.map((month) => (
+            <option key={month.value} value={month.value}>
+              {month.label}
+            </option>
+          ))}
+        </select>
+        <select
+          value={parts.day}
+          onChange={(e) => updatePart("day", e.target.value)}
+          className="w-full rounded-xl border border-brand-200 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
+          required
+        >
+          <option value="">Day</option>
+          {dayOptions.map((day) => (
+            <option key={day} value={day}>
+              {day}
+            </option>
+          ))}
+        </select>
+      </div>
+    </label>
+  );
+}
 
 export default function CourseManagePage() {
   const navigate = useNavigate();
-  const { authUser, authCheckComplete, pushToast } = useApp();
+  const { pushToast } = useApp();
+  const { authUser, authCheckComplete } = useAuth();
+  const isTeacherAdmin = isTeacher(authUser);
   const [items, setItems] = useState([]);
   const [status, setStatus] = useState({ loading: true, error: "" });
   const [search, setSearch] = useState("");
@@ -29,7 +138,7 @@ export default function CourseManagePage() {
       navigate("/login", { replace: true });
       return;
     }
-    if (!authUser.is_superuser) {
+    if (!isTeacher(authUser)) {
       navigate("/courses", { replace: true });
       return;
     }
@@ -45,7 +154,7 @@ export default function CourseManagePage() {
       );
   }, [authUser, authCheckComplete, navigate]);
 
-  if (!authCheckComplete || !authUser || !authUser.is_superuser) return null;
+  if (!authCheckComplete || !authUser || !isTeacherAdmin) return null;
 
   // ✅ Fixed search logic (case-insensitive + correct field names)
   const filteredItems = items.filter((c) => {
@@ -152,12 +261,52 @@ export default function CourseManagePage() {
               >
                 <div className="flex flex-col justify-between h-full">
                   <div>
+                    <p className="text-base font-semibold text-brand-700">
+                      {c.course_code}
+                    </p>
                     <p className="text-lg font-semibold text-gray-800 group-hover:text-brand-600 transition">
-                      {c.course_code} · {c.course_name}
+                      {c.course_name || c.name || "Untitled Course"}
                     </p>
-                    <p className="text-xs text-gray-400 mt-2">
-                      {c.term} · Join Code: {c.join_code}
-                    </p>
+                    <p className="text-xs text-gray-400 mt-2">{c.term}</p>
+                    <div className="mt-3 rounded-xl border border-brand-200 bg-brand-50/70 px-3 py-2">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                        Join Code
+                      </p>
+                      <div className="mt-1 flex items-center justify-between gap-2">
+                        <span className="text-base font-extrabold tracking-wider text-brand">
+                          {c.join_code || "N/A"}
+                        </span>
+                        <button
+                          type="button"
+                          className="rounded-full border border-brand-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-brand transition hover:border-brand"
+                          onClick={() => {
+                            if (!c.join_code) {
+                              pushToast({
+                                title: "Join code unavailable",
+                                message: "This course does not have a join code yet.",
+                              });
+                              return;
+                            }
+                            navigator.clipboard
+                              .writeText(c.join_code)
+                              .then(() => {
+                                pushToast({
+                                  title: "Join code copied",
+                                  message: `${c.join_code} copied to clipboard.`,
+                                });
+                              })
+                              .catch(() => {
+                                pushToast({
+                                  title: "Copy failed",
+                                  message: "Unable to copy join code.",
+                                });
+                              });
+                          }}
+                        >
+                          Copy
+                        </button>
+                      </div>
+                    </div>
                   </div>
                   <div className="mt-5 flex flex-wrap items-center gap-2">
                     <button
@@ -165,14 +314,14 @@ export default function CourseManagePage() {
                       className="inline-flex w-44 items-center justify-center gap-2 rounded-md border border-brand-300 bg-white px-4 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-500 hover:text-white shadow-sm transition-all duration-150"
                       onClick={() => navigate(`/courses/${c.id}`)}
                     >
-                      Enter Course →
+                      View Course →
                     </button>
                     <button
                       type="button"
                       className="inline-flex w-44 items-center justify-center gap-2 rounded-md border border-brand-300 bg-white px-4 py-1.5 text-xs font-semibold text-brand-500 hover:bg-brand-500 hover:text-white shadow-sm transition-all duration-150"
-                      onClick={() => navigate(`/courses/${c.id}/ai-users`)}
+                      onClick={() => navigate(`/courses/${c.id}/materials`)}
                     >
-                      Manage AI Users →
+                      Course Materials →
                     </button>
                     <button
                       type="button"
@@ -189,7 +338,32 @@ export default function CourseManagePage() {
                         setEditStatus({ loading: false, error: "" });
                       }}
                     >
-                      Edit Course
+                      Edit Course Details
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex w-44 items-center justify-center gap-2 rounded-md border border-red-300 bg-white px-4 py-1.5 text-xs font-semibold text-red-500 hover:bg-red-500 hover:text-white shadow-sm transition-all duration-150"
+                      onClick={async () => {
+                        const confirmed = window.confirm(
+                          `Delete ${c.course_code} · ${c.course_name}? This action cannot be undone.`
+                        );
+                        if (!confirmed) return;
+                        try {
+                          await deleteJson(`/api/courses/${c.id}/`);
+                          setItems((prev) => prev.filter((item) => item.id !== c.id));
+                          pushToast({
+                            title: "Course deleted",
+                            message: `${c.course_code} has been deleted.`,
+                          });
+                        } catch (error) {
+                          pushToast({
+                            title: "Delete failed",
+                            message: error.message || "Failed to delete course.",
+                          });
+                        }
+                      }}
+                    >
+                      Delete Course
                     </button>
                   </div>
                 </div>
@@ -297,26 +471,20 @@ export default function CourseManagePage() {
               </label>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block text-xs font-semibold text-slate-600">
-                  Start Date
-                  <input
-                    type="date"
-                    value={editForm.start_date}
-                    onChange={(e) => setEditForm((prev) => ({ ...prev, start_date: e.target.value }))}
-                    className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
-                    required
-                  />
-                </label>
-                <label className="block text-xs font-semibold text-slate-600">
-                  End Date
-                  <input
-                    type="date"
-                    value={editForm.end_date}
-                    onChange={(e) => setEditForm((prev) => ({ ...prev, end_date: e.target.value }))}
-                    className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
-                    required
-                  />
-                </label>
+                <DatePartsField
+                  label="Start Date"
+                  value={editForm.start_date}
+                  onChange={(next) =>
+                    setEditForm((prev) => ({ ...prev, start_date: next }))
+                  }
+                />
+                <DatePartsField
+                  label="End Date"
+                  value={editForm.end_date}
+                  onChange={(next) =>
+                    setEditForm((prev) => ({ ...prev, end_date: next }))
+                  }
+                />
               </div>
 
               {editStatus.error ? <Feedback error={editStatus.error} /> : null}

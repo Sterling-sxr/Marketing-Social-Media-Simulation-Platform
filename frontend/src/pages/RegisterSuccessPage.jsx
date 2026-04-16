@@ -13,7 +13,7 @@ export default function RegisterSuccessPage() {
 
     // Redirect to login after 3 seconds
     const redirect = setTimeout(() => {
-      navigate("/", { replace: true });
+      navigate("/login", { replace: true });
     }, 3000);
 
     return () => {
@@ -43,7 +43,7 @@ export default function RegisterSuccessPage() {
           <button
             type="button"
             className="brand-button w-full"
-            onClick={() => navigate("/", { replace: true })}
+            onClick={() => navigate("/login", { replace: true })}
           >
             Login now
           </button>

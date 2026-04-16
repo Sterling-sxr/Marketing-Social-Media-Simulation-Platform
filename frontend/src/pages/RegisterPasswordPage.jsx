@@ -14,6 +14,7 @@ export default function RegisterPasswordPage() {
     setRegisterPasswordConfirm,
     registerCompleteStatus,
     completeRegistration,
+    login,
     resetRegisterFlow,
   } = useApp();
 
@@ -30,8 +31,18 @@ export default function RegisterPasswordPage() {
     event.preventDefault();
     const success = await completeRegistration();
     if (success) {
+      // Treat profile completion as the last step of registration.
+      // Auto-sign-in and jump to onboarding profile immediately.
+      try {
+        await login(registerVerifiedEmail, registerPassword);
+      } catch {
+        // If auto login fails, fall back to normal login flow.
+        resetRegisterFlow();
+        navigate("/login", { replace: true });
+        return;
+      }
       resetRegisterFlow();
-      navigate("/register/success", { replace: true });
+      navigate("/onboarding/profile", { replace: true });
     }
   };
 

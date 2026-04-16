@@ -9,31 +9,64 @@ from ..repositories.models import Notification
 from ..utils.serializers import notification_to_dict
 
 
+def _parse_optional_course_id(course_id: object) -> int | None:
+    if course_id is None:
+        return None
+    try:
+        # Accept numeric strings and ints.
+        course_id_int = int(str(course_id).strip())
+        return course_id_int
+    except (TypeError, ValueError):
+        return None
+
+
 def list_notifications(
-    *, recipient: str, limit: int = 50
+    *,
+    recipient: str,
+    limit: int = 50,
+    course_id: object | None = None,
 ) -> tuple[list[Notification], int]:
-    """Return notifications for a recipient and the unread count."""
+    """Return notifications for a recipient and the unread count.
+
+    If `course_id` is provided, only notifications whose metadata.course_id
+    matches are returned.
+    """
+    parsed_course_id = _parse_optional_course_id(course_id)
     queryset = Notification.objects.filter(recipient=recipient)
+    if parsed_course_id is not None:
+        queryset = queryset.filter(metadata__course_id=parsed_course_id)
     unread_count = queryset.filter(is_read=False).count()
     return list(queryset[:limit]), unread_count
 
 
-def mark_as_read(*, recipient: str, ids: Iterable[int]) -> int:
-    """Mark supplied notification ids as read for the recipient."""
+def mark_as_read(*, recipient: str, ids: Iterable[int], course_id: object | None = None) -> int:
+    """Mark supplied notification ids as read for the recipient.
+
+    If `course_id` is provided, only matching notifications for that course
+    are marked.
+    """
     ids = list(ids)
     if not ids:
         return 0
-    return Notification.objects.filter(recipient=recipient, id__in=ids).update(is_read=True)
+    parsed_course_id = _parse_optional_course_id(course_id)
+    qs = Notification.objects.filter(recipient=recipient, id__in=ids)
+    if parsed_course_id is not None:
+        qs = qs.filter(metadata__course_id=parsed_course_id)
+    return qs.update(is_read=True)
 
 
-def mark_all_as_read(*, recipient: str) -> int:
+def mark_all_as_read(*, recipient: str, course_id: object | None = None) -> int:
     """
     Mark all notifications for the given recipient as read.
 
     Used by the "Mark all read" action in the UI so that the badge
     count truly drops to zero, not just for the first page of results.
     """
-    return Notification.objects.filter(recipient=recipient, is_read=False).update(is_read=True)
+    parsed_course_id = _parse_optional_course_id(course_id)
+    qs = Notification.objects.filter(recipient=recipient, is_read=False)
+    if parsed_course_id is not None:
+        qs = qs.filter(metadata__course_id=parsed_course_id)
+    return qs.update(is_read=True)
 
 
 def create_notification(
@@ -63,13 +96,14 @@ def create_notification(
 
 def _broadcast_notification(*, recipient: str, payload: dict) -> None:
     import logging
+
     logger = logging.getLogger(__name__)
-    
+
     channel_layer = get_channel_layer()
     if not channel_layer:
         logger.warning("No channel layer configured for notifications")
         return
-    
+
     group_name = f"notifications_{recipient}"
     logger.info(f"Broadcasting notification to group: {group_name}, payload: {payload}")
     async_to_sync(channel_layer.group_send)(

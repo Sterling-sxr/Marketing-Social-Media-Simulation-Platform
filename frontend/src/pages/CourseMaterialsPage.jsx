@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { useApp } from "../context/AppContext";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { useCourse } from "../context/CourseContext";
 import AuthenticatedShell from "./components/AuthenticatedShell";
 import { getJson, deleteJson } from "../lib/api";
+import { canManageCourse } from "../lib/access";
 import {
-  ArrowLeft,
   Bell,
   BookOpen,
   BotMessageSquare,
@@ -13,9 +14,6 @@ import {
   FileText,
   Home,
   Loader2,
-  MessageSquare,
-  Paperclip,
-  Plus,
   Search,
   Trash2,
   Upload,
@@ -336,21 +334,20 @@ export default function CourseMaterialsPage() {
   const { courseId: courseIdParam } = useParams();
   const courseId = Number(courseIdParam);
   const navigate = useNavigate();
-  const { authUser, authCheckComplete, courses, fetchCourses } = useApp();
+  const { authUser, authCheckComplete } = useAuth();
+  const { courses, fetchCourses } = useCourse();
 
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
-  const [showUpload, setShowUpload] = useState(false);
   const [courseName, setCourseName] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const isTeacherOrAdmin = useMemo(() => {
-    if (!authUser) return false;
-    if (authUser.is_superuser || authUser.is_staff) return true;
     const allCourses = [...(courses.joined || []), ...(courses.available || [])];
     const membership = allCourses.find((c) => c.id === courseId);
-    return membership?.role === "teacher";
+    return canManageCourse(authUser, membership);
   }, [authUser, courses, courseId]);
 
   useEffect(() => {
@@ -389,10 +386,23 @@ export default function CourseMaterialsPage() {
     loadMaterials();
   }, [loadMaterials]);
 
-  const handleUploadSuccess = (newMaterial) => {
-    setShowUpload(false);
-    setMaterials((prev) => [newMaterial, ...prev]);
-  };
+  const filteredMaterials = useMemo(() => {
+    const q = String(searchQuery || "").trim().toLowerCase();
+    if (!q) return materials;
+    return materials.filter((m) => {
+      const haystack = [
+        m.title,
+        m.original_name,
+        m.description,
+        m.category,
+        m.uploaded_by,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [materials, searchQuery]);
 
   const handleDelete = async (materialId) => {
     try {
@@ -402,22 +412,6 @@ export default function CourseMaterialsPage() {
       alert(err.message || "Failed to delete material.");
     }
   };
-
-  const courseLinks = useMemo(
-    () => [
-      {
-        to: `/courses/${courseId}`,
-        label: "Course Feed",
-        icon: <MessageSquare className="h-5 w-5" />,
-      },
-      {
-        to: `/courses/${courseId}/materials`,
-        label: "Materials",
-        icon: <BookOpen className="h-5 w-5" />,
-      },
-    ],
-    [courseId]
-  );
 
   // Mobile bottom nav always shows the 5 global destinations so users
   // are never stranded when inside a course-specific page.
@@ -432,34 +426,33 @@ export default function CourseMaterialsPage() {
     []
   );
 
+  if (authCheckComplete && !authUser) {
+    return <Navigate to="/login" replace />;
+  }
   if (!authCheckComplete || !authUser) return null;
 
   return (
     <AuthenticatedShell
       title={courseName ? `${courseName} — Materials` : "Course Materials"}
       subtitle="Download lecture slides, assignments, and resources for this course."
-      links={courseLinks}
       mobileNavLinks={globalMobileNav}
     >
       <div className="space-y-5">
-        {/* Header row */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <Link
-            to={`/courses/${courseId}`}
-            className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-brand"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Feed
-          </Link>
-
-          <button
-            type="button"
-            onClick={() => setShowUpload(true)}
-            className="inline-flex items-center gap-2 rounded-full bg-brand px-4 py-2 text-sm font-semibold text-white shadow-brand hover:bg-brand-dark"
-          >
-            <Plus className="h-4 w-4" />
-            Upload Material
-          </button>
+        {/* Search */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative w-full sm:max-w-lg">
+            <Search
+              className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
+              aria-hidden="true"
+            />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search files (title, filename, description...)"
+              className="w-full rounded-full border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-800 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
+            />
+          </div>
         </div>
 
         {/* Category filter tabs */}
@@ -489,7 +482,7 @@ export default function CourseMaterialsPage() {
           <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
             {error}
           </div>
-        ) : materials.length === 0 ? (
+        ) : filteredMaterials.length === 0 ? (
           <div className="rounded-[1.7rem] border border-dashed border-brand-200 bg-brand-50/70 px-5 py-12 text-center">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm">
               <FileText className="h-6 w-6 text-brand-400" />
@@ -498,16 +491,12 @@ export default function CourseMaterialsPage() {
               No materials yet
             </h3>
             <p className="mt-2 text-sm text-slate-500">
-              {isTeacherOrAdmin ? (
-                "Upload your first material using the button above."
-              ) : (
-                "No materials have been uploaded for this course yet."
-              )}
+              {searchQuery ? "No files match your search." : "No materials have been uploaded for this course yet."}
             </p>
           </div>
         ) : (
           <div className="grid gap-3">
-            {materials.map((m) => (
+            {filteredMaterials.map((m) => (
               <MaterialCard
                 key={m.id}
                 material={m}
@@ -522,13 +511,6 @@ export default function CourseMaterialsPage() {
         )}
       </div>
 
-      {showUpload && (
-        <UploadModal
-          courseId={courseId}
-          onClose={() => setShowUpload(false)}
-          onSuccess={handleUploadSuccess}
-        />
-      )}
     </AuthenticatedShell>
   );
 }
