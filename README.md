@@ -140,11 +140,7 @@ docker compose exec backend python manage.py shell -c \
 "from apps.core.services.dashboard_service import refresh_all_dashboards_async; refresh_all_dashboards_async()"
 
 ## CI
-
-This project uses GitHub Actions for basic continuous integration checks.
-
-The workflow runs on push, pull request, and manual trigger.
-
-It currently covers backend lint and checks, backend tests, frontend lint and build, frontend unit tests, security audit, and Docker build validation.
-
-If a CI job fails, contributors should check the failed step in the Actions tab before requesting review.
+- run on push, pull request, and manual trigger:
+GitHub Actions workflow for backend lint and checks, backend tests, frontend lint and build, frontend unit tests, security audit, and Docker build validation.
+- if CI fails:
+Check the failed step in the Actions tab before requesting review.
