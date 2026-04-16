@@ -9,8 +9,8 @@ import {
   FileText,
   BarChart3,
   LayoutDashboard,
-  Wrench,
   BotMessageSquare,
+  Plus,
 } from "lucide-react";
 import ToastHost from "../../components/ToastHost"; // Global Toast host
 
@@ -69,7 +69,10 @@ export default function AuthenticatedShell({
     notifications,
     notificationStatus,
     fetchNotifications,
+    courses,
+    fetchCourses,
   } = useApp();
+  const isTeacherUser = Boolean(authUser?.is_superuser || authUser?.is_staff);
 
   // On first load or account switch, fetch once when auto-polling is enabled
   useEffect(() => {
@@ -77,6 +80,11 @@ export default function AuthenticatedShell({
       fetchNotifications({ silent: true }).catch(() => {});
     }
   }, [authUser, showNotifications, fetchNotifications]);
+
+  useEffect(() => {
+    if (!authUser || !isTeacherUser) return;
+    fetchCourses().catch(() => {});
+  }, [authUser, isTeacherUser, fetchCourses]);
 
   // Refresh once when the tab/window becomes visible (prevents missed notifications)
   useEffect(() => {
@@ -102,6 +110,104 @@ export default function AuthenticatedShell({
 
   const sidebarLinks = useMemo(() => {
     if (links && links.length) return links;
+    const isAdminUser = Boolean(authUser?.is_superuser || authUser?.is_staff);
+    if (isAdminUser) {
+      // Teacher course analysis pages should keep the course-scoped sidebar
+      // (otherwise they'd fall into the generic Course Center / Dashboard sidebar).
+      const dashCourseMatch = location.pathname.match(/^\/dashboard\/courses\/(\d+)/);
+      if (dashCourseMatch?.[1]) {
+        const currentCourseId = dashCourseMatch[1];
+        return [
+          {
+            to: `/courses/${currentCourseId}/community`,
+            label: "Community",
+            icon: <FileText className="h-5 w-5" />,
+          },
+          {
+            to: `/courses/${currentCourseId}/materials`,
+            label: "Materials",
+            icon: <BookOpen className="h-5 w-5" />,
+          },
+          {
+            to: `/dashboard/courses/${currentCourseId}`,
+            label: "Analyze",
+            icon: <BarChart3 className="h-5 w-5" />,
+          },
+          {
+            to: `/courses/${currentCourseId}/messages`,
+            label: "Messages",
+            icon: <Bell className="h-5 w-5" />,
+          },
+        ];
+      }
+
+      if (
+        location.pathname === "/courses" ||
+        location.pathname === "/courses/manage" ||
+        location.pathname === "/courses/create" ||
+        location.pathname === "/ai-users" ||
+        location.pathname.startsWith("/dashboard") ||
+        location.pathname.endsWith("/ai-users")
+      ) {
+        return [
+          {
+            to: "/courses/manage",
+            label: "Course Manage",
+            icon: <BookOpen className="h-5 w-5" />,
+          },
+          {
+            to: "/ai-users",
+            label: "AI User",
+            icon: <BotMessageSquare className="h-5 w-5" />,
+          },
+          {
+            to: "/dashboard",
+            label: "Dashboard",
+            icon: <LayoutDashboard className="h-5 w-5" />,
+          },
+        ];
+      }
+      const courseMatch = location.pathname.match(/^\/courses\/(\d+)/);
+      if (courseMatch?.[1]) {
+        const currentCourseId = courseMatch[1];
+        return [
+          {
+            to: `/courses/${currentCourseId}/community`,
+            label: "Community",
+            icon: <FileText className="h-5 w-5" />,
+          },
+          {
+            to: `/courses/${currentCourseId}/materials`,
+            label: "Materials",
+            icon: <BookOpen className="h-5 w-5" />,
+          },
+          {
+            to: `/dashboard/courses/${currentCourseId}`,
+            label: "Analyze",
+            icon: <BarChart3 className="h-5 w-5" />,
+          },
+          {
+            to: `/courses/${currentCourseId}/messages`,
+            label: "Messages",
+            icon: <Bell className="h-5 w-5" />,
+          },
+        ];
+      }
+      // Teacher console keeps only two top-level modules:
+      // Courses / Dashboard.
+      return [
+        {
+          to: "/courses",
+          label: "Courses",
+          icon: <BookOpen className="h-5 w-5" />,
+        },
+        {
+          to: "/dashboard",
+          label: "Dashboard",
+          icon: <LayoutDashboard className="h-5 w-5" />,
+        },
+      ];
+    }
     const uid = authUser?.id;
     const base = [
       {
@@ -141,28 +247,14 @@ export default function AuthenticatedShell({
       },
     ];
 
-    const admin =
-      authUser?.is_superuser || authUser?.is_staff
-        ? [
-            {
-              to: "/dashboard",
-              label: "Dashboard",
-              icon: <LayoutDashboard className="h-5 w-5" />,
-            },
-            {
-              to: "/courses/manage",
-              label: "Course Manage",
-              icon: <Wrench className="h-5 w-5" />,
-            },
-          ]
-        : [];
-
-    const merged = [...base.slice(0, 2), ...admin, ...base.slice(2)];
-    const uniq = Array.from(new Map(merged.map((i) => [i.to, i])).values());
-    return uniq;
-  }, [links, authUser?.id, authUser?.is_superuser, authUser?.is_staff]);
+    return base;
+  }, [links, authUser?.id, authUser?.is_superuser, authUser?.is_staff, location.pathname]);
 
   const compactName = displayName || "User";
+  const teacherCourses = useMemo(() => {
+    if (!isTeacherUser) return [];
+    return [...(courses?.joined || [])];
+  }, [isTeacherUser, courses?.joined]);
   const compactLinks = useMemo(() => {
     const dedupeByTo = (items) =>
       Array.from(
@@ -172,15 +264,17 @@ export default function AuthenticatedShell({
     if (mobileNavLinks && mobileNavLinks.length) {
       return dedupeByTo(mobileNavLinks).slice(0, 5);
     }
-    const preferred = Array.from(
-      new Set([
-        "/studenthome",
-        "/courses",
-        "/search",
-        "/notifications",
-        "/ai-tutor",
-      ])
-    );
+    const preferred = authUser?.is_superuser || authUser?.is_staff
+      ? ["/courses", "/dashboard"]
+      : Array.from(
+          new Set([
+            "/studenthome",
+            "/courses",
+            "/search",
+            "/notifications",
+            "/ai-tutor",
+          ])
+        );
     const linksByTo = new Map(sidebarLinks.map((item) => [item.to, item]));
     const picked = preferred.map((to) => linksByTo.get(to)).filter(Boolean);
     if (picked.length >= 4) return picked.slice(0, 5);
@@ -292,6 +386,52 @@ export default function AuthenticatedShell({
             </button>
           </div>
         </div>
+        {isTeacherUser ? (
+          <div className="mx-auto w-full max-w-6xl px-3 pb-3 sm:px-4 lg:px-6">
+            <div className="flex items-center gap-2 rounded-2xl border border-brand-100/80 bg-white/80 px-3 py-2">
+              <button
+                type="button"
+                onClick={() => navigate("/courses")}
+                className="shrink-0 rounded-full border border-brand bg-gradient-to-r from-brand to-brand-dark px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:brightness-110 hover:shadow-md"
+              >
+                Course Center
+              </button>
+              <div className="min-w-0 flex-1 overflow-x-auto">
+                <div className="flex items-center gap-2">
+                  {teacherCourses.length > 0 ? (
+                    teacherCourses.map((course) => (
+                      <button
+                        key={course.id}
+                        type="button"
+                        onClick={() => navigate(`/courses/${course.id}`)}
+                        className="shrink-0 rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand transition hover:border-brand hover:bg-brand-50"
+                        title={`${course.course_code || ""} ${course.name || ""}`.trim()}
+                      >
+                        {course.course_code || `Course ${course.id}`}
+                      </button>
+                    ))
+                  ) : (
+                    <p className="text-xs font-medium text-slate-500">
+                      You do not have any courses yet. Please create a course.
+                    </p>
+                  )}
+                </div>
+              </div>
+              <button
+                type="button"
+                className="group inline-flex shrink-0 items-center gap-2 rounded-full border border-brand bg-brand
+                        px-3 py-1.5 text-xs font-semibold text-white
+                        shadow-soft transition-all duration-200 hover:bg-brand/90
+                        hover:shadow-brand hover:scale-[1.02] active:scale-[0.99]
+                        focus:outline-none focus:ring-2 focus:ring-brand/30"
+                onClick={() => navigate("/courses")}
+              >
+                <Plus className="h-4 w-4" />
+                <span>Join Course</span>
+              </button>
+            </div>
+          </div>
+        ) : null}
       </header>
 
       {/* Main content region */}
@@ -304,6 +444,8 @@ export default function AuthenticatedShell({
           </div>
           {sidebarLinks.map((link) => {
             const active = isActiveLink(link.to, location);
+            // `unread` is global notifications unread count, so only show badge
+            // for the global `/notifications` page.
             const isMessages = link.to === "/notifications";
             return (
               <NavLink

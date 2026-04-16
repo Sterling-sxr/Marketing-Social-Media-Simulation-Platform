@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
 import { getJson } from "../../lib/api";
 import AuthenticatedShell from "../components/AuthenticatedShell";
 import Feedback from "../components/Feedback";
+import { isTeacher } from "../../lib/access";
 
 const SUMMARY_TILES = [
   { key: "total_posts", label: "Total Posts" },
@@ -256,6 +257,7 @@ function sortByNumeric(arr, key, asc) {
 export default function CourseDashboardPage() {
   const { courseId: courseIdParam } = useParams();
   const courseId = Number(courseIdParam);
+  const location = useLocation();
   const navigate = useNavigate();
   const { authUser, authCheckComplete } = useApp();
 
@@ -267,6 +269,7 @@ export default function CourseDashboardPage() {
     loading: true,
     error: "",
   });
+  const [refreshing, setRefreshing] = useState(false);
 
   // Fixed default sorting (no interactive controls)
   const [hashtagSortKey] = useState("total_posts");
@@ -274,10 +277,25 @@ export default function CourseDashboardPage() {
   const [studentSortKey] = useState("posts_total");
   const [studentAsc] = useState(false); // Desc by post count
 
-  const isAdmin = useMemo(
-    () => Boolean(authUser && (authUser.is_superuser || authUser.is_staff)),
-    [authUser]
-  );
+  const isAdmin = useMemo(() => isTeacher(authUser), [authUser]);
+  const loadCourseDashboard = useCallback(() => {
+    if (!Number.isFinite(courseId)) {
+      setStatus({ loading: false, error: "Invalid course id." });
+      return Promise.resolve();
+    }
+    setStatus((prev) => ({ ...prev, loading: true, error: "" }));
+    return getJson(`/api/admin/dashboard/courses/${courseId}/`)
+      .then((payload) => {
+        setData(payload.course || null);
+        setStatus({ loading: false, error: "" });
+      })
+      .catch((error) => {
+        setStatus({
+          loading: false,
+          error: error.message || "Failed to load course dashboard.",
+        });
+      });
+  }, [courseId]);
 
   useEffect(() => {
     if (!authCheckComplete) return;
@@ -289,24 +307,8 @@ export default function CourseDashboardPage() {
       navigate("/courses", { replace: true });
       return;
     }
-    if (!Number.isFinite(courseId)) {
-      setStatus({ loading: false, error: "Invalid course id." });
-      return;
-    }
-
-    setStatus({ loading: true, error: "" });
-    getJson(`/api/admin/dashboard/courses/${courseId}/`)
-      .then((payload) => {
-        setData(payload.course || null);
-        setStatus({ loading: false, error: "" });
-      })
-      .catch((error) => {
-        setStatus({
-          loading: false,
-          error: error.message || "Failed to load course dashboard.",
-        });
-      });
-  }, [authCheckComplete, authUser, isAdmin, courseId, navigate]);
+    loadCourseDashboard();
+  }, [authCheckComplete, authUser, isAdmin, navigate, loadCourseDashboard]);
 
   useEffect(() => {
     if (!authCheckComplete || !authUser || !isAdmin || !Number.isFinite(courseId)) return;
@@ -358,6 +360,7 @@ export default function CourseDashboardPage() {
     if (!studentsRaw?.length) return [];
     return sortByNumeric(studentsRaw, studentSortKey, studentAsc);
   }, [studentsRaw, studentSortKey, studentAsc]);
+  const topHashtag = hashtags[0]?.hashtag;
 
   // Scroll into view when landing on the #students-section anchor
   useEffect(() => {
@@ -386,7 +389,53 @@ export default function CourseDashboardPage() {
         <Btn variant="secondary" onClick={() => navigate(-1)}>
           ← Back
         </Btn>
+        <Btn
+          variant="secondary"
+          disabled={refreshing}
+          onClick={async () => {
+            setRefreshing(true);
+            await loadCourseDashboard();
+            setRefreshing(false);
+          }}
+        >
+          {refreshing ? "Refreshing..." : "Refresh"}
+        </Btn>
+        {courseMeta?.id ? (
+          <Btn variant="secondary" onClick={() => navigate(`/courses/${courseMeta.id}`)}>
+            Open Course
+          </Btn>
+        ) : null}
       </div>
+
+      <section className="rounded-3xl border border-brand-100 bg-white p-4 shadow-sm">
+        <h2 className="text-sm font-semibold text-slate-800 sm:text-base">
+          Insights Navigation
+        </h2>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Btn variant="secondary" onClick={() => navigate(`/dashboard/courses/${courseId}`)}>
+            Course Dashboard
+          </Btn>
+          <Btn variant="secondary" onClick={() => navigate(`/dashboard/courses/${courseId}/students`)}>
+            Student Dashboard
+          </Btn>
+          <Btn
+            variant="secondary"
+            onClick={() =>
+              topHashtag
+                ? navigate(`/dashboard/courses/${courseId}/hashtags/${encodeURIComponent(topHashtag)}`)
+                : window.alert("No hashtag analytics available yet for this course.")
+            }
+          >
+            Hashtag Dashboard
+          </Btn>
+          <Btn variant="secondary" onClick={() => navigate(`/courses/${courseId}/community`)}>
+            Open Community
+          </Btn>
+          <Btn variant="secondary" onClick={() => navigate(`/courses/${courseId}/ai-users`)}>
+            Manage AI Users
+          </Btn>
+        </div>
+      </section>
 
       {status.error ? <Feedback error={status.error} /> : null}
       {status.loading ? (

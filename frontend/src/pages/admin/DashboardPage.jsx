@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
+import { useAuth } from "../../context/AuthContext";
 import { getJson } from "../../lib/api";
+import { isTeacher } from "../../lib/access";
 import AuthenticatedShell from "../components/AuthenticatedShell";
 import Feedback from "../components/Feedback";
 // import { Sparkles, X } from "lucide-react";
@@ -14,6 +16,43 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+
+function SectionCard({ title, subtitle, icon, children, tone = "default", right }) {
+  const toneStyles =
+    tone === "peach"
+      ? "bg-[linear-gradient(135deg,#FFF1EB_0%,#FFFFFF_60%)] border-[#BDDDE7]"
+      : tone === "mint"
+      ? "bg-[linear-gradient(135deg,#EEF7F9_0%,#FFFFFF_60%)] border-brand-100"
+      : "bg-white border-brand-100";
+
+  return (
+    <section
+      className={`rounded-3xl border p-4 shadow-sm sm:p-6 ${toneStyles}`}
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            {icon ? (
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-brand-100 bg-white shadow-sm">
+                <span className="text-lg" aria-hidden="true">
+                  {icon}
+                </span>
+              </span>
+            ) : null}
+            <h2 className="text-base font-semibold text-slate-900 sm:text-lg">
+              {title}
+            </h2>
+          </div>
+          {subtitle ? (
+            <p className="mt-1 text-xs text-slate-500 sm:text-sm">{subtitle}</p>
+          ) : null}
+        </div>
+        {right ? <div className="shrink-0">{right}</div> : null}
+      </div>
+      <div className="mt-4">{children}</div>
+    </section>
+  );
+}
 /* Dashboard chart palette aligned with global brand tokens */
 const DONUT = {
   peach50: "#EEF7F9",
@@ -216,11 +255,11 @@ function makeAutoSummary(summary) {
 }
 
 export default function DashboardPage() {
-  const { authUser, authCheckComplete } = useApp();
+  const { pushToast } = useApp();
+  const { authUser, authCheckComplete } = useAuth();
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [status, setStatus] = useState({ loading: true, error: "" });
-  const [showCoursesModal, setShowCoursesModal] = useState(false);
   const [sparkSummary, setSparkSummary] = useState("");
   const [sparkStatus, setSparkStatus] = useState({ loading: false, error: "" });
   const [isMobile, setIsMobile] = useState(() =>
@@ -229,10 +268,13 @@ export default function DashboardPage() {
       : false
   );
 
-  const isAdmin = useMemo(
-    () => Boolean(authUser && (authUser.is_superuser || authUser.is_staff)),
-    [authUser]
-  );
+  const isAdmin = useMemo(() => isTeacher(authUser), [authUser]);
+  const handleNeedCourse = useCallback(() => {
+    pushToast({
+      title: "Course required",
+      message: "Please create or join a course first.",
+    });
+  }, [pushToast]);
 
   const reloadDashboard = useCallback(() => {
     setStatus({ loading: true, error: "" });
@@ -268,7 +310,6 @@ export default function DashboardPage() {
 
   const sentiment = data?.sentiment || {};
   const lastUpdated = data?.calculated_at ? new Date(data.calculated_at) : null;
-  const courses = data?.courses || [];
 
   const sPos = Math.round(
     Math.min(Math.max(Number(sentiment.positive || 0), 0), 100)
@@ -342,16 +383,6 @@ export default function DashboardPage() {
   }, [data]);
 
   useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === "Escape") {
-        setShowCoursesModal(false);
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
-  useEffect(() => {
     if (typeof window === "undefined") return undefined;
     const media = window.matchMedia("(max-width: 639px)");
     const onChange = (e) => setIsMobile(e.matches);
@@ -377,81 +408,67 @@ export default function DashboardPage() {
       ) : null}
 
       {!status.loading && data ? (
-        <div className="pb-24 sm:pb-8">
+        <div className="space-y-4 pb-24 sm:space-y-5 sm:pb-8">
           {lastUpdated ? (
-            <div className="mt-1 flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs text-slate-500">
-                Last updated:{" "}
-                {lastUpdated.toLocaleString("en-US", { hour12: false })}
+            <SectionCard
+              title="Last Updated"
+              subtitle={`Last updated: ${lastUpdated.toLocaleString("en-US", {
+                hour12: false,
+              })}`}
+              icon="⏱️"
+              right={
+                <button
+                  type="button"
+                  className="rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand transition hover:border-brand disabled:opacity-60"
+                  onClick={reloadDashboard}
+                  disabled={status.loading}
+                >
+                  {status.loading ? "Refreshing..." : "Refresh"}
+                </button>
+              }
+            >
+              <p className="text-sm text-slate-600">
+                Use refresh if you recently changed course activity and want the latest insights.
               </p>
-              <button
-                type="button"
-                className="rounded-full border border-brand-200 bg-white px-3 py-1 text-xs font-semibold text-brand transition hover:border-brand disabled:opacity-60"
-                onClick={reloadDashboard}
-                disabled={status.loading}
-              >
-                {status.loading ? "Refreshing..." : "Refresh"}
-              </button>
-            </div>
+            </SectionCard>
           ) : null}
 
           {/* =============================== Summary tiles (KPI-inspired) =============================== */}
-          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mt-4">
-            {SUMMARY_TILES.map((tile) => {
-              const Card = (
+          <SectionCard
+            title="Summary"
+            subtitle="Key metrics across all managed courses."
+            icon="📌"
+          >
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {SUMMARY_TILES.map((tile) => (
                 <div
+                  key={tile.key}
                   className={[
-                    "rounded-2xl p-4 text-center select-none sm:p-6",
-                    "border-[1px] border-accent-400 bg-white",
-                    "transition-colors transition-transform duration-200 ease-out",
-                    "hover:-translate-y-[2px]",
-                    "hover:bg-gradient-to-br hover:from-brand-100 hover:to-accent-100 active:bg-brand-50",
+                    "rounded-2xl p-4 text-center select-none",
+                    "border border-accent-200 bg-white",
+                    "transition-transform duration-200 ease-out hover:-translate-y-0.5 hover:shadow-sm",
                   ].join(" ")}
                   role="status"
                   aria-label={`${tile.label}: ${data?.[tile.key] ?? 0}`}
                 >
-                  <div className="text-sm text-slate-600 transition-colors sm:text-base hover:text-white">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                     {tile.label}
                   </div>
-                  <div className="mt-1 text-2xl font-extrabold text-slate-900 transition-colors sm:text-3xl hover:text-white">
+                  <div className="mt-1 text-2xl font-extrabold text-slate-900">
                     {data?.[tile.key] ?? 0}
                   </div>
                 </div>
-              );
-
-              return tile.clickable ? (
-                <button
-                  key={tile.key}
-                  type="button"
-                  className="text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-200 rounded-2xl"
-                  onClick={() => {
-                    if ((data?.courses || []).length === 0) return;
-                    setShowCoursesModal(true);
-                  }}
-                >
-                  {Card}
-                </button>
-              ) : (
-                <div key={tile.key}>{Card}</div>
-              );
-            })}
-          </section>
+              ))}
+            </div>
+          </SectionCard>
 
           {/* ====================== Course Comparison (BarChart) ====================== */}
-          <section
-            className="rounded-3xl shadow-sm mt-4"
-            style={{
-              border: `1px solid ${DONUT.border}`,
-              background: "linear-gradient(135deg, #FFF1EB 0%, #FFFFFF 100%)",
-            }}
+          <SectionCard
+            title="Course Comparison Analysis"
+            subtitle="Posts and interactions across different courses."
+            icon="📊"
+            tone="peach"
           >
-            <div className="p-4 sm:p-6">
-              <h2 className="text-lg font-semibold text-slate-800 sm:text-2xl">
-                Course Comparison Analysis
-              </h2>
-              <p className="text-xs text-slate-500">
-                Posts and interactions across different courses
-              </p>
 
               {compareData.length === 0 ? (
                 <p className="text-sm text-slate-500 mt-3">
@@ -513,57 +530,44 @@ export default function DashboardPage() {
                   </div>
                 </div>
               )}
-            </div>
-          </section>
+          </SectionCard>
 
           {/* ======================= Sentiment ======================= */}
-          <section
-            className="rounded-3xl border border-brand-100 bg-white/90 mt-4 shadow-sm"
+          <SectionCard
+            title="Sentiment Analysis"
+            subtitle="Snapshot of overall tone across managed courses."
+            icon="🙂"
           >
-            <div className="p-4 sm:p-6">
-              <h2 className="text-base font-semibold text-slate-800 sm:text-lg">
-                Sentiment Analysis
-              </h2>
-              <p className="text-xs text-slate-500">
-                Supporting context for the overall tone across managed courses.
-              </p>
-
-              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                {[
-                  { key: "positive", label: "Positive", value: sPos },
-                  { key: "neutral", label: "Neutral", value: sNeu },
-                  { key: "negative", label: "Negative", value: sNeg },
-                ].map((item) => (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {[
+                { key: "positive", label: "Positive", value: sPos },
+                { key: "neutral", label: "Neutral", value: sNeu },
+                { key: "negative", label: "Negative", value: sNeg },
+              ].map((item) => (
+                <div
+                  key={item.key}
+                  className="rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-4"
+                >
                   <div
-                    key={item.key}
-                    className="rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-4"
+                    className={`text-2xl font-extrabold tracking-tight ${
+                      SENTIMENT_TEXT_COLORS[item.key]
+                    }`}
                   >
-                    <div
-                      className={`text-2xl font-extrabold tracking-tight ${
-                        SENTIMENT_TEXT_COLORS[item.key]
-                      }`}
-                    >
-                      {item.value}%
-                    </div>
-                    <div className="mt-1 text-sm font-medium text-slate-600">
-                      {item.label}
-                    </div>
+                    {item.value}%
                   </div>
-                ))}
-              </div>
+                  <div className="mt-1 text-sm font-medium text-slate-600">
+                    {item.label}
+                  </div>
+                </div>
+              ))}
             </div>
-          </section>
+          </SectionCard>
 
-          <section className="mt-4 rounded-3xl border border-brand-100 bg-white/90 p-4 shadow-sm sm:p-6">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h2 className="text-base font-semibold text-slate-800 sm:text-lg">
-                  AI Summary
-                </h2>
-                <p className="text-xs text-slate-500">
-                  Supporting narrative generated from the same dashboard evidence.
-                </p>
-              </div>
+          <SectionCard
+            title="AI Summary"
+            subtitle="Readable conclusions generated from dashboard evidence."
+            icon="✨"
+            right={
               <button
                 type="button"
                 className="rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand transition hover:border-brand disabled:opacity-60"
@@ -572,9 +576,9 @@ export default function DashboardPage() {
               >
                 {sparkStatus.loading ? "Generating..." : "Refresh AI summary"}
               </button>
-            </div>
-
-            <div className="mt-4 rounded-2xl border border-brand-100 bg-brand-50/50 px-4 py-4 text-sm leading-6 text-slate-700">
+            }
+          >
+            <div className="rounded-2xl border border-brand-100 bg-brand-50/50 px-4 py-4 text-sm leading-6 text-slate-700">
               {sparkSummary || autoSummary}
             </div>
             {sparkStatus.error ? (
@@ -582,86 +586,7 @@ export default function DashboardPage() {
                 {sparkStatus.error} Showing the built-in summary instead.
               </p>
             ) : null}
-          </section>
-        </div>
-      ) : null}
-
-      {/* ============================ Courses modal ============================ */}
-      {showCoursesModal ? (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/35 p-0 sm:items-center sm:p-4"
-          onClick={() => setShowCoursesModal(false)}
-          role="presentation"
-        >
-          <div
-            className="flex max-h-[90vh] w-full flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:max-h-[80vh] sm:max-w-xl sm:rounded-3xl"
-            style={{ border: `1px solid ${DONUT.border}` }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div
-              className="sticky top-0 z-10 flex items-center justify-between border-b px-4 py-3 sm:px-5 sm:py-4"
-              style={{ borderColor: DONUT.border, background: DONUT.peach50 }}
-            >
-              <div>
-                <h3 className="text-lg font-semibold text-slate-800 sm:text-xl">
-                  Courses
-                </h3>
-                <p className="text-xs text-slate-500">
-                  Select a course to view detailed analytics.
-                </p>
-              </div>
-              <button
-                type="button"
-                aria-label="Close"
-                title="Close"
-                onClick={() => setShowCoursesModal(false)}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-rose-300 bg-rose-100 text-xl font-bold text-rose-700 transition hover:bg-rose-300 hover:text-white focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-200"
-                style={{
-                  lineHeight: "1",
-                }}
-              >
-                ×
-              </button>
-            </div>
-            <div className="min-h-0 flex-1 overflow-y-auto">
-              {(data?.courses || []).length === 0 ? (
-                <p className="px-5 py-4 text-sm text-slate-500">
-                  No courses available.
-                </p>
-              ) : (
-                <ul
-                  className="divide-y"
-                  style={{ borderColor: DONUT.peach100 }}
-                >
-                  {data.courses.map((course) => (
-                    <li key={course.id}>
-                      <button
-                        type="button"
-                        className="flex w-full items-center justify-between px-4 py-4 text-left text-sm transition hover:bg-brand-50 active:bg-brand-100 sm:px-5"
-                        onClick={() => {
-                          setShowCoursesModal(false);
-                          navigate(`/dashboard/courses/${course.id}`);
-                        }}
-                      >
-                        <div className="min-w-0 pr-3">
-                          <p className="truncate text-sm font-semibold text-slate-800 sm:text-[15px]">
-                            {course.course_code} · {course.name}
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {course.term}
-                          </p>
-                        </div>
-                        <div className="shrink-0 text-right text-xs text-slate-500">
-                          <p>Total posts: {course.total_posts}</p>
-                          <p>Interactions: {course.total_interactions}</p>
-                        </div>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
+          </SectionCard>
         </div>
       ) : null}
 
