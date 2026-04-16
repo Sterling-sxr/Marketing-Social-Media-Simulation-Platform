@@ -102,6 +102,7 @@ from .registration_service import (
     request_verification_code,
     verify_registration_code,
 )
+from .student_analytics_service import build_student_analytics_payload
 
 __all__ = [
     "GmailNotConfiguredError",
@@ -159,6 +160,7 @@ __all__ = [
     "get_course_post_analytics",
     "list_posts_by_user",
     "list_posts_with_analytics_by_user",
+    "build_student_analytics_payload",
     "list_liked_posts",
     "like_course_post",
     "unlike_course_post",

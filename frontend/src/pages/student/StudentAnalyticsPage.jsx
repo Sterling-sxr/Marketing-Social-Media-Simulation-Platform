@@ -339,6 +339,76 @@ function buildAnalyticsFromApi(items) {
   };
 }
 
+function hasItems(value) {
+  return Array.isArray(value) && value.length > 0;
+}
+
+function normalizeStudentAnalyticsPayload(data) {
+  const items = Array.isArray(data?.items) ? data.items : [];
+  const derived = buildAnalyticsFromApi(items);
+  const backend = data && typeof data === "object" ? data : {};
+
+  const summary =
+    backend.summary && typeof backend.summary === "object"
+      ? { ...mockAnalytics.summary, ...backend.summary }
+      : derived?.summary || mockAnalytics.summary;
+
+  const engagementTrend =
+    backend.engagementTrend && Array.isArray(backend.engagementTrend.series)
+      ? { ...mockAnalytics.engagementTrend, ...backend.engagementTrend }
+      : derived?.engagementTrend || mockAnalytics.engagementTrend;
+
+  const topPosts = hasItems(backend.topPosts)
+    ? backend.topPosts
+    : derived?.topPosts || mockAnalytics.topPosts;
+
+  const bestTimeToPost =
+    backend.bestTimeToPost &&
+    (backend.bestTimeToPost.bestHourLabel || hasItems(backend.bestTimeToPost.slots))
+      ? { ...mockAnalytics.bestTimeToPost, ...backend.bestTimeToPost }
+      : derived?.bestTimeToPost || mockAnalytics.bestTimeToPost;
+
+  const audienceInsights =
+    backend.audienceInsights && typeof backend.audienceInsights === "object"
+      ? {
+          ...mockAnalytics.audienceInsights,
+          ...backend.audienceInsights,
+          breakdown: hasItems(backend.audienceInsights.breakdown)
+            ? backend.audienceInsights.breakdown
+            : mockAnalytics.audienceInsights.breakdown,
+        }
+      : mockAnalytics.audienceInsights;
+
+  const audiencePatterns = hasItems(backend.audiencePatterns)
+    ? backend.audiencePatterns
+    : mockAnalytics.audiencePatterns;
+
+  const contentPatterns = hasItems(backend.contentPatterns)
+    ? backend.contentPatterns
+    : mockAnalytics.contentPatterns;
+
+  const suggestions = hasItems(backend.suggestions)
+    ? backend.suggestions
+    : mockAnalytics.suggestions;
+
+  const aiInsight =
+    backend.aiInsight && typeof backend.aiInsight === "object"
+      ? { ...mockAnalytics.aiInsight, ...backend.aiInsight }
+      : mockAnalytics.aiInsight;
+
+  return {
+    summary,
+    engagementTrend,
+    topPosts,
+    audienceInsights,
+    bestTimeToPost,
+    audiencePatterns,
+    contentPatterns,
+    suggestions,
+    aiInsight,
+  };
+}
+
 // =============================== Helpers =================================
 function formatDate(isoString) {
   if (!isoString) return "—";
@@ -722,9 +792,7 @@ export default function StudentAnalyticsPage() {
     getJson(`/api/users/${authUser.id}/posts/analytics/`)
       .then((data) => {
         if (cancelled) return;
-        const items = Array.isArray(data?.items) ? data.items : [];
-        const derived = buildAnalyticsFromApi(items);
-        setAnalytics(derived);
+        setAnalytics(normalizeStudentAnalyticsPayload(data));
         setStatus({ loading: false, error: "" });
       })
       .catch((error) => {
