@@ -94,11 +94,6 @@ from .profile_service import (
     profile_to_dict,
     save_profile,
 )
-from .segmentation_analytics_service import (
-    LENS_CONFIG,
-    get_admin_course_segmentation,
-    get_admin_post_segmentation,
-)
 from .registration_service import (
     EmailThrottleError,
     RegistrationError,
@@ -107,6 +102,11 @@ from .registration_service import (
     complete_registration,
     request_verification_code,
     verify_registration_code,
+)
+from .segmentation_analytics_service import (
+    LENS_CONFIG,
+    get_admin_course_segmentation,
+    get_admin_post_segmentation,
 )
 
 __all__ = [
@@ -153,8 +153,6 @@ __all__ = [
     "create_course",
     "list_managed_courses",
     "update_course",
-    "get_course_profile",
-    "save_course_profile",
     "get_course_profile",
     "save_course_profile",
     "list_course_posts",

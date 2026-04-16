@@ -406,7 +406,15 @@ def _pick_interests(options: list[str], index: int) -> list[str]:
     return [first] if first == second else [first, second]
 
 
-def _build_guided_draft(*, template_id: str, template: dict[str, Any], payload: dict[str, Any], course_id: int, index: int, seen: set[str]) -> dict[str, Any]:
+def _build_guided_draft(
+    *,
+    template_id: str,
+    template: dict[str, Any],
+    payload: dict[str, Any],
+    course_id: int,
+    index: int,
+    seen: set[str],
+) -> dict[str, Any]:
     audience_theme = (payload.get("audience_theme") or "").strip()
     interest_mix = payload.get("interest_mix") or template["interests"]
     age_mix = payload.get("age_mix") or template["age_groups"]
@@ -1213,8 +1221,16 @@ def _seed_to_draft(
         allowed_key="age_groups",
         fallback_values=_resolve_constraint_values(constraints, "age_group", "age_groups"),
     )
-    gender, _ = _pick_allowed_value(seed.get("gender"), allowed_key="genders", fallback_values=_resolve_constraint_values(constraints, "gender", "genders"))
-    city, _ = _pick_allowed_value(seed.get("city"), allowed_key="cities", fallback_values=_resolve_constraint_values(constraints, "city", "cities"))
+    gender, _ = _pick_allowed_value(
+        seed.get("gender"),
+        allowed_key="genders",
+        fallback_values=_resolve_constraint_values(constraints, "gender", "genders"),
+    )
+    city, _ = _pick_allowed_value(
+        seed.get("city"),
+        allowed_key="cities",
+        fallback_values=_resolve_constraint_values(constraints, "city", "cities"),
+    )
     education_level, _ = _pick_allowed_value(
         seed.get("education_level"),
         allowed_key="education_levels",
@@ -1400,7 +1416,8 @@ def _build_generation_prompt(*, payload: dict[str, Any], course) -> str:
         "Every score_hints value must be an integer 1-10.\n"
         "interest_biases and behavior_signals must always be JSON arrays of strings, never a single string.\n"
         "Return at least one persona seed unless the constraints make it impossible.\n"
-        "Prioritize contrast across interests, response tendencies, and decision drivers so students can compare which content attracts which audience segments.\n"
+        "Prioritize contrast across interests, response tendencies, and decision drivers "
+        "so students can compare which content attracts which audience segments.\n"
         "Do not invent new schema fields beyond those listed above. Prefer allowed values where possible.\n"
         "Allowed values by field:\n"
         f"{_format_allowed_values_by_field()}\n"

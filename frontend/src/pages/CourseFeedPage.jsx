@@ -13,6 +13,7 @@ import ConfirmDialog from "./components/ConfirmDialog";
 import Feedback from "./components/Feedback";
 import { hasProfanity } from "../lib/profanity";
 import ProfanityHint from "./components/ProfanityHint";
+import CourseSecondaryNav from "./components/CourseSecondaryNav";
 
 /** ===== Utilities and constants ===== */
 const initialComposerStatus = { loading: false, error: "", message: "" };
@@ -158,8 +159,8 @@ export default function CourseFeedPage() {
   const courseReadOnly = Boolean(headerCourse?.read_only);
   const courseEndDate = headerCourse?.end_date || null;
   const pageTitle = headerCourse
-    ? `${headerCourse.course_code} · ${headerCourse.name}`
-    : "Course Dynamics";
+    ? `${headerCourse.course_code} · ${headerCourse.name} · Community`
+    : "Course Community";
 
   // Subtitle excludes roles; only term/end date plus filters
   const subtitleParts = [];
@@ -369,7 +370,7 @@ export default function CourseFeedPage() {
 
   const handleFilterAll = useCallback(() => {
     setLeftFilter({ type: "all" });
-    navigate(`/courses/${courseId}`, { replace: true });
+    navigate(`/courses/${courseId}/community`, { replace: true });
     setMobileFilterOpen(false);
   }, [courseId, navigate]);
 
@@ -1322,6 +1323,7 @@ export default function CourseFeedPage() {
 
         {/* Right column */}
         <main className="flex-1 space-y-4 rounded-2xl border border-brand-100 bg-white/90 p-4 pb-24 shadow-lg shadow-brand-100/80 sm:space-y-5 sm:p-5 lg:space-y-6 lg:rounded-3xl lg:p-6 lg:pb-6 lg:shadow-xl lg:shadow-brand-100">
+          <CourseSecondaryNav courseId={courseId} />
           <div className="space-y-2 lg:hidden">
             <h1 className="break-words text-base font-bold text-slate-900">
               {pageTitle}

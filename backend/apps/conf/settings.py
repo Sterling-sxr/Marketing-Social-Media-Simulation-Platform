@@ -57,17 +57,32 @@ TEMPLATES = [
 WSGI_APPLICATION = "apps.conf.wsgi.application"
 ASGI_APPLICATION = "apps.conf.asgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("PG_DB"),
-        "USER": os.environ.get("PG_USER"),
-        "PASSWORD": os.environ.get("PG_PASSWORD"),
-        "HOST": os.environ.get("PG_HOST"),
-        "PORT": os.environ.get("PG_PORT"),
-        "CONN_MAX_AGE": 600,
+_pg_db = os.environ.get("PG_DB")
+_pg_user = os.environ.get("PG_USER")
+_pg_password = os.environ.get("PG_PASSWORD")
+_pg_host = os.environ.get("PG_HOST")
+_pg_port = os.environ.get("PG_PORT")
+
+if _pg_db and _pg_user and _pg_password and _pg_host and _pg_port:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": _pg_db,
+            "USER": _pg_user,
+            "PASSWORD": _pg_password,
+            "HOST": _pg_host,
+            "PORT": _pg_port,
+            "CONN_MAX_AGE": 600,
+        }
     }
-}
+else:
+    # CI (and local dev) may not provide Postgres env vars. Fall back to SQLite so tests can run.
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": str(BASE_DIR / "db.sqlite3"),
+        }
+    }
 
 CACHES = {
     "default": {
