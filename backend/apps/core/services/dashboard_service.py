@@ -104,7 +104,64 @@ def _apply_source_status(
     next_payload["source_kind"] = source_kind
     next_payload["source_status"] = source_status
     next_payload["refreshing"] = source_kind == "fallback_placeholder"
+    next_payload["stale"] = source_status == "stale"
     return next_payload
+
+
+def _mark_snapshot_data_stale(data: dict[str, Any] | None) -> dict[str, Any]:
+    payload = dict(data or {})
+    payload["stale"] = True
+    payload.pop("source_kind", None)
+    payload.pop("source_status", None)
+    return payload
+
+
+def _mark_queryset_stale(queryset) -> int:
+    updated = 0
+    for snapshot in queryset:
+        next_data = _mark_snapshot_data_stale(getattr(snapshot, "data", None))
+        if next_data == getattr(snapshot, "data", None):
+            continue
+        snapshot.data = next_data
+        snapshot.save(update_fields=["data"])
+        updated += 1
+    return updated
+
+
+def invalidate_course_dashboard_snapshots(
+    *,
+    course_id: int,
+    hashtags: list[str] | tuple[str, ...] | set[str] | None = None,
+    student_ids: list[int] | tuple[int, ...] | set[int] | None = None,
+    include_all_hashtags: bool = False,
+    include_all_students: bool = False,
+) -> None:
+    course_queryset = CourseDashboardSnapshot.objects.filter(course_id=course_id)
+    _mark_queryset_stale(course_queryset)
+
+    normalized_hashtags = {
+        _normalize_hashtag(tag)
+        for tag in (hashtags or [])
+        if _normalize_hashtag(tag)
+    }
+    if include_all_hashtags:
+        hashtag_queryset = CourseHashtagDashboardSnapshot.objects.filter(course_id=course_id)
+        _mark_queryset_stale(hashtag_queryset)
+    elif normalized_hashtags:
+        hashtag_queryset = CourseHashtagDashboardSnapshot.objects.filter(course_id=course_id, hashtag__in=normalized_hashtags)
+        _mark_queryset_stale(hashtag_queryset)
+
+    normalized_student_ids = {
+        int(student_id)
+        for student_id in (student_ids or [])
+        if student_id is not None
+    }
+    if include_all_students:
+        student_queryset = CourseStudentDashboardSnapshot.objects.filter(course_id=course_id)
+        _mark_queryset_stale(student_queryset)
+    elif normalized_student_ids:
+        student_queryset = CourseStudentDashboardSnapshot.objects.filter(course_id=course_id, student_id__in=normalized_student_ids)
+        _mark_queryset_stale(student_queryset)
 
 
 def _get_sentiment_pipeline():
@@ -628,10 +685,11 @@ def _get_course_snapshot_payload(course) -> dict[str, Any] | None:
         return None
     payload = dict(snapshot.data)
     payload["calculated_at"] = snapshot.calculated_at.isoformat()
+    is_stale = bool(payload.get("stale"))
     return _apply_source_status(
         payload,
         source_kind="backend_snapshot",
-        source_status="fresh" if _is_snapshot_fresh(snapshot) else "stale",
+        source_status="fresh" if not is_stale and _is_snapshot_fresh(snapshot) else "stale",
     )
 
 
@@ -662,10 +720,11 @@ def _get_hashtag_snapshot_payload(course, normalized_hashtag: str) -> dict[str, 
         return None
     payload = dict(snapshot.data)
     payload["calculated_at"] = snapshot.calculated_at.isoformat()
+    is_stale = bool(payload.get("stale"))
     return _apply_source_status(
         payload,
         source_kind="backend_snapshot",
-        source_status="fresh" if _is_snapshot_fresh(snapshot) else "stale",
+        source_status="fresh" if not is_stale and _is_snapshot_fresh(snapshot) else "stale",
     )
 
 
@@ -715,10 +774,11 @@ def _get_student_snapshot_payload(course, student_id: int) -> dict[str, Any] | N
         return None
     payload = dict(snapshot.data)
     payload["calculated_at"] = snapshot.calculated_at.isoformat()
+    is_stale = bool(payload.get("stale"))
     return _apply_source_status(
         payload,
         source_kind="backend_snapshot",
-        source_status="fresh" if _is_snapshot_fresh(snapshot) else "stale",
+        source_status="fresh" if not is_stale and _is_snapshot_fresh(snapshot) else "stale",
     )
 
 

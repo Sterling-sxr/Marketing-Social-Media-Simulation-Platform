@@ -41,7 +41,10 @@ from ..repositories import (
 from ..services.notification_service import create_notification
 from ..utils import asset_to_dict
 from .ai_user_reaction_service import evaluate_persona_prompt
-from .dashboard_service import classify_comment_sentiment
+from .dashboard_service import (
+    classify_comment_sentiment,
+    invalidate_course_dashboard_snapshots,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -142,6 +145,19 @@ def _extract_hashtags(content: str, provided: Sequence[str] | None = None) -> li
         return list(dict.fromkeys([item.strip().lstrip("#").lower() for item in provided if item and item.strip()]))
     pattern = re.compile(r"#([^\s@#]+)")
     return list(dict.fromkeys(match.lower() for match in pattern.findall(content or "")))
+
+
+def _invalidate_post_related_dashboards(
+    *,
+    course_id: int,
+    author_id: int | None,
+    hashtags: Sequence[str] | None = None,
+) -> None:
+    invalidate_course_dashboard_snapshots(
+        course_id=course_id,
+        hashtags=list(hashtags or []),
+        student_ids=[author_id] if author_id else None,
+    )
 
 
 def _normalize_insert_candidate(user) -> str:
@@ -524,6 +540,13 @@ def create_course_post_with_meta(
             logger.exception("Failed to schedule AI reactions for post=%s", post.id)
 
     transaction.on_commit(_schedule_post_tasks)
+    transaction.on_commit(
+        lambda: _invalidate_post_related_dashboards(
+            course_id=course_id,
+            author_id=user.id,
+            hashtags=extracted_hashtags,
+        )
+    )
 
     return _serialize_posts(
         [post],
@@ -650,6 +673,15 @@ def like_course_post(*, user, course_id: int, post_id: int) -> dict[str, Any]:
         except Exception:  # noqa: BLE001 - avoid breaking like flow on notification errors
             pass
 
+    if created:
+        transaction.on_commit(
+            lambda: _invalidate_post_related_dashboards(
+                course_id=course_id,
+                author_id=post.author_id,
+                hashtags=post.hashtags or [],
+            )
+        )
+
     like_count = post.likes.count()
     return _serialize_posts(
         [post],
@@ -680,6 +712,13 @@ def unlike_course_post(*, user, course_id: int, post_id: int) -> dict[str, Any]:
         raise CoursePostNotFoundError("The post does not exist in this course.") from exc
 
     CoursePostLike.objects.filter(post=post, user=user).delete()
+    transaction.on_commit(
+        lambda: _invalidate_post_related_dashboards(
+            course_id=course_id,
+            author_id=post.author_id,
+            hashtags=post.hashtags or [],
+        )
+    )
 
     like_count = post.likes.count()
     return _serialize_posts(
@@ -718,6 +757,13 @@ def add_comment_to_post(
         post=post,
         user=user,
         content=sanitized,
+    )
+    transaction.on_commit(
+        lambda: _invalidate_post_related_dashboards(
+            course_id=course_id,
+            author_id=post.author_id,
+            hashtags=post.hashtags or [],
+        )
     )
 
     if not suppress_notifications and post.author_id != getattr(user, "id", None):
@@ -795,6 +841,7 @@ def update_course_post(
         raise ValueError("Post content cannot be empty.")
 
     extracted_mentions = _extract_mentions(sanitized, mentions)
+    previous_hashtags = list(post.hashtags or [])
     mention_entity_map: dict[str, int] = {}
     if mention_entities:
         for entity in mention_entities:
@@ -847,6 +894,13 @@ def update_course_post(
     like_count = CoursePostLike.objects.filter(post_id=post.id).count()
     liked = CoursePostLike.objects.filter(post_id=post.id, user_id=user.id).exists()
     liked_ids = {post.id} if liked else set()
+    transaction.on_commit(
+        lambda: _invalidate_post_related_dashboards(
+            course_id=course_id,
+            author_id=post.author_id,
+            hashtags=[*previous_hashtags, *extracted_hashtags],
+        )
+    )
     return _serialize_posts(
         [post],
         liked_ids=liked_ids,
@@ -869,7 +923,16 @@ def delete_course_post(*, user, course_id: int, post_id: int) -> None:
     if not _can_delete_post_for_user(user, post):
         raise CourseAccessError("You do not have permission to delete this post.")
 
+    affected_hashtags = list(post.hashtags or [])
+    affected_author_id = post.author_id
     post.delete()
+    transaction.on_commit(
+        lambda: _invalidate_post_related_dashboards(
+            course_id=course_id,
+            author_id=affected_author_id,
+            hashtags=affected_hashtags,
+        )
+    )
 
 
 def get_course_post_detail(*, user, course_id: int, post_id: int) -> dict[str, Any]:

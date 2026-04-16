@@ -19,6 +19,7 @@ from ..repositories import (
     CourseRepository,
     create_user,
 )
+from .dashboard_service import invalidate_course_dashboard_snapshots
 from .profile_service import PROFILE_OPTIONS, normalize_ai_profile_payload
 
 AI_USER_NUMERIC_FIELDS = ("social_value", "sociability", "openness")
@@ -90,6 +91,10 @@ def _ensure_identity(ai_user: CourseAIUser, course) -> None:
             user.save(update_fields=["first_name"])
 
     CourseMemberRepository.get_or_create_member(course.id, user.id, role="student")
+    invalidate_course_dashboard_snapshots(
+        course_id=course.id,
+        student_ids=[user.id],
+    )
     CourseAIUserIdentityRepository.create(ai_user=ai_user, user=user)
 
 
@@ -120,6 +125,10 @@ def _delete_identity(ai_user: CourseAIUser, course_id: int) -> None:
     user = identity.user
     if user:
         CourseMemberRepository.model.objects.filter(course_id=course_id, user_id=user.id).delete()
+        invalidate_course_dashboard_snapshots(
+            course_id=course_id,
+            student_ids=[user.id],
+        )
         user.delete()
     else:
         CourseAIUserIdentityRepository.delete_by_id(identity.id)

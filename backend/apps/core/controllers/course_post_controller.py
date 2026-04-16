@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 
 from django.http import HttpRequest, JsonResponse
-from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
 from ..services import (
@@ -11,8 +10,8 @@ from ..services import (
     CourseAccessError,
     CoursePostNotFoundError,
     CourseReadOnlyError,
+    add_comment_to_post,
     create_course_post_with_meta,
-    create_notification,
     delete_course_post,
     get_course_post_analytics,
     get_course_post_detail,
@@ -142,55 +141,22 @@ def course_post_comments(request: HttpRequest, course_id: int, post_id: int) -> 
         content = (payload.get("content") or "").strip()
         if not content:
             return JsonResponse({"error": "Comment content cannot be empty."}, status=400)
-        from ..repositories import CoursePost, CoursePostComment
-
         try:
-            post = CoursePost.objects.select_related("course").get(id=post_id, course_id=course_id)
-        except CoursePost.DoesNotExist:
+            item = add_comment_to_post(
+                user=request.user,
+                course_id=course_id,
+                post_id=post_id,
+                content=content,
+            )
+        except CourseAccessError as exc:
+            return JsonResponse({"error": str(exc)}, status=403)
+        except CourseReadOnlyError as exc:
+            return JsonResponse({"error": str(exc)}, status=403)
+        except CoursePostNotFoundError:
             return JsonResponse({"error": "Post not found."}, status=404)
-        course = post.course
-        end_date = getattr(course, "end_date", None)
-        if end_date and timezone.localdate() > end_date:
-            return JsonResponse({"error": "This course has ended; posts are read-only."}, status=403)
-        comment = CoursePostComment.objects.create(post=post, user=request.user, content=content)
-
-        # Create notification to post author (except self-comment)
-        if post.author_id != request.user.id:
-            try:
-                recipient = (post.author.username or "").strip() or (post.author.email or "").strip() or str(post.author_id)
-                full_name = (request.user.get_full_name() or "").strip()
-                if full_name:
-                    actor_name = full_name
-                elif request.user.first_name or request.user.last_name:
-                    actor_name = f"{request.user.first_name} {request.user.last_name}".strip()
-                else:
-                    actor_name = request.user.username or request.user.email or f"User {request.user.pk}"
-                subject = f"{actor_name} commented on your post"
-                link = f"/courses/{course_id}/posts/{post_id}"
-                create_notification(
-                    recipient=recipient,
-                    actor=actor_name,
-                    action="comment",
-                    subject=subject,
-                    body=content[:140],
-                    link=link,
-                    metadata={"course_id": course_id, "post_id": post_id, "comment_id": comment.id},
-                )
-            except Exception:
-                pass
-        return JsonResponse(
-            {
-                "id": comment.id,
-                "user": {
-                    "id": request.user.id,
-                    "name": getattr(request.user, "username", "") or getattr(request.user, "email", ""),
-                    "avatar_url": getattr(request.user, "avatar_url", ""),
-                },
-                "content": comment.content,
-                "created_at": comment.created_at.isoformat(),
-            },
-            status=201,
-        )
+        except ValueError as exc:
+            return JsonResponse({"error": str(exc)}, status=400)
+        return JsonResponse(item, status=201)
 
     if request.method == "OPTIONS":
         response = JsonResponse({})

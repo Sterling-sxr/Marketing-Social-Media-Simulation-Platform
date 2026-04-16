@@ -15,6 +15,7 @@ from ..repositories import (
     CourseProfileRepository,
     CourseRepository,
 )
+from .dashboard_service import invalidate_course_dashboard_snapshots
 
 
 def list_courses_for_user(user) -> dict[str, Any]:
@@ -86,6 +87,10 @@ def join_course_by_code(*, user, join_code: str):
 
     # Create membership via repository
     membership, _created = CourseMemberRepository.get_or_create_member(course.id, user.id, role="student")
+    invalidate_course_dashboard_snapshots(
+        course_id=course.id,
+        student_ids=[user.id],
+    )
     return membership
 
 
@@ -245,6 +250,11 @@ def update_course(
     course.start_date = start_dt
     course.end_date = end_dt
     course.save(update_fields=["course_code", "name", "term", "start_date", "end_date", "updated_at"])
+    invalidate_course_dashboard_snapshots(
+        course_id=course.id,
+        include_all_hashtags=True,
+        include_all_students=True,
+    )
 
     return {
         "id": course.id,
