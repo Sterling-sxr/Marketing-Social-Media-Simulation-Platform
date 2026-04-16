@@ -4,7 +4,6 @@ import { getJson } from "../lib/api";
 import { useApp } from "../context/AppContext";
 import AuthenticatedShell from "./components/AuthenticatedShell";
 import Feedback from "./components/Feedback";
-import CourseSecondaryNav from "./components/CourseSecondaryNav";
 
 export default function CourseMembersPage() {
   const { courseId: courseIdParam } = useParams();
@@ -44,7 +43,6 @@ export default function CourseMembersPage() {
 
   return (
     <AuthenticatedShell title="Course Members" subtitle="Member roster and participation">
-      <CourseSecondaryNav courseId={courseId} />
       {status.error ? <Feedback error={status.error} /> : null}
       {status.loading ? <p className="text-sm text-slate-500">Loading members...</p> : null}
 

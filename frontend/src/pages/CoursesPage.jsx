@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import AuthenticatedShell from "./components/AuthenticatedShell";
 import Feedback from "./components/Feedback";
+import { isTeacher } from "../lib/access";
 
 // Centralized badge renderer for TEACHER / STUDENT
 function RoleBadge({ courseRole, isStaff, isSuperuser }) {
@@ -57,7 +58,12 @@ export default function CoursesPage() {
 
   const handleEnterCourse = (course) => {
     if (!course) return;
-    if (course.profile_completed) {
+    const roleFromCourse = (course?.role || "").toString().toLowerCase();
+    const isCourseTeacher =
+      roleFromCourse === "teacher" || roleFromCourse === "instructor";
+    // Teacher should be able to browse the course community even if
+    // course persona/profile isn't completed yet.
+    if (course.profile_completed || isTeacher(authUser) || isCourseTeacher) {
       navigate(`/courses/${course.id}`);
     } else {
       navigate(`/courses/${course.id}/profile`);

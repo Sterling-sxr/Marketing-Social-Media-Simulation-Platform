@@ -4,7 +4,6 @@ import { getJson } from "../lib/api";
 import { useApp } from "../context/AppContext";
 import AuthenticatedShell from "./components/AuthenticatedShell";
 import Feedback from "./components/Feedback";
-import CourseSecondaryNav from "./components/CourseSecondaryNav";
 
 export default function CourseOverviewPage() {
   const { courseId: courseIdParam } = useParams();
@@ -65,8 +64,6 @@ export default function CourseOverviewPage() {
 
   return (
     <AuthenticatedShell title="Course Overview" subtitle={subtitle}>
-      <CourseSecondaryNav courseId={courseId} />
-
       {status.error ? <Feedback error={status.error} /> : null}
       {status.loading ? (
         <p className="text-sm text-slate-500">Loading course overview...</p>

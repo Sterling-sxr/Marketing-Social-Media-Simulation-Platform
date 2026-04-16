@@ -110,8 +110,12 @@ def notifications_endpoint(request: HttpRequest) -> JsonResponse:
     if not user:
         return JsonResponse({"error": "Specify a user via `user` query parameter or X-User header."}, status=400)
 
+    # Optional: scope notifications to a course.
+    # We rely on metadata.course_id (stored as JSONField) from notification creators.
+    course_id = request.GET.get("course_id") or request.GET.get("courseId")
+
     if request.method == "GET":
-        notifications, unread = list_notifications(recipient=user)
+        notifications, unread = list_notifications(recipient=user, course_id=course_id)
         items = [notification_to_dict(item) for item in notifications]
         return JsonResponse({"items": items, "unread": unread})
 
@@ -125,11 +129,11 @@ def notifications_endpoint(request: HttpRequest) -> JsonResponse:
         mark_all_flag = bool(payload.get("all"))
 
         if mark_all_flag:
-            updated = mark_all_as_read(recipient=user)
+            updated = mark_all_as_read(recipient=user, course_id=course_id)
         else:
             if not isinstance(ids, list):
                 return JsonResponse({"error": "`ids` must be a list."}, status=400)
-            updated = mark_as_read(recipient=user, ids=ids)
+            updated = mark_as_read(recipient=user, ids=ids, course_id=course_id)
         return JsonResponse({"updated": updated})
 
     return JsonResponse({"error": "Method not allowed"}, status=405)

@@ -19,6 +19,7 @@ import RegisterSuccessPage from "./pages/RegisterSuccessPage";
 import CourseFeedPage from "./pages/CourseFeedPage";
 import UserProfilePage from "./pages/UserProfilePage";
 import NotificationsPage from "./pages/NotificationsPage";
+import CourseMessagesPage from "./pages/CourseMessagesPage";
 import PostDetailPage from "./pages/PostDetailPage";
 import PostAnalyticsPage from "./pages/PostAnalyticsPage";
 import DashboardPage from "./pages/admin/DashboardPage";
@@ -100,6 +101,10 @@ export default function App() {
           <Route path="/search" element={<SearchPage />} />
           <Route path="/courses/:courseId" element={<CourseOverviewPage />} />
           <Route path="/courses/:courseId/community" element={<CourseFeedPage />} />
+          <Route
+            path="/courses/:courseId/messages"
+            element={<CourseMessagesPage />}
+          />
           <Route
             path="/courses/:courseId/materials"
             element={<CourseMaterialsPage />}

@@ -1,7 +1,6 @@
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import AuthenticatedShell from "./components/AuthenticatedShell";
-import CourseSecondaryNav from "./components/CourseSecondaryNav";
 
 export default function CourseSettingsPage() {
   const { courseId: courseIdParam } = useParams();
@@ -16,7 +15,6 @@ export default function CourseSettingsPage() {
 
   return (
     <AuthenticatedShell title="Course Settings" subtitle="Configure this course">
-      <CourseSecondaryNav courseId={courseId} />
       <section className="rounded-2xl border border-brand-100 bg-white p-4 shadow-sm">
         <h2 className="text-sm font-semibold text-slate-800">Settings scope</h2>
         <p className="mt-2 text-sm text-slate-600">

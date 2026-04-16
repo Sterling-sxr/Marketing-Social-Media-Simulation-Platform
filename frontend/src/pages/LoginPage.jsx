@@ -22,8 +22,12 @@ export default function LoginPage() {
     e.preventDefault();
     setStatus({ loading: true, message: "", error: "" });
     try {
-      await login(email, password);
+      const result = await login(email, password);
       setStatus({ loading: false, message: "Login Success!", error: "" });
+      if (result?.needsProfile) {
+        navigate("/onboarding/profile", { replace: true });
+        return;
+      }
       navigate("/studenthome");
     } catch (error) {
       setStatus({ loading: false, message: "", error: error.message });

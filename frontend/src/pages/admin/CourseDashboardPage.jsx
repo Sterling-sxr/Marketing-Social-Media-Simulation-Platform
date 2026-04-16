@@ -4,7 +4,6 @@ import { useApp } from "../../context/AppContext";
 import { getJson } from "../../lib/api";
 import AuthenticatedShell from "../components/AuthenticatedShell";
 import Feedback from "../components/Feedback";
-import CourseSecondaryNav from "../components/CourseSecondaryNav";
 import { isTeacher } from "../../lib/access";
 
 const SUMMARY_TILES = [
@@ -385,7 +384,6 @@ export default function CourseDashboardPage() {
       }
       subtitle={subtitle}
     >
-      <CourseSecondaryNav courseId={courseId} />
       {/* Top action buttons styled consistently */}
       <div className="flex items-center gap-2">
         <Btn variant="secondary" onClick={() => navigate(-1)}>

@@ -112,6 +112,35 @@ export default function AuthenticatedShell({
     if (links && links.length) return links;
     const isAdminUser = Boolean(authUser?.is_superuser || authUser?.is_staff);
     if (isAdminUser) {
+      // Teacher course analysis pages should keep the course-scoped sidebar
+      // (otherwise they'd fall into the generic Course Center / Dashboard sidebar).
+      const dashCourseMatch = location.pathname.match(/^\/dashboard\/courses\/(\d+)/);
+      if (dashCourseMatch?.[1]) {
+        const currentCourseId = dashCourseMatch[1];
+        return [
+          {
+            to: `/courses/${currentCourseId}/community`,
+            label: "Community",
+            icon: <FileText className="h-5 w-5" />,
+          },
+          {
+            to: `/courses/${currentCourseId}/materials`,
+            label: "Materials",
+            icon: <BookOpen className="h-5 w-5" />,
+          },
+          {
+            to: `/dashboard/courses/${currentCourseId}`,
+            label: "Analyze",
+            icon: <BarChart3 className="h-5 w-5" />,
+          },
+          {
+            to: `/courses/${currentCourseId}/messages`,
+            label: "Messages",
+            icon: <Bell className="h-5 w-5" />,
+          },
+        ];
+      }
+
       if (
         location.pathname === "/courses" ||
         location.pathname === "/courses/manage" ||
@@ -144,8 +173,13 @@ export default function AuthenticatedShell({
         return [
           {
             to: `/courses/${currentCourseId}/community`,
-            label: "Posts",
+            label: "Community",
             icon: <FileText className="h-5 w-5" />,
+          },
+          {
+            to: `/courses/${currentCourseId}/materials`,
+            label: "Materials",
+            icon: <BookOpen className="h-5 w-5" />,
           },
           {
             to: `/dashboard/courses/${currentCourseId}`,
@@ -153,7 +187,7 @@ export default function AuthenticatedShell({
             icon: <BarChart3 className="h-5 w-5" />,
           },
           {
-            to: "/notifications",
+            to: `/courses/${currentCourseId}/messages`,
             label: "Messages",
             icon: <Bell className="h-5 w-5" />,
           },
@@ -410,6 +444,8 @@ export default function AuthenticatedShell({
           </div>
           {sidebarLinks.map((link) => {
             const active = isActiveLink(link.to, location);
+            // `unread` is global notifications unread count, so only show badge
+            // for the global `/notifications` page.
             const isMessages = link.to === "/notifications";
             return (
               <NavLink

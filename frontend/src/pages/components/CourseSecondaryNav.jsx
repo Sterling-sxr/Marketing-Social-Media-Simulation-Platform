@@ -4,9 +4,12 @@ function classNames(...values) {
   return values.filter(Boolean).join(" ");
 }
 
-export default function CourseSecondaryNav({ courseId }) {
+export default function CourseSecondaryNav({ courseId, showOverview = true }) {
+  // Some pages (e.g. Materials) should hide Overview to reduce navigation noise.
   const links = [
-    { to: `/courses/${courseId}`, label: "Overview", end: true },
+    ...(showOverview === false
+      ? []
+      : [{ to: `/courses/${courseId}`, label: "Overview", end: true }]),
     { to: `/courses/${courseId}/community`, label: "Community" },
     { to: `/courses/${courseId}/materials`, label: "Materials" },
     { to: `/courses/${courseId}/ai-users`, label: "AI Users" },
