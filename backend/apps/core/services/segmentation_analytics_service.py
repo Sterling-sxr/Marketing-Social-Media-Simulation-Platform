@@ -320,7 +320,14 @@ def _post_segmentation_summary(post: CoursePost, aggregated: dict[str, Any], len
     }
 
 
-def _comparison_payload(*, post_id: int, compare_post_id: int, base_segments: list[dict[str, Any]], compare_segments: list[dict[str, Any]], compare_post_label: str) -> dict[str, Any]:
+def _comparison_payload(
+    *,
+    post_id: int,
+    compare_post_id: int,
+    base_segments: list[dict[str, Any]],
+    compare_segments: list[dict[str, Any]],
+    compare_post_label: str,
+) -> dict[str, Any]:
     base_map = {segment["key"]: segment for segment in base_segments}
     compare_map = {segment["key"]: segment for segment in compare_segments}
     merged_keys = sorted(set(base_map) | set(compare_map))

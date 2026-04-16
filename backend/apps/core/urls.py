@@ -2,6 +2,7 @@ from django.urls import path
 
 from .controllers import (
     add_search_history,
+    admin_course_post_segmentation,
     ai_analyze,
     ai_tutor,
     check_auth_status,
@@ -58,7 +59,6 @@ from .controllers import (
     update_course_view,
     update_display_name,
     upload_avatar,
-    admin_course_post_segmentation,
     user_posts,
     user_posts_analytics,
     verify_registration_code_view,
@@ -159,12 +159,36 @@ urlpatterns = [
         course_ai_users_import,
         name="course-ai-users-import",
     ),
-    path("courses/<int:course_id>/ai-users/<int:ai_user_id>/", course_ai_user_detail, name="course-ai-user-detail"),
-    path("courses/<int:course_id>/posts/<int:post_id>/", course_post_detail, name="course-post-detail"),
-    path("courses/<int:course_id>/posts/<int:post_id>/analytics/", course_post_analytics, name="course-post-analytics"),
-    path("courses/<int:course_id>/posts/suggestions/", course_post_suggestions, name="course-post-suggestions"),
-    path("courses/<int:course_id>/posts/<int:post_id>/like/", course_post_like, name="course-post-like"),
-    path("courses/<int:course_id>/posts/<int:post_id>/comments/", course_post_comments, name="course-post-comments"),
+    path(
+        "courses/<int:course_id>/ai-users/<int:ai_user_id>/",
+        course_ai_user_detail,
+        name="course-ai-user-detail",
+    ),
+    path(
+        "courses/<int:course_id>/posts/<int:post_id>/",
+        course_post_detail,
+        name="course-post-detail",
+    ),
+    path(
+        "courses/<int:course_id>/posts/<int:post_id>/analytics/",
+        course_post_analytics,
+        name="course-post-analytics",
+    ),
+    path(
+        "courses/<int:course_id>/posts/suggestions/",
+        course_post_suggestions,
+        name="course-post-suggestions",
+    ),
+    path(
+        "courses/<int:course_id>/posts/<int:post_id>/like/",
+        course_post_like,
+        name="course-post-like",
+    ),
+    path(
+        "courses/<int:course_id>/posts/<int:post_id>/comments/",
+        course_post_comments,
+        name="course-post-comments",
+    ),
     path("messages/", messages_endpoint, name="messages"),
     path("messages/send-email", send_demo_email, name="send-demo-email"),
     path("messages/files/", files_endpoint, name="files"),

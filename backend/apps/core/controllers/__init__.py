@@ -21,11 +21,11 @@ from .auth_controller import (
 )
 from .course_ai_user_controller import (
     course_ai_user_detail,
+    course_ai_users,
     course_ai_users_generate_commit,
     course_ai_users_generate_preview,
     course_ai_users_guided_commit,
     course_ai_users_guided_preview,
-    course_ai_users,
     course_ai_users_import,
 )
 from .course_controller import (
