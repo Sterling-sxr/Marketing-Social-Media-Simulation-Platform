@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
-import { isTeacherLike } from "../../lib/authRole";
-import { fetchStudentDashboard } from "../../lib/teacherAnalytics";
+import { getJson } from "../../lib/api";
 import AuthenticatedShell from "../components/AuthenticatedShell";
 import Feedback from "../components/Feedback";
 
@@ -66,16 +65,16 @@ export default function CourseStudentDashboardPage() {
   const [data, setData] = useState(null);
   const [status, setStatus] = useState({ loading: true, error: "" });
 
-  const canManageAnalytics = useMemo(
-    () => Boolean(authUser && isTeacherLike(authUser)),
+  const isAdmin = useMemo(
+    () => Boolean(authUser && (authUser.is_superuser || authUser.is_staff)),
     [authUser]
   );
 
   const canView = useMemo(() => {
     if (!authUser) return false;
-    if (canManageAnalytics) return true;
+    if (isAdmin) return true;
     return Number(authUser.id) === studentId;
-  }, [authUser, canManageAnalytics, studentId]);
+  }, [authUser, isAdmin, studentId]);
 
   useEffect(() => {
     if (!authCheckComplete) return;
@@ -93,9 +92,9 @@ export default function CourseStudentDashboardPage() {
     }
 
     setStatus({ loading: true, error: "" });
-    fetchStudentDashboard(courseId, studentId)
+    getJson(`/api/admin/dashboard/courses/${courseId}/students/${studentId}/`)
       .then((payload) => {
-        setData(payload);
+        setData(payload.student || null);
         setStatus({ loading: false, error: "" });
       })
       .catch((error) => {
@@ -168,17 +167,12 @@ export default function CourseStudentDashboardPage() {
       {status.loading ? (
         <p className="text-sm text-slate-500">Loading student analytics...</p>
       ) : null}
-      {data?.meta?.sourceKind === "fallback" ? (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          This student view is currently using the fallback analytics contract.
-        </div>
-      ) : null}
 
       {data ? (
         <>
-          {data.meta?.calculatedAt ? (
+          {data.calculated_at ? (
             <p className="text-xs text-slate-500">
-              Generated at: {formatDate(data.meta.calculatedAt)}
+              Generated at: {formatDate(data.calculated_at)}
             </p>
           ) : null}
 

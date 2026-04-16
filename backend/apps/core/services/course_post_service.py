@@ -40,10 +40,7 @@ from ..repositories import (
 from ..services.notification_service import create_notification
 from ..utils import asset_to_dict
 from .ai_user_reaction_service import evaluate_persona_prompt
-from .dashboard_service import (
-    classify_comment_sentiment,
-    invalidate_post_related_snapshots,
-)
+from .dashboard_service import classify_comment_sentiment
 
 logger = logging.getLogger(__name__)
 
@@ -58,10 +55,6 @@ class CourseAccessError(PermissionError):
 
 class CoursePostNotFoundError(ValueError):
     """Class summary: CoursePostNotFoundError keeps related behavior together behind one clear interface."""
-
-
-class CourseCommentNotFoundError(ValueError):
-    """Raised when the requested comment does not exist within the course."""
 
 
 class CourseReadOnlyError(PermissionError):
@@ -144,24 +137,6 @@ def _can_delete_post_for_user(user, post) -> bool:
     return False
 
 
-def _can_edit_comment_for_user(user, comment) -> bool:
-    if not user or not comment:
-        return False
-    if getattr(comment, "user_id", None) == getattr(user, "id", None):
-        return True
-    return False
-
-
-def _can_delete_comment_for_user(user, comment) -> bool:
-    if not user or not comment:
-        return False
-    if getattr(comment, "user_id", None) == getattr(user, "id", None):
-        return True
-    if _user_is_admin(user):
-        return True
-    return False
-
-
 def _extract_mentions(content: str, provided: Sequence[str] | None = None) -> list[str]:
     if provided is not None:
         return list(dict.fromkeys([item.strip() for item in provided if item and item.strip()]))
@@ -178,19 +153,6 @@ def _extract_hashtags(content: str, provided: Sequence[str] | None = None) -> li
         )
     pattern = re.compile(r"#([^\s@#]+)")
     return list(dict.fromkeys(match.lower() for match in pattern.findall(content or "")))
-
-
-def _invalidate_post_related_dashboards(
-    *,
-    course_id: int,
-    author_id: int | None,
-    hashtags: Sequence[str] | None = None,
-) -> None:
-    invalidate_post_related_snapshots(
-        course_id=course_id,
-        hashtags=list(hashtags or []),
-        author_id=author_id,
-    )
 
 
 def _normalize_insert_candidate(user) -> str:
@@ -584,13 +546,6 @@ def create_course_post_with_meta(
             logger.exception("Failed to schedule AI reactions for post=%s", post.id)
 
     transaction.on_commit(_schedule_post_tasks)
-    transaction.on_commit(
-        lambda: _invalidate_post_related_dashboards(
-            course_id=course_id,
-            author_id=user.id,
-            hashtags=extracted_hashtags,
-        )
-    )
 
     return _serialize_posts(
         [post],
@@ -719,15 +674,6 @@ def like_course_post(*, user, course_id: int, post_id: int) -> dict[str, Any]:
         except Exception:  # noqa: BLE001 - avoid breaking like flow on notification errors
             pass
 
-    if created:
-        transaction.on_commit(
-            lambda: _invalidate_post_related_dashboards(
-                course_id=course_id,
-                author_id=post.author_id,
-                hashtags=post.hashtags or [],
-            )
-        )
-
     like_count = post.likes.count()
     return _serialize_posts(
         [post],
@@ -757,15 +703,7 @@ def unlike_course_post(*, user, course_id: int, post_id: int) -> dict[str, Any]:
     except CoursePost.DoesNotExist as exc:
         raise CoursePostNotFoundError("The post does not exist in this course.") from exc
 
-    deleted_count = CoursePostLike.objects.filter(post=post, user=user).delete()[0]
-    if deleted_count:
-        transaction.on_commit(
-            lambda: _invalidate_post_related_dashboards(
-                course_id=course_id,
-                author_id=post.author_id,
-                hashtags=post.hashtags or [],
-            )
-        )
+    CoursePostLike.objects.filter(post=post, user=user).delete()
 
     like_count = post.likes.count()
     return _serialize_posts(
@@ -808,13 +746,6 @@ def add_comment_to_post(
         user=user,
         content=sanitized,
     )
-    transaction.on_commit(
-        lambda: _invalidate_post_related_dashboards(
-            course_id=course_id,
-            author_id=post.author_id,
-            hashtags=post.hashtags or [],
-        )
-    )
 
     if not suppress_notifications and post.author_id != getattr(user, "id", None):
         try:
@@ -849,91 +780,6 @@ def add_comment_to_post(
             "username": getattr(user, "username", ""),
         },
     }
-
-
-def update_comment_on_post(
-    *,
-    user,
-    course_id: int,
-    post_id: int,
-    comment_id: int,
-    content: str,
-) -> dict[str, Any]:
-    course = _get_course(course_id)
-    _ensure_membership(course, user)
-    if _course_is_read_only(course) and not _user_is_admin(user):
-        raise CourseReadOnlyError("This course has ended; posts are read-only.")
-
-    sanitized = (content or "").strip()
-    if not sanitized:
-        raise ValueError("Comment content cannot be empty.")
-
-    try:
-        comment = (
-            CoursePostComment.objects.select_related("post", "post__course", "user")
-            .get(id=comment_id, post_id=post_id, post__course_id=course_id)
-        )
-    except CoursePostComment.DoesNotExist as exc:
-        raise CourseCommentNotFoundError("The comment does not exist in this course.") from exc
-
-    if not _can_edit_comment_for_user(user, comment):
-        raise CourseAccessError("You do not have permission to edit this comment.")
-
-    comment.content = sanitized
-    comment.save(update_fields=["content"])
-    transaction.on_commit(
-        lambda: _invalidate_post_related_dashboards(
-            course_id=course_id,
-            author_id=comment.post.author_id,
-            hashtags=comment.post.hashtags or [],
-        )
-    )
-
-    return {
-        "id": comment.id,
-        "content": comment.content,
-        "created_at": comment.created_at.isoformat(),
-        "user": {
-            "id": comment.user_id,
-            "name": _display_name(comment.user),
-            "username": getattr(comment.user, "username", ""),
-        },
-    }
-
-
-def delete_comment_from_post(
-    *,
-    user,
-    course_id: int,
-    post_id: int,
-    comment_id: int,
-) -> None:
-    course = _get_course(course_id)
-    _ensure_membership(course, user)
-    if _course_is_read_only(course) and not _user_is_admin(user):
-        raise CourseReadOnlyError("This course has ended; posts are read-only.")
-
-    try:
-        comment = (
-            CoursePostComment.objects.select_related("post")
-            .get(id=comment_id, post_id=post_id, post__course_id=course_id)
-        )
-    except CoursePostComment.DoesNotExist as exc:
-        raise CourseCommentNotFoundError("The comment does not exist in this course.") from exc
-
-    if not _can_delete_comment_for_user(user, comment):
-        raise CourseAccessError("You do not have permission to delete this comment.")
-
-    affected_author_id = comment.post.author_id
-    affected_hashtags = list(comment.post.hashtags or [])
-    comment.delete()
-    transaction.on_commit(
-        lambda: _invalidate_post_related_dashboards(
-            course_id=course_id,
-            author_id=affected_author_id,
-            hashtags=affected_hashtags,
-        )
-    )
 
 
 def update_course_post(
@@ -980,7 +826,6 @@ def update_course_post(
         raise ValueError("Post content cannot be empty.")
 
     extracted_mentions = _extract_mentions(sanitized, mentions)
-    previous_hashtags = list(post.hashtags or [])
     mention_entity_map: dict[str, int] = {}
     if mention_entities:
         for entity in mention_entities:
@@ -1037,13 +882,6 @@ def update_course_post(
     like_count = CoursePostLike.objects.filter(post_id=post.id).count()
     liked = CoursePostLike.objects.filter(post_id=post.id, user_id=user.id).exists()
     liked_ids = {post.id} if liked else set()
-    transaction.on_commit(
-        lambda: _invalidate_post_related_dashboards(
-            course_id=course_id,
-            author_id=post.author_id,
-            hashtags=[*previous_hashtags, *extracted_hashtags],
-        )
-    )
     return _serialize_posts(
         [post],
         liked_ids=liked_ids,
@@ -1066,16 +904,7 @@ def delete_course_post(*, user, course_id: int, post_id: int) -> None:
     if not _can_delete_post_for_user(user, post):
         raise CourseAccessError("You do not have permission to delete this post.")
 
-    affected_hashtags = list(post.hashtags or [])
-    affected_author_id = post.author_id
     post.delete()
-    transaction.on_commit(
-        lambda: _invalidate_post_related_dashboards(
-            course_id=course_id,
-            author_id=affected_author_id,
-            hashtags=affected_hashtags,
-        )
-    )
 
 
 def get_course_post_detail(*, user, course_id: int, post_id: int) -> dict[str, Any]:
@@ -1693,15 +1522,11 @@ def _recency_weight(event_time, now) -> float:
 
 __all__ = [
     "CourseAccessError",
-    "CourseCommentNotFoundError",
     "CoursePostNotFoundError",
     "CourseReadOnlyError",
     "list_course_posts",
     "create_course_post",
     "create_course_post_with_meta",
-    "add_comment_to_post",
-    "update_comment_on_post",
-    "delete_comment_from_post",
     "update_course_post",
     "delete_course_post",
     "like_course_post",

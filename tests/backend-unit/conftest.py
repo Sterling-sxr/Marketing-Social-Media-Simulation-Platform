@@ -1,11 +1,8 @@
-import os
 import sys
 from pathlib import Path
 import types
 
 import pytest
-
-os.environ.setdefault("DJANGO_USE_SQLITE", "1")
 
 
 # Ensure "apps" package is importable by adding backend directory to sys.path

@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
-import { isTeacherLike } from "../../lib/authRole";
-import { fetchHashtagDashboard } from "../../lib/teacherAnalytics";
+import { getJson } from "../../lib/api";
 import AuthenticatedShell from "../components/AuthenticatedShell";
 import Feedback from "../components/Feedback";
 
@@ -66,8 +65,8 @@ export default function CourseHashtagDashboardPage() {
   const [data, setData] = useState(null);
   const [status, setStatus] = useState({ loading: true, error: "" });
 
-  const canManageAnalytics = useMemo(
-    () => Boolean(authUser && isTeacherLike(authUser)),
+  const isAdmin = useMemo(
+    () => Boolean(authUser && (authUser.is_superuser || authUser.is_staff)),
     [authUser]
   );
 
@@ -77,7 +76,7 @@ export default function CourseHashtagDashboardPage() {
       navigate("/login", { replace: true });
       return;
     }
-    if (!canManageAnalytics) {
+    if (!isAdmin) {
       navigate("/courses", { replace: true });
       return;
     }
@@ -87,9 +86,10 @@ export default function CourseHashtagDashboardPage() {
     }
 
     setStatus({ loading: true, error: "" });
-    fetchHashtagDashboard(courseId, hashtag)
+    const encoded = encodeURIComponent(hashtag);
+    getJson(`/api/admin/dashboard/courses/${courseId}/hashtags/${encoded}/`)
       .then((payload) => {
-        setData(payload);
+        setData(payload.hashtag || null);
         setStatus({ loading: false, error: "" });
       })
       .catch((error) => {
@@ -98,9 +98,9 @@ export default function CourseHashtagDashboardPage() {
           error: error.message || "Failed to load hashtag analytics.",
         });
       });
-  }, [authUser, authCheckComplete, canManageAnalytics, courseId, hashtag, navigate]);
+  }, [authUser, authCheckComplete, isAdmin, courseId, hashtag, navigate]);
 
-  if (authCheckComplete && authUser && !canManageAnalytics) {
+  if (authCheckComplete && authUser && !isAdmin) {
     return <Navigate to="/courses" replace />;
   }
 
@@ -148,17 +148,12 @@ export default function CourseHashtagDashboardPage() {
       {status.loading ? (
         <p className="text-sm text-slate-500">Loading hashtag analytics...</p>
       ) : null}
-      {data?.meta?.sourceKind === "fallback" ? (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          This hashtag view is currently using the fallback analytics contract.
-        </div>
-      ) : null}
 
       {data ? (
         <>
-          {data.meta?.calculatedAt ? (
+          {data.calculated_at ? (
             <p className="text-xs text-slate-500">
-              Generated at: {formatDate(data.meta.calculatedAt)}
+              Generated at: {formatDate(data.calculated_at)}
             </p>
           ) : null}
 

@@ -32,7 +32,6 @@ _scheduler_started = False
 _logger = logging.getLogger(__name__)
 _refreshing_users: set[int] = set()
 _refresh_users_lock = threading.Lock()
-_DEFAULT_SNAPSHOT_TTL_SECONDS = 900
 
 
 def _local_sentiment_enabled() -> bool:
@@ -46,149 +45,6 @@ def _ensure_admin(user) -> None:
 
 def _is_admin(user) -> bool:
     return bool(getattr(user, "is_superuser", False) or getattr(user, "is_staff", False))
-
-
-def _is_teacher_for_course(user, course_id: int) -> bool:
-    user_id = getattr(user, "id", None)
-    if user_id is None:
-        return False
-    return CourseMemberRepository.model.objects.filter(
-        course_id=course_id,
-        user_id=user_id,
-        role="teacher",
-    ).exists()
-
-
-def _get_accessible_course(user, course_id: int):
-    course = CourseRepository.model.objects.filter(id=course_id).first()
-    if not course:
-        return None
-
-    if _is_admin(user):
-        if course.created_by_id == user.id or getattr(user, "is_superuser", False):
-            return course
-        return None
-
-    if _is_teacher_for_course(user, course_id):
-        return course
-
-    return None
-
-
-def _get_snapshot_ttl_seconds() -> int:
-    raw_value = os.environ.get(
-        "DASHBOARD_SNAPSHOT_TTL_SECONDS",
-        str(_DEFAULT_SNAPSHOT_TTL_SECONDS),
-    )
-    try:
-        return max(int(raw_value), 0)
-    except (TypeError, ValueError):
-        return _DEFAULT_SNAPSHOT_TTL_SECONDS
-
-
-def _is_snapshot_fresh(snapshot) -> bool:
-    if not snapshot or not getattr(snapshot, "calculated_at", None):
-        return False
-    ttl_seconds = _get_snapshot_ttl_seconds()
-    if ttl_seconds == 0:
-        return False
-    age = timezone.now() - snapshot.calculated_at
-    return age <= timedelta(seconds=ttl_seconds)
-
-
-def _apply_source_status(
-    payload: dict[str, Any],
-    *,
-    source_kind: str,
-    source_status: str,
-) -> dict[str, Any]:
-    next_payload = dict(payload)
-    next_payload["source_kind"] = source_kind
-    next_payload["source_status"] = source_status
-    next_payload["refreshing"] = source_kind == "fallback_placeholder"
-    next_payload["stale"] = source_status == "stale"
-    return next_payload
-
-
-def _mark_snapshot_data_stale(data: dict[str, Any] | None) -> dict[str, Any]:
-    payload = dict(data or {})
-    payload["stale"] = True
-    payload.pop("source_kind", None)
-    payload.pop("source_status", None)
-    return payload
-
-
-def _mark_queryset_stale(queryset) -> int:
-    updated = 0
-    for snapshot in queryset:
-        next_data = _mark_snapshot_data_stale(getattr(snapshot, "data", None))
-        if next_data == getattr(snapshot, "data", None):
-            continue
-        snapshot.data = next_data
-        snapshot.save(update_fields=["data"])
-        updated += 1
-    return updated
-
-
-def invalidate_course_dashboard_snapshots(
-    *,
-    course_id: int,
-    hashtags: list[str] | tuple[str, ...] | set[str] | None = None,
-    student_ids: list[int] | tuple[int, ...] | set[int] | None = None,
-    include_all_hashtags: bool = False,
-    include_all_students: bool = False,
-) -> None:
-    course_queryset = CourseDashboardSnapshot.objects.filter(course_id=course_id)
-    _mark_queryset_stale(course_queryset)
-
-    normalized_hashtags = {
-        _normalize_hashtag(tag)
-        for tag in (hashtags or [])
-        if _normalize_hashtag(tag)
-    }
-    if include_all_hashtags:
-        hashtag_queryset = CourseHashtagDashboardSnapshot.objects.filter(course_id=course_id)
-        _mark_queryset_stale(hashtag_queryset)
-    elif normalized_hashtags:
-        hashtag_queryset = CourseHashtagDashboardSnapshot.objects.filter(course_id=course_id, hashtag__in=normalized_hashtags)
-        _mark_queryset_stale(hashtag_queryset)
-
-    normalized_student_ids = {
-        int(student_id)
-        for student_id in (student_ids or [])
-        if student_id is not None
-    }
-    if include_all_students:
-        student_queryset = CourseStudentDashboardSnapshot.objects.filter(course_id=course_id)
-        _mark_queryset_stale(student_queryset)
-    elif normalized_student_ids:
-        student_queryset = CourseStudentDashboardSnapshot.objects.filter(course_id=course_id, student_id__in=normalized_student_ids)
-        _mark_queryset_stale(student_queryset)
-
-
-def invalidate_post_related_snapshots(
-    *,
-    course_id: int,
-    author_id: int | None,
-    hashtags: list[str] | tuple[str, ...] | set[str] | None = None,
-) -> None:
-    invalidate_course_dashboard_snapshots(
-        course_id=course_id,
-        hashtags=hashtags,
-        student_ids=[author_id] if author_id else None,
-    )
-
-
-def invalidate_membership_related_snapshots(*, course_id: int) -> None:
-    invalidate_course_dashboard_snapshots(course_id=course_id)
-
-
-def invalidate_course_metadata_related_snapshots(*, course_id: int) -> None:
-    invalidate_course_dashboard_snapshots(
-        course_id=course_id,
-        include_all_hashtags=True,
-        include_all_students=True,
-    )
 
 
 def _get_sentiment_pipeline():
@@ -352,153 +208,6 @@ def _change_percentage(current: int, previous: int) -> float:
     if previous <= 0:
         return 100.0 if current > 0 else 0.0
     return round((current - previous) * 100 / previous, 1)
-
-
-def _post_engagement_score(*, likes: int, comments: int, views: int) -> int:
-    return max(int(likes or 0), 0) + max(int(comments or 0), 0) + max(int(views or 0), 0)
-
-
-def _build_student_engagement_trend(student_posts: list[dict[str, Any]], course_data: dict[str, Any]) -> dict[str, Any]:
-    if not student_posts:
-        return {
-            "change_percent": 0.0,
-            "direction": "up",
-            "window_label": "Last 7 days vs previous 7 days",
-            "current_window_engagement": 0,
-            "previous_window_engagement": 0,
-            "series": [],
-        }
-
-    latest = max((record.get("created_at") for record in student_posts), default=None)
-    if latest is None:
-        return {
-            "change_percent": 0.0,
-            "direction": "up",
-            "window_label": "Last 7 days vs previous 7 days",
-            "current_window_engagement": 0,
-            "previous_window_engagement": 0,
-            "series": [],
-        }
-
-    current_start = latest - timedelta(days=7)
-    previous_start = latest - timedelta(days=14)
-    like_counts = course_data["like_counts"]
-    comment_counts = course_data["comment_counts"]
-    view_counts = course_data["view_counts"]
-
-    current_window_engagement = 0
-    previous_window_engagement = 0
-    ordered_posts = sorted(
-        student_posts,
-        key=lambda record: record.get("created_at") or timezone.make_aware(timezone.datetime.min),
-    )
-    series = []
-
-    for record in ordered_posts[-7:]:
-        pid = record["id"]
-        series.append(
-            _post_engagement_score(
-                likes=like_counts.get(pid, 0),
-                comments=comment_counts.get(pid, 0),
-                views=view_counts.get(pid, 0),
-            )
-        )
-
-    for record in student_posts:
-        created_at = record.get("created_at")
-        if created_at is None:
-            continue
-        pid = record["id"]
-        engagement = _post_engagement_score(
-            likes=like_counts.get(pid, 0),
-            comments=comment_counts.get(pid, 0),
-            views=view_counts.get(pid, 0),
-        )
-        if created_at >= current_start:
-            current_window_engagement += engagement
-        elif previous_start <= created_at < current_start:
-            previous_window_engagement += engagement
-
-    delta = _change_percentage(current_window_engagement, previous_window_engagement)
-    return {
-        "change_percent": abs(delta),
-        "direction": "up" if delta >= 0 else "down",
-        "window_label": "Last 7 days vs previous 7 days",
-        "current_window_engagement": current_window_engagement,
-        "previous_window_engagement": previous_window_engagement,
-        "series": series,
-    }
-
-
-def _build_best_time_to_post(student_posts: list[dict[str, Any]], course_data: dict[str, Any]) -> dict[str, Any]:
-    if not student_posts:
-        return {
-            "best_hour_label": "—",
-            "window_label": "Recent 7-day posting hours",
-            "average_engagement": 0.0,
-            "sample_size": 0,
-            "slots": [],
-        }
-
-    latest = max((record.get("created_at") for record in student_posts), default=None)
-    if latest is None:
-        return {
-            "best_hour_label": "—",
-            "window_label": "Recent 7-day posting hours",
-            "average_engagement": 0.0,
-            "sample_size": 0,
-            "slots": [],
-        }
-
-    cutoff = latest - timedelta(days=7)
-    like_counts = course_data["like_counts"]
-    comment_counts = course_data["comment_counts"]
-    view_counts = course_data["view_counts"]
-    hourly_totals: list[dict[str, float]] = [{"engagement": 0.0, "posts": 0} for _ in range(24)]
-
-    for record in student_posts:
-        created_at = record.get("created_at")
-        if created_at is None or created_at < cutoff:
-            continue
-        pid = record["id"]
-        hour_bucket = hourly_totals[created_at.hour]
-        hour_bucket["engagement"] += _post_engagement_score(
-            likes=like_counts.get(pid, 0),
-            comments=comment_counts.get(pid, 0),
-            views=view_counts.get(pid, 0),
-        )
-        hour_bucket["posts"] += 1
-
-    averages = [
-        (bucket["engagement"] / bucket["posts"]) if bucket["posts"] else 0.0
-        for bucket in hourly_totals
-    ]
-    best_hour = max(range(24), key=lambda hour: averages[hour])
-    if averages[best_hour] <= 0:
-        return {
-            "best_hour_label": "—",
-            "window_label": "Recent 7-day posting hours",
-            "average_engagement": 0.0,
-            "sample_size": 0,
-            "slots": [],
-        }
-
-    def _format_hour_label(hour: int) -> str:
-        normalized = ((hour % 24) + 24) % 24
-        suffix = "PM" if normalized >= 12 else "AM"
-        display = 12 if normalized % 12 == 0 else normalized % 12
-        return f"{display} {suffix}"
-
-    return {
-        "best_hour_label": _format_hour_label(best_hour),
-        "window_label": "Recent 7-day posting hours",
-        "average_engagement": round(averages[best_hour], 1),
-        "sample_size": int(hourly_totals[best_hour]["posts"]),
-        "slots": [
-            f"{_format_hour_label(best_hour - 1)}–{_format_hour_label(best_hour + 1)}",
-            f"{_format_hour_label(best_hour)}–{_format_hour_label(best_hour + 3)}",
-        ],
-    }
 
 
 def _get_post_interactions(
@@ -731,7 +440,7 @@ def _calculate_course_metrics(course) -> tuple[dict[str, Any], dict[str, Any]]:
 
 
 def _placeholder_dashboard_data() -> dict[str, Any]:
-    return _apply_source_status({
+    return {
         "refreshing": True,
         "calculated_at": None,
         "total_courses": 0,
@@ -740,7 +449,7 @@ def _placeholder_dashboard_data() -> dict[str, Any]:
         "total_interactions": 0,
         "sentiment": {"positive": 0, "neutral": 0, "negative": 0},
         "courses": [],
-    }, source_kind="fallback_placeholder", source_status="placeholder")
+    }
 
 
 def _placeholder_course_data(course) -> dict[str, Any]:
@@ -750,7 +459,7 @@ def _placeholder_course_data(course) -> dict[str, Any]:
         "course_code": getattr(course, "course_code", ""),
         "term": getattr(course, "term", ""),
     }
-    return _apply_source_status({
+    return {
         "refreshing": True,
         "calculated_at": None,
         "course": course_info,
@@ -767,7 +476,7 @@ def _placeholder_course_data(course) -> dict[str, Any]:
         },
         "hashtags": [],
         "students": [],
-    }, source_kind="fallback_placeholder", source_status="placeholder")
+    }
 
 
 def _normalize_hashtag(value: str) -> str:
@@ -781,7 +490,7 @@ def _placeholder_hashtag_data(course, hashtag: str) -> dict[str, Any]:
         "course_code": getattr(course, "course_code", ""),
         "term": getattr(course, "term", ""),
     }
-    return _apply_source_status({
+    return {
         "refreshing": True,
         "calculated_at": None,
         "course": course_info,
@@ -800,7 +509,7 @@ def _placeholder_hashtag_data(course, hashtag: str) -> dict[str, Any]:
             "total_comments": 0,
         },
         "top_posts": [],
-    }, source_kind="fallback_placeholder", source_status="placeholder")
+    }
 
 
 def _placeholder_student_data(course, student_id: int, student=None) -> dict[str, Any]:
@@ -818,7 +527,7 @@ def _placeholder_student_data(course, student_id: int, student=None) -> dict[str
     else:
         student_name = f"user-{student_id}" if student_id else ""
         student_email = ""
-    return _apply_source_status({
+    return {
         "refreshing": True,
         "calculated_at": None,
         "course": course_info,
@@ -837,7 +546,7 @@ def _placeholder_student_data(course, student_id: int, student=None) -> dict[str
             "total_comments": 0,
         },
         "top_posts": [],
-    }, source_kind="fallback_placeholder", source_status="placeholder")
+    }
 
 
 def refresh_course_snapshot(course) -> dict[str, Any]:
@@ -858,11 +567,6 @@ def refresh_course_snapshot(course) -> dict[str, Any]:
     snapshot.refresh_from_db(fields=["data", "calculated_at"])
     result = dict(snapshot.data)
     result["calculated_at"] = snapshot.calculated_at.isoformat()
-    result = _apply_source_status(
-        result,
-        source_kind="backend_snapshot",
-        source_status="refreshed",
-    )
     try:
         _refresh_course_hashtag_snapshots(course, course_data)
     except Exception:
@@ -872,143 +576,6 @@ def refresh_course_snapshot(course) -> dict[str, Any]:
     except Exception:
         _logger.exception("Failed to refresh student snapshots for course=%s", course.id)
     return result
-
-
-def _get_course_snapshot_payload(course) -> dict[str, Any] | None:
-    snapshot = CourseDashboardSnapshot.objects.filter(course=course).first()
-    if not snapshot:
-        return None
-    payload = dict(snapshot.data)
-    payload["calculated_at"] = snapshot.calculated_at.isoformat()
-    is_stale = bool(payload.get("stale"))
-    return _apply_source_status(
-        payload,
-        source_kind="backend_snapshot",
-        source_status="fresh" if not is_stale and _is_snapshot_fresh(snapshot) else "stale",
-    )
-
-
-def _ensure_course_snapshot(course) -> dict[str, Any]:
-    snapshot_payload = _get_course_snapshot_payload(course)
-    if snapshot_payload and snapshot_payload.get("source_status") == "fresh":
-        return snapshot_payload
-
-    try:
-        action = "refreshing" if snapshot_payload else "generating"
-        _logger.info(
-            "On-demand %s course dashboard snapshot for course=%s",
-            action,
-            course.id,
-        )
-        return refresh_course_snapshot(course)
-    except Exception:
-        _logger.exception("On-demand course snapshot refresh failed for course=%s", course.id)
-        return _placeholder_course_data(course)
-
-
-def _get_hashtag_snapshot_payload(course, normalized_hashtag: str) -> dict[str, Any] | None:
-    snapshot = CourseHashtagDashboardSnapshot.objects.filter(
-        course=course,
-        hashtag=normalized_hashtag,
-    ).first()
-    if not snapshot:
-        return None
-    payload = dict(snapshot.data)
-    payload["calculated_at"] = snapshot.calculated_at.isoformat()
-    is_stale = bool(payload.get("stale"))
-    return _apply_source_status(
-        payload,
-        source_kind="backend_snapshot",
-        source_status="fresh" if not is_stale and _is_snapshot_fresh(snapshot) else "stale",
-    )
-
-
-def _ensure_hashtag_snapshot(course, hashtag: str) -> dict[str, Any]:
-    normalized = _normalize_hashtag(hashtag)
-    if not normalized:
-        raise ValueError("Hashtag is required.")
-
-    snapshot_payload = _get_hashtag_snapshot_payload(course, normalized)
-    if snapshot_payload and snapshot_payload.get("source_status") == "fresh":
-        return snapshot_payload
-
-    try:
-        action = "refreshing" if snapshot_payload else "generating"
-        _logger.info(
-            "On-demand %s hashtag dashboard snapshot for course=%s hashtag=%s",
-            action,
-            course.id,
-            normalized,
-        )
-        course_data = _collect_course_post_data(course)
-        refresh_course_hashtag_snapshot(course, hashtag, course_data)
-    except Exception:
-        _logger.exception(
-            "On-demand hashtag snapshot generation failed for course=%s hashtag=%s",
-            course.id,
-            normalized,
-        )
-        return _placeholder_hashtag_data(course, hashtag)
-
-    snapshot_payload = _get_hashtag_snapshot_payload(course, normalized)
-    if snapshot_payload:
-        return _apply_source_status(
-            snapshot_payload,
-            source_kind="backend_snapshot",
-            source_status="refreshed",
-        )
-    return _placeholder_hashtag_data(course, hashtag)
-
-
-def _get_student_snapshot_payload(course, student_id: int) -> dict[str, Any] | None:
-    snapshot = CourseStudentDashboardSnapshot.objects.filter(
-        course=course,
-        student_id=student_id,
-    ).first()
-    if not snapshot:
-        return None
-    payload = dict(snapshot.data)
-    payload["calculated_at"] = snapshot.calculated_at.isoformat()
-    is_stale = bool(payload.get("stale"))
-    return _apply_source_status(
-        payload,
-        source_kind="backend_snapshot",
-        source_status="fresh" if not is_stale and _is_snapshot_fresh(snapshot) else "stale",
-    )
-
-
-def _ensure_student_snapshot(course, student_id: int) -> dict[str, Any]:
-    snapshot_payload = _get_student_snapshot_payload(course, student_id)
-    if snapshot_payload and snapshot_payload.get("source_status") == "fresh":
-        return snapshot_payload
-
-    student = get_user_model().objects.filter(id=student_id).first()
-    try:
-        action = "refreshing" if snapshot_payload else "generating"
-        _logger.info(
-            "On-demand %s student dashboard snapshot for course=%s student=%s",
-            action,
-            course.id,
-            student_id,
-        )
-        course_data = _collect_course_post_data(course)
-        refresh_course_student_snapshot(course, student_id, course_data)
-    except Exception:
-        _logger.exception(
-            "On-demand student snapshot generation failed for course=%s student=%s",
-            course.id,
-            student_id,
-        )
-        return _placeholder_student_data(course, student_id, student)
-
-    snapshot_payload = _get_student_snapshot_payload(course, student_id)
-    if snapshot_payload:
-        return _apply_source_status(
-            snapshot_payload,
-            source_kind="backend_snapshot",
-            source_status="refreshed",
-        )
-    return _placeholder_student_data(course, student_id, student)
 
 
 def refresh_dashboard_snapshot(user) -> dict[str, Any]:
@@ -1160,17 +727,38 @@ def get_admin_dashboard(*, user) -> dict[str, Any]:
 
 
 def get_course_dashboard(*, user, course_id: int) -> dict[str, Any]:
-    course = _get_accessible_course(user, course_id)
+    _ensure_admin(user)
+    course = CourseRepository.model.objects.filter(id=course_id, created_by_id=user.id).first()
     if not course:
         raise PermissionError("Course not found or not managed by current user.")
-    return _ensure_course_snapshot(course)
+
+    snapshot = CourseDashboardSnapshot.objects.filter(course=course).first()
+    if snapshot:
+        payload = dict(snapshot.data)
+        payload["calculated_at"] = snapshot.calculated_at.isoformat()
+        return payload
+    return _placeholder_course_data(course)
 
 
 def get_course_hashtag_dashboard(*, user, course_id: int, hashtag: str) -> dict[str, Any]:
-    course = _get_accessible_course(user, course_id)
+    _ensure_admin(user)
+    course = CourseRepository.model.objects.filter(
+        id=course_id,
+        created_by_id=user.id,
+    ).first()
     if not course:
         raise PermissionError("Course not found or not managed by current user.")
-    return _ensure_hashtag_snapshot(course, hashtag)
+    normalized = _normalize_hashtag(hashtag)
+    snapshot = CourseHashtagDashboardSnapshot.objects.filter(
+        course=course,
+        hashtag=normalized,
+    ).first()
+    if snapshot:
+        payload = dict(snapshot.data)
+        payload["refreshing"] = False
+        payload["calculated_at"] = snapshot.calculated_at.isoformat()
+        return payload
+    return _placeholder_hashtag_data(course, hashtag)
 
 
 def get_course_student_dashboard(*, user, course_id: int, student_id: int) -> dict[str, Any]:
@@ -1183,10 +771,12 @@ def get_course_student_dashboard(*, user, course_id: int, student_id: int) -> di
         if course.created_by_id != user.id and not getattr(user, "is_superuser", False):
             raise PermissionError("Course not managed by current user.")
     else:
-        is_teacher = _is_teacher_for_course(user, course_id)
-        if not is_teacher and user.id != student_id:
+        if user.id != student_id:
             raise PermissionError("You can only view your own analytics.")
-        is_member = CourseMemberRepository.model.objects.filter(course_id=course_id, user_id=user.id).exists()
+        is_member = CourseMemberRepository.model.objects.filter(
+            course_id=course_id,
+            user_id=user.id,
+        ).exists()
         if not is_member:
             raise PermissionError("You are not a member of this course.")
 
@@ -1197,7 +787,17 @@ def get_course_student_dashboard(*, user, course_id: int, student_id: int) -> di
     if not target_member_exists:
         raise ValueError("Student not enrolled in this course.")
 
-    return _ensure_student_snapshot(course, student_id)
+    snapshot = CourseStudentDashboardSnapshot.objects.filter(
+        course=course,
+        student_id=student_id,
+    ).first()
+    if snapshot:
+        payload = dict(snapshot.data)
+        payload["refreshing"] = False
+        payload["calculated_at"] = snapshot.calculated_at.isoformat()
+        return payload
+    student = get_user_model().objects.filter(id=student_id).first()
+    return _placeholder_student_data(course, student_id, student)
 
 
 def _calculate_course_hashtag_metrics_from_data(
@@ -1251,33 +851,25 @@ def _calculate_course_hashtag_metrics_from_data(
         interactions = interactions_per_post.get(pid, 0)
         content = (record.get("content") or "").strip()
         preview = content[:117].rstrip() + "..." if len(content) > 120 else content
-        likes = like_counts.get(pid, 0)
-        comments = comment_counts.get(pid, 0)
-        views = view_counts.get(pid, 0)
         top_posts.append(
             {
                 "post_id": pid,
                 "author_id": author_id,
                 "author_name": name,
                 "preview": preview,
-                "likes": likes,
-                "comments": comments,
-                "views": views,
+                "likes": like_counts.get(pid, 0),
+                "comments": comment_counts.get(pid, 0),
+                "views": view_counts.get(pid, 0),
                 "interactions": interactions,
-                "engagement_score": _post_engagement_score(
-                    likes=likes,
-                    comments=comments,
-                    views=views,
-                ),
                 "created_at": (record.get("created_at").isoformat() if hasattr(record.get("created_at"), "isoformat") else None),
             }
         )
     top_posts.sort(
         key=lambda item: (
-            item["engagement_score"],
             item["interactions"],
             item["likes"],
             item["comments"],
+            item["views"],
             item["created_at"] or "",
         ),
         reverse=True,
@@ -1299,7 +891,6 @@ def _calculate_course_hashtag_metrics_from_data(
         "total_comments": total_comments,
         "total_views": total_views,
         "total_interactions": total_interactions,
-        "total_engagement": total_interactions + total_views,
     }
 
     return {
@@ -1346,34 +937,26 @@ def _calculate_course_student_metrics_from_data(
         interactions = interactions_per_post.get(pid, 0)
         content = (record.get("content") or "").strip()
         preview = content[:117].rstrip() + "..." if len(content) > 120 else content
-        likes = like_counts.get(pid, 0)
-        comments = comment_counts.get(pid, 0)
-        views = view_counts.get(pid, 0)
         top_posts.append(
             {
                 "post_id": pid,
                 "author_id": student_id,
                 "author_name": student_name,
                 "preview": preview,
-                "likes": likes,
-                "comments": comments,
-                "views": views,
+                "likes": like_counts.get(pid, 0),
+                "comments": comment_counts.get(pid, 0),
+                "views": view_counts.get(pid, 0),
                 "interactions": interactions,
-                "engagement_score": _post_engagement_score(
-                    likes=likes,
-                    comments=comments,
-                    views=views,
-                ),
                 "created_at": (record.get("created_at").isoformat() if hasattr(record.get("created_at"), "isoformat") else None),
             }
         )
 
     top_posts.sort(
         key=lambda item: (
-            item["engagement_score"],
             item["interactions"],
             item["likes"],
             item["comments"],
+            item["views"],
             item["created_at"] or "",
         ),
         reverse=True,
@@ -1395,7 +978,6 @@ def _calculate_course_student_metrics_from_data(
         "total_comments": total_comments,
         "total_views": total_views,
         "total_interactions": total_interactions,
-        "total_engagement": total_interactions + total_views,
     }
 
     student_info = {
@@ -1403,8 +985,6 @@ def _calculate_course_student_metrics_from_data(
         "name": student_name,
         "email": student.email if student else "",
     }
-    engagement_trend = _build_student_engagement_trend(student_posts, course_data)
-    best_time_to_post = _build_best_time_to_post(student_posts, course_data)
 
     return {
         "refreshing": False,
@@ -1413,8 +993,6 @@ def _calculate_course_student_metrics_from_data(
         "summary": summary,
         "sentiment": sentiment_summary,
         "top_posts": top_posts,
-        "engagement_trend": engagement_trend,
-        "best_time_to_post": best_time_to_post,
     }
 
 

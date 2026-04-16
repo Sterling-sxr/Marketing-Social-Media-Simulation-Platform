@@ -8,11 +8,11 @@ from django.views.decorators.csrf import csrf_exempt
 
 from ..services import (
     PROFILE_OPTIONS,
-    build_student_analytics_payload,
     followers_count,
     following_count,
     list_liked_posts,
     list_posts_by_user,
+    list_posts_with_analytics_by_user,
     needs_profile,
     profile_to_dict,
     save_profile,
@@ -406,12 +406,12 @@ def user_posts_analytics(request: HttpRequest, user_id: int) -> JsonResponse:
         except ValueError:
             limit = None
 
-    payload = build_student_analytics_payload(
+    items = list_posts_with_analytics_by_user(
         user=request.user,
         target_user_id=user_id,
         limit=limit,
     )
-    return JsonResponse(payload)
+    return JsonResponse({"items": items})
 
 
 __all__ = [

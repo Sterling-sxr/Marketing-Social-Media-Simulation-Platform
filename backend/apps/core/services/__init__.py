@@ -31,13 +31,11 @@ from .course_material_service import (
 from .course_post_service import (
     MAX_POST_ATTACHMENTS,
     CourseAccessError,
-    CourseCommentNotFoundError,
     CoursePostNotFoundError,
     CourseReadOnlyError,
     add_comment_to_post,
     create_course_post,
     create_course_post_with_meta,
-    delete_comment_from_post,
     delete_course_post,
     get_course_post_analytics,
     get_course_post_detail,
@@ -49,7 +47,6 @@ from .course_post_service import (
     search_course_hashtags,
     search_course_mentions,
     unlike_course_post,
-    update_comment_on_post,
     update_course_post,
 )
 from .course_profile_service import (
@@ -69,10 +66,6 @@ from .dashboard_service import (
     get_course_dashboard,
     get_course_hashtag_dashboard,
     get_course_student_dashboard,
-    invalidate_course_metadata_related_snapshots,
-    invalidate_course_dashboard_snapshots,
-    invalidate_membership_related_snapshots,
-    invalidate_post_related_snapshots,
     refresh_dashboard_snapshot,
 )
 from .gmail_service import GmailNotConfiguredError, build_gmail_flow, send_demo_email
@@ -110,23 +103,11 @@ from .registration_service import (
     request_verification_code,
     verify_registration_code,
 )
-from .registration_service import (
-    EmailThrottleError,
-    RegistrationError,
-    VerificationCodeError,
-    VerificationRequest,
-    complete_registration,
-    request_verification_code,
-    verify_registration_code,
-)
-
 from .segmentation_analytics_service import (
     LENS_CONFIG,
     get_admin_course_segmentation,
     get_admin_post_segmentation,
 )
-
-from .student_analytics_service import build_student_analytics_payload
 
 __all__ = [
     "GmailNotConfiguredError",
@@ -183,15 +164,11 @@ __all__ = [
     "get_course_post_analytics",
     "list_posts_by_user",
     "list_posts_with_analytics_by_user",
-    "build_student_analytics_payload",
     "list_liked_posts",
     "like_course_post",
     "unlike_course_post",
     "add_comment_to_post",
-    "update_comment_on_post",
-    "delete_comment_from_post",
     "CourseAccessError",
-    "CourseCommentNotFoundError",
     "CoursePostNotFoundError",
     "CourseReadOnlyError",
     "MAX_POST_ATTACHMENTS",
@@ -202,10 +179,6 @@ __all__ = [
     "get_course_dashboard",
     "get_course_hashtag_dashboard",
     "get_course_student_dashboard",
-    "invalidate_post_related_snapshots",
-    "invalidate_membership_related_snapshots",
-    "invalidate_course_metadata_related_snapshots",
-    "invalidate_course_dashboard_snapshots",
     "classify_comment_sentiment",
     "get_admin_course_segmentation",
     "get_admin_post_segmentation",

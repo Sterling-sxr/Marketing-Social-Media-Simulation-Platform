@@ -14,10 +14,6 @@ from ..repositories import (
     CourseProfileRepository,
     CourseRepository,
 )
-from .dashboard_service import (
-    invalidate_course_metadata_related_snapshots,
-    invalidate_membership_related_snapshots,
-)
 
 
 def list_courses_for_user(user) -> dict[str, Any]:
@@ -86,14 +82,11 @@ def join_course_by_code(*, user, join_code: str):
     # Context: Compute shared values once so all branches use the same normalized inputs.
     if CourseRepository.is_user_member(course.id, user.id):
         raise ValueError("You have already joined this course.")
-
-    # Create membership via repository
+    
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     membership, _created = CourseMemberRepository.get_or_create_member(
         course.id, user.id, role="student"
     )
-    invalidate_membership_related_snapshots(course_id=course.id)
-
-    return membership
     return membership
 
 
@@ -252,7 +245,6 @@ def update_course(
     course.start_date = start_dt
     course.end_date = end_dt
     course.save(update_fields=["course_code", "name", "term", "start_date", "end_date", "updated_at"])
-    invalidate_course_metadata_related_snapshots(course_id=course.id)
 
     return {
         "id": course.id,
