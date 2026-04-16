@@ -59,7 +59,7 @@ export function AppProvider({ children }) {
   const [authUser, setAuthUser] = useState(null);
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
 
-  // Register flow
+  // Section note: groups related logic for readability.
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerStatus, setRegisterStatus] = useState(makeStatus);
   const [verifyDigits, setVerifyDigits] = useState(["", "", "", ""]);
@@ -71,7 +71,7 @@ export function AppProvider({ children }) {
     useState(makeSimpleStatus);
   const [registerVerifiedEmail, setRegisterVerifiedEmail] = useState("");
 
-  // Password reset flow
+  // Section note: groups related logic for readability.
   const [resetEmail, setResetEmail] = useState("");
   const [resetStatus, setResetStatus] = useState(makeStatus);
   const [resetVerifiedEmail, setResetVerifiedEmail] = useState("");
@@ -82,12 +82,12 @@ export function AppProvider({ children }) {
   const [resetCompleteStatus, setResetCompleteStatus] =
     useState(makeSimpleStatus);
 
-  // Profile data
+  // Section note: groups related logic for readability.
   const [profileOptions, setProfileOptions] = useState(null);
   const [profileData, setProfileData] = useState(createProfileData);
   const [profileStatus, setProfileStatus] = useState(makeSimpleStatus);
 
-  // Courses
+  // Section note: groups related logic for readability.
   const [courses, setCourses] = useState({ joined: [], available: [] });
   const [courseStatus, setCourseStatus] = useState(makeSimpleStatus);
   const [joinCode, setJoinCode] = useState("");
@@ -108,7 +108,7 @@ export function AppProvider({ children }) {
     const payload = { id, ...toast };
     setToasts((prev) => [payload, ...prev].slice(0, 5));
 
-    // Auto-dismiss after 5 seconds
+    // Section note: groups related logic for readability.
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 5000);
@@ -120,7 +120,7 @@ export function AppProvider({ children }) {
         (notification, { silent = false } = {}) => {
             if (!notification || notification.id == null) return;
             if (seenNotificationIdsRef.current.has(notification.id)) return;
-            // Extra guard: if a toast with same notification_id already exists, skip
+            // Section note: groups related logic for readability.
             if (
               toasts.some(
                 (t) =>
@@ -152,7 +152,7 @@ export function AppProvider({ children }) {
   const isAuthenticated = useMemo(() => Boolean(authUser), [authUser]);
 
 
-  // Check authentication status on app initialization
+  // Section note: groups related logic for readability.
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -161,7 +161,7 @@ export function AppProvider({ children }) {
           setAuthUser(data.user);
         }
       } catch (error) {
-        // Not authenticated or error, keep authUser as null
+        // Section note: groups related logic for readability.
       } finally {
         setAuthCheckComplete(true);
       }
@@ -169,7 +169,7 @@ export function AppProvider({ children }) {
     checkAuth();
   }, []);
 
-  // Refresh avatar/display name from full profile after login or reload
+  // Section note: groups related logic for readability.
   useEffect(() => {
     const userId = authUser?.id;
     if (!userId) return;
@@ -205,7 +205,7 @@ export function AppProvider({ children }) {
           };
         });
       } catch {
-        // ignore profile sync errors
+        // Section note: groups related logic for readability.
       }
     };
 
@@ -563,7 +563,7 @@ export function AppProvider({ children }) {
     try {
       await postJson(AUTH_ENDPOINTS.logout, {});
     } catch (error) {
-      // ignore logout errors
+      // Section note: groups related logic for readability.
     } finally {
       setAuthUser(null);
       resetRegisterFlow();
@@ -599,7 +599,7 @@ export function AppProvider({ children }) {
     setProfileStatus((prev) => ({ ...prev, loading: true, error: "" }));
     try {
       const data = await getJson(`${PROFILE_ENDPOINT}/me/`);
-      // Update profileData with loaded values
+      // Section note: groups related logic for readability.
       setProfileData({
         gender: data.gender || "",
         city: data.city || "",
@@ -727,7 +727,7 @@ export function AppProvider({ children }) {
       return { items: [], unread: 0 };
     }
 
-    // Use same identifier logic as backend
+    // Section note: groups related logic for readability.
     const identifier =
       (authUser.username || "").trim() ||
       (authUser.email || "").trim() ||
@@ -751,7 +751,7 @@ export function AppProvider({ children }) {
         items: data.items || [],
         unread: typeof data.unread === "number" ? data.unread : 0,
       });
-      // 仅在显式需要提醒时才注册 toast，避免静默拉取把新消息标记为已见从而跳过后续实时提醒
+      // Section note: groups related logic for readability.
       if (!silent) {
         (data.items || []).forEach((item) =>
           registerNotification(item, { silent })
@@ -827,7 +827,7 @@ export function AppProvider({ children }) {
     async (ids) => {
       if (!ids || ids.length === 0) return { updated: 0 };
       try {
-        // Use same identifier logic as backend
+        // Section note: groups related logic for readability.
         const identifier =
           (authUser?.username || "").trim() ||
           (authUser?.email || "").trim() ||
@@ -836,7 +836,7 @@ export function AppProvider({ children }) {
           `/api/messages/notifications/?user=${encodeURIComponent(identifier)}`,
           { ids }
         );
-        // Optimistically update unread count for the provided ids only
+        // Section note: groups related logic for readability.
         setNotifications((prev) => {
           const nextItems = prev.items.map((n) =>
             ids.includes(n.id) ? { ...n, is_read: true } : n
@@ -867,7 +867,7 @@ export function AppProvider({ children }) {
         `/api/messages/notifications/?user=${encodeURIComponent(identifier)}`,
         { all: true }
       );
-      // Optimistically mark everything as read in local state
+      // Section note: groups related logic for readability.
       setNotifications((prev) => {
         const nextItems = prev.items.map((n) => ({ ...n, is_read: true }));
         return { items: nextItems, unread: 0 };
@@ -884,7 +884,7 @@ export function AppProvider({ children }) {
   }, [authUser]);
 
   useEffect(() => {
-    // Setup websocket for real-time notifications
+    // Section note: groups related logic for readability.
     if (!authUser) {
       if (wsRef.current) {
         try {
@@ -895,7 +895,7 @@ export function AppProvider({ children }) {
       return undefined;
     }
 
-    // Use same identifier logic as backend: username (trimmed) || email (trimmed) || id (string)
+    // Section note: groups related logic for readability.
     const identifier =
       (authUser.username || "").trim() ||
       (authUser.email || "").trim() ||
@@ -934,12 +934,12 @@ export function AppProvider({ children }) {
           registerNotification(data, { silent: false });
         }
       } catch (_) {
-        // ignore malformed
+        // Section note: groups related logic for readability.
       }
     };
 
     socket.onerror = () => {
-      // ignore errors for now
+      // Section note: groups related logic for readability.
     };
 
     socket.onclose = () => {

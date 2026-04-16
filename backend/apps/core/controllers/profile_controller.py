@@ -19,12 +19,14 @@ from ..services import (
 )
 
 
+# Function note: _ensure_authenticated handles this controller action.
 def _ensure_authenticated(request: HttpRequest) -> JsonResponse | None:
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Unauthorized"}, status=401)
     return None
 
 
+# Function note: _display_user handles this controller action.
 def _display_user(user) -> str:
     full_name = (user.get_full_name() or "").strip()
     if full_name:
@@ -40,6 +42,7 @@ def _display_user(user) -> str:
     return f"User {user.pk}"
 
 
+# Function note: _institution_from_email handles this controller action.
 def _institution_from_email(email: str) -> str:
     if not email:
         return ""
@@ -58,6 +61,7 @@ def _institution_from_email(email: str) -> str:
     return f"{pretty_name} ({domain})"
 
 
+# Function note: profile_status handles this controller action.
 def profile_status(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -65,6 +69,7 @@ def profile_status(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"needs_profile": needs_profile(request.user)})
 
 
+# Function note: profile_options handles this controller action.
 def profile_options(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -72,6 +77,7 @@ def profile_options(request: HttpRequest) -> JsonResponse:
     return JsonResponse(PROFILE_OPTIONS)
 
 
+# Function note: get_my_profile handles this controller action.
 def get_my_profile(request: HttpRequest) -> JsonResponse:
     """Function note: get_my_profile handles this backend operation."""
     auth_error = _ensure_authenticated(request)
@@ -86,6 +92,7 @@ def get_my_profile(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
+# Function note: submit_profile handles this controller action.
 def submit_profile(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -112,6 +119,7 @@ def submit_profile(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"success": True})
 
 
+# Function note: profile_detail handles this controller action.
 def profile_detail(request: HttpRequest, user_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -150,6 +158,7 @@ def profile_detail(request: HttpRequest, user_id: int) -> JsonResponse:
 
 
 @csrf_exempt
+# Function note: upload_avatar handles this controller action.
 def upload_avatar(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -172,6 +181,7 @@ def upload_avatar(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
+# Function note: update_display_name handles this controller action.
 def update_display_name(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -199,6 +209,7 @@ def update_display_name(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
+# Function note: set_user_admin handles this controller action.
 def set_user_admin(request: HttpRequest, user_id: int) -> JsonResponse:
     """Function note: set_user_admin handles this backend operation."""
     auth_error = _ensure_authenticated(request)
@@ -240,6 +251,7 @@ def set_user_admin(request: HttpRequest, user_id: int) -> JsonResponse:
 
 
 @csrf_exempt
+# Function note: follow_user handles this controller action.
 def follow_user(request: HttpRequest, user_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -291,6 +303,7 @@ def follow_user(request: HttpRequest, user_id: int) -> JsonResponse:
     return JsonResponse({"error": "Method not allowed"}, status=405)
 
 
+# Function note: list_following handles this controller action.
 def list_following(request: HttpRequest, user_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -304,6 +317,7 @@ def list_following(request: HttpRequest, user_id: int) -> JsonResponse:
     return JsonResponse({"items": items})
 
 
+# Function note: list_followers handles this controller action.
 def list_followers(request: HttpRequest, user_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -317,6 +331,7 @@ def list_followers(request: HttpRequest, user_id: int) -> JsonResponse:
     return JsonResponse({"items": items})
 
 
+# Function note: user_posts handles this controller action.
 def user_posts(request: HttpRequest, user_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -333,6 +348,7 @@ def user_posts(request: HttpRequest, user_id: int) -> JsonResponse:
     return JsonResponse({"items": items})
 
 
+# Function note: user_posts_analytics handles this controller action.
 def user_posts_analytics(request: HttpRequest, user_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:

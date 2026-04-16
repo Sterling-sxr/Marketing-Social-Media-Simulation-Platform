@@ -13,6 +13,7 @@ from .course_controller import _ensure_authenticated
 
 
 @csrf_exempt
+# Function note: dashboard_summary handles this controller action.
 def dashboard_summary(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -32,6 +33,7 @@ def dashboard_summary(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
+# Function note: dashboard_course_detail handles this controller action.
 def dashboard_course_detail(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -49,6 +51,7 @@ def dashboard_course_detail(request: HttpRequest, course_id: int) -> JsonRespons
 
 
 @csrf_exempt
+# Function note: dashboard_course_hashtag_detail handles this controller action.
 def dashboard_course_hashtag_detail(
     request: HttpRequest, course_id: int, hashtag: str
 ) -> JsonResponse:
@@ -74,6 +77,7 @@ def dashboard_course_hashtag_detail(
 
 
 @csrf_exempt
+# Function note: dashboard_course_student_detail handles this controller action.
 def dashboard_course_student_detail(
     request: HttpRequest, course_id: int, student_id: int
 ) -> JsonResponse:

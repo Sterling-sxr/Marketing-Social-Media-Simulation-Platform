@@ -17,6 +17,7 @@ _RANK_LABELS = {
 }
 
 
+# Function note: _save_search_history handles this controller action.
 def _save_search_history(request, query: str) -> None:
     if request.user.is_authenticated:
         # Section note: explains the purpose of this backend block.
@@ -39,6 +40,7 @@ def _save_search_history(request, query: str) -> None:
 
 
 @require_GET
+# Function note: search_posts handles this controller action.
 def search_posts(request):
     """Function note: search_posts handles this backend operation."""
     query = request.GET.get("q", "").strip()
@@ -101,6 +103,7 @@ def search_posts(request):
 
 
 @require_GET
+# Function note: suggested_search handles this controller action.
 def suggested_search(request):
     """Function note: suggested_search handles this backend operation."""
     top_keywords = (
@@ -121,6 +124,7 @@ def suggested_search(request):
 
 
 @require_GET
+# Function note: get_search_history handles this controller action.
 def get_search_history(request):
     """Function note: get_search_history handles this backend operation."""
     if request.user.is_authenticated:
@@ -132,6 +136,7 @@ def get_search_history(request):
 
 
 @require_POST
+# Function note: add_search_history handles this controller action.
 def add_search_history(request):
     """Function note: add_search_history handles this backend operation."""
     try:

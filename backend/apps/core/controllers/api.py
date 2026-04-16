@@ -35,6 +35,7 @@ from ..utils import (
 
 
 @csrf_exempt
+# Function note: messages_endpoint handles this controller action.
 def messages_endpoint(request: HttpRequest) -> JsonResponse:
     if request.method == "GET":
         data = [message_to_dict(msg) for msg in list_recent_messages()]
@@ -62,6 +63,7 @@ def messages_endpoint(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
+# Function note: send_demo_email handles this controller action.
 def send_demo_email(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -88,6 +90,7 @@ def send_demo_email(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
+# Function note: files_endpoint handles this controller action.
 def files_endpoint(request: HttpRequest) -> JsonResponse:
     if request.method == "GET":
         assets = [asset_to_dict(asset) for asset in list_recent_assets()]
@@ -105,6 +108,7 @@ def files_endpoint(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
+# Function note: notifications_endpoint handles this controller action.
 def notifications_endpoint(request: HttpRequest) -> JsonResponse:
     user = resolve_user_from_request(request)
     if not user:
@@ -140,6 +144,7 @@ def notifications_endpoint(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
+# Function note: simulate_activity handles this controller action.
 def simulate_activity(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -175,6 +180,7 @@ def simulate_activity(request: HttpRequest) -> JsonResponse:
     return JsonResponse(notification_payload, status=201)
 
 
+# Function note: gmail_oauth_start handles this controller action.
 def gmail_oauth_start(request: HttpRequest):
     try:
         flow = build_gmail_flow()
@@ -190,6 +196,7 @@ def gmail_oauth_start(request: HttpRequest):
     return HttpResponseRedirect(authorization_url)
 
 
+# Function note: gmail_oauth_callback handles this controller action.
 def gmail_oauth_callback(request: HttpRequest):
     try:
         flow = build_gmail_flow()

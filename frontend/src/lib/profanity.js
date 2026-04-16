@@ -1,11 +1,11 @@
-// src/lib/profanity.js
-// Lightweight client-side profanity detection: supports Chinese/English,
-// mixed casing, symbol noise, and simple leetspeak variants (1!l|, a@4, e3, etc.)
-// Intended only for front-end filtering; does NOT replace backend moderation.
+// Section note: groups related logic for readability.
+// Section note: groups related logic for readability.
+// Section note: groups related logic for readability.
+// Section note: groups related logic for readability.
 
-// Extend this list as needed; supports both Chinese and English entries.
+// Section note: groups related logic for readability.
 const BASE_LIST = [
-  // English
+  // Section note: groups related logic for readability.
   "fuck",
   "f*ck",
   "f**k",
@@ -73,7 +73,7 @@ const BASE_LIST = [
   "fk u",
   "fk off",
   "f off",
-  // Chinese (examples; adjust as needed)
+  // Section note: groups related logic for readability.
   "傻逼",
   "煞笔",
   "傻b",
@@ -91,12 +91,12 @@ const BASE_LIST = [
   "SB",
 ];
 
-// Normalize leetspeak / symbol variants back to regular letters
+// Function note: normalizeForMatch encapsulates this unit of behavior.
 function normalizeForMatch(s) {
   return (
     s
       .toLowerCase()
-      // Leet replacements
+      // Section note: groups related logic for readability.
       .replace(/[¡!]|1|l|\|/g, "i")
       .replace(/[@4]/g, "a")
       .replace(/3/g, "e")
@@ -104,16 +104,16 @@ function normalizeForMatch(s) {
       .replace(/[$5]/g, "s")
       .replace(/7/g, "t")
       .replace(/8/g, "b")
-      // Collapse extra whitespace
+      // Section note: groups related logic for readability.
       .replace(/\s+/g, " ")
-      // Fold repeated characters (e.g. fuuuuck -> fuuck)
+      // Section note: groups related logic for readability.
       .replace(/(.)\1{2,}/g, "$1$1")
   );
 }
 
-// Build a loose regex for English words that allows punctuation/spacing between letters
+// Function note: makeLooseWordRegex encapsulates this unit of behavior.
 function makeLooseWordRegex(word) {
-  // Only handle ASCII alphabetic words; Chinese terms use substring matching
+  // Section note: groups related logic for readability.
   if (!/^[a-z]+$/i.test(word)) return null;
   const letters = word
     .split("")
@@ -122,7 +122,7 @@ function makeLooseWordRegex(word) {
   return new RegExp(`\\b${body}\\b`, "i");
 }
 
-// Chinese words are matched via simple includes (after normalization)
+// Function note: hasChineseBadWord encapsulates this unit of behavior.
 function hasChineseBadWord(text, term) {
   return text.includes(term);
 }
@@ -144,13 +144,13 @@ export function hasProfanity(input, extraList = []) {
     const term = normalizeForMatch(termRaw);
     if (!term) continue;
 
-    // Chinese terms: use simple substring check
+    // Section note: groups related logic for readability.
     if (/[^\x00-\x7F]/.test(term)) {
       if (hasChineseBadWord(src, term)) hits.push(termRaw);
       continue;
     }
 
-    // English terms: loose regex that allows spacing/symbols
+    // Section note: groups related logic for readability.
     const m = makeLooseWordRegex(term);
     if (m && m.test(src)) hits.push(termRaw);
   }

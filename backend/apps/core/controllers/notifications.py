@@ -22,13 +22,16 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             }
         )
 
+    # Function note: disconnect handles this controller action.
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
+    # Function note: notification_message handles this controller action.
     async def notification_message(self, event):
         payload = event.get("payload", {})
         await self.send_json({"type": "notification", **payload})
 
+    # Function note: receive_json handles this controller action.
     async def receive_json(self, content, **kwargs):
         # Section note: explains the purpose of this backend block.
         if content.get("action") == "ping":

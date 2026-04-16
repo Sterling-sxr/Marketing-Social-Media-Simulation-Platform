@@ -20,6 +20,7 @@ from ..services import (
 )
 
 
+# Function note: _ensure_authenticated handles this controller action.
 def _ensure_authenticated(request: HttpRequest) -> JsonResponse | None:
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Unauthorized"}, status=401)
@@ -27,6 +28,7 @@ def _ensure_authenticated(request: HttpRequest) -> JsonResponse | None:
 
 
 @csrf_exempt
+# Function note: course_ai_users handles this controller action.
 def course_ai_users(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -65,6 +67,7 @@ def course_ai_users(request: HttpRequest, course_id: int) -> JsonResponse:
 
 
 @csrf_exempt
+# Function note: course_ai_user_detail handles this controller action.
 def course_ai_user_detail(request: HttpRequest, course_id: int, ai_user_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -119,6 +122,7 @@ def course_ai_user_detail(request: HttpRequest, course_id: int, ai_user_id: int)
 
 
 @csrf_exempt
+# Function note: course_ai_users_import handles this controller action.
 def course_ai_users_import(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -140,6 +144,7 @@ def course_ai_users_import(request: HttpRequest, course_id: int) -> JsonResponse
     return JsonResponse(report)
 
 
+# Function note: _load_json_body handles this controller action.
 def _load_json_body(request: HttpRequest) -> tuple[dict, JsonResponse | None]:
     try:
         payload = json.loads(request.body.decode() or "{}")
@@ -151,6 +156,7 @@ def _load_json_body(request: HttpRequest) -> tuple[dict, JsonResponse | None]:
 
 
 @csrf_exempt
+# Function note: course_ai_users_guided_preview handles this controller action.
 def course_ai_users_guided_preview(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -172,6 +178,7 @@ def course_ai_users_guided_preview(request: HttpRequest, course_id: int) -> Json
 
 
 @csrf_exempt
+# Function note: course_ai_users_guided_commit handles this controller action.
 def course_ai_users_guided_commit(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -193,6 +200,7 @@ def course_ai_users_guided_commit(request: HttpRequest, course_id: int) -> JsonR
 
 
 @csrf_exempt
+# Function note: course_ai_users_generate_preview handles this controller action.
 def course_ai_users_generate_preview(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -216,6 +224,7 @@ def course_ai_users_generate_preview(request: HttpRequest, course_id: int) -> Js
 
 
 @csrf_exempt
+# Function note: course_ai_users_generate_commit handles this controller action.
 def course_ai_users_generate_commit(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:

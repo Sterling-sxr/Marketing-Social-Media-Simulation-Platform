@@ -1,10 +1,10 @@
-/** @type {import('tailwindcss').Config} */
+/* Section note: groups related logic for readability. */
 export default {
   content: ["./index.html", "./src/**/*.{js,jsx}"],
   theme: {
     extend: {
       colors: {
-        // Primary brand palette: deep-sea blue
+        // Section note: groups related logic for readability.
         brand: {
           50: "#EEF7F9",
           100: "#DCEFF3",
@@ -20,7 +20,7 @@ export default {
           dark: "#1B596E",
           light: "#94C8D8",
         },
-        // Accent palette: clear teal
+        // Section note: groups related logic for readability.
         accent: {
           50: "#ECFBF7",
           100: "#D3F5EC",

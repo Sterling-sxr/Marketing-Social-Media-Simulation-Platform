@@ -25,6 +25,7 @@ from ..services import (
 )
 
 
+# Function note: _ensure_authenticated handles this controller action.
 def _ensure_authenticated(request: HttpRequest) -> JsonResponse | None:
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Unauthorized"}, status=401)
@@ -32,6 +33,7 @@ def _ensure_authenticated(request: HttpRequest) -> JsonResponse | None:
 
 
 @csrf_exempt
+# Function note: course_posts handles this controller action.
 def course_posts(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -110,6 +112,7 @@ def course_posts(request: HttpRequest, course_id: int) -> JsonResponse:
 
 
 @csrf_exempt
+# Function note: course_post_comments handles this controller action.
 def course_post_comments(request: HttpRequest, course_id: int, post_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -207,6 +210,7 @@ def course_post_comments(request: HttpRequest, course_id: int, post_id: int) -> 
 
 
 @csrf_exempt
+# Function note: course_post_like handles this controller action.
 def course_post_like(request: HttpRequest, course_id: int, post_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -243,6 +247,7 @@ def course_post_like(request: HttpRequest, course_id: int, post_id: int) -> Json
 
 
 @csrf_exempt
+# Function note: course_post_detail handles this controller action.
 def course_post_detail(request: HttpRequest, course_id: int, post_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -323,6 +328,7 @@ def course_post_detail(request: HttpRequest, course_id: int, post_id: int) -> Js
 
 
 @csrf_exempt
+# Function note: course_post_analytics handles this controller action.
 def course_post_analytics(request: HttpRequest, course_id: int, post_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -351,6 +357,7 @@ def course_post_analytics(request: HttpRequest, course_id: int, post_id: int) ->
 
 
 @csrf_exempt
+# Function note: course_post_suggestions handles this controller action.
 def course_post_suggestions(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
