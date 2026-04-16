@@ -12,6 +12,3 @@
 - [ ] Commits are scoped and have descriptive messages.
 - [ ] At least one reviewer has been requested.
 - [ ] I have responded to reviewer comments (or left clarifying replies).
-
-Please keep discussion focused on the PR so that meaningful review history is
-preserved for tutors.
