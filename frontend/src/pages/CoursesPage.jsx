@@ -1,4 +1,4 @@
-// Keep the top imports unchanged
+// Section note: groups related logic for readability.
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
@@ -6,7 +6,7 @@ import AuthenticatedShell from "./components/AuthenticatedShell";
 import Feedback from "./components/Feedback";
 import { isTeacher } from "../lib/access";
 
-// Centralized badge renderer for TEACHER / STUDENT
+// Function note: RoleBadge encapsulates this unit of behavior.
 function RoleBadge({ courseRole, isStaff, isSuperuser }) {
   const roleFromCourse = (courseRole || "").toString().toLowerCase();
 
@@ -18,11 +18,11 @@ function RoleBadge({ courseRole, isStaff, isSuperuser }) {
 
   const text = isTeacher ? "TEACHER" : "STUDENT";
 
-  // Soft gradient capsule badge
+  // Section note: groups related logic for readability.
   const cls = isTeacher
-    ? // Teacher badge: amber/orange gradient
+    ? // Inline note: clarifies the nearby code intent.
       "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide text-accent-800 shadow-sm border border-accent-200 bg-gradient-to-r from-accent-50 via-accent-100 to-brand-50"
-    : // Student badge: pastel purple to peach gradient
+    : // Inline note: clarifies the nearby code intent.
       "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide text-accent-700 shadow-sm border border-accent-200 bg-gradient-to-r from-accent-50 via-accent-50 to-brand-50";
 
   return <span className={cls}>{text}</span>;
@@ -61,8 +61,8 @@ export default function CoursesPage() {
     const roleFromCourse = (course?.role || "").toString().toLowerCase();
     const isCourseTeacher =
       roleFromCourse === "teacher" || roleFromCourse === "instructor";
-    // Teacher should be able to browse the course community even if
-    // course persona/profile isn't completed yet.
+    // Section note: groups related logic for readability.
+    // Section note: groups related logic for readability.
     if (course.profile_completed || isTeacher(authUser) || isCourseTeacher) {
       navigate(`/courses/${course.id}`);
     } else {
@@ -141,12 +141,12 @@ export default function CoursesPage() {
                     ) : null}
                   </div>
 
-                  {/* Replaced raw {course.role} with RoleBadge for consistent rendering */}
+                  {/* Section note: groups related UI behavior for readability. */}
                   <div className="self-end sm:self-center">
                     <RoleBadge
-                      courseRole={course.role} // Role returned from the course payload (if any)
-                      isStaff={!!authUser?.is_staff} // Boolean flags from Django auth user
-                      isSuperuser={!!authUser?.is_superuser} // Boolean flags from Django auth user
+                      courseRole={course.role} // Inline note: clarifies the nearby code intent.
+                      isStaff={!!authUser?.is_staff} // Inline note: clarifies the nearby code intent.
+                      isSuperuser={!!authUser?.is_superuser} // Inline note: clarifies the nearby code intent.
                     />
                   </div>
                 </button>

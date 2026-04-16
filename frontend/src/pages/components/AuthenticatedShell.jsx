@@ -12,7 +12,7 @@ import {
   BotMessageSquare,
   Plus,
 } from "lucide-react";
-import ToastHost from "../../components/ToastHost"; // Global Toast host
+import ToastHost from "../../components/ToastHost"; // Inline note: clarifies the nearby code intent.
 
 function classNames(...values) {
   return values.filter(Boolean).join(" ");
@@ -57,8 +57,8 @@ export default function AuthenticatedShell({
   links,
   mobileNavLinks,
   hideMobileNav = false,
-  showNotifications = false, // Pages that need auto-polling pass true
-  /** When true, @media print hides chrome so the page can print main content only. */
+  showNotifications = false, // Inline note: clarifies the nearby code intent.
+  /* Section note: groups related logic for readability. */
   printFriendlyChrome = false,
 }) {
   const navigate = useNavigate();
@@ -74,7 +74,7 @@ export default function AuthenticatedShell({
   } = useApp();
   const isTeacherUser = Boolean(authUser?.is_superuser || authUser?.is_staff);
 
-  // On first load or account switch, fetch once when auto-polling is enabled
+  // Section note: groups related logic for readability.
   useEffect(() => {
     if (authUser && showNotifications) {
       fetchNotifications({ silent: true }).catch(() => {});
@@ -86,7 +86,7 @@ export default function AuthenticatedShell({
     fetchCourses().catch(() => {});
   }, [authUser, isTeacherUser, fetchCourses]);
 
-  // Refresh once when the tab/window becomes visible (prevents missed notifications)
+  // Section note: groups related logic for readability.
   useEffect(() => {
     if (!showNotifications) return;
     const onVis = () => {
@@ -112,8 +112,8 @@ export default function AuthenticatedShell({
     if (links && links.length) return links;
     const isAdminUser = Boolean(authUser?.is_superuser || authUser?.is_staff);
     if (isAdminUser) {
-      // Teacher course analysis pages should keep the course-scoped sidebar
-      // (otherwise they'd fall into the generic Course Center / Dashboard sidebar).
+      // Section note: groups related logic for readability.
+      // Section note: groups related logic for readability.
       const dashCourseMatch = location.pathname.match(/^\/dashboard\/courses\/(\d+)/);
       if (dashCourseMatch?.[1]) {
         const currentCourseId = dashCourseMatch[1];
@@ -193,8 +193,8 @@ export default function AuthenticatedShell({
           },
         ];
       }
-      // Teacher console keeps only two top-level modules:
-      // Courses / Dashboard.
+      // Section note: groups related logic for readability.
+      // Section note: groups related logic for readability.
       return [
         {
           to: "/courses",
@@ -278,7 +278,7 @@ export default function AuthenticatedShell({
     const linksByTo = new Map(sidebarLinks.map((item) => [item.to, item]));
     const picked = preferred.map((to) => linksByTo.get(to)).filter(Boolean);
     if (picked.length >= 4) return picked.slice(0, 5);
-    // Keep mobile nav capped to 5 primary destinations. Admin shortcuts can live in page-level quick actions.
+    // Section note: groups related logic for readability.
     return dedupeByTo(sidebarLinks).slice(0, 5);
   }, [mobileNavLinks, sidebarLinks, authUser?.id]);
 
@@ -289,10 +289,10 @@ export default function AuthenticatedShell({
         printFriendlyChrome && "at-print-student-analysis"
       )}
     >
-      {/* Top navigation bar */}
+      {/* Section note: groups related UI behavior for readability. */}
       <header className="sticky top-0 z-40 border-b border-brand-100/70 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/60">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 lg:px-6 lg:py-4">
-          {/* Bread brand section */}
+          {/* Section note: groups related UI behavior for readability. */}
           <button
             type="button"
             onClick={() => navigate("/studenthome")}
@@ -313,9 +313,9 @@ export default function AuthenticatedShell({
               Bread
             </span>
           </button>
-          {/* Action area on the right */}
+          {/* Section note: groups related UI behavior for readability. */}
           <div className="flex min-w-0 items-center gap-2 sm:gap-3 lg:gap-5">
-            {/* User card */}
+            {/* Section note: groups related UI behavior for readability. */}
             <button
               type="button"
               onClick={() => navigate("/profile")}
@@ -352,7 +352,7 @@ export default function AuthenticatedShell({
               </div>
             </button>
 
-            {/* Logout button */}
+            {/* Section note: groups related UI behavior for readability. */}
             <button
               type="button"
               className="group inline-flex items-center gap-2 rounded-2xl border border-brand-200 bg-white
@@ -434,7 +434,7 @@ export default function AuthenticatedShell({
         ) : null}
       </header>
 
-      {/* Main content region */}
+      {/* Section note: groups related UI behavior for readability. */}
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-3 py-3 sm:gap-4 sm:px-4 sm:py-4 lg:flex-row lg:gap-6 lg:px-6 lg:py-8">
         <aside className="hidden w-16 flex-shrink-0 flex-col gap-2 rounded-3xl border border-brand-100/80 bg-white/75 p-2 shadow-soft backdrop-blur lg:flex lg:w-60 lg:p-4">
           <div className="hidden lg:block px-2 pb-1">
@@ -444,8 +444,8 @@ export default function AuthenticatedShell({
           </div>
           {sidebarLinks.map((link) => {
             const active = isActiveLink(link.to, location);
-            // `unread` is global notifications unread count, so only show badge
-            // for the global `/notifications` page.
+            // Section note: groups related logic for readability.
+            // Section note: groups related logic for readability.
             const isMessages = link.to === "/notifications";
             return (
               <NavLink
@@ -473,7 +473,7 @@ export default function AuthenticatedShell({
                   )}
                 >
                   {link.icon}
-                  {/* Unread badge (Messages only) */}
+                  {/* Section note: groups related UI behavior for readability. */}
                   {isMessages && unread > 0 && (
                     <span
                       className="absolute -right-1.5 -top-1.5 inline-flex min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold leading-5 text-white shadow"

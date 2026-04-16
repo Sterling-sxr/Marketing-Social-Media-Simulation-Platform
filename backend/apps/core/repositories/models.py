@@ -174,7 +174,7 @@ class CourseMember(models.Model):
 
 
 class CourseProfile(models.Model):
-    """Per-course persona info."""
+    """Class note: CourseProfile encapsulates related backend behavior."""
 
     course = models.ForeignKey(
         Course,

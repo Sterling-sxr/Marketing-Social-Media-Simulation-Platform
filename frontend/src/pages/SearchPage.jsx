@@ -218,7 +218,7 @@ export default function SearchPage() {
     inputRef.current?.focus();
   }, [authCheckComplete, authUser]);
 
-  // Load hot searches from backend; keep static data as fallback
+  // Section note: groups related logic for readability.
   useEffect(() => {
     if (!authUser) return;
     getJson("/api/search/suggestions/")
@@ -228,7 +228,7 @@ export default function SearchPage() {
       .catch(() => {});
   }, [authUser]);
 
-  // Fetch search results from backend when committed query changes
+  // Section note: groups related logic for readability.
   useEffect(() => {
     if (!queryFromUrl || !authUser) {
       setSearchResults([]);
@@ -245,7 +245,7 @@ export default function SearchPage() {
       })
       .catch(() => {
         if (controller.signal.aborted) return;
-        // Fallback: show only course matches from local context
+        // Section note: groups related logic for readability.
         setSearchResults(buildCourseResults(queryFromUrl, courses.joined));
       })
       .finally(() => {

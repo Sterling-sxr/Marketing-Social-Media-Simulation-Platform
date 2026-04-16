@@ -1,16 +1,4 @@
-"""
-Management command: seed_posts
-
-用法（在容器内执行）:
-  docker compose exec backend python manage.py seed_posts
-  docker compose exec backend python manage.py seed_posts --posts 50 --users 5
-
-参数:
-  --posts   生成的帖子数量，默认 30
-  --users   生成的测试用户数量，默认 3
-  --course  指定已有课程的 join_code；不填则自动创建一门测试课程
-  --clear   执行前先删除该课程下所有已有帖子
-"""
+"""Module note: seed_posts backend module."""
 
 import random
 import string
@@ -30,7 +18,7 @@ from apps.core.repositories.models import (
 
 User = get_user_model()
 
-# ── 随机内容素材 ──────────────────────────────────────────────
+# Section note: explains the purpose of this backend block.
 TOPICS = [
     "有没有人觉得这门课的作业太多了？",
     "刚刚看完今天的讲义，感觉收获很大！",
@@ -98,7 +86,7 @@ def rand_hashtags():
     return random.sample(HASHTAGS_POOL, k)
 
 
-# ─────────────────────────────────────────────────────────────
+# Class note: Command encapsulates related backend behavior.
 
 
 class Command(BaseCommand):
@@ -116,7 +104,7 @@ class Command(BaseCommand):
         join_code = options["course"].strip()
         clear = options["clear"]
 
-        # ── 1. 准备课程 ──────────────────────────────────────
+        # Section note: explains the purpose of this backend block.
         if join_code:
             try:
                 course = Course.objects.get(join_code=join_code)
@@ -140,12 +128,12 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(f"复用课程: {course}  join_code={course.join_code}")
 
-        # ── 2. 清空旧帖子（可选）────────────────────────────
+        # Section note: explains the purpose of this backend block.
         if clear:
             deleted, _ = CoursePost.objects.filter(course=course).delete()
             self.stdout.write(self.style.WARNING(f"已删除 {deleted} 条旧帖子"))
 
-        # ── 3. 准备测试用户 ──────────────────────────────────
+        # Section note: explains the purpose of this backend block.
         users = []
         for i in range(1, n_users + 1):
             username = f"seed_user_{i}"
@@ -160,7 +148,7 @@ class Command(BaseCommand):
             CourseMember.objects.get_or_create(course=course, user=user, defaults={"role": "student"})
             users.append(user)
 
-        # ── 4. 生成帖子 ──────────────────────────────────────
+        # Section note: explains the purpose of this backend block.
         posts_created = 0
         now = timezone.now()
         for i in range(n_posts):
@@ -168,12 +156,12 @@ class Command(BaseCommand):
             content = random.choice(TOPICS)
             hashtags = rand_hashtags()
 
-            # 在帖子内容末尾追加 hashtag（如果内容里没有的话）
+            # Section note: explains the purpose of this backend block.
             for tag in hashtags:
                 if f"#{tag}" not in content:
                     content += f" #{tag}"
 
-            # 随机往前偏移时间，让帖子时间分散
+            # Section note: explains the purpose of this backend block.
             offset_days = random.randint(0, 30)
             offset_hours = random.randint(0, 23)
             created_at = now - timedelta(days=offset_days, hours=offset_hours)
@@ -184,17 +172,17 @@ class Command(BaseCommand):
                 content=content,
                 hashtags=hashtags,
             )
-            # 手动设置时间（auto_now_add 不能直接传，用 update 绕过）
+            # Section note: explains the purpose of this backend block.
             CoursePost.objects.filter(pk=post.pk).update(created_at=created_at, updated_at=created_at)
             posts_created += 1
 
-            # ── 5. 随机点赞 ──────────────────────────────────
+            # Section note: explains the purpose of this backend block.
             likers = random.sample(users, k=random.randint(0, len(users)))
             for liker in likers:
                 if liker != author:
                     CoursePostLike.objects.get_or_create(post=post, user=liker)
 
-            # ── 6. 随机评论 ──────────────────────────────────
+            # Section note: explains the purpose of this backend block.
             n_comments = random.randint(0, 4)
             for _ in range(n_comments):
                 commenter = random.choice(users)

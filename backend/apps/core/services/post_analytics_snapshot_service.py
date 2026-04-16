@@ -1,4 +1,4 @@
-"""Background refresh tasks for post analytics snapshots."""
+"""Module note: post_analytics_snapshot_service backend module."""
 from __future__ import annotations
 
 import logging
@@ -25,7 +25,7 @@ _scheduler_started = False
 
 
 def _calculate_post_snapshot(post: CoursePost, *, days: int = 7) -> PostAnalyticsSnapshot:
-    course = post.course  # already fetched
+    course = post.course  # Inline note: explains the nearby backend logic.
     end_date = timezone.localdate()
     start_date = end_date - timedelta(days=days - 1)
 

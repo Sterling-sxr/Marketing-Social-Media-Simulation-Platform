@@ -10,7 +10,7 @@ export default function HomePage() {
   const navigate = useNavigate();
   const { authUser, login, logout } = useApp();
 
-  // ===== Login form state (reuse LoginPage logic) =====
+  // Section note: groups related logic for readability.
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState({

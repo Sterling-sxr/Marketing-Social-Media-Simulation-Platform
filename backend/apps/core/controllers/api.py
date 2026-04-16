@@ -21,7 +21,7 @@ from ..services import (
     mark_all_as_read,
     mark_as_read,
     store_upload,
-    # follow services
+    # Section note: explains the purpose of this backend block.
 )
 from ..services import (
     send_demo_email as send_demo_email_via_gmail,
@@ -110,8 +110,8 @@ def notifications_endpoint(request: HttpRequest) -> JsonResponse:
     if not user:
         return JsonResponse({"error": "Specify a user via `user` query parameter or X-User header."}, status=400)
 
-    # Optional: scope notifications to a course.
-    # We rely on metadata.course_id (stored as JSONField) from notification creators.
+    # Section note: explains the purpose of this backend block.
+    # Section note: explains the purpose of this backend block.
     course_id = request.GET.get("course_id") or request.GET.get("courseId")
 
     if request.method == "GET":

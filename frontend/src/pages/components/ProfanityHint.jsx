@@ -1,4 +1,4 @@
-// src/components/ProfanityHint.jsx
+// Function note: ProfanityHint encapsulates this unit of behavior.
 export default function ProfanityHint({ message }) {
   if (!message) return null;
   return (

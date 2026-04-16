@@ -1,6 +1,4 @@
-"""
-Media repository – data-access helpers for stored assets.
-"""
+"""Module note: media_repository backend module."""
 from __future__ import annotations
 
 from typing import List
@@ -10,16 +8,12 @@ from .models import MediaAsset
 
 
 class MediaRepository(BaseRepository[MediaAsset]):
-    """
-    Data-access layer for media assets.
-
-    Encapsulates media-related queries.
-    """
+    """Class note: MediaRepository encapsulates related backend behavior."""
     model = MediaAsset
     
     @classmethod
     def get_recent_assets(cls, limit: int = 20) -> List[MediaAsset]:
-        """Fetch the most recently uploaded media assets."""
+        """Function note: get_recent_assets handles this backend operation."""
         return list(
             cls.model.objects
             .order_by('-uploaded_at')[:limit]
@@ -27,7 +21,7 @@ class MediaRepository(BaseRepository[MediaAsset]):
     
     @classmethod
     def get_by_ids(cls, asset_ids: List[int]) -> List[MediaAsset]:
-        """Bulk fetch media assets by ID."""
+        """Function note: get_by_ids handles this backend operation."""
         return list(
             cls.model.objects.filter(id__in=asset_ids)
         )

@@ -5,7 +5,7 @@ function classNames(...values) {
 }
 
 export default function CourseSecondaryNav({ courseId, showOverview = true }) {
-  // Some pages (e.g. Materials) should hide Overview to reduce navigation noise.
+  // Section note: groups related logic for readability.
   const links = [
     ...(showOverview === false
       ? []

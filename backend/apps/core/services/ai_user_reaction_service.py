@@ -1,12 +1,4 @@
-"""Background helpers that let AI personas react to new posts.
-
-Async redesign:
-- schedule_ai_reactions: fires a daemon thread (immediate return to caller)
-- Inside the thread, asyncio.run() drives async_handle_post_reactions
-- All persona LLM calls run concurrently via asyncio.gather  (N personas → 1 round-trip time)
-- Django ORM calls are wrapped with sync_to_async(thread_sensitive=False) so they
-  run in a thread-pool thread rather than requiring the main ASGI loop thread.
-"""
+"""Module note: ai_user_reaction_service backend module."""
 
 from __future__ import annotations
 
@@ -36,12 +28,12 @@ except ImportError:  # pragma: no cover – optional dependency
 logger = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
-# Client factory (no global cache – AsyncOpenAI is bound to an event loop)
-# ---------------------------------------------------------------------------
+# Section note: explains the purpose of this backend block.
+# Section note: explains the purpose of this backend block.
+# Function note: _get_client_kwargs handles this backend operation.
 
 def _get_client_kwargs() -> dict[str, str] | None:
-    """Return constructor kwargs for AsyncOpenAI, or None when not configured."""
+    """Function note: _get_client_kwargs handles this backend operation."""
     api_key = getattr(settings, "DEEPSEEK_API_KEY", None)
     if not api_key:
         return None
@@ -54,17 +46,12 @@ def _get_client_kwargs() -> dict[str, str] | None:
     }
 
 
-# ---------------------------------------------------------------------------
-# Public entry-point (called from transaction.on_commit in post service)
-# ---------------------------------------------------------------------------
+# Section note: explains the purpose of this backend block.
+# Section note: explains the purpose of this backend block.
+# Function note: schedule_ai_reactions handles this backend operation.
 
 def schedule_ai_reactions(course_id: int, post_id: int, delay_seconds: float = 0.0) -> None:
-    """
-    Fire-and-forget: start a daemon thread that runs async AI reactions.
-
-    The calling request handler returns immediately; all LLM work happens in
-    the background thread's own asyncio event loop.
-    """
+    """Function note: schedule_ai_reactions handles this backend operation."""
     if not getattr(settings, "DEEPSEEK_API_KEY", None):
         logger.debug("DEEPSEEK_API_KEY not configured; skip AI reactions for post=%s", post_id)
         return
@@ -85,9 +72,9 @@ def schedule_ai_reactions(course_id: int, post_id: int, delay_seconds: float = 0
     ).start()
 
 
-# ---------------------------------------------------------------------------
-# Data types
-# ---------------------------------------------------------------------------
+# Section note: explains the purpose of this backend block.
+# Section note: explains the purpose of this backend block.
+# Section note: explains the purpose of this backend block.
 
 @dataclass
 class ReactionDecision:
@@ -96,9 +83,9 @@ class ReactionDecision:
     comment_text: str
 
 
-# ---------------------------------------------------------------------------
-# Prompt helpers (pure functions – no I/O)
-# ---------------------------------------------------------------------------
+# Section note: explains the purpose of this backend block.
+# Section note: explains the purpose of this backend block.
+# Function note: _build_persona_prompt handles this backend operation.
 
 def _build_persona_prompt(ai_user, post: CoursePost) -> str:
     persona_lines = [
@@ -144,17 +131,12 @@ def _parse_decision(raw: str | dict[str, Any]) -> ReactionDecision:
     )
 
 
-# ---------------------------------------------------------------------------
-# Async core – all LLM calls happen concurrently
-# ---------------------------------------------------------------------------
+# Section note: explains the purpose of this backend block.
+# Section note: explains the purpose of this backend block.
+# Function note: async_handle_post_reactions handles this backend operation.
 
 async def async_handle_post_reactions(course_id: int, post_id: int) -> None:
-    """
-    Async entry point: load data then fan-out to all AI personas in parallel.
-
-    Uses thread_sensitive=False so Django ORM calls run in a thread-pool
-    thread rather than the main ASGI thread (which we don't own here).
-    """
+    """Function note: async_handle_post_reactions handles this backend operation."""
     kwargs = _get_client_kwargs()
     if kwargs is None:
         return
@@ -206,13 +188,13 @@ async def async_handle_post_reactions(course_id: int, post_id: int) -> None:
 
 
 async def _handle_single_ai_user(
-    client: Any,  # AsyncOpenAI
+    client: Any,  # Inline note: explains the nearby backend logic.
     ai_user: Any,
     post: CoursePost,
     course_id: int,
     post_id: int,
 ) -> None:
-    """Evaluate one AI persona and apply like/comment if appropriate."""
+    """Function note: _handle_single_ai_user handles this backend operation."""
     _db = lambda fn, *a, **kw: sync_to_async(fn, thread_sensitive=False)(*a, **kw)  # noqa: E731
 
     identity = getattr(ai_user, "identity", None)
@@ -221,7 +203,7 @@ async def _handle_single_ai_user(
     if not system_user:
         logger.debug("AI user %s missing identity, attempting repair.", ai_user.id)
         try:
-            from .ai_user_service import ensure_ai_user_identity  # local import avoids circular dep
+            from .ai_user_service import ensure_ai_user_identity  # Inline note: explains the nearby backend logic.
 
             if post.course:
                 await _db(ensure_ai_user_identity, ai_user)
@@ -234,7 +216,7 @@ async def _handle_single_ai_user(
     if not system_user:
         return
 
-    # Skip self-reactions when the post was authored by this AI's system user.
+    # Section note: explains the purpose of this backend block.
     if post.author_id == system_user.id:
         return
 
@@ -294,7 +276,7 @@ async def _handle_single_ai_user(
 
 
 async def _async_request_decision(prompt: str, client: Any) -> ReactionDecision | None:
-    """Make a single async LLM call and parse the JSON response."""
+    """Function note: _async_request_decision handles this backend operation."""
     model_name = getattr(settings, "DEEPSEEK_MODEL_NAME", "deepseek-chat")
     try:
         response = await client.chat.completions.create(
@@ -319,17 +301,17 @@ async def _async_request_decision(prompt: str, client: Any) -> ReactionDecision 
         return None
 
 
-# ---------------------------------------------------------------------------
-# Sync wrappers kept for backward compatibility
-# ---------------------------------------------------------------------------
+# Section note: explains the purpose of this backend block.
+# Section note: explains the purpose of this backend block.
+# Function note: handle_post_reactions handles this backend operation.
 
 def handle_post_reactions(course_id: int, post_id: int) -> None:
-    """Synchronous wrapper (kept for any callers that haven't migrated)."""
+    """Function note: handle_post_reactions handles this backend operation."""
     asyncio.run(async_handle_post_reactions(course_id, post_id))
 
 
 def _request_decision(prompt: str, client: Any = None) -> ReactionDecision | None:
-    """Synchronous wrapper around the async LLM call (used by evaluate_persona_prompt)."""
+    """Function note: _request_decision handles this backend operation."""
 
     async def _run() -> ReactionDecision | None:
         kwargs = _get_client_kwargs()
@@ -342,7 +324,7 @@ def _request_decision(prompt: str, client: Any = None) -> ReactionDecision | Non
 
 
 def evaluate_persona_prompt(prompt: str) -> ReactionDecision | None:
-    """Public sync helper used by course_post_service for interest recommendations."""
+    """Function note: evaluate_persona_prompt handles this backend operation."""
     return _request_decision(prompt)
 
 

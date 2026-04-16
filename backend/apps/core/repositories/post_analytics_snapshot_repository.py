@@ -1,4 +1,4 @@
-"""Repository for PostAnalyticsSnapshot."""
+"""Module note: post_analytics_snapshot_repository backend module."""
 from __future__ import annotations
 
 from typing import Iterable, Optional

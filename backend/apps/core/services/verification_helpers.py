@@ -1,4 +1,4 @@
-"""Shared helpers for email verification flows."""
+"""Module note: verification_helpers backend module."""
 from __future__ import annotations
 
 import random

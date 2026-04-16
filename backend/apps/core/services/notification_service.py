@@ -13,7 +13,7 @@ def _parse_optional_course_id(course_id: object) -> int | None:
     if course_id is None:
         return None
     try:
-        # Accept numeric strings and ints.
+        # Section note: explains the purpose of this backend block.
         course_id_int = int(str(course_id).strip())
         return course_id_int
     except (TypeError, ValueError):
@@ -26,11 +26,7 @@ def list_notifications(
     limit: int = 50,
     course_id: object | None = None,
 ) -> tuple[list[Notification], int]:
-    """Return notifications for a recipient and the unread count.
-
-    If `course_id` is provided, only notifications whose metadata.course_id
-    matches are returned.
-    """
+    """Function note: list_notifications handles this backend operation."""
     parsed_course_id = _parse_optional_course_id(course_id)
     queryset = Notification.objects.filter(recipient=recipient)
     if parsed_course_id is not None:
@@ -40,11 +36,7 @@ def list_notifications(
 
 
 def mark_as_read(*, recipient: str, ids: Iterable[int], course_id: object | None = None) -> int:
-    """Mark supplied notification ids as read for the recipient.
-
-    If `course_id` is provided, only matching notifications for that course
-    are marked.
-    """
+    """Function note: mark_as_read handles this backend operation."""
     ids = list(ids)
     if not ids:
         return 0
@@ -56,12 +48,7 @@ def mark_as_read(*, recipient: str, ids: Iterable[int], course_id: object | None
 
 
 def mark_all_as_read(*, recipient: str, course_id: object | None = None) -> int:
-    """
-    Mark all notifications for the given recipient as read.
-
-    Used by the "Mark all read" action in the UI so that the badge
-    count truly drops to zero, not just for the first page of results.
-    """
+    """Function note: mark_all_as_read handles this backend operation."""
     parsed_course_id = _parse_optional_course_id(course_id)
     qs = Notification.objects.filter(recipient=recipient, is_read=False)
     if parsed_course_id is not None:
@@ -79,7 +66,7 @@ def create_notification(
     link: str,
     metadata: dict | None = None,
 ) -> dict:
-    """Create and broadcast a notification returning the payload."""
+    """Function note: create_notification handles this backend operation."""
     notification = Notification.objects.create(
         recipient=recipient,
         actor=actor,

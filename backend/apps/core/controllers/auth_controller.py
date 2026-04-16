@@ -150,7 +150,7 @@ def login_user(request: HttpRequest) -> JsonResponse:
 
 
 def check_auth_status(request: HttpRequest) -> JsonResponse:
-    """Check if user is currently authenticated."""
+    """Function note: check_auth_status handles this backend operation."""
     if not request.user.is_authenticated:
         return JsonResponse({"authenticated": False}, status=200)
     

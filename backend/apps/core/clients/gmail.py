@@ -1,4 +1,4 @@
-"""Utilities for sending email via the Gmail API."""
+"""Module note: gmail backend module."""
 import base64
 from email.mime.text import MIMEText
 from typing import Optional
@@ -10,7 +10,7 @@ from googleapiclient.errors import HttpError
 
 
 class GmailNotConfiguredError(RuntimeError):
-    """Raised when the Gmail client configuration is incomplete."""
+    """Class note: GmailNotConfiguredError encapsulates related backend behavior."""
 
 
 def _build_credentials() -> Credentials:
@@ -42,17 +42,7 @@ def _build_credentials() -> Credentials:
 def send_gmail_message(
     *, subject: str, body: str, recipient: Optional[str] = None
 ) -> dict:
-    """Send a plaintext email using the Gmail API.
-
-    Args:
-        subject: Email subject line.
-        body: Plaintext body content.
-        recipient: Optional override for the recipient. Falls back to
-            settings.GMAIL_DEMO_RECIPIENT when omitted.
-
-    Returns:
-        The raw Gmail API response dict.
-    """
+    """Function note: send_gmail_message handles this backend operation."""
 
     to_address = recipient or settings.GMAIL_DEMO_RECIPIENT
     if not to_address:

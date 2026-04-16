@@ -22,8 +22,8 @@ def dashboard_summary(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"error": "Method not allowed"}, status=405)
 
     try:
-        # Always refresh the snapshot so totals (e.g. Total Posts)
-        # reflect the latest activity when the dashboard is opened.
+        # Section note: explains the purpose of this backend block.
+        # Section note: explains the purpose of this backend block.
         data = refresh_dashboard_snapshot(user=request.user)
     except PermissionError as exc:
         return JsonResponse({"error": str(exc)}, status=403)

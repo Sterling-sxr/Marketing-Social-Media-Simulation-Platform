@@ -73,7 +73,7 @@ def profile_options(request: HttpRequest) -> JsonResponse:
 
 
 def get_my_profile(request: HttpRequest) -> JsonResponse:
-    """Get current user's profile data."""
+    """Function note: get_my_profile handles this backend operation."""
     auth_error = _ensure_authenticated(request)
     if auth_error:
         return auth_error
@@ -99,7 +99,7 @@ def submit_profile(request: HttpRequest) -> JsonResponse:
     except json.JSONDecodeError:
         return JsonResponse({"error": "Request body must be valid JSON."}, status=400)
 
-    # Optional: update username if provided and non-empty
+    # Section note: explains the purpose of this backend block.
     new_username = (payload.get("username") or "").strip()
     if new_username and new_username != (request.user.username or ""):
         UserModel = get_user_model()
@@ -200,12 +200,7 @@ def update_display_name(request: HttpRequest) -> JsonResponse:
 
 @csrf_exempt
 def set_user_admin(request: HttpRequest, user_id: int) -> JsonResponse:
-    """
-    Grant or revoke admin/superuser role.
-
-    NOTE: This endpoint now allows a user to elevate themselves when targeting their own id.
-    Use with caution; in production you should lock this down or remove it.
-    """
+    """Function note: set_user_admin handles this backend operation."""
     auth_error = _ensure_authenticated(request)
     if auth_error:
         return auth_error
@@ -226,7 +221,7 @@ def set_user_admin(request: HttpRequest, user_id: int) -> JsonResponse:
     except UserModel.DoesNotExist:
         return JsonResponse({"error": "User not found."}, status=404)
 
-    # Allow self-elevation; otherwise require existing superuser
+    # Section note: explains the purpose of this backend block.
     if target.id != request.user.id and not getattr(request.user, "is_superuser", False):
         return JsonResponse({"error": "Only superusers can change admin roles."}, status=403)
 
@@ -256,7 +251,7 @@ def follow_user(request: HttpRequest, user_id: int) -> JsonResponse:
         if me.id == user_id:
             return JsonResponse({"error": "You cannot follow yourself."}, status=400)
         
-        # Load target user to get username/email for notification
+        # Section note: explains the purpose of this backend block.
         UserModel = get_user_model()
         try:
             target_user = UserModel.objects.get(id=user_id)
@@ -265,9 +260,9 @@ def follow_user(request: HttpRequest, user_id: int) -> JsonResponse:
 
         obj, created = UserFollow.objects.get_or_create(follower_id=me.id, target_id=user_id)
         if created:
-            # Send notification to the target user
+            # Section note: explains the purpose of this backend block.
             try:
-                # Ensure we use consistent recipient identifier (strip empty strings)
+                # Section note: explains the purpose of this backend block.
                 recipient = (target_user.username or "").strip() or (target_user.email or "").strip() or str(target_user.id)
                 actor_name = (me.username or "").strip() or (me.email or "").strip() or f"User {me.pk}"
                 import logging

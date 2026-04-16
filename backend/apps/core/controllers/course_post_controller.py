@@ -156,7 +156,7 @@ def course_post_comments(request: HttpRequest, course_id: int, post_id: int) -> 
             return JsonResponse({"error": "This course has ended; posts are read-only."}, status=403)
         comment = CoursePostComment.objects.create(post=post, user=request.user, content=content)
 
-        # Create notification to post author (except self-comment)
+        # Section note: explains the purpose of this backend block.
         if post.author_id != request.user.id:
             try:
                 recipient = (

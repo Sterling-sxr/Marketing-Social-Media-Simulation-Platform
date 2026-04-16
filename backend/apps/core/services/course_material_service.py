@@ -8,7 +8,7 @@ from django.core.files.uploadedfile import UploadedFile
 
 from ..repositories.models import Course, CourseMaterial, CourseMember
 
-MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
+MAX_FILE_SIZE = 50 * 1024 * 1024  # Inline note: explains the nearby backend logic.
 
 ALLOWED_EXTENSIONS = {
     ".pdf", ".doc", ".docx", ".ppt", ".pptx",
@@ -68,18 +68,18 @@ def upload_course_material(
 
     _get_course_or_raise(course_id)
 
-    # Validate title
+    # Section note: explains the purpose of this backend block.
     title = title.strip()
     if not title:
         raise ValidationError("Title is required.")
 
-    # Validate file size
+    # Section note: explains the purpose of this backend block.
     if uploaded_file.size > MAX_FILE_SIZE:
         raise ValidationError(
             f"File size exceeds the 50 MB limit ({uploaded_file.size // (1024 * 1024)} MB)."
         )
 
-    # Validate extension
+    # Section note: explains the purpose of this backend block.
     _, ext = os.path.splitext(uploaded_file.name or "")
     if ext.lower() not in ALLOWED_EXTENSIONS:
         raise ValidationError(
@@ -87,7 +87,7 @@ def upload_course_material(
             f"Allowed: {', '.join(sorted(ALLOWED_EXTENSIONS))}"
         )
 
-    # Validate category
+    # Section note: explains the purpose of this backend block.
     if category not in CATEGORY_CHOICES:
         category = "other"
 
@@ -116,7 +116,7 @@ def delete_course_material(user, course_id: int, material_id: int) -> None:
     if not is_uploader and not _is_teacher_or_admin(user, course_id):
         raise PermissionError("You do not have permission to delete this material.")
 
-    # Remove physical file
+    # Section note: explains the purpose of this backend block.
     if material.file:
         try:
             storage = material.file.storage
@@ -131,8 +131,8 @@ def delete_course_material(user, course_id: int, material_id: int) -> None:
 def _serialize(m: CourseMaterial) -> dict:
     try:
         if m.file:
-            # Use PUBLIC_MEDIA_URL so the browser can reach the file via Nginx,
-            # instead of the internal MinIO address (http://minio:9000/...).
+            # Section note: explains the purpose of this backend block.
+            # Section note: explains the purpose of this backend block.
             public_base = getattr(settings, "PUBLIC_MEDIA_URL", "").rstrip("/")
             if public_base:
                 file_url = f"{public_base}/{m.file.name}"

@@ -68,7 +68,7 @@ function fileIcon(contentType, originalName) {
   return "📎";
 }
 
-/** Returns true for file types the browser can show inline (no download). */
+/* Function note: isPreviewable encapsulates this unit of behavior. */
 function isPreviewable(contentType, originalName) {
   const ext = (originalName || "").split(".").pop().toLowerCase();
   const previewableExts = ["pdf", "png", "jpg", "jpeg", "gif", "webp", "svg", "mp4", "mov", "webm"];
@@ -114,7 +114,7 @@ function UploadModal({ courseId, onClose, onSuccess }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Upload failed.");
-      // Backend wraps the new material under {"material": {...}}
+      // Section note: groups related logic for readability.
       onSuccess(data.material ?? data);
     } catch (err) {
       setStatus({ loading: false, error: err.message || "Upload failed." });
@@ -372,7 +372,7 @@ export default function CourseMaterialsPage() {
     try {
       const params = activeCategory !== "all" ? `?category=${activeCategory}` : "";
       const data = await getJson(`/api/courses/${courseId}/materials/${params}`);
-      // Backend returns {"items": [...]}
+      // Section note: groups related logic for readability.
       setMaterials(Array.isArray(data) ? data : data.items ?? data.materials ?? []);
       setError("");
     } catch (err) {
@@ -413,8 +413,8 @@ export default function CourseMaterialsPage() {
     }
   };
 
-  // Mobile bottom nav always shows the 5 global destinations so users
-  // are never stranded when inside a course-specific page.
+  // Section note: groups related logic for readability.
+  // Section note: groups related logic for readability.
   const globalMobileNav = useMemo(
     () => [
       { to: "/studenthome", label: "Home", icon: <Home className="h-5 w-5" /> },
@@ -438,7 +438,7 @@ export default function CourseMaterialsPage() {
       mobileNavLinks={globalMobileNav}
     >
       <div className="space-y-5">
-        {/* Search */}
+        {/* Section note: groups related UI behavior for readability. */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative w-full sm:max-w-lg">
             <Search
@@ -455,7 +455,7 @@ export default function CourseMaterialsPage() {
           </div>
         </div>
 
-        {/* Category filter tabs */}
+        {/* Section note: groups related UI behavior for readability. */}
         <div className="flex flex-wrap gap-2">
           {CATEGORIES.map((cat) => (
             <button
@@ -473,7 +473,7 @@ export default function CourseMaterialsPage() {
           ))}
         </div>
 
-        {/* Content */}
+        {/* Section note: groups related UI behavior for readability. */}
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-8 w-8 animate-spin text-brand-400" />

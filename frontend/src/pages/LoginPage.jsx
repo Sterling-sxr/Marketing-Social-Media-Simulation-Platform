@@ -8,7 +8,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const { authUser, login, logout } = useApp();
 
-  // ===== Login form state =====
+  // Section note: groups related logic for readability.
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState({

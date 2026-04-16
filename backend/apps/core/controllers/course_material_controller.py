@@ -19,10 +19,7 @@ def _ensure_authenticated(request: HttpRequest) -> JsonResponse | None:
 
 @csrf_exempt
 def course_materials_view(request: HttpRequest, course_id: int) -> JsonResponse:
-    """
-    GET  /api/courses/<course_id>/materials/          — list materials
-    POST /api/courses/<course_id>/materials/          — upload a new material
-    """
+    """Function note: course_materials_view handles this backend operation."""
     auth_error = _ensure_authenticated(request)
     if auth_error:
         return auth_error
@@ -70,9 +67,7 @@ def course_materials_view(request: HttpRequest, course_id: int) -> JsonResponse:
 def course_material_detail_view(
     request: HttpRequest, course_id: int, material_id: int
 ) -> JsonResponse:
-    """
-    DELETE /api/courses/<course_id>/materials/<material_id>/  — delete a material
-    """
+    """Function note: course_material_detail_view handles this backend operation."""
     auth_error = _ensure_authenticated(request)
     if auth_error:
         return auth_error

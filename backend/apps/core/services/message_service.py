@@ -6,10 +6,10 @@ from ..repositories.models import Message
 
 
 def list_recent_messages(limit: int = 20) -> Iterable[Message]:
-    """Return the most recent messages limited by `limit`."""
+    """Function note: list_recent_messages handles this backend operation."""
     return Message.objects.all()[:limit]
 
 
 def create_message(*, content: str) -> Message:
-    """Persist a new message with the given content."""
+    """Function note: create_message handles this backend operation."""
     return Message.objects.create(content=content)

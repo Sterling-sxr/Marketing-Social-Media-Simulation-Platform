@@ -1,6 +1,4 @@
-"""
-Course AI User Repository
-"""
+"""Module note: ai_user_repository backend module."""
 from __future__ import annotations
 
 from typing import List, Optional
@@ -12,7 +10,7 @@ from .models import CourseAIUser
 
 
 class CourseAIUserRepository(BaseRepository[CourseAIUser]):
-    """Data-access helpers for course AI users."""
+    """Class note: CourseAIUserRepository encapsulates related backend behavior."""
 
     model = CourseAIUser
 

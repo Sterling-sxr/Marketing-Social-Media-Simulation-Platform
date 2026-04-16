@@ -35,7 +35,7 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-brand-100 text-slate-900 flex flex-col">
-      {/* Top navigation (same structure as HomePage) */}
+      {/* Section note: groups related UI behavior for readability. */}
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-3 py-3 sm:px-6 sm:py-5">
         <div className="flex items-center gap-3">
           <img
@@ -58,9 +58,9 @@ export default function ResetPasswordPage() {
         </nav>
       </header>
 
-      {/* Main area: stacked on small screens, split layout on large screens */}
+      {/* Section note: groups related UI behavior for readability. */}
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-5 px-3 py-4 sm:gap-10 sm:px-6 sm:py-10 lg:flex-row lg:items-center">
-        {/* Left copy block (first on small screens) */}
+        {/* Section note: groups related UI behavior for readability. */}
         <section className="order-1 lg:order-none relative flex-1 pt-1 lg:pt-6">
           <div className="relative z-10 space-y-4 max-w-[560px] lg:-mt-10">
             <h1 className="text-center text-2xl font-bold sm:text-left sm:text-4xl lg:text-4xl">
@@ -75,7 +75,7 @@ export default function ResetPasswordPage() {
             </p>
           </div>
 
-          {/* Decorative circles: md+ only, layered behind the text */}
+          {/* Section note: groups related UI behavior for readability. */}
           <div className="absolute inset-0 hidden md:block pointer-events-none z-0">
             <CircleImage
               src="/logo.jpg"
@@ -98,7 +98,7 @@ export default function ResetPasswordPage() {
           </div>
         </section>
 
-        {/* Right-hand card (second on small screens) */}
+        {/* Section note: groups related UI behavior for readability. */}
         <aside className="order-2 lg:order-none flex-1">
           <div className="relative w-full max-w-md lg:ml-auto rounded-2xl border border-brand-100 bg-white p-5 shadow-lg shadow-brand-100 text-center sm:rounded-3xl sm:p-8 sm:shadow-xl">
             <div className="absolute right-0 top-0 h-16 w-16 rounded-bl-3xl bg-gradient-to-b from-brand/10 to-brand/0" />
@@ -181,7 +181,7 @@ export default function ResetPasswordPage() {
         </aside>
       </main>
 
-      {/* Footer pinned to the bottom */}
+      {/* Section note: groups related UI behavior for readability. */}
       <footer className="py-6 text-center text-xs text-slate-400">
         © {new Date().getFullYear()} Bread Capstone Team. All rights reserved.
       </footer>

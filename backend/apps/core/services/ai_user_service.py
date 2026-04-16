@@ -1,4 +1,4 @@
-"""Services for managing course-level AI users."""
+"""Module note: ai_user_service backend module."""
 from __future__ import annotations
 
 import csv
@@ -49,7 +49,7 @@ ALL_AI_USER_FIELDS = (
 
 
 class CourseAINotFoundError(ValueError):
-    """Raised when course AI user is not found."""
+    """Class note: CourseAINotFoundError encapsulates related backend behavior."""
 
 
 def _generate_auth_username(course, ai_username: str) -> str:
@@ -198,7 +198,7 @@ def _payload_to_data(payload: dict[str, Any]) -> dict[str, Any]:
         data[field] = _normalize_numeric(payload.get(field), field)
     for field in AI_USER_LIST_FIELDS:
         data[field] = _normalize_interests(payload.get(field))
-        # Validate interests items
+        # Section note: explains the purpose of this backend block.
         allowed = set(PROFILE_OPTIONS.get("interests", []))
         for item in data[field]:
             if item not in allowed:
@@ -454,7 +454,7 @@ def import_course_ai_users(*, user, course_id: int, file_bytes: bytes) -> dict[s
 
 
 def ensure_ai_user_identity(ai_user: CourseAIUser) -> None:
-    """Public helper to make sure an AI persona has a backing auth user."""
+    """Function note: ensure_ai_user_identity handles this backend operation."""
     course = CourseRepository.get_by_id(ai_user.course_id)
     if not course:
         return

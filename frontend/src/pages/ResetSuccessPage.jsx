@@ -6,12 +6,12 @@ export default function ResetSuccessPage() {
   const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
-    // Decrease the countdown every second
+    // Section note: groups related logic for readability.
     const timer = setInterval(() => {
       setCountdown((c) => c - 1);
     }, 1000);
 
-    // Redirect to login after 3 seconds
+    // Section note: groups related logic for readability.
     const redirect = setTimeout(() => {
       navigate("/", { replace: true });
     }, 3000);

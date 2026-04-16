@@ -1,6 +1,4 @@
-"""
-Post repository helpers for course discussions.
-"""
+"""Module note: post_repository backend module."""
 from __future__ import annotations
 
 from typing import List, Optional, Set
@@ -19,19 +17,12 @@ from .models import (
 
 
 class PostRepository(BaseRepository[CoursePost]):
-    """
-    Data-access helpers for posts.
-
-    Encapsulates complex queries and bulk operations around posts.
-    """
+    """Class note: PostRepository encapsulates related backend behavior."""
     model = CoursePost
     
     @classmethod
     def get_with_details(cls, post_id: int) -> Optional[CoursePost]:
-        """
-        Fetch a post plus all related data (optimized query).
-        Includes author, attachments, and mentions.
-        """
+        """Function note: get_with_details handles this backend operation."""
         try:
             return (
                 cls.model.objects
@@ -60,12 +51,7 @@ class PostRepository(BaseRepository[CoursePost]):
         following_ids: List[int] = None,
         limit: int = 50
     ) -> List[CoursePost]:
-        """
-        Fetch posts within a course (optimized query).
-        - Optional hashtag filtering
-        - Optional "following only" filtering
-        - Prefetches related objects for efficiency
-        """
+        """Function note: get_course_posts handles this backend operation."""
         queryset = (
             cls.model.objects
             .filter(course_id=course_id)
@@ -83,7 +69,7 @@ class PostRepository(BaseRepository[CoursePost]):
             .order_by('-created_at')
         )
         
-        # Hashtag filter
+        # Section note: explains the purpose of this backend block.
         if hashtag:
             normalized = hashtag.lower()
             queryset = queryset.filter(
@@ -91,7 +77,7 @@ class PostRepository(BaseRepository[CoursePost]):
                 Q(hashtags__contains=[hashtag])
             )
         
-        # Following filter
+        # Section note: explains the purpose of this backend block.
         if following_only and following_ids:
             queryset = queryset.filter(author_id__in=following_ids)
         
@@ -99,9 +85,7 @@ class PostRepository(BaseRepository[CoursePost]):
     
     @classmethod
     def get_user_posts(cls, user_id: int, course_ids: List[int], limit: int | None = None) -> List[CoursePost]:
-        """
-        Fetch posts authored by the user within specified courses.
-        """
+        """Function note: get_user_posts handles this backend operation."""
         queryset = (
             cls.model.objects
             .filter(author_id=user_id, course_id__in=course_ids)
@@ -124,9 +108,7 @@ class PostRepository(BaseRepository[CoursePost]):
     
     @classmethod
     def get_liked_posts(cls, user_id: int, course_ids: List[int]) -> List[CoursePost]:
-        """
-        Fetch posts liked by the user within specified courses.
-        """
+        """Function note: get_liked_posts handles this backend operation."""
         return list(
             cls.model.objects
             .filter(course_id__in=course_ids, likes__user_id=user_id)
@@ -146,29 +128,27 @@ class PostRepository(BaseRepository[CoursePost]):
 
 
 class PostLikeRepository(BaseRepository[CoursePostLike]):
-    """
-    Data-access helpers for post likes.
-    """
+    """Class note: PostLikeRepository encapsulates related backend behavior."""
     model = CoursePostLike
     
     @classmethod
     def get_or_create_like(cls, post_id: int, user_id: int) -> tuple[CoursePostLike, bool]:
-        """Get or create a like record."""
+        """Function note: get_or_create_like handles this backend operation."""
         return cls.model.objects.get_or_create(post_id=post_id, user_id=user_id)
     
     @classmethod
     def unlike(cls, post_id: int, user_id: int) -> int:
-        """Remove a like."""
+        """Function note: unlike handles this backend operation."""
         return cls.delete_by_filter(post_id=post_id, user_id=user_id)
     
     @classmethod
     def get_like_count(cls, post_id: int) -> int:
-        """Return the like count for a post."""
+        """Function note: get_like_count handles this backend operation."""
         return cls.count(post_id=post_id)
     
     @classmethod
     def get_like_counts(cls, post_ids: List[int]) -> dict[int, int]:
-        """Return like counts for multiple posts."""
+        """Function note: get_like_counts handles this backend operation."""
         counts = (
             cls.model.objects
             .filter(post_id__in=post_ids)
@@ -179,7 +159,7 @@ class PostLikeRepository(BaseRepository[CoursePostLike]):
     
     @classmethod
     def get_user_liked_posts(cls, user_id: int, post_ids: List[int]) -> Set[int]:
-        """Return the set of post IDs liked by the user."""
+        """Function note: get_user_liked_posts handles this backend operation."""
         return set(
             cls.model.objects
             .filter(post_id__in=post_ids, user_id=user_id)
@@ -188,14 +168,12 @@ class PostLikeRepository(BaseRepository[CoursePostLike]):
 
 
 class PostCommentRepository(BaseRepository[CoursePostComment]):
-    """
-    Data-access helpers for post comments.
-    """
+    """Class note: PostCommentRepository encapsulates related backend behavior."""
     model = CoursePostComment
     
     @classmethod
     def get_post_comments(cls, post_id: int) -> List[CoursePostComment]:
-        """Fetch all comments for a post."""
+        """Function note: get_post_comments handles this backend operation."""
         return list(
             cls.model.objects
             .filter(post_id=post_id)
@@ -205,12 +183,12 @@ class PostCommentRepository(BaseRepository[CoursePostComment]):
     
     @classmethod
     def get_comment_count(cls, post_id: int) -> int:
-        """Return the comment count for a post."""
+        """Function note: get_comment_count handles this backend operation."""
         return cls.count(post_id=post_id)
     
     @classmethod
     def get_comment_counts(cls, post_ids: List[int]) -> dict[int, int]:
-        """Return comment counts for multiple posts."""
+        """Function note: get_comment_counts handles this backend operation."""
         counts = (
             cls.model.objects
             .filter(post_id__in=post_ids)
@@ -221,14 +199,12 @@ class PostCommentRepository(BaseRepository[CoursePostComment]):
 
 
 class PostAttachmentRepository(BaseRepository[CoursePostAttachment]):
-    """
-    Data-access helpers for post attachments.
-    """
+    """Class note: PostAttachmentRepository encapsulates related backend behavior."""
     model = CoursePostAttachment
     
     @classmethod
     def attach_to_post(cls, post_id: int, asset_ids: List[int]) -> int:
-        """Associate many attachments with a post."""
+        """Function note: attach_to_post handles this backend operation."""
         attachments = [
             cls.model(post_id=post_id, asset_id=asset_id)
             for asset_id in asset_ids
@@ -238,14 +214,12 @@ class PostAttachmentRepository(BaseRepository[CoursePostAttachment]):
 
 
 class PostMentionRepository(BaseRepository[CoursePostMention]):
-    """
-    Data-access helpers for post mentions.
-    """
+    """Class note: PostMentionRepository encapsulates related backend behavior."""
     model = CoursePostMention
     
     @classmethod
     def create_mentions(cls, post_id: int, mention_entities: List[dict]) -> int:
-        """Bulk-create mention records."""
+        """Function note: create_mentions handles this backend operation."""
         mentions = [
             cls.model(
                 post_id=post_id,
@@ -259,19 +233,17 @@ class PostMentionRepository(BaseRepository[CoursePostMention]):
 
 
 class PostViewRepository(BaseRepository[CoursePostView]):
-    """
-    Data-access helpers for post views.
-    """
+    """Class note: PostViewRepository encapsulates related backend behavior."""
     model = CoursePostView
 
     @classmethod
     def create_view(cls, post_id: int, user_id: int | None) -> CoursePostView:
-        """Record a post view."""
+        """Function note: create_view handles this backend operation."""
         return cls.create(post_id=post_id, user_id=user_id)
 
     @classmethod
     def count_views(cls, post_id: int) -> int:
-        """Return the total view count for a post."""
+        """Function note: count_views handles this backend operation."""
         return cls.count(post_id=post_id)
 
 

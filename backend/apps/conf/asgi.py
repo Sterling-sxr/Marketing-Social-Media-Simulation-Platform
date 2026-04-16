@@ -1,4 +1,4 @@
-"""ASGI config for Django with Channels support."""
+"""Module note: asgi backend module."""
 import os
 
 from channels.auth import AuthMiddlewareStack

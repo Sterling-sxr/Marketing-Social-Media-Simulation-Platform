@@ -8,7 +8,7 @@ class CoreConfig(AppConfig):
     name = "apps.core"
 
     def ready(self) -> None:  # noqa: D401
-        """Hook to start background schedulers after Django is ready."""
+        """Function note: ready handles this backend operation."""
         if os.environ.get("SKIP_CORE_BACKGROUND_TASKS") == "1":
             return
         from .services.dashboard_service import start_dashboard_scheduler

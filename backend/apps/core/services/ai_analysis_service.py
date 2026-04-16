@@ -1,4 +1,4 @@
-"""Generic helpers for DeepSeek-driven analysis outputs."""
+"""Module note: ai_analysis_service backend module."""
 from __future__ import annotations
 
 import json
@@ -7,7 +7,7 @@ from typing import Any
 
 from django.conf import settings
 
-try:  # optional dependency (same as ai_user_reaction_service)
+try:  # Inline note: explains the nearby backend logic.
     from openai import OpenAI
 except ImportError:  # pragma: no cover - optional
     OpenAI = None  # type: ignore
@@ -112,16 +112,7 @@ _TUTOR_SYSTEM_PROMPT = (
 
 
 def generate_tutor_response(*, question: str, history: list[dict] | None = None) -> dict[str, Any]:
-    """
-    Teaching-assistant endpoint.
-
-    Args:
-        question: The student's current question.
-        history:  Optional list of prior turns, each {"role": "user"|"assistant", "content": str}.
-
-    Returns:
-        Parsed dict with keys: short_answer, detailed_explanation, example, key_points.
-    """
+    """Function note: generate_tutor_response handles this backend operation."""
     client = _get_client()
     if client is None:
         raise RuntimeError("DeepSeek client is unavailable.")
@@ -148,7 +139,7 @@ def generate_tutor_response(*, question: str, history: list[dict] | None = None)
     if not raw:
         raise RuntimeError("DeepSeek returned an empty response.")
 
-    # Strip markdown code fences if model adds them
+    # Section note: explains the purpose of this backend block.
     if raw.startswith("```"):
         raw = raw.split("```")[1]
         if raw.startswith("json"):

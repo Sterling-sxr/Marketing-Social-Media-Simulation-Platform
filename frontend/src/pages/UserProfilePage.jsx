@@ -1,4 +1,4 @@
-// src/pages/UserProfilePage.jsx
+// Section note: groups related logic for readability.
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { getJson, postJson, deleteJson } from "../lib/api";
@@ -13,7 +13,7 @@ export default function UserProfilePage() {
   const navigate = useNavigate();
   const { authUser, loadMyProfile, setAuthUser } = useApp();
 
-  // URL tabs
+  // Section note: groups related logic for readability.
   const showPostsOnly = searchParams.get("tab") === "posts";
   const showLikesOnly = searchParams.get("tab") === "likes";
 
@@ -49,14 +49,14 @@ export default function UserProfilePage() {
     return Boolean(authUser.is_superuser || authUser.is_staff);
   }, [authUser, isSelf]);
 
-  // page title for posts/likes pages
+  // Section note: groups related logic for readability.
   const pageTitle = useMemo(() => {
     if (showLikesOnly) return "Likes";
     if (showPostsOnly) return "Posts";
     return null;
   }, [showPostsOnly, showLikesOnly]);
 
-  // initial fetch: profile + posts/likes depending on URL
+  // Section note: groups related logic for readability.
   useEffect(() => {
     let isMounted = true;
     setStatus({ loading: true, error: "" });
@@ -93,7 +93,7 @@ export default function UserProfilePage() {
     }
   }, [profile]);
 
-  // refetch when switching internal tab on full profile page
+  // Section note: groups related logic for readability.
   useEffect(() => {
     if (showPostsOnly || showLikesOnly) return;
     const endpoint =
@@ -259,11 +259,11 @@ export default function UserProfilePage() {
     }
   };
 
-  // ---------- posts-only / likes-only ----------
+  // Section note: groups related logic for readability.
   if (showPostsOnly || showLikesOnly) {
     return (
       <AuthenticatedShell title={pageTitle} subtitle={null}>
-        {/* Top actions */}
+        {/* Section note: groups related UI behavior for readability. */}
         <div className="flex items-center justify-between">
           {/* <button
             type="button"
@@ -283,7 +283,7 @@ export default function UserProfilePage() {
           )} */}
         </div>
 
-        {/* Tabs: Posts / Likes */}
+        {/* Section note: groups related UI behavior for readability. */}
         <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-brand-50 p-1 text-xs">
           <button
             type="button"
@@ -305,7 +305,7 @@ export default function UserProfilePage() {
           </button>
         </div>
 
-        {/* List */}
+        {/* Section note: groups related UI behavior for readability. */}
         {status.loading ? (
           <p className="text-sm text-slate-500">Loading...</p>
         ) : status.error ? (
@@ -338,7 +338,7 @@ export default function UserProfilePage() {
     );
   }
 
-  // ---------- full profile ----------
+  // Section note: groups related logic for readability.
   return (
     <AuthenticatedShell title={null} subtitle={null}>
       <div className="flex items-center justify-between">{/* spacer */}</div>

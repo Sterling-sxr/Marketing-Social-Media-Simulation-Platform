@@ -87,7 +87,7 @@ export default function PostCard({
     let match;
     let lastIndex = 0;
     
-    // Build a map of mention identifiers to user IDs
+    // Section note: groups related logic for readability.
     const mentionMap = {};
     if (post.mentions_detail && Array.isArray(post.mentions_detail)) {
       post.mentions_detail.forEach((m) => {

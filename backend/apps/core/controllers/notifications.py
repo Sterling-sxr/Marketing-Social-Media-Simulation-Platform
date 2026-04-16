@@ -4,7 +4,7 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
 
 class NotificationConsumer(AsyncJsonWebsocketConsumer):
-    """Simple consumer that streams notification payloads to a given user."""
+    """Class note: NotificationConsumer encapsulates related backend behavior."""
 
     async def connect(self):
         query = parse_qs(self.scope.get("query_string", b"").decode())
@@ -30,6 +30,6 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
         await self.send_json({"type": "notification", **payload})
 
     async def receive_json(self, content, **kwargs):
-        # Optional ping/pong support for the demo UI.
+        # Section note: explains the purpose of this backend block.
         if content.get("action") == "ping":
             await self.send_json({"type": "pong"})

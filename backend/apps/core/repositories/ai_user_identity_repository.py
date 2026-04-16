@@ -1,6 +1,4 @@
-"""
-Repository helpers for CourseAIUserIdentity.
-"""
+"""Module note: ai_user_identity_repository backend module."""
 from __future__ import annotations
 
 from typing import Optional

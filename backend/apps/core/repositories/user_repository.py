@@ -1,6 +1,4 @@
-"""
-User repository helpers.
-"""
+"""Module note: user_repository backend module."""
 from __future__ import annotations
 
 from typing import Dict, List, Optional
@@ -14,26 +12,22 @@ User = get_user_model()
 
 
 class UserRepository(BaseRepository[User]):
-    """
-    Data-access helpers for user accounts.
-
-    Encapsulates user-focused queries.
-    """
+    """Class note: UserRepository encapsulates related backend behavior."""
     model = User
     
     @classmethod
     def get_by_email(cls, email: str) -> Optional[User]:
-        """Look up a user by email (case-insensitive)."""
+        """Function note: get_by_email handles this backend operation."""
         return cls.model.objects.filter(email__iexact=email).first()
     
     @classmethod
     def get_by_username(cls, username: str) -> Optional[User]:
-        """Look up a user by username (case-insensitive)."""
+        """Function note: get_by_username handles this backend operation."""
         return cls.model.objects.filter(username__iexact=username).first()
     
     @classmethod
     def create_user(cls, username: str, email: str, password: str) -> User:
-        """Create a new user."""
+        """Function note: create_user handles this backend operation."""
         return cls.model.objects.create_user(
             username=username.lower(),
             email=email.lower(),
@@ -42,7 +36,7 @@ class UserRepository(BaseRepository[User]):
     
     @classmethod
     def username_exists(cls, username: str, exclude_id: int = None) -> bool:
-        """Check whether the username already exists."""
+        """Function note: username_exists handles this backend operation."""
         queryset = cls.model.objects.filter(username=username)
         if exclude_id:
             queryset = queryset.exclude(id=exclude_id)
@@ -50,7 +44,7 @@ class UserRepository(BaseRepository[User]):
     
     @classmethod
     def find_by_usernames(cls, usernames: List[str]) -> Dict[str, int]:
-        """Bulk look up usernames and return a username->id mapping."""
+        """Function note: find_by_usernames handles this backend operation."""
         users = cls.model.objects.filter(
             username__in=[u.lower() for u in usernames]
         )
@@ -58,9 +52,7 @@ class UserRepository(BaseRepository[User]):
     
     @classmethod
     def search_in_course(cls, course_id: int, query: str, limit: int = 10) -> List[User]:
-        """
-        Search users within a course (used for @mention suggestions).
-        """
+        """Function note: search_in_course handles this backend operation."""
         return list(
             cls.model.objects
             .filter(course_memberships__course_id=course_id)

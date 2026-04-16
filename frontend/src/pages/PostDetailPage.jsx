@@ -56,12 +56,12 @@ export default function PostDetailPage() {
   const courseEndDate = courseInfo?.end_date || null;
   const authorName = authUser?.full_name || authUser?.username || "User";
 
-  // —— Owner detection: tolerate different backend field names —— //
+  // Section note: groups related logic for readability.
   const isOwner = useMemo(() => {
     if (!authUser || !post) return false;
     const uid = Number(authUser.id);
 
-    // Direct author ID fields
+    // Section note: groups related logic for readability.
     const possibleIds = [
       post.author_id,
       post?.author?.id,
@@ -73,7 +73,7 @@ export default function PostDetailPage() {
 
     if (possibleIds.some((v) => Number(v) === uid)) return true;
 
-    // Fall back to username/email matching
+    // Section note: groups related logic for readability.
     const meUname = String(authUser.username || "").toLowerCase();
     const meEmail = String(authUser.email || "").toLowerCase();
 
@@ -151,12 +151,12 @@ export default function PostDetailPage() {
     }
   };
 
-  // —— Reuse the Bread header pattern —— //
+  // Function note: HeaderBar encapsulates this unit of behavior.
   const HeaderBar = () => (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-accent-100/60 bg-white/95 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 lg:px-6 lg:py-4">
         <div className="flex items-center gap-2">
-          {/* Back to course feed button — always visible on mobile */}
+          {/* Section note: groups related UI behavior for readability. */}
           <button
             type="button"
             onClick={() => navigate(`/courses/${courseId}`)}
@@ -226,9 +226,9 @@ export default function PostDetailPage() {
           : "Post Detail"
       }
     >
-      {/* Main content */}
+      {/* Section note: groups related UI behavior for readability. */}
       <main className="space-y-4">
-        {/* Sticky toolbar: title + right-side actions (Analyze button is conditional) */}
+        {/* Section note: groups related UI behavior for readability. */}
         <div className="z-20">
           <div className="rounded-2xl border border-brand-100 bg-white px-3 py-3 shadow-sm sm:px-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
@@ -304,7 +304,7 @@ export default function PostDetailPage() {
           </div>
         )}
 
-        {/* Comments */}
+        {/* Section note: groups related UI behavior for readability. */}
         <section className="space-y-3">
           <h3 className="text-sm font-semibold text-slate-700">Comments</h3>
           <ul className="divide-y divide-brand-50 rounded-2xl border border-brand-100 bg-white">

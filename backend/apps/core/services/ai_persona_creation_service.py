@@ -1,4 +1,4 @@
-"""Helpers for guided and AI-assisted AI persona creation flows."""
+"""Module note: ai_persona_creation_service backend module."""
 from __future__ import annotations
 
 import json

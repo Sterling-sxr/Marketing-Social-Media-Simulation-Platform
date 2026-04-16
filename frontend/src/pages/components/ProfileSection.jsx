@@ -1,4 +1,4 @@
-// src/pages/components/ProfileSection.jsx
+// Function note: ProfileSection encapsulates this unit of behavior.
 export default function ProfileSection({
   icon,
   title,

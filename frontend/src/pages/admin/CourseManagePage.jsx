@@ -156,7 +156,7 @@ export default function CourseManagePage() {
 
   if (!authCheckComplete || !authUser || !isTeacherAdmin) return null;
 
-  // ✅ Fixed search logic (case-insensitive + correct field names)
+  // Section note: groups related logic for readability.
   const filteredItems = items.filter((c) => {
     const query = search.toLowerCase();
     const matchSearch =
@@ -170,7 +170,7 @@ export default function CourseManagePage() {
   return (
     <AuthenticatedShell title="Course Management" subtitle="Manage all your Bread courses 🍩">
       <main className="flex-1 p-8 bg-gradient-to-b from-brand-50 to-white rounded-2xl min-h-[calc(100vh-8rem)]">
-        {/* Header Section */}
+        {/* Section note: groups related UI behavior for readability. */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-to-br from-accent-400 via-brand-400 to-yellow-300 rounded-full flex items-center justify-center shadow-md animate-pulse">
@@ -196,7 +196,7 @@ export default function CourseManagePage() {
           </button>
         </div>
 
-        {/* Search & Filter */}
+        {/* Section note: groups related UI behavior for readability. */}
         <div className="flex flex-col sm:flex-row items-center gap-3 mb-6">
           <input
             type="text"
@@ -217,17 +217,17 @@ export default function CourseManagePage() {
           </select>
         </div>
 
-        {/* Error feedback */}
+        {/* Section note: groups related UI behavior for readability. */}
         {status.error && <Feedback error={status.error} />}
 
-        {/* Loading state */}
+        {/* Section note: groups related UI behavior for readability. */}
         {status.loading ? (
           <div className="flex flex-col items-center justify-center py-20 text-gray-500">
             <span className="animate-spin text-3xl mb-2">🍩</span>
             Loading your courses...
           </div>
         ) : filteredItems.length === 0 ? (
-          /* Empty state */
+          /* Section note: groups related logic for readability. */
           search.trim() ? (
             <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl shadow-sm border border-brand-100">
               <div className="text-6xl mb-3">🔍</div>
@@ -252,7 +252,7 @@ export default function CourseManagePage() {
             </div>
           )
         ) : (
-          /* Course list grid */
+          /* Section note: groups related logic for readability. */
           <ul className="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredItems.map((c) => (
               <li

@@ -31,12 +31,12 @@ export default function RegisterPasswordPage() {
     event.preventDefault();
     const success = await completeRegistration();
     if (success) {
-      // Treat profile completion as the last step of registration.
-      // Auto-sign-in and jump to onboarding profile immediately.
+      // Section note: groups related logic for readability.
+      // Section note: groups related logic for readability.
       try {
         await login(registerVerifiedEmail, registerPassword);
       } catch {
-        // If auto login fails, fall back to normal login flow.
+        // Section note: groups related logic for readability.
         resetRegisterFlow();
         navigate("/login", { replace: true });
         return;
@@ -190,7 +190,7 @@ export default function RegisterPasswordPage() {
         </aside>
       </main>
 
-      {/* Footer pinned to the bottom */}
+      {/* Section note: groups related UI behavior for readability. */}
       <footer className="py-6 text-center text-xs text-slate-400">
         © {new Date().getFullYear()} Bread Capstone Team. All rights reserved.
       </footer>

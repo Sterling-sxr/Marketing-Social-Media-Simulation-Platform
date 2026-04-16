@@ -1,4 +1,4 @@
-"""WSGI config for Django."""
+"""Module note: wsgi backend module."""
 import os
 
 from django.core.wsgi import get_wsgi_application

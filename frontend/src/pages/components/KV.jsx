@@ -1,4 +1,4 @@
-// src/pages/components/KV.jsx
+// Function note: KV encapsulates this unit of behavior.
 export default function KV({ label, value }) {
   const empty =
     value === undefined || value === null || value === "" || value === "—";

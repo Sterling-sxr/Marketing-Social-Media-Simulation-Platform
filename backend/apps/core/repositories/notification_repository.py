@@ -1,6 +1,4 @@
-"""
-Notification repository helpers.
-"""
+"""Module note: notification_repository backend module."""
 from __future__ import annotations
 
 from typing import List, Tuple
@@ -10,21 +8,12 @@ from .models import Notification
 
 
 class NotificationRepository(BaseRepository[Notification]):
-    """
-    Data-access helpers for notifications.
-
-    Encapsulates notification-specific queries.
-    """
+    """Class note: NotificationRepository encapsulates related backend behavior."""
     model = Notification
     
     @classmethod
     def get_user_notifications(cls, recipient: str, limit: int = 50) -> Tuple[List[Notification], int]:
-        """
-        Retrieve the user's notifications and unread count.
-        
-        Returns:
-            (notifications, unread_count)
-        """
+        """Function note: get_user_notifications handles this backend operation."""
         queryset = cls.model.objects.filter(recipient=recipient)
         unread_count = queryset.filter(is_read=False).count()
         notifications = list(queryset[:limit])
@@ -32,7 +21,7 @@ class NotificationRepository(BaseRepository[Notification]):
     
     @classmethod
     def mark_as_read(cls, recipient: str, notification_ids: List[int]) -> int:
-        """Mark notifications as read."""
+        """Function note: mark_as_read handles this backend operation."""
         if not notification_ids:
             return 0
         return cls.model.objects.filter(
@@ -42,7 +31,7 @@ class NotificationRepository(BaseRepository[Notification]):
     
     @classmethod
     def get_unread_count(cls, recipient: str) -> int:
-        """Return how many unread notifications remain."""
+        """Function note: get_unread_count handles this backend operation."""
         return cls.count(recipient=recipient, is_read=False)
 
 

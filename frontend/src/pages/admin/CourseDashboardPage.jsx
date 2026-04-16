@@ -12,12 +12,12 @@ const SUMMARY_TILES = [
   { key: "registered_students", label: "Registered Students" },
 ];
 
-/* ---------------------------- Shared button component ---------------------------- */
+/* Function note: Btn encapsulates this unit of behavior. */
 function Btn({
   children,
   onClick,
   type = "button",
-  variant = "primary", // primary / secondary / link
+  variant = "primary", // Inline note: clarifies the nearby code intent.
   className = "",
   disabled = false,
 }) {
@@ -46,7 +46,7 @@ function Btn({
     </button>
   );
 }
-/* -------------------------------------------------------------------- */
+/* Function note: formatPercent encapsulates this unit of behavior. */
 
 function formatPercent(value) {
   if (typeof value !== "number" || Number.isNaN(value)) return "—";
@@ -83,7 +83,7 @@ function ChangeBadge({ value }) {
   );
 }
 
-/* ---------------------------- KPI Summary Card ---------------------------- */
+/* Function note: SummaryCard encapsulates this unit of behavior. */
 function SummaryCard({ item, value, onClick }) {
   const card =
     "group rounded-2xl p-6 text-center select-none border border-accent-400 bg-white " +
@@ -121,7 +121,7 @@ function SummaryCard({ item, value, onClick }) {
     </div>
   );
 }
-/* ------------------------------------------------------------------------- */
+/* Function note: EmptyState encapsulates this unit of behavior. */
 
 function EmptyState({ message }) {
   return (
@@ -239,20 +239,20 @@ function SentimentCell({ sentiment }) {
   );
 }
 
-/* ---------------------------- Sorting helpers (default view) ---------------------------- */
+/* Function note: sortByNumeric encapsulates this unit of behavior. */
 function sortByNumeric(arr, key, asc) {
   const dir = asc ? 1 : -1;
   return [...arr].sort((a, b) => {
     const va = Number(a?.[key] ?? 0);
     const vb = Number(b?.[key] ?? 0);
     if (Number.isNaN(va) && Number.isNaN(vb)) return 0;
-    if (Number.isNaN(va)) return 1; // Place NaN values at the end
+    if (Number.isNaN(va)) return 1; // Inline note: clarifies the nearby code intent.
     if (Number.isNaN(vb)) return -1;
     if (va === vb) return 0;
     return va > vb ? dir : -dir;
   });
 }
-/* -------------------------------------------------------------------- */
+/* Function note: CourseDashboardPage encapsulates this unit of behavior. */
 
 export default function CourseDashboardPage() {
   const { courseId: courseIdParam } = useParams();
@@ -271,11 +271,11 @@ export default function CourseDashboardPage() {
   });
   const [refreshing, setRefreshing] = useState(false);
 
-  // Fixed default sorting (no interactive controls)
+  // Section note: groups related logic for readability.
   const [hashtagSortKey] = useState("total_posts");
-  const [hashtagAsc] = useState(false); // Desc by post count
+  const [hashtagAsc] = useState(false); // Inline note: clarifies the nearby code intent.
   const [studentSortKey] = useState("posts_total");
-  const [studentAsc] = useState(false); // Desc by post count
+  const [studentAsc] = useState(false); // Inline note: clarifies the nearby code intent.
 
   const isAdmin = useMemo(() => isTeacher(authUser), [authUser]);
   const loadCourseDashboard = useCallback(() => {
@@ -343,14 +343,14 @@ export default function CourseDashboardPage() {
       }`
     : "Course analytics overview";
 
-  // Clicking the Total Posts tile routes to the course feed
+  // Function note: goAllPosts encapsulates this unit of behavior.
   const goAllPosts = () => {
     if (courseMeta?.id) {
       navigate(`/courses/${courseMeta.id}`);
     }
   };
 
-  // Apply the fixed default sorting
+  // Section note: groups related logic for readability.
   const hashtags = useMemo(() => {
     if (!hashtagsRaw?.length) return [];
     return sortByNumeric(hashtagsRaw, hashtagSortKey, hashtagAsc);
@@ -362,7 +362,7 @@ export default function CourseDashboardPage() {
   }, [studentsRaw, studentSortKey, studentAsc]);
   const topHashtag = hashtags[0]?.hashtag;
 
-  // Scroll into view when landing on the #students-section anchor
+  // Section note: groups related logic for readability.
   useEffect(() => {
     if (location.hash === "#students-section") {
       const el = document.getElementById("students-section");
@@ -384,7 +384,7 @@ export default function CourseDashboardPage() {
       }
       subtitle={subtitle}
     >
-      {/* Top action buttons styled consistently */}
+      {/* Section note: groups related UI behavior for readability. */}
       <div className="flex items-center gap-2">
         <Btn variant="secondary" onClick={() => navigate(-1)}>
           ← Back
@@ -451,7 +451,7 @@ export default function CourseDashboardPage() {
             </p>
           ) : null}
 
-          {/* KPI summary cards (only Total Posts is clickable) */}
+          {/* Section note: groups related UI behavior for readability. */}
           <section className="grid gap-4 sm:grid-cols-3">
             {SUMMARY_TILES.map((item) => (
               <SummaryCard
@@ -561,7 +561,7 @@ export default function CourseDashboardPage() {
             ) : null}
           </section>
 
-          {/* --------------- Students table (styling polish) --------------- */}
+          {/* Section note: groups related UI behavior for readability. */}
           <section
             id="students-section"
             className="space-y-4 rounded-3xl border border-brand-100 bg-white p-6 shadow-sm"
@@ -647,7 +647,7 @@ export default function CourseDashboardPage() {
             )}
           </section>
 
-          {/* ---------------- Hashtags table (styling polish) ---------------- */}
+          {/* Section note: groups related UI behavior for readability. */}
           <section className="space-y-4 rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
             <header className="mb-2">
               <h2 className="text-2xl font-bold text-slate-900">
