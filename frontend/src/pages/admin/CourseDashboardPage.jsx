@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
-import { getJson } from "../../lib/api";
+import { isTeacherLike } from "../../lib/authRole";
+import { fetchCourseDashboard } from "../../lib/teacherAnalytics";
 import AuthenticatedShell from "../components/AuthenticatedShell";
 import Feedback from "../components/Feedback";
 import { isTeacher } from "../../lib/access";
@@ -277,12 +278,17 @@ export default function CourseDashboardPage() {
   const [studentSortKey] = useState("posts_total");
   const [studentAsc] = useState(false); // Inline explanation: Keep this non-obvious normalization rule explicit.
 
-  const isAdmin = useMemo(() => isTeacher(authUser), [authUser]);
+  const canManageAnalytics = useMemo(
+    () => Boolean(authUser && isTeacherLike(authUser)),
+    [authUser]
+  );
+  
   const loadCourseDashboard = useCallback(() => {
     if (!Number.isFinite(courseId)) {
       setStatus({ loading: false, error: "Invalid course id." });
       return Promise.resolve();
     }
+  
     setStatus((prev) => ({ ...prev, loading: true, error: "" }));
     return getJson(`/api/admin/dashboard/courses/${courseId}/`)
       .then((payload) => {
@@ -303,20 +309,20 @@ export default function CourseDashboardPage() {
       navigate("/login", { replace: true });
       return;
     }
-    if (!isAdmin) {
+    if (!canManageAnalytics) {
       navigate("/courses", { replace: true });
       return;
     }
-    loadCourseDashboard();
-  }, [authCheckComplete, authUser, isAdmin, navigate, loadCourseDashboard]);
+    if (!Number.isFinite(courseId)) {
+      setStatus({ loading: false, error: "Invalid course id." });
+      return;
+    }
 
-  useEffect(() => {
-    if (!authCheckComplete || !authUser || !isAdmin || !Number.isFinite(courseId)) return;
-    setSegmentationStatus({ loading: true, error: "" });
-    getJson(`/api/admin/dashboard/courses/${courseId}/segmentation?lens=${encodeURIComponent(selectedLens)}`)
+    setStatus({ loading: true, error: "" });
+    getJson(`/api/admin/dashboard/courses/${courseId}/`)
       .then((payload) => {
-        setSegmentation(payload.segmentation || null);
-        setSegmentationStatus({ loading: false, error: "" });
+        setData(payload.course || null);
+        setStatus({ loading: false, error: "" });
       })
       .catch((error) => {
         setSegmentation(null);
@@ -325,9 +331,9 @@ export default function CourseDashboardPage() {
           error: error.message || "Failed to load segmentation analytics.",
         });
       });
-  }, [authCheckComplete, authUser, courseId, isAdmin, selectedLens]);
+    }, [authCheckComplete, authUser, canManageAnalytics, courseId, selectedLens]);
 
-  if (authCheckComplete && authUser && !isAdmin) {
+  if (authCheckComplete && authUser && !canManageAnalytics) {
     return <Navigate to="/courses" replace />;
   }
 
@@ -335,7 +341,8 @@ export default function CourseDashboardPage() {
   const summary = data?.summary || {};
   const hashtagsRaw = data?.hashtags || [];
   const studentsRaw = data?.students || [];
-  const lastUpdated = data?.calculated_at ? new Date(data.calculated_at) : null;
+  const meta = data?.meta;
+  const lastUpdated = meta?.calculatedAt ? new Date(meta.calculatedAt) : null;
 
   const subtitle = courseMeta
     ? `${courseMeta.course_code} · ${courseMeta.name}${
@@ -440,6 +447,12 @@ export default function CourseDashboardPage() {
       {status.error ? <Feedback error={status.error} /> : null}
       {status.loading ? (
         <p className="text-sm text-slate-500">Loading course analytics...</p>
+      ) : null}
+      {data?.meta?.sourceKind === "fallback" ? (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          This course is currently rendering the fallback analytics contract.
+          Snapshot-backed data has not been generated yet.
+        </div>
       ) : null}
 
       {data ? (

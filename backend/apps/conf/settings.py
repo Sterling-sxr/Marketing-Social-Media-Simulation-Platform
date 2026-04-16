@@ -62,16 +62,35 @@ TEMPLATES = [
 WSGI_APPLICATION = "apps.conf.wsgi.application"
 ASGI_APPLICATION = "apps.conf.asgi.application"
 
-_database_url = os.environ.get("DATABASE_URL")
-if _database_url:
-    _default_database = dj_database_url.parse(_database_url, conn_max_age=600)
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("PG_DB"),
+        "USER": os.environ.get("PG_USER"),
+        "PASSWORD": os.environ.get("PG_PASSWORD"),
+        "HOST": os.environ.get("PG_HOST"),
+        "PORT": os.environ.get("PG_PORT"),
+        "CONN_MAX_AGE": 600,
+    }
+}
+
+database_url = os.environ.get("DATABASE_URL")
+
+if os.environ.get("DJANGO_USE_SQLITE", "0") == "1":
+    _default_database = {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": os.environ.get("SQLITE_NAME", str(BASE_DIR / "test.sqlite3")),
+    }
+elif database_url:
+    _default_database = dj_database_url.parse(database_url, conn_max_age=600)
 else:
     _pg_db = os.environ.get("PG_DB")
     _pg_user = os.environ.get("PG_USER")
     _pg_password = os.environ.get("PG_PASSWORD")
-    _pg_host = os.environ.get("PG_HOST")
-    _pg_port = os.environ.get("PG_PORT")
-    if _pg_db and _pg_user and _pg_password and _pg_host and _pg_port:
+    _pg_host = os.environ.get("PG_HOST", "127.0.0.1")
+    _pg_port = os.environ.get("PG_PORT", "15432")
+
+    if _pg_db and _pg_user and _pg_password:
         _default_database = {
             "ENGINE": "django.db.backends.postgresql",
             "NAME": _pg_db,
@@ -82,7 +101,6 @@ else:
             "CONN_MAX_AGE": 600,
         }
     else:
-        # Context: Compute shared values once so all branches use the same normalized inputs.
         _default_database = {
             "ENGINE": "django.db.backends.sqlite3",
             "NAME": str(BASE_DIR / "db.sqlite3"),

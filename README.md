@@ -54,6 +54,32 @@ Notes:
 - API and media proxy target defaults to `http://gateway` inside Docker network.
 - Override API target if needed: `VITE_API_BASE=http://gateway docker compose up -d frontend-dev`.
 
+## Backend Runtime Verification
+For teacher analytics snapshot verification, the smallest repeatable runtime path is the Docker backend stack plus the verification management command.
+
+1. Create a local env file from the sample if needed:
+   - `cp .env.example .env`
+2. Start the minimal backend dependencies:
+   - `docker compose up -d postgres redis rabbitmq minio minio-init backend`
+3. Confirm migrations/checks inside the backend container:
+   - `docker compose exec backend python manage.py migrate --noinput`
+   - `docker compose exec backend python manage.py check`
+4. Run the teacher analytics runtime verifier:
+   - `docker compose exec -e SKIP_CORE_BACKGROUND_TASKS=1 backend python manage.py verify_teacher_analytics_runtime`
+   - Optional subsets:
+     - `--scenario comment`
+     - `--scenario like`
+     - `--scenario post`
+     - `--scenario membership`
+
+What the command verifies:
+- post create / update / delete
+- like create / remove
+- comment create / update / delete
+- membership change
+- snapshot row becomes `stale` after the write
+- teacher analytics read path returns `source_status=refreshed`
+
 ## Git Workflow
 - Create feature/fix branches from `sprint3` (or the active sprint branch) using names such as `W16B-42-short-description`.
 - Keep commits small and descriptive, e.g. `W16B-42: describe change`.
