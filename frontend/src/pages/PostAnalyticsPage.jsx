@@ -6,30 +6,24 @@ import { useApp } from "../context/AppContext";
 import AuthenticatedShell from "./components/AuthenticatedShell";
 import Feedback from "./components/Feedback";
 
-// Download a JSON file in the browser
 function downloadJsonFile(filename, data) {
   const blob = new Blob([JSON.stringify(data, null, 2)], {
     type: "application/json;charset=utf-8",
   });
-
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-
   a.href = url;
   a.download = filename;
   a.click();
-
   URL.revokeObjectURL(url);
 }
 
-// Supported metric types
 const METRICS = [
   { key: "likes", label: "Likes" },
   { key: "comments", label: "Comments" },
   { key: "views", label: "Views" },
 ];
 
-// Summary metric card
 function SummaryCard({ title, value, active, onClick }) {
   return (
     <button
@@ -41,18 +35,13 @@ function SummaryCard({ title, value, active, onClick }) {
           : "border-brand-100 bg-white text-slate-600 hover:border-brand hover:text-brand"
       }`}
     >
-      {/* Metric title */}
       <p className="text-xs uppercase tracking-wide text-slate-400">{title}</p>
-
-      {/* Metric value */}
       <p className="mt-1 text-2xl font-semibold text-slate-800">{value}</p>
     </button>
   );
 }
 
-// Line chart for 7-day trend
 function LineChart({ data }) {
-  // Empty state
   if (!data || data.length === 0) {
     return (
       <div className="flex h-44 w-full items-center justify-center rounded-2xl border border-dashed border-brand-200 bg-brand-50 text-sm text-slate-500">
@@ -60,29 +49,22 @@ function LineChart({ data }) {
       </div>
     );
   }
-
-  // Chart layout settings
   const padding = 16;
   const height = 180;
   const width = 560;
 
-  // Find max value for scaling
   const maxValue = data.reduce((acc, item) => Math.max(acc, item.count), 0);
   const safeMax = Math.max(1, maxValue);
 
-  // Convert points into SVG coordinates
   const points = data.map((item, index) => {
     const x =
       padding +
       ((width - padding * 2) * (data.length <= 1 ? 0 : index / (data.length - 1)));
-
     const y =
       height - padding - ((height - padding * 2) * item.count) / safeMax;
-
     return [x, y];
   });
 
-  // Build polyline points string
   const polyline = points.map(([x, y]) => `${x},${y}`).join(" ");
 
   return (
@@ -92,7 +74,6 @@ function LineChart({ data }) {
       role="img"
       aria-label="Metric trend line chart"
     >
-      {/* Grid background */}
       <rect
         x="0"
         y="0"
@@ -101,8 +82,6 @@ function LineChart({ data }) {
         fill="url(#grid)"
         opacity="0.4"
       />
-
-      {/* Grid pattern */}
       <defs>
         <pattern
           id="grid"
@@ -120,8 +99,6 @@ function LineChart({ data }) {
           />
         </pattern>
       </defs>
-
-      {/* Main trend line */}
       <polyline
         fill="none"
         stroke="currentColor"
@@ -130,8 +107,6 @@ function LineChart({ data }) {
         strokeLinecap="round"
         points={polyline}
       />
-
-      {/* Data points */}
       {points.map(([x, y], idx) => (
         <circle
           key={`point-${idx}`}
@@ -143,8 +118,6 @@ function LineChart({ data }) {
           strokeWidth="2"
         />
       ))}
-
-      {/* Date labels */}
       {data.map((item, idx) => {
         const [x] = points[idx];
         return (
@@ -163,24 +136,16 @@ function LineChart({ data }) {
   );
 }
 
-// Radar chart for hashtag comparison
 function RadarChart({ comparison }) {
-  // Chart size settings
   const size = 360;
   const center = size / 2;
   const radius = size / 2 - 48;
   const metrics = METRICS;
 
-  // Current post values
   const postValues = metrics.map((metric) => comparison.post?.[metric.key] ?? 0);
-
-  // Average values
   const avgValues = metrics.map((metric) => comparison.average?.[metric.key] ?? 0);
-
-  // Shared max value
   const maxValue = Math.max(...postValues, ...avgValues, 1);
 
-  // Build polygon points
   const buildPoints = (values) =>
     values
       .map((value, index) => {
@@ -192,12 +157,10 @@ function RadarChart({ comparison }) {
       })
       .join(" ");
 
-  // Axis lines
   const axisLines = metrics.map((metric, index) => {
     const angle = (Math.PI * 2 * index) / metrics.length - Math.PI / 2;
     const x = center + radius * Math.cos(angle);
     const y = center + radius * Math.sin(angle);
-
     return (
       <line
         key={`axis-${metric.key}`}
@@ -219,7 +182,6 @@ function RadarChart({ comparison }) {
         role="img"
         aria-label="Hashtag comparison radar chart"
       >
-        {/* Background rings */}
         {[1, 0.66, 0.33].map((factor) => (
           <circle
             key={`ring-${factor}`}
@@ -231,40 +193,25 @@ function RadarChart({ comparison }) {
             strokeWidth="1"
           />
         ))}
-
-        {/* Axis lines */}
         {axisLines}
-
-        {/* Average polygon */}
         <polyline
           points={buildPoints(avgValues)}
           fill="rgba(251, 191, 36, 0.15)"
           stroke="rgba(251, 191, 36, 0.6)"
           strokeWidth="2"
         />
-
-        {/* Current post polygon */}
         <polyline
           points={buildPoints(postValues)}
           fill="rgba(255, 99, 132, 0.2)"
           stroke="rgba(255, 99, 132, 0.7)"
           strokeWidth="2"
         />
-
-        {/* Metric labels */}
         {metrics.map((metric, index) => {
           const angle = (Math.PI * 2 * index) / metrics.length - Math.PI / 2;
-          const labelRadius = radius + 36;
-          const x = center + labelRadius * Math.cos(angle);
-          const y = center + labelRadius * Math.sin(angle);
-
-          const align =
-            Math.abs(Math.cos(angle)) > 0.35
-              ? Math.cos(angle) > 0
-                ? "start"
-                : "end"
-              : "middle";
-
+      const labelRadius = radius + 36;
+      const x = center + labelRadius * Math.cos(angle);
+      const y = center + labelRadius * Math.sin(angle);
+      const align = Math.abs(Math.cos(angle)) > 0.35 ? (Math.cos(angle) > 0 ? "start" : "end") : "middle";
           return (
             <text
               key={`label-${metric.key}`}
@@ -278,8 +225,6 @@ function RadarChart({ comparison }) {
           );
         })}
       </svg>
-
-      {/* Legend */}
       <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-500">
         <span className="inline-flex items-center gap-1">
           <span className="h-2 w-2 rounded-full bg-rose-400" /> Post performance
@@ -292,18 +237,10 @@ function RadarChart({ comparison }) {
   );
 }
 
-// Sentiment distribution section
 function SentimentDistribution({ sentiment }) {
-  // Total comment count
   const total = sentiment?.total_comments ?? 0;
-
-  // Raw count values
   const counts = sentiment?.counts || {};
-
-  // Percentage values
   const percentages = sentiment?.percentages || {};
-
-  // Bar settings
   const bars = [
     { key: "positive", label: "Positive", bar: "bg-emerald-400" },
     { key: "neutral", label: "Neutral", bar: "bg-accent-400" },
@@ -320,8 +257,6 @@ function SentimentDistribution({ sentiment }) {
           Based on the classified sentiments of this post's comments.
         </p>
       </header>
-
-      {/* Empty state */}
       {total === 0 ? (
         <p className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-3 text-sm text-slate-600">
           No comments yet. Sentiment breakdown will appear once comments are added.
@@ -330,24 +265,18 @@ function SentimentDistribution({ sentiment }) {
         <div className="space-y-4">
           {bars.map((item) => {
             const percent = Number(percentages[item.key] ?? 0);
-
             return (
               <div key={item.key} className="space-y-1">
-                {/* Label row */}
                 <div className="flex items-center justify-between text-sm font-semibold text-slate-600">
                   <span>{item.label}</span>
                   <span>{percent.toFixed(1)}%</span>
                 </div>
-
-                {/* Progress bar */}
                 <div className="h-3 w-full rounded-full bg-brand-50">
                   <div
                     className={`h-full rounded-full transition-all ${item.bar}`}
                     style={{ width: `${Math.min(100, Math.max(0, percent))}%` }}
                   />
                 </div>
-
-                {/* Count text */}
                 <p className="text-[11px] text-slate-400">
                   {counts[item.key] || 0} comment{counts[item.key] === 1 ? "" : "s"}
                 </p>
@@ -360,36 +289,23 @@ function SentimentDistribution({ sentiment }) {
   );
 }
 
-// Format engagement rate as percentage
 function formatRate(value) {
   const num = Number(value ?? 0);
   if (!Number.isFinite(num)) return "0.0%";
   return `${(num * 100).toFixed(1)}%`;
 }
 
-// Coverage summary banner
 function CoverageBanner({ coverage, overlapping }) {
   if (!coverage) return null;
-
   return (
     <div className="rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-3 text-xs text-slate-600">
       <p>
-        Audience size:{" "}
-        <span className="font-semibold text-slate-800">
-          {coverage.total_audience ?? 0}
-        </span>
+        Audience size: <span className="font-semibold text-slate-800">{coverage.total_audience ?? 0}</span>
         {" · "}
-        Missing profile data:{" "}
-        <span className="font-semibold text-slate-800">
-          {coverage.missing_profile_count ?? 0}
-        </span>
+        Missing profile data: <span className="font-semibold text-slate-800">{coverage.missing_profile_count ?? 0}</span>
         {" · "}
-        Unattributed interactions:{" "}
-        <span className="font-semibold text-slate-800">
-          {coverage.missing_actor_identity_count ?? 0}
-        </span>
+        Unattributed interactions: <span className="font-semibold text-slate-800">{coverage.missing_actor_identity_count ?? 0}</span>
       </p>
-
       <p className="mt-1">
         {overlapping
           ? "Interest buckets overlap, so the segment totals can exceed the total audience."
@@ -399,9 +315,7 @@ function CoverageBanner({ coverage, overlapping }) {
   );
 }
 
-// Segment metrics table
 function SegmentMetricsTable({ segments }) {
-  // Empty state
   if (!segments?.length) {
     return (
       <p className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-3 text-sm text-slate-600">
@@ -409,7 +323,6 @@ function SegmentMetricsTable({ segments }) {
       </p>
     );
   }
-
   return (
     <div className="overflow-hidden rounded-2xl ring-1 ring-brand-100 shadow-sm">
       <table className="min-w-full text-sm">
@@ -424,31 +337,16 @@ function SegmentMetricsTable({ segments }) {
             <th className="px-4 py-3 text-right">Engagement</th>
           </tr>
         </thead>
-
         <tbody className="divide-y divide-brand-100">
           {segments.map((segment) => (
             <tr key={segment.key} className="odd:bg-white even:bg-brand-50/30">
-              <td className="px-4 py-3 font-semibold text-slate-800">
-                {segment.label}
-              </td>
-              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">
-                {segment.audience_count}
-              </td>
-              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">
-                {segment.engaged_user_count}
-              </td>
-              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">
-                {segment.metrics?.views ?? 0}
-              </td>
-              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">
-                {segment.metrics?.likes ?? 0}
-              </td>
-              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">
-                {segment.metrics?.comments ?? 0}
-              </td>
-              <td className="px-4 py-3 text-right font-semibold text-brand">
-                {formatRate(segment.metrics?.engagement_rate)}
-              </td>
+              <td className="px-4 py-3 font-semibold text-slate-800">{segment.label}</td>
+              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.audience_count}</td>
+              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.engaged_user_count}</td>
+              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.metrics?.views ?? 0}</td>
+              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.metrics?.likes ?? 0}</td>
+              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.metrics?.comments ?? 0}</td>
+              <td className="px-4 py-3 text-right font-semibold text-brand">{formatRate(segment.metrics?.engagement_rate)}</td>
             </tr>
           ))}
         </tbody>
@@ -457,15 +355,11 @@ function SegmentMetricsTable({ segments }) {
   );
 }
 
-// Comparison matrix for two posts
 function ComparisonMatrix({ comparison }) {
   if (!comparison?.segments?.length) return null;
-
   return (
     <div className="space-y-3">
-      {/* Summary text */}
       <p className="text-sm text-slate-600">{comparison.summary_text}</p>
-
       <div className="overflow-hidden rounded-2xl ring-1 ring-brand-100 shadow-sm">
         <table className="min-w-full text-sm">
           <thead className="bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] border-b border-accent-100">
@@ -476,26 +370,13 @@ function ComparisonMatrix({ comparison }) {
               <th className="px-4 py-3 text-right">Delta</th>
             </tr>
           </thead>
-
           <tbody className="divide-y divide-brand-100">
             {comparison.segments.map((segment) => (
               <tr key={segment.key} className="odd:bg-white even:bg-brand-50/30">
-                <td className="px-4 py-3 font-semibold text-slate-800">
-                  {segment.label}
-                </td>
-                <td className="px-4 py-3 text-slate-700">
-                  {formatRate(segment.post_metrics?.engagement_rate)}
-                </td>
-                <td className="px-4 py-3 text-slate-700">
-                  {formatRate(segment.compare_metrics?.engagement_rate)}
-                </td>
-                <td
-                  className={`px-4 py-3 text-right font-semibold ${
-                    segment.delta_engagement_rate >= 0
-                      ? "text-emerald-700"
-                      : "text-rose-600"
-                  }`}
-                >
+                <td className="px-4 py-3 font-semibold text-slate-800">{segment.label}</td>
+                <td className="px-4 py-3 text-slate-700">{formatRate(segment.post_metrics?.engagement_rate)}</td>
+                <td className="px-4 py-3 text-slate-700">{formatRate(segment.compare_metrics?.engagement_rate)}</td>
+                <td className={`px-4 py-3 text-right font-semibold ${segment.delta_engagement_rate >= 0 ? "text-emerald-700" : "text-rose-600"}`}>
                   {segment.delta_engagement_rate >= 0 ? "+" : ""}
                   {formatRate(segment.delta_engagement_rate)}
                 </td>
@@ -509,72 +390,42 @@ function ComparisonMatrix({ comparison }) {
 }
 
 export default function PostAnalyticsPage() {
-  // Read route params
   const { courseId: courseIdParam, postId: postIdParam } = useParams();
-
-  // Convert ids to numbers
   const courseId = Number(courseIdParam);
   const postId = Number(postIdParam);
-
-  // Router navigation
   const navigate = useNavigate();
-
-  // Global auth and toast state
   const { authUser, authCheckComplete, pushToast } = useApp();
-
-  // Check whether current user is admin
   const isAdmin = Boolean(authUser && (authUser.is_staff || authUser.is_superuser));
 
-  // Analytics state
   const [analytics, setAnalytics] = useState(null);
   const [status, setStatus] = useState({ loading: true, error: "" });
-
-  // Selected metric for trend chart
   const [activeMetric, setActiveMetric] = useState("likes");
-
-  // Selected hashtag
   const [activeHashtag, setActiveHashtag] = useState(null);
-
-  // Selected segmentation lens
   const [selectedLens, setSelectedLens] = useState("interests");
-
-  // Selected comparison post id
   const [comparePostId, setComparePostId] = useState("");
-
-  // Segmentation data
   const [segmentation, setSegmentation] = useState(null);
   const [segmentationStatus, setSegmentationStatus] = useState({
     loading: false,
     error: "",
   });
 
-  // Load main analytics data
   useEffect(() => {
     if (!authCheckComplete) return;
-
-    // Redirect to login if user is not logged in
     if (!authUser) {
       navigate("/login", { replace: true });
       return;
     }
-
-    // Validate ids
     if (!Number.isFinite(courseId) || !Number.isFinite(postId)) {
       setStatus({ loading: false, error: "Invalid post or course id." });
       return;
     }
-
     setStatus({ loading: true, error: "" });
-
     getJson(`/api/courses/${courseId}/posts/${postId}/analytics/`)
       .then((data) => {
         setAnalytics(data);
-
-        // Default to first hashtag
         if (data.hashtags && data.hashtags.length) {
           setActiveHashtag((prev) => prev || data.hashtags[0].hashtag);
         }
-
         setStatus({ loading: false, error: "" });
       })
       .catch((error) => {
@@ -585,51 +436,34 @@ export default function PostAnalyticsPage() {
       });
   }, [authUser, authCheckComplete, courseId, postId, navigate]);
 
-  // Keep selected hashtag valid
   useEffect(() => {
     const list = analytics?.hashtags || [];
-
     if (!list.length) {
       if (activeHashtag !== null) setActiveHashtag(null);
       return;
     }
-
     const exists = list.some((item) => item.hashtag === activeHashtag);
-
     if (!exists) {
       setActiveHashtag(list[0].hashtag);
     }
   }, [analytics, activeHashtag]);
 
-  // Load admin-only segmentation data
   useEffect(() => {
     if (!authCheckComplete || !authUser || !isAdmin) return;
-
     setSegmentationStatus({ loading: true, error: "" });
-
     const params = new URLSearchParams({ lens: selectedLens });
-
     if (comparePostId) {
       params.set("compare_post_id", comparePostId);
     }
-
-    getJson(
-      `/api/admin/courses/${courseId}/posts/${postId}/segmentation?${params.toString()}`
-    )
+    getJson(`/api/admin/courses/${courseId}/posts/${postId}/segmentation?${params.toString()}`)
       .then((payload) => {
         const next = payload.segmentation || null;
         setSegmentation(next);
-
-        // Keep comparison post valid
         const options = next?.compare_options || [];
-        const compareExists = options.some(
-          (item) => String(item.post_id) === String(comparePostId)
-        );
-
+        const compareExists = options.some((item) => String(item.post_id) === String(comparePostId));
         if (!compareExists) {
           setComparePostId(options[0]?.post_id ? String(options[0].post_id) : "");
         }
-
         setSegmentationStatus({ loading: false, error: "" });
       })
       .catch((error) => {
@@ -641,17 +475,14 @@ export default function PostAnalyticsPage() {
       });
   }, [authCheckComplete, authUser, comparePostId, courseId, isAdmin, postId, selectedLens]);
 
-  // Summary card values
   const summaryCards = useMemo(() => {
     if (!analytics) return [];
-
     return METRICS.map((metric) => ({
       ...metric,
       value: analytics.totals?.[metric.key] ?? 0,
     }));
   }, [analytics]);
 
-  // Safe sentiment data
   const sentimentData = useMemo(() => {
     if (!analytics?.sentiment) {
       return {
@@ -660,13 +491,7 @@ export default function PostAnalyticsPage() {
         total_comments: 0,
       };
     }
-
-    const {
-      counts = {},
-      percentages = {},
-      total_comments = 0,
-    } = analytics.sentiment;
-
+    const { counts = {}, percentages = {}, total_comments = 0 } = analytics.sentiment;
     return {
       counts: {
         positive: counts.positive ?? 0,
@@ -682,31 +507,24 @@ export default function PostAnalyticsPage() {
     };
   }, [analytics]);
 
-  // Current chart series
   const chartSeries = useMemo(() => {
     if (!analytics) return [];
     return analytics.series?.[activeMetric] || [];
   }, [analytics, activeMetric]);
 
-  // All hashtag comparison items
   const hashtagComparisons = analytics?.hashtags || [];
-
-  // Current active hashtag comparison
   const activeComparison = useMemo(
     () => hashtagComparisons.find((item) => item.hashtag === activeHashtag),
     [hashtagComparisons, activeHashtag]
   );
 
-  // Page title and subtitle
   const pageTitle = "Post Analytics";
   const pageSubtitle = `Course #${courseId} · Post #${postId}`;
 
   return (
     <AuthenticatedShell title={pageTitle} subtitle={pageSubtitle}>
-      {/* Top action bar */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap gap-2">
-          {/* Back button */}
           <button
             type="button"
             className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
@@ -714,8 +532,6 @@ export default function PostAnalyticsPage() {
           >
             ← Back
           </button>
-
-          {/* View post button */}
           <button
             type="button"
             className="rounded-full border border-brand bg-brand-100 px-4 py-2 text-xs font-semibold text-brand transition hover:bg-brand-200"
@@ -724,15 +540,15 @@ export default function PostAnalyticsPage() {
             View Post
           </button>
         </div>
-
-        {/* Export JSON button */}
         {analytics ? (
           <button
             type="button"
             className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-brand hover:text-brand"
             onClick={() => {
-              downloadJsonFile(`post-${postId}-analytics.json`, analytics);
-
+              downloadJsonFile(
+                `post-${postId}-analytics.json`,
+                analytics
+              );
               pushToast?.({
                 title: "Download started",
                 message: "JSON snapshot saved from the data already on this page.",
@@ -745,18 +561,13 @@ export default function PostAnalyticsPage() {
         ) : null}
       </div>
 
-      {/* Error message */}
       {status.error ? <Feedback error={status.error} /> : null}
-
-      {/* Loading message */}
       {status.loading ? (
         <p className="text-sm text-slate-500">Loading analytics...</p>
       ) : null}
 
-      {/* Main content */}
       {analytics ? (
         <>
-          {/* Summary cards */}
           <section className="grid gap-3 sm:grid-cols-3">
             {summaryCards.map((card) => (
               <SummaryCard
@@ -769,7 +580,6 @@ export default function PostAnalyticsPage() {
             ))}
           </section>
 
-          {/* Trend chart */}
           <section className="rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
             <header className="flex items-center justify-between pb-4">
               <div>
@@ -781,14 +591,11 @@ export default function PostAnalyticsPage() {
                 </p>
               </div>
             </header>
-
             <LineChart data={chartSeries} />
           </section>
 
-          {/* Sentiment distribution */}
           <SentimentDistribution sentiment={sentimentData} />
 
-          {/* Hashtag comparison */}
           <section className="space-y-3 rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
             <header className="flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -799,8 +606,6 @@ export default function PostAnalyticsPage() {
                   Supporting evidence showing how this post compares with other posts using the same hashtag.
                 </p>
               </div>
-
-              {/* Hashtag buttons */}
               <div className="flex flex-wrap gap-2">
                 {hashtagComparisons.map((item) => (
                   <button
@@ -819,14 +624,12 @@ export default function PostAnalyticsPage() {
               </div>
             </header>
 
-            {/* Hashtag content */}
             {hashtagComparisons.length === 0 ? (
               <p className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-3 text-sm text-slate-600">
                 No hashtags detected in this post.
               </p>
             ) : activeComparison ? (
               <div className="grid gap-6 lg:grid-cols-[1fr_auto]">
-                {/* Metric rows */}
                 <div className="space-y-3">
                   {METRICS.map((metric) => (
                     <div
@@ -842,7 +645,6 @@ export default function PostAnalyticsPage() {
                           {activeComparison.cohort_size === 1 ? "" : "s"}
                         </p>
                       </div>
-
                       <div className="text-right text-sm">
                         <p className="font-semibold text-rose-500">
                           Post: {activeComparison.post?.[metric.key] ?? 0}
@@ -854,8 +656,6 @@ export default function PostAnalyticsPage() {
                     </div>
                   ))}
                 </div>
-
-                {/* Radar chart */}
                 <RadarChart comparison={activeComparison} />
               </div>
             ) : (
@@ -863,20 +663,15 @@ export default function PostAnalyticsPage() {
             )}
           </section>
 
-          {/* Admin-only audience segmentation */}
           {isAdmin ? (
             <section className="space-y-4 rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
               <header className="space-y-3">
                 <div>
-                  <h2 className="text-lg font-semibold text-slate-800">
-                    Audience Segments
-                  </h2>
+                  <h2 className="text-lg font-semibold text-slate-800">Audience Segments</h2>
                   <p className="text-xs text-slate-500">
                     Understand which persona-derived audience buckets interacted with this post.
                   </p>
                 </div>
-
-                {/* Lens selector buttons */}
                 <div className="flex flex-wrap gap-2">
                   {(segmentation?.available_lenses || []).map((lens) => (
                     <button
@@ -895,26 +690,19 @@ export default function PostAnalyticsPage() {
                 </div>
               </header>
 
-              {/* Segmentation error */}
               {segmentationStatus.error ? <Feedback error={segmentationStatus.error} /> : null}
-
-              {/* Segmentation loading */}
               {segmentationStatus.loading ? (
                 <p className="text-sm text-slate-500">Loading audience segmentation...</p>
               ) : segmentation ? (
                 <>
-                  {/* Coverage banner */}
                   <CoverageBanner
                     coverage={segmentation.coverage}
                     overlapping={segmentation.lens_meta?.overlapping}
                   />
-
-                  {/* Summary insight box */}
                   <div className="rounded-2xl border border-brand-100 bg-brand-50/60 p-4">
                     <p className="text-sm text-slate-700">
                       {segmentation.insights?.summary_text || "No insight summary available yet."}
                     </p>
-
                     <div className="mt-3 grid gap-3 sm:grid-cols-2 text-sm">
                       <div className="rounded-2xl bg-white px-4 py-3">
                         <p className="text-slate-500">Top-performing segment</p>
@@ -922,7 +710,6 @@ export default function PostAnalyticsPage() {
                           {segmentation.insights?.top_segment?.label || "—"}
                         </p>
                       </div>
-
                       <div className="rounded-2xl bg-white px-4 py-3">
                         <p className="text-slate-500">Under-engaged segment</p>
                         <p className="mt-1 font-semibold text-slate-800">
@@ -931,23 +718,16 @@ export default function PostAnalyticsPage() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Segment table */}
                   <SegmentMetricsTable segments={segmentation.segments} />
 
-                  {/* Comparison section */}
                   <div className="space-y-3">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
-                        <h3 className="text-base font-semibold text-slate-800">
-                          Compare with another post
-                        </h3>
+                        <h3 className="text-base font-semibold text-slate-800">Compare with another post</h3>
                         <p className="text-xs text-slate-500">
                           Compare this post against another post from the same course under the same segment lens.
                         </p>
                       </div>
-
-                      {/* Compare post selector */}
                       <select
                         value={comparePostId}
                         onChange={(event) => setComparePostId(event.target.value)}
@@ -961,15 +741,9 @@ export default function PostAnalyticsPage() {
                         ))}
                       </select>
                     </div>
-
-                    {/* Comparison summary */}
                     {segmentation.insights?.comparison_summary_text ? (
-                      <p className="text-sm text-slate-600">
-                        {segmentation.insights.comparison_summary_text}
-                      </p>
+                      <p className="text-sm text-slate-600">{segmentation.insights.comparison_summary_text}</p>
                     ) : null}
-
-                    {/* Comparison matrix */}
                     <ComparisonMatrix comparison={segmentation.comparison} />
                   </div>
                 </>
