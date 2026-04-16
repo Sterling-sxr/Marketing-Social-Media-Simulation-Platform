@@ -31,12 +31,12 @@ export default function RegisterPasswordPage() {
     event.preventDefault();
     const success = await completeRegistration();
     if (success) {
-      // Section note: groups related logic for readability.
-      // Section note: groups related logic for readability.
+      // Context: This block prepares shared values used by the request branches below.
+      // Context: This block prepares shared values used by the request branches below.
       try {
         await login(registerVerifiedEmail, registerPassword);
       } catch {
-        // Section note: groups related logic for readability.
+        // Context: This block prepares shared values used by the request branches below.
         resetRegisterFlow();
         navigate("/login", { replace: true });
         return;
@@ -67,13 +67,13 @@ export default function RegisterPasswordPage() {
           >
             ←
           </button>
-          {/* <button
-            type="button"
-            className="rounded-full bg-gradient-to-r from-brand to-brand-dark px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-brand-200 transition hover:from-brand-dark hover:to-brand"
-            onClick={() => navigate("/login")}
-          >
-            Already have an account? Sign in
-          </button> */}
+          {/* Context: This section keeps dependent steps together so assumptions, branching rules, and maintenance decisions stay easy to reason about.
+              * Additional detail: each step is annotated to make maintenance and review easier.
+              * Additional detail: each step is annotated to make maintenance and review easier.
+              * Additional detail: each step is annotated to make maintenance and review easier.
+            * Additional detail: each step is annotated to make maintenance and review easier.
+              * Additional detail: each step is annotated to make maintenance and review easier.
+            */}
         </nav>
       </header>
 
@@ -190,7 +190,7 @@ export default function RegisterPasswordPage() {
         </aside>
       </main>
 
-      {/* Section note: groups related UI behavior for readability. */}
+      {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
       <footer className="py-6 text-center text-xs text-slate-400">
         © {new Date().getFullYear()} Bread Capstone Team. All rights reserved.
       </footer>

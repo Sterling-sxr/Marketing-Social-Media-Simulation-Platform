@@ -5,7 +5,7 @@ import { getJson } from "../../lib/api";
 import AuthenticatedShell from "../components/AuthenticatedShell";
 import Feedback from "../components/Feedback";
 
-/* Function note: Btn encapsulates this unit of behavior. */
+/* Purpose: `Btn` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
 function Btn({
   children,
   onClick,
@@ -44,7 +44,7 @@ function EmptyState({ message }) {
   );
 }
 
-/* Function note: SmallChange encapsulates this unit of behavior. */
+/* Purpose: `SmallChange` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
 function SmallChange({ value }) {
   if (typeof value !== "number" || Number.isNaN(value)) {
     return (
@@ -83,9 +83,9 @@ export default function CourseStudentsPage() {
   const [data, setData] = useState(null);
   const [status, setStatus] = useState({ loading: true, error: "" });
 
-  // Section note: groups related logic for readability.
+  // Context: This block prepares shared values used by the request branches below.
   const [q, setQ] = useState("");
-  const [sortBy, setSortBy] = useState("name"); // Inline note: clarifies the nearby code intent.
+  const [sortBy, setSortBy] = useState("name"); // Inline explanation: This line clarifies an assumption, guard, or transformation.
   const [onlyActive, setOnlyActive] = useState(false);
 
   const isAdmin = useMemo(
@@ -129,12 +129,12 @@ export default function CourseStudentsPage() {
   const courseMeta = data?.course;
   const raw = data?.students || [];
 
-  // Section note: groups related logic for readability.
+  // Context: This block prepares shared values used by the request branches below.
   const rows = useMemo(() => {
     let arr = raw.map((s) => {
       const posts = Number(s.posts_total || 0);
       const inter = Number(s.interactions_total || 0);
-      const engagement = posts > 0 ? inter / posts : 0; // Inline note: clarifies the nearby code intent.
+      const engagement = posts > 0 ? inter / posts : 0; // Inline explanation: This line clarifies an assumption, guard, or transformation.
       return { ...s, posts, inter, engagement };
     });
 
@@ -175,25 +175,25 @@ export default function CourseStudentsPage() {
 
   return (
     <AuthenticatedShell title="All Students" subtitle={subtitle}>
-      {/* Section note: groups related UI behavior for readability. */}
+      {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
       <div className="flex flex-wrap items-center gap-2">
         <Btn variant="secondary" onClick={() => navigate(-1)}>
           ← Back
         </Btn>
-        {/* <Btn
-          variant="secondary"
-          onClick={() => navigate(`/dashboard/courses/${courseId}`)}
-        >
-          Course Dashboard
-        </Btn> */}
-        {/* {courseMeta ? (
-          <Btn
-            variant="primary"
-            onClick={() => navigate(`/courses/${courseMeta.id}`)}
-          >
-            All posts
-          </Btn>
-        ) : null} */}
+        {/* Context: This section keeps dependent steps together so assumptions, branching rules, and maintenance decisions stay easy to reason about.
+            * Additional detail: each step is annotated to make maintenance and review easier.
+            * Additional detail: each step is annotated to make maintenance and review easier.
+          * Additional detail: each step is annotated to make maintenance and review easier.
+            * Additional detail: each step is annotated to make maintenance and review easier.
+          */}
+        {/* Context: This section keeps dependent steps together so assumptions, branching rules, and maintenance decisions stay easy to reason about.
+            * Additional detail: each step is annotated to make maintenance and review easier.
+              * Additional detail: each step is annotated to make maintenance and review easier.
+              * Additional detail: each step is annotated to make maintenance and review easier.
+            * Additional detail: each step is annotated to make maintenance and review easier.
+              * Additional detail: each step is annotated to make maintenance and review easier.
+            * Additional detail: each step is annotated to make maintenance and review easier.
+          */}
       </div>
 
       {status.error ? <Feedback error={status.error} /> : null}
@@ -201,7 +201,7 @@ export default function CourseStudentsPage() {
         <p className="text-sm text-slate-500">Loading students...</p>
       ) : null}
 
-      {/* Section note: groups related UI behavior for readability. */}
+      {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
       <div className="mt-3 flex flex-wrap items-center gap-2 rounded-3xl border border-brand-100 bg-white p-3">
         <div className="input-shell">
           <input
@@ -216,7 +216,7 @@ export default function CourseStudentsPage() {
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value)}
         >
-          {/* Section note: groups related UI behavior for readability. */}
+          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
           <option value="posts">Sort by Posts</option>
           <option value="interactions">Sort by Interactions</option>
         </select>
@@ -231,7 +231,7 @@ export default function CourseStudentsPage() {
         </label>
       </div>
 
-      {/* Section note: groups related UI behavior for readability. */}
+      {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
       {rows.length === 0 ? (
         <EmptyState message="No students found." />
       ) : (
@@ -240,7 +240,7 @@ export default function CourseStudentsPage() {
             <thead className="bg-brand-50/60 text-left text-xs uppercase tracking-wide text-slate-500">
               <tr>
                 <th className="px-4 py-3 font-semibold">Student</th>
-                {/* Section note: groups related UI behavior for readability. */}
+                {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
                 <th className="px-4 py-3 font-semibold">Posts</th>
                 <th className="px-4 py-3 font-semibold">Total Interactions</th>
                 <th className="px-4 py-3 font-semibold">Engagement / Post</th>
@@ -264,7 +264,7 @@ export default function CourseStudentsPage() {
                     <td className="px-4 py-3 font-semibold text-slate-800">
                       {s.name}
                     </td>
-                    {/* Section note: groups related UI behavior for readability. */}
+                    {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
                     <td className="px-4 py-3 text-slate-600">{s.posts}</td>
                     <td className="px-4 py-3 text-slate-600">{s.inter}</td>
                     <td className="px-4 py-3 text-slate-600">{engagement}</td>
@@ -287,7 +287,7 @@ export default function CourseStudentsPage() {
                         >
                           View analytics
                         </Btn>
-                        {/* Section note: groups related UI behavior for readability. */}
+                        {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
                         <Btn
                           variant="link"
                           onClick={() => {

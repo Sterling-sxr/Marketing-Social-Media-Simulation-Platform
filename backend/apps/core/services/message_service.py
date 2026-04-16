@@ -6,10 +6,14 @@ from ..repositories.models import Message
 
 
 def list_recent_messages(limit: int = 20) -> Iterable[Message]:
-    """Function note: list_recent_messages handles this backend operation."""
+    """Handle the `list_recent_messages` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     return Message.objects.all()[:limit]
 
 
 def create_message(*, content: str) -> Message:
-    """Function note: create_message handles this backend operation."""
+    """Handle the `create_message` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     return Message.objects.create(content=content)

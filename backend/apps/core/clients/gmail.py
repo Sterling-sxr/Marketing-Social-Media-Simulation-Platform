@@ -1,4 +1,4 @@
-"""Module note: gmail backend module."""
+"""Module summary: this module groups related logic and clarifies design intent."""
 import base64
 from email.mime.text import MIMEText
 from typing import Optional
@@ -10,7 +10,7 @@ from googleapiclient.errors import HttpError
 
 
 class GmailNotConfiguredError(RuntimeError):
-    """Class note: GmailNotConfiguredError encapsulates related backend behavior."""
+    """Class summary: GmailNotConfiguredError keeps related behavior together behind one clear interface."""
 
 
 def _build_credentials() -> Credentials:
@@ -42,7 +42,9 @@ def _build_credentials() -> Credentials:
 def send_gmail_message(
     *, subject: str, body: str, recipient: Optional[str] = None
 ) -> dict:
-    """Function note: send_gmail_message handles this backend operation."""
+    """Handle the `send_gmail_message` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
 
     to_address = recipient or settings.GMAIL_DEMO_RECIPIENT
     if not to_address:

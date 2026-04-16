@@ -1,4 +1,4 @@
-"""Module note: ai_analysis_service backend module."""
+"""Module summary: this module groups related logic and clarifies design intent."""
 from __future__ import annotations
 
 import json
@@ -7,7 +7,7 @@ from typing import Any
 
 from django.conf import settings
 
-try:  # Inline note: explains the nearby backend logic.
+try:  # Inline explanation: This line clarifies an assumption, guard, or transformation.
     from openai import OpenAI
 except ImportError:  # pragma: no cover - optional
     OpenAI = None  # type: ignore
@@ -112,7 +112,9 @@ _TUTOR_SYSTEM_PROMPT = (
 
 
 def generate_tutor_response(*, question: str, history: list[dict] | None = None) -> dict[str, Any]:
-    """Function note: generate_tutor_response handles this backend operation."""
+    """Handle the `generate_tutor_response` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     client = _get_client()
     if client is None:
         raise RuntimeError("DeepSeek client is unavailable.")
@@ -139,7 +141,7 @@ def generate_tutor_response(*, question: str, history: list[dict] | None = None)
     if not raw:
         raise RuntimeError("DeepSeek returned an empty response.")
 
-    # Section note: explains the purpose of this backend block.
+    # Context: This block prepares shared values used by the request branches below.
     if raw.startswith("```"):
         raw = raw.split("```")[1]
         if raw.startswith("json"):

@@ -1,4 +1,4 @@
-"""Module note: ai_user_reaction_service backend module."""
+"""Module summary: this module groups related logic and clarifies design intent."""
 
 from __future__ import annotations
 
@@ -28,12 +28,15 @@ except ImportError:  # pragma: no cover – optional dependency
 logger = logging.getLogger(__name__)
 
 
-# Section note: explains the purpose of this backend block.
-# Section note: explains the purpose of this backend block.
-# Function note: _get_client_kwargs handles this backend operation.
+# Context: This block prepares shared values used by the request branches below.
+# Context: This block prepares shared values used by the request branches below.
+# Purpose: Handle the `_get_client_kwargs` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 
 def _get_client_kwargs() -> dict[str, str] | None:
-    """Function note: _get_client_kwargs handles this backend operation."""
+    """Handle the `_get_client_kwargs` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     api_key = getattr(settings, "DEEPSEEK_API_KEY", None)
     if not api_key:
         return None
@@ -46,12 +49,15 @@ def _get_client_kwargs() -> dict[str, str] | None:
     }
 
 
-# Section note: explains the purpose of this backend block.
-# Section note: explains the purpose of this backend block.
-# Function note: schedule_ai_reactions handles this backend operation.
+# Context: This block prepares shared values used by the request branches below.
+# Context: This block prepares shared values used by the request branches below.
+# Purpose: Handle the `schedule_ai_reactions` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 
 def schedule_ai_reactions(course_id: int, post_id: int, delay_seconds: float = 0.0) -> None:
-    """Function note: schedule_ai_reactions handles this backend operation."""
+    """Handle the `schedule_ai_reactions` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     if not getattr(settings, "DEEPSEEK_API_KEY", None):
         logger.debug("DEEPSEEK_API_KEY not configured; skip AI reactions for post=%s", post_id)
         return
@@ -72,9 +78,9 @@ def schedule_ai_reactions(course_id: int, post_id: int, delay_seconds: float = 0
     ).start()
 
 
-# Section note: explains the purpose of this backend block.
-# Section note: explains the purpose of this backend block.
-# Section note: explains the purpose of this backend block.
+# Context: This block prepares shared values used by the request branches below.
+# Context: This block prepares shared values used by the request branches below.
+# Context: This block prepares shared values used by the request branches below.
 
 @dataclass
 class ReactionDecision:
@@ -83,9 +89,10 @@ class ReactionDecision:
     comment_text: str
 
 
-# Section note: explains the purpose of this backend block.
-# Section note: explains the purpose of this backend block.
-# Function note: _build_persona_prompt handles this backend operation.
+# Context: This block prepares shared values used by the request branches below.
+# Context: This block prepares shared values used by the request branches below.
+# Purpose: Handle the `_build_persona_prompt` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 
 def _build_persona_prompt(ai_user, post: CoursePost) -> str:
     persona_lines = [
@@ -131,12 +138,15 @@ def _parse_decision(raw: str | dict[str, Any]) -> ReactionDecision:
     )
 
 
-# Section note: explains the purpose of this backend block.
-# Section note: explains the purpose of this backend block.
-# Function note: async_handle_post_reactions handles this backend operation.
+# Context: This block prepares shared values used by the request branches below.
+# Context: This block prepares shared values used by the request branches below.
+# Purpose: Handle the `async_handle_post_reactions` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 
 async def async_handle_post_reactions(course_id: int, post_id: int) -> None:
-    """Function note: async_handle_post_reactions handles this backend operation."""
+    """Handle the `async_handle_post_reactions` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     kwargs = _get_client_kwargs()
     if kwargs is None:
         return
@@ -188,13 +198,15 @@ async def async_handle_post_reactions(course_id: int, post_id: int) -> None:
 
 
 async def _handle_single_ai_user(
-    client: Any,  # Inline note: explains the nearby backend logic.
+    client: Any,  # Inline explanation: This line clarifies an assumption, guard, or transformation.
     ai_user: Any,
     post: CoursePost,
     course_id: int,
     post_id: int,
 ) -> None:
-    """Function note: _handle_single_ai_user handles this backend operation."""
+    """Handle the `_handle_single_ai_user` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     _db = lambda fn, *a, **kw: sync_to_async(fn, thread_sensitive=False)(*a, **kw)  # noqa: E731
 
     identity = getattr(ai_user, "identity", None)
@@ -203,7 +215,8 @@ async def _handle_single_ai_user(
     if not system_user:
         logger.debug("AI user %s missing identity, attempting repair.", ai_user.id)
         try:
-            from .ai_user_service import ensure_ai_user_identity  # Inline note: explains the nearby backend logic.
+            # Inline explanation: this local import is intentional to avoid circular dependencies.
+            from .ai_user_service import ensure_ai_user_identity
 
             if post.course:
                 await _db(ensure_ai_user_identity, ai_user)
@@ -216,7 +229,7 @@ async def _handle_single_ai_user(
     if not system_user:
         return
 
-    # Section note: explains the purpose of this backend block.
+    # Context: This block prepares shared values used by the request branches below.
     if post.author_id == system_user.id:
         return
 
@@ -276,7 +289,9 @@ async def _handle_single_ai_user(
 
 
 async def _async_request_decision(prompt: str, client: Any) -> ReactionDecision | None:
-    """Function note: _async_request_decision handles this backend operation."""
+    """Handle the `_async_request_decision` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     model_name = getattr(settings, "DEEPSEEK_MODEL_NAME", "deepseek-chat")
     try:
         response = await client.chat.completions.create(
@@ -301,17 +316,22 @@ async def _async_request_decision(prompt: str, client: Any) -> ReactionDecision 
         return None
 
 
-# Section note: explains the purpose of this backend block.
-# Section note: explains the purpose of this backend block.
-# Function note: handle_post_reactions handles this backend operation.
+# Context: This block prepares shared values used by the request branches below.
+# Context: This block prepares shared values used by the request branches below.
+# Purpose: Handle the `handle_post_reactions` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 
 def handle_post_reactions(course_id: int, post_id: int) -> None:
-    """Function note: handle_post_reactions handles this backend operation."""
+    """Handle the `handle_post_reactions` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     asyncio.run(async_handle_post_reactions(course_id, post_id))
 
 
 def _request_decision(prompt: str, client: Any = None) -> ReactionDecision | None:
-    """Function note: _request_decision handles this backend operation."""
+    """Handle the `_request_decision` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
 
     async def _run() -> ReactionDecision | None:
         kwargs = _get_client_kwargs()
@@ -324,7 +344,9 @@ def _request_decision(prompt: str, client: Any = None) -> ReactionDecision | Non
 
 
 def evaluate_persona_prompt(prompt: str) -> ReactionDecision | None:
-    """Function note: evaluate_persona_prompt handles this backend operation."""
+    """Handle the `evaluate_persona_prompt` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     return _request_decision(prompt)
 
 

@@ -1,4 +1,4 @@
-"""Module note: wsgi backend module."""
+"""Module summary: this module groups related logic and clarifies design intent."""
 import os
 
 from django.core.wsgi import get_wsgi_application

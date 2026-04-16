@@ -218,7 +218,7 @@ export default function SearchPage() {
     inputRef.current?.focus();
   }, [authCheckComplete, authUser]);
 
-  // Section note: groups related logic for readability.
+  // Context: This block prepares shared values used by the request branches below.
   useEffect(() => {
     if (!authUser) return;
     getJson("/api/search/suggestions/")
@@ -228,7 +228,7 @@ export default function SearchPage() {
       .catch(() => {});
   }, [authUser]);
 
-  // Section note: groups related logic for readability.
+  // Context: This block prepares shared values used by the request branches below.
   useEffect(() => {
     if (!queryFromUrl || !authUser) {
       setSearchResults([]);
@@ -245,7 +245,7 @@ export default function SearchPage() {
       })
       .catch(() => {
         if (controller.signal.aborted) return;
-        // Section note: groups related logic for readability.
+        // Context: This block prepares shared values used by the request branches below.
         setSearchResults(buildCourseResults(queryFromUrl, courses.joined));
       })
       .finally(() => {

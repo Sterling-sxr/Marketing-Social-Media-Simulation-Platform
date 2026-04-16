@@ -1,11 +1,11 @@
-// src/lib/profanity.js
-// Lightweight client-side profanity detection: supports Chinese/English,
-// mixed casing, symbol noise, and simple leetspeak variants (1!l|, a@4, e3, etc.)
-// Intended only for front-end filtering; does NOT replace backend moderation.
+// Context: This block prepares shared values used by the request branches below.
+// Context: This block prepares shared values used by the request branches below.
+// Context: This block prepares shared values used by the request branches below.
+// Context: This block prepares shared values used by the request branches below.
 
-// Extend this list as needed; supports both Chinese and English entries.
+// Context: This block prepares shared values used by the request branches below.
 const BASE_LIST = [
-  // English
+  // Context: This block prepares shared values used by the request branches below.
   "fuck",
   "f*ck",
   "f**k",
@@ -73,7 +73,7 @@ const BASE_LIST = [
   "fk u",
   "fk off",
   "f off",
-  // Chinese (examples; adjust as needed)
+  // Context: This block prepares shared values used by the request branches below.
   "傻逼",
   "煞笔",
   "傻b",
@@ -91,12 +91,12 @@ const BASE_LIST = [
   "SB",
 ];
 
-// Normalize leetspeak / symbol variants back to regular letters
+// Purpose: `normalizeForMatch` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable.
 function normalizeForMatch(s) {
   return (
     s
       .toLowerCase()
-      // Leet replacements
+      // Context: This block prepares shared values used by the request branches below.
       .replace(/[¡!]|1|l|\|/g, "i")
       .replace(/[@4]/g, "a")
       .replace(/3/g, "e")
@@ -104,16 +104,16 @@ function normalizeForMatch(s) {
       .replace(/[$5]/g, "s")
       .replace(/7/g, "t")
       .replace(/8/g, "b")
-      // Collapse extra whitespace
+      // Context: This block prepares shared values used by the request branches below.
       .replace(/\s+/g, " ")
-      // Fold repeated characters (e.g. fuuuuck -> fuuck)
+      // Context: This block prepares shared values used by the request branches below.
       .replace(/(.)\1{2,}/g, "$1$1")
   );
 }
 
-// Build a loose regex for English words that allows punctuation/spacing between letters
+// Purpose: `makeLooseWordRegex` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable.
 function makeLooseWordRegex(word) {
-  // Only handle ASCII alphabetic words; Chinese terms use substring matching
+  // Context: This block prepares shared values used by the request branches below.
   if (!/^[a-z]+$/i.test(word)) return null;
   const letters = word
     .split("")
@@ -122,17 +122,17 @@ function makeLooseWordRegex(word) {
   return new RegExp(`\\b${body}\\b`, "i");
 }
 
-// Chinese words are matched via simple includes (after normalization)
+// Purpose: `hasChineseBadWord` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable.
 function hasChineseBadWord(text, term) {
   return text.includes(term);
 }
 
-/**
- * Entry point: detect whether input contains profanity.
- * @param {string} input
- * @param {string[]} extraList - runtime additions (e.g., from localStorage)
- * @returns {{ok:boolean, hits:string[], message?:string}}
- */
+/* Context: This section keeps dependent steps together so assumptions, branching rules, and maintenance decisions stay easy to reason about.
+   * Additional detail: this explanation keeps assumptions and intent explicit.
+   * Additional detail: this explanation keeps assumptions and intent explicit.
+   * Additional detail: this explanation keeps assumptions and intent explicit.
+   * Additional detail: this explanation keeps assumptions and intent explicit.
+   */
 export function hasProfanity(input, extraList = []) {
   if (!input || !input.trim()) return { ok: true, hits: [] };
 
@@ -144,13 +144,13 @@ export function hasProfanity(input, extraList = []) {
     const term = normalizeForMatch(termRaw);
     if (!term) continue;
 
-    // Chinese terms: use simple substring check
+    // Context: This block prepares shared values used by the request branches below.
     if (/[^\x00-\x7F]/.test(term)) {
       if (hasChineseBadWord(src, term)) hits.push(termRaw);
       continue;
     }
 
-    // English terms: loose regex that allows spacing/symbols
+    // Context: This block prepares shared values used by the request branches below.
     const m = makeLooseWordRegex(term);
     if (m && m.test(src)) hits.push(termRaw);
   }

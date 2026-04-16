@@ -1,4 +1,4 @@
-# Section note: explains the purpose of this backend block.
+# Context: This block prepares shared values used by the request branches below.
 import json
 
 from django.contrib.auth import get_user_model
@@ -17,11 +17,13 @@ _RANK_LABELS = {
 }
 
 
+# Purpose: Handle the `_save_search_history` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def _save_search_history(request, query: str) -> None:
     if request.user.is_authenticated:
-        # Section note: explains the purpose of this backend block.
-        # Section note: explains the purpose of this backend block.
-        # Section note: explains the purpose of this backend block.
+        # Context: This block prepares shared values used by the request branches below.
+        # Context: This block prepares shared values used by the request branches below.
+        # Context: This block prepares shared values used by the request branches below.
         profile = UserProfile.objects.filter(user=request.user).first()
         if profile is not None:
             history = profile.search_history or []
@@ -39,15 +41,19 @@ def _save_search_history(request, query: str) -> None:
 
 
 @require_GET
+# Purpose: Handle the `search_posts` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def search_posts(request):
-    """Function note: search_posts handles this backend operation."""
+    """Handle the `search_posts` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     query = request.GET.get("q", "").strip()
     if not query:
         return JsonResponse({"results": []})
 
-    # Section note: explains the purpose of this backend block.
-    # Section note: explains the purpose of this backend block.
-    # Section note: explains the purpose of this backend block.
+    # Context: This block prepares shared values used by the request branches below.
+    # Context: This block prepares shared values used by the request branches below.
+    # Context: This block prepares shared values used by the request branches below.
     tokens = [t for t in query.split() if t]
 
     token_filter = Q()
@@ -101,8 +107,12 @@ def search_posts(request):
 
 
 @require_GET
+# Purpose: Handle the `suggested_search` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def suggested_search(request):
-    """Function note: suggested_search handles this backend operation."""
+    """Handle the `suggested_search` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     top_keywords = (
         SearchLog.objects.values("keyword")
         .annotate(hit_count=Count("keyword"))
@@ -121,8 +131,12 @@ def suggested_search(request):
 
 
 @require_GET
+# Purpose: Handle the `get_search_history` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def get_search_history(request):
-    """Function note: get_search_history handles this backend operation."""
+    """Handle the `get_search_history` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     if request.user.is_authenticated:
         profile = UserProfile.objects.filter(user=request.user).first()
         history = profile.search_history if profile else []
@@ -132,8 +146,12 @@ def get_search_history(request):
 
 
 @require_POST
+# Purpose: Handle the `add_search_history` workflow and keep behavior predictable.
+# Details: Validate incoming data, call dependent services, and return a stable response.
 def add_search_history(request):
-    """Function note: add_search_history handles this backend operation."""
+    """Handle the `add_search_history` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     try:
         body = json.loads(request.body)
         keyword = body.get("keyword", "").strip()

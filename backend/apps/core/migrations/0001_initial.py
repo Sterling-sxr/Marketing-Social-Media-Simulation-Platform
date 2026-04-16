@@ -1,4 +1,4 @@
-# Section note: explains the purpose of this backend block.
+# Context: This block prepares shared values used by the request branches below.
 
 from django.conf import settings
 from django.db import migrations, models

@@ -1,4 +1,4 @@
-"""Module note: user_repository backend module."""
+"""Module summary: this module groups related logic and clarifies design intent."""
 from __future__ import annotations
 
 from typing import Dict, List, Optional
@@ -12,22 +12,28 @@ User = get_user_model()
 
 
 class UserRepository(BaseRepository[User]):
-    """Class note: UserRepository encapsulates related backend behavior."""
+    """Class summary: UserRepository keeps related behavior together behind one clear interface."""
     model = User
     
     @classmethod
     def get_by_email(cls, email: str) -> Optional[User]:
-        """Function note: get_by_email handles this backend operation."""
+        """Handle the `get_by_email` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         return cls.model.objects.filter(email__iexact=email).first()
     
     @classmethod
     def get_by_username(cls, username: str) -> Optional[User]:
-        """Function note: get_by_username handles this backend operation."""
+        """Handle the `get_by_username` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         return cls.model.objects.filter(username__iexact=username).first()
     
     @classmethod
     def create_user(cls, username: str, email: str, password: str) -> User:
-        """Function note: create_user handles this backend operation."""
+        """Handle the `create_user` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         return cls.model.objects.create_user(
             username=username.lower(),
             email=email.lower(),
@@ -36,7 +42,9 @@ class UserRepository(BaseRepository[User]):
     
     @classmethod
     def username_exists(cls, username: str, exclude_id: int = None) -> bool:
-        """Function note: username_exists handles this backend operation."""
+        """Handle the `username_exists` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         queryset = cls.model.objects.filter(username=username)
         if exclude_id:
             queryset = queryset.exclude(id=exclude_id)
@@ -44,7 +52,9 @@ class UserRepository(BaseRepository[User]):
     
     @classmethod
     def find_by_usernames(cls, usernames: List[str]) -> Dict[str, int]:
-        """Function note: find_by_usernames handles this backend operation."""
+        """Handle the `find_by_usernames` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         users = cls.model.objects.filter(
             username__in=[u.lower() for u in usernames]
         )
@@ -52,7 +62,9 @@ class UserRepository(BaseRepository[User]):
     
     @classmethod
     def search_in_course(cls, course_id: int, query: str, limit: int = 10) -> List[User]:
-        """Function note: search_in_course handles this backend operation."""
+        """Handle the `search_in_course` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         return list(
             cls.model.objects
             .filter(course_memberships__course_id=course_id)

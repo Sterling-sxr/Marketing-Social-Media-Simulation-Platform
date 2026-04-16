@@ -6,12 +6,12 @@ export default function ResetSuccessPage() {
   const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
-    // Section note: groups related logic for readability.
+    // Context: This block prepares shared values used by the request branches below.
     const timer = setInterval(() => {
       setCountdown((c) => c - 1);
     }, 1000);
 
-    // Section note: groups related logic for readability.
+    // Context: This block prepares shared values used by the request branches below.
     const redirect = setTimeout(() => {
       navigate("/", { replace: true });
     }, 3000);

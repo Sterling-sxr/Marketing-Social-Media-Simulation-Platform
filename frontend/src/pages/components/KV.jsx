@@ -1,4 +1,4 @@
-// Function note: KV encapsulates this unit of behavior.
+// Purpose: `KV` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable.
 export default function KV({ label, value }) {
   const empty =
     value === undefined || value === null || value === "" || value === "—";

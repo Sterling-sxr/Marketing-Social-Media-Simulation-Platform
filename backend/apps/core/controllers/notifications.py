@@ -4,7 +4,7 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
 
 class NotificationConsumer(AsyncJsonWebsocketConsumer):
-    """Class note: NotificationConsumer encapsulates related backend behavior."""
+    """Class summary: NotificationConsumer keeps related behavior together behind one clear interface."""
 
     async def connect(self):
         query = parse_qs(self.scope.get("query_string", b"").decode())
@@ -22,14 +22,20 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             }
         )
 
+    # Purpose: Handle the `disconnect` workflow and keep behavior predictable.
+    # Details: Validate incoming data, call dependent services, and return a stable response.
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
+    # Purpose: Handle the `notification_message` workflow and keep behavior predictable.
+    # Details: Validate incoming data, call dependent services, and return a stable response.
     async def notification_message(self, event):
         payload = event.get("payload", {})
         await self.send_json({"type": "notification", **payload})
 
+    # Purpose: Handle the `receive_json` workflow and keep behavior predictable.
+    # Details: Validate incoming data, call dependent services, and return a stable response.
     async def receive_json(self, content, **kwargs):
-        # Section note: explains the purpose of this backend block.
+        # Context: This block prepares shared values used by the request branches below.
         if content.get("action") == "ping":
             await self.send_json({"type": "pong"})

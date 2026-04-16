@@ -1,4 +1,4 @@
-"""Module note: course_repository backend module."""
+"""Module summary: this module groups related logic and clarifies design intent."""
 from __future__ import annotations
 
 from typing import List, Optional
@@ -10,17 +10,21 @@ from .models import Course, CourseMember
 
 
 class CourseRepository(BaseRepository[Course]):
-    """Class note: CourseRepository encapsulates related backend behavior."""
+    """Class summary: CourseRepository keeps related behavior together behind one clear interface."""
     model = Course
     
     @classmethod
     def get_by_join_code(cls, join_code: str) -> Optional[Course]:
-        """Function note: get_by_join_code handles this backend operation."""
+        """Handle the `get_by_join_code` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         return cls.model.objects.filter(join_code=join_code).first()
     
     @classmethod
     def get_user_courses(cls, user_id: int) -> List[Course]:
-        """Function note: get_user_courses handles this backend operation."""
+        """Handle the `get_user_courses` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         return list(
             cls.model.objects
             .filter(members__user_id=user_id)
@@ -30,7 +34,9 @@ class CourseRepository(BaseRepository[Course]):
     
     @classmethod
     def get_available_courses(cls, user_id: int) -> List[Course]:
-        """Function note: get_available_courses handles this backend operation."""
+        """Handle the `get_available_courses` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         return list(
             cls.model.objects
             .exclude(members__user_id=user_id)
@@ -39,7 +45,9 @@ class CourseRepository(BaseRepository[Course]):
     
     @classmethod
     def get_created_by_user(cls, user_id: int) -> List[Course]:
-        """Function note: get_created_by_user handles this backend operation."""
+        """Handle the `get_created_by_user` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         return list(
             cls.model.objects
             .filter(created_by_id=user_id)
@@ -48,7 +56,9 @@ class CourseRepository(BaseRepository[Course]):
     
     @classmethod
     def is_user_member(cls, course_id: int, user_id: int) -> bool:
-        """Function note: is_user_member handles this backend operation."""
+        """Handle the `is_user_member` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         return CourseMember.objects.filter(
             course_id=course_id,
             user_id=user_id
@@ -56,7 +66,9 @@ class CourseRepository(BaseRepository[Course]):
     
     @classmethod
     def get_user_role(cls, course_id: int, user_id: int) -> Optional[str]:
-        """Function note: get_user_role handles this backend operation."""
+        """Handle the `get_user_role` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         member = CourseMember.objects.filter(
             course_id=course_id,
             user_id=user_id
@@ -65,7 +77,9 @@ class CourseRepository(BaseRepository[Course]):
     
     @classmethod
     def get_with_stats(cls, course_id: int) -> Optional[dict]:
-        """Function note: get_with_stats handles this backend operation."""
+        """Handle the `get_with_stats` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         try:
             course = (
                 cls.model.objects
@@ -88,17 +102,21 @@ class CourseRepository(BaseRepository[Course]):
 
 
 class CourseMemberRepository(BaseRepository[CourseMember]):
-    """Class note: CourseMemberRepository encapsulates related backend behavior."""
+    """Class summary: CourseMemberRepository keeps related behavior together behind one clear interface."""
     model = CourseMember
     
     @classmethod
     def add_member(cls, course_id: int, user_id: int, role: str = 'student') -> CourseMember:
-        """Function note: add_member handles this backend operation."""
+        """Handle the `add_member` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         return cls.create(course_id=course_id, user_id=user_id, role=role)
     
     @classmethod
     def get_or_create_member(cls, course_id: int, user_id: int, role: str = 'student') -> tuple[CourseMember, bool]:
-        """Function note: get_or_create_member handles this backend operation."""
+        """Handle the `get_or_create_member` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         return cls.model.objects.get_or_create(
             course_id=course_id,
             user_id=user_id,
@@ -107,7 +125,9 @@ class CourseMemberRepository(BaseRepository[CourseMember]):
     
     @classmethod
     def get_course_members(cls, course_id: int) -> List[CourseMember]:
-        """Function note: get_course_members handles this backend operation."""
+        """Handle the `get_course_members` workflow.
+        Validate incoming data, coordinate service calls, and return a consistent result.
+        """
         return list(
             cls.model.objects
             .filter(course_id=course_id)

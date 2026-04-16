@@ -7,7 +7,7 @@ from .models import CourseProfile
 
 
 class CourseProfileRepository(BaseRepository[CourseProfile]):
-    """Class note: CourseProfileRepository encapsulates related backend behavior."""
+    """Class summary: CourseProfileRepository keeps related behavior together behind one clear interface."""
 
     model = CourseProfile
 

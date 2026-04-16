@@ -68,7 +68,7 @@ function fileIcon(contentType, originalName) {
   return "📎";
 }
 
-/* Function note: isPreviewable encapsulates this unit of behavior. */
+/* Purpose: `isPreviewable` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
 function isPreviewable(contentType, originalName) {
   const ext = (originalName || "").split(".").pop().toLowerCase();
   const previewableExts = ["pdf", "png", "jpg", "jpeg", "gif", "webp", "svg", "mp4", "mov", "webm"];
@@ -114,7 +114,7 @@ function UploadModal({ courseId, onClose, onSuccess }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Upload failed.");
-      // Section note: groups related logic for readability.
+      // Context: This block prepares shared values used by the request branches below.
       onSuccess(data.material ?? data);
     } catch (err) {
       setStatus({ loading: false, error: err.message || "Upload failed." });
@@ -372,7 +372,7 @@ export default function CourseMaterialsPage() {
     try {
       const params = activeCategory !== "all" ? `?category=${activeCategory}` : "";
       const data = await getJson(`/api/courses/${courseId}/materials/${params}`);
-      // Section note: groups related logic for readability.
+      // Context: This block prepares shared values used by the request branches below.
       setMaterials(Array.isArray(data) ? data : data.items ?? data.materials ?? []);
       setError("");
     } catch (err) {
@@ -413,8 +413,8 @@ export default function CourseMaterialsPage() {
     }
   };
 
-  // Section note: groups related logic for readability.
-  // Section note: groups related logic for readability.
+  // Context: This block prepares shared values used by the request branches below.
+  // Context: This block prepares shared values used by the request branches below.
   const globalMobileNav = useMemo(
     () => [
       { to: "/studenthome", label: "Home", icon: <Home className="h-5 w-5" /> },
@@ -438,7 +438,7 @@ export default function CourseMaterialsPage() {
       mobileNavLinks={globalMobileNav}
     >
       <div className="space-y-5">
-        {/* Section note: groups related UI behavior for readability. */}
+        {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative w-full sm:max-w-lg">
             <Search
@@ -455,7 +455,7 @@ export default function CourseMaterialsPage() {
           </div>
         </div>
 
-        {/* Section note: groups related UI behavior for readability. */}
+        {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
         <div className="flex flex-wrap gap-2">
           {CATEGORIES.map((cat) => (
             <button
@@ -473,7 +473,7 @@ export default function CourseMaterialsPage() {
           ))}
         </div>
 
-        {/* Section note: groups related UI behavior for readability. */}
+        {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-8 w-8 animate-spin text-brand-400" />

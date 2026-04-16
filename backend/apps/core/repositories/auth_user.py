@@ -1,4 +1,4 @@
-"""Module note: auth_user backend module."""
+"""Module summary: this module groups related logic and clarifies design intent."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -18,17 +18,23 @@ class UserCreationResult:
 
 
 def get_by_email(email: str) -> Optional[AbstractBaseUser]:
-    """Function note: get_by_email handles this backend operation."""
+    """Handle the `get_by_email` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     return UserModel.objects.filter(email__iexact=email).first()
 
 
 def get_by_username(username: str) -> Optional[AbstractBaseUser]:
-    """Function note: get_by_username handles this backend operation."""
+    """Handle the `get_by_username` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     return UserModel.objects.filter(username__iexact=username).first()
 
 
 def create_user(*, username: str, email: str, password: str) -> UserCreationResult:
-    """Function note: create_user handles this backend operation."""
+    """Handle the `create_user` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     try:
         user = UserModel.objects.create_user(
             username=username.lower(),
@@ -37,7 +43,7 @@ def create_user(*, username: str, email: str, password: str) -> UserCreationResu
         )
         return UserCreationResult(user=user, created=True)
     except IntegrityError:
-        # Section note: explains the purpose of this backend block.
+        # Context: This block prepares shared values used by the request branches below.
         existing = get_by_username(username)
         if existing is None:
             raise

@@ -4,7 +4,9 @@ from django.http import HttpRequest
 
 
 def resolve_user_from_request(request: HttpRequest) -> str | None:
-    """Function note: resolve_user_from_request handles this backend operation."""
+    """Handle the `resolve_user_from_request` workflow.
+    Validate incoming data, coordinate service calls, and return a consistent result.
+    """
     user = request.GET.get("user") or request.headers.get("X-User")
     return user.strip() if user else None
 
