@@ -1,4 +1,4 @@
-"""Module note: profile_repository backend module."""
+"""Module summary: profile_repository defines backend functionality with clear intent."""
 from __future__ import annotations
 
 from typing import Optional
@@ -8,22 +8,22 @@ from .models import UserProfile
 
 
 class ProfileRepository(BaseRepository[UserProfile]):
-    """Class note: ProfileRepository encapsulates related backend behavior."""
+    """Class summary: ProfileRepository groups related behavior in one place."""
     model = UserProfile
     
     @classmethod
     def get_by_user_id(cls, user_id: int) -> Optional[UserProfile]:
-        """Function note: get_by_user_id handles this backend operation."""
+        """Function summary: get_by_user_id executes this unit of backend logic."""
         return cls.model.objects.filter(user_id=user_id).first()
     
     @classmethod
     def user_has_profile(cls, user_id: int) -> bool:
-        """Function note: user_has_profile handles this backend operation."""
+        """Function summary: user_has_profile executes this unit of backend logic."""
         return cls.exists(user_id=user_id)
     
     @classmethod
     def create_or_update(cls, user_id: int, profile_data: dict) -> tuple[UserProfile, bool]:
-        """Function note: create_or_update handles this backend operation."""
+        """Function summary: create_or_update executes this unit of backend logic."""
         return cls.update_or_create(
             defaults=profile_data,
             user_id=user_id

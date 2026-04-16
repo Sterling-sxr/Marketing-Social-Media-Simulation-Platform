@@ -13,7 +13,7 @@ def _parse_optional_course_id(course_id: object) -> int | None:
     if course_id is None:
         return None
     try:
-        # Section note: explains the purpose of this backend block.
+        # Section summary: this block is described for easier reading.
         course_id_int = int(str(course_id).strip())
         return course_id_int
     except (TypeError, ValueError):
@@ -26,7 +26,7 @@ def list_notifications(
     limit: int = 50,
     course_id: object | None = None,
 ) -> tuple[list[Notification], int]:
-    """Function note: list_notifications handles this backend operation."""
+    """Function summary: list_notifications executes this unit of backend logic."""
     parsed_course_id = _parse_optional_course_id(course_id)
     queryset = Notification.objects.filter(recipient=recipient)
     if parsed_course_id is not None:
@@ -36,7 +36,7 @@ def list_notifications(
 
 
 def mark_as_read(*, recipient: str, ids: Iterable[int], course_id: object | None = None) -> int:
-    """Function note: mark_as_read handles this backend operation."""
+    """Function summary: mark_as_read executes this unit of backend logic."""
     ids = list(ids)
     if not ids:
         return 0
@@ -48,7 +48,7 @@ def mark_as_read(*, recipient: str, ids: Iterable[int], course_id: object | None
 
 
 def mark_all_as_read(*, recipient: str, course_id: object | None = None) -> int:
-    """Function note: mark_all_as_read handles this backend operation."""
+    """Function summary: mark_all_as_read executes this unit of backend logic."""
     parsed_course_id = _parse_optional_course_id(course_id)
     qs = Notification.objects.filter(recipient=recipient, is_read=False)
     if parsed_course_id is not None:
@@ -66,7 +66,7 @@ def create_notification(
     link: str,
     metadata: dict | None = None,
 ) -> dict:
-    """Function note: create_notification handles this backend operation."""
+    """Function summary: create_notification executes this unit of backend logic."""
     notification = Notification.objects.create(
         recipient=recipient,
         actor=actor,

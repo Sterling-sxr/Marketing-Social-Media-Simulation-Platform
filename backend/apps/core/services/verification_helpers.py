@@ -1,4 +1,4 @@
-"""Module note: verification_helpers backend module."""
+"""Module summary: verification_helpers defines backend functionality with clear intent."""
 from __future__ import annotations
 
 import random

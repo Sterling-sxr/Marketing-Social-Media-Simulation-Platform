@@ -59,7 +59,7 @@ export function AppProvider({ children }) {
   const [authUser, setAuthUser] = useState(null);
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerStatus, setRegisterStatus] = useState(makeStatus);
   const [verifyDigits, setVerifyDigits] = useState(["", "", "", ""]);
@@ -71,7 +71,7 @@ export function AppProvider({ children }) {
     useState(makeSimpleStatus);
   const [registerVerifiedEmail, setRegisterVerifiedEmail] = useState("");
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   const [resetEmail, setResetEmail] = useState("");
   const [resetStatus, setResetStatus] = useState(makeStatus);
   const [resetVerifiedEmail, setResetVerifiedEmail] = useState("");
@@ -82,12 +82,12 @@ export function AppProvider({ children }) {
   const [resetCompleteStatus, setResetCompleteStatus] =
     useState(makeSimpleStatus);
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   const [profileOptions, setProfileOptions] = useState(null);
   const [profileData, setProfileData] = useState(createProfileData);
   const [profileStatus, setProfileStatus] = useState(makeSimpleStatus);
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   const [courses, setCourses] = useState({ joined: [], available: [] });
   const [courseStatus, setCourseStatus] = useState(makeSimpleStatus);
   const [joinCode, setJoinCode] = useState("");
@@ -108,7 +108,7 @@ export function AppProvider({ children }) {
     const payload = { id, ...toast };
     setToasts((prev) => [payload, ...prev].slice(0, 5));
 
-    // Section note: groups related logic for readability.
+    // Section summary: this block is documented for clarity.
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 5000);
@@ -120,7 +120,7 @@ export function AppProvider({ children }) {
         (notification, { silent = false } = {}) => {
             if (!notification || notification.id == null) return;
             if (seenNotificationIdsRef.current.has(notification.id)) return;
-            // Section note: groups related logic for readability.
+            // Section summary: this block is documented for clarity.
             if (
               toasts.some(
                 (t) =>
@@ -152,7 +152,7 @@ export function AppProvider({ children }) {
   const isAuthenticated = useMemo(() => Boolean(authUser), [authUser]);
 
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -161,7 +161,7 @@ export function AppProvider({ children }) {
           setAuthUser(data.user);
         }
       } catch (error) {
-        // Section note: groups related logic for readability.
+        // Section summary: this block is documented for clarity.
       } finally {
         setAuthCheckComplete(true);
       }
@@ -169,7 +169,7 @@ export function AppProvider({ children }) {
     checkAuth();
   }, []);
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   useEffect(() => {
     const userId = authUser?.id;
     if (!userId) return;
@@ -205,7 +205,7 @@ export function AppProvider({ children }) {
           };
         });
       } catch {
-        // Section note: groups related logic for readability.
+        // Section summary: this block is documented for clarity.
       }
     };
 
@@ -563,7 +563,7 @@ export function AppProvider({ children }) {
     try {
       await postJson(AUTH_ENDPOINTS.logout, {});
     } catch (error) {
-      // Section note: groups related logic for readability.
+      // Section summary: this block is documented for clarity.
     } finally {
       setAuthUser(null);
       resetRegisterFlow();
@@ -599,7 +599,7 @@ export function AppProvider({ children }) {
     setProfileStatus((prev) => ({ ...prev, loading: true, error: "" }));
     try {
       const data = await getJson(`${PROFILE_ENDPOINT}/me/`);
-      // Section note: groups related logic for readability.
+      // Section summary: this block is documented for clarity.
       setProfileData({
         gender: data.gender || "",
         city: data.city || "",
@@ -727,7 +727,7 @@ export function AppProvider({ children }) {
       return { items: [], unread: 0 };
     }
 
-    // Section note: groups related logic for readability.
+    // Section summary: this block is documented for clarity.
     const identifier =
       (authUser.username || "").trim() ||
       (authUser.email || "").trim() ||
@@ -751,7 +751,7 @@ export function AppProvider({ children }) {
         items: data.items || [],
         unread: typeof data.unread === "number" ? data.unread : 0,
       });
-      // Section note: groups related logic for readability.
+      // Section summary: this block is documented for clarity.
       if (!silent) {
         (data.items || []).forEach((item) =>
           registerNotification(item, { silent })
@@ -827,7 +827,7 @@ export function AppProvider({ children }) {
     async (ids) => {
       if (!ids || ids.length === 0) return { updated: 0 };
       try {
-        // Section note: groups related logic for readability.
+        // Section summary: this block is documented for clarity.
         const identifier =
           (authUser?.username || "").trim() ||
           (authUser?.email || "").trim() ||
@@ -836,7 +836,7 @@ export function AppProvider({ children }) {
           `/api/messages/notifications/?user=${encodeURIComponent(identifier)}`,
           { ids }
         );
-        // Section note: groups related logic for readability.
+        // Section summary: this block is documented for clarity.
         setNotifications((prev) => {
           const nextItems = prev.items.map((n) =>
             ids.includes(n.id) ? { ...n, is_read: true } : n
@@ -867,7 +867,7 @@ export function AppProvider({ children }) {
         `/api/messages/notifications/?user=${encodeURIComponent(identifier)}`,
         { all: true }
       );
-      // Section note: groups related logic for readability.
+      // Section summary: this block is documented for clarity.
       setNotifications((prev) => {
         const nextItems = prev.items.map((n) => ({ ...n, is_read: true }));
         return { items: nextItems, unread: 0 };
@@ -884,7 +884,7 @@ export function AppProvider({ children }) {
   }, [authUser]);
 
   useEffect(() => {
-    // Section note: groups related logic for readability.
+    // Section summary: this block is documented for clarity.
     if (!authUser) {
       if (wsRef.current) {
         try {
@@ -895,7 +895,7 @@ export function AppProvider({ children }) {
       return undefined;
     }
 
-    // Section note: groups related logic for readability.
+    // Section summary: this block is documented for clarity.
     const identifier =
       (authUser.username || "").trim() ||
       (authUser.email || "").trim() ||
@@ -934,12 +934,12 @@ export function AppProvider({ children }) {
           registerNotification(data, { silent: false });
         }
       } catch (_) {
-        // Section note: groups related logic for readability.
+        // Section summary: this block is documented for clarity.
       }
     };
 
     socket.onerror = () => {
-      // Section note: groups related logic for readability.
+      // Section summary: this block is documented for clarity.
     };
 
     socket.onclose = () => {

@@ -1,4 +1,4 @@
-"""Module note: course_profile_service backend module."""
+"""Module summary: course_profile_service defines backend functionality with clear intent."""
 from __future__ import annotations
 
 from typing import Any

@@ -1,17 +1,17 @@
-// Section note: groups related logic for readability.
+// Section summary: this block is documented for clarity.
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useApp, createEmptyProfileData } from "../context/AppContext";
 import Feedback from "./components/Feedback";
 import CircleImage from "./components/CircleImage";
 
-/* Function note: EditSection encapsulates this unit of behavior. */
+/* Function summary: EditSection drives this behavior. */
 function EditSection({
   emoji = "",
   title,
   desc,
   children,
-  tone = "default", // Inline note: clarifies the nearby code intent.
+  tone = "default", // Inline explanation: this statement is clarified for readability.
   defaultOpen = false,
   forceOpen = false,
   hasError = false,
@@ -109,7 +109,7 @@ function Help({ children, className = "" }) {
   );
 }
 
-/* Function note: FieldText encapsulates this unit of behavior. */
+/* Function summary: FieldText drives this behavior. */
 function FieldText({
   label,
   value,
@@ -176,7 +176,7 @@ function FieldSlider({ label, value, onChange }) {
   return (
     <FieldBlock>
       <Label title={label} />
-      {/* Section note: groups related UI behavior for readability. */}
+      {/* Section summary: this UI block is explained for clarity. */}
       <div className="flex flex-col gap-2">
         <span className="text-sm">
           Current: <span className="font-semibold">{value ?? "—"}</span>
@@ -244,7 +244,7 @@ function FieldInterests({
   );
 }
 
-/* Function note: OnboardingProfilePage encapsulates this unit of behavior. */
+/* Function summary: OnboardingProfilePage drives this behavior. */
 export default function OnboardingProfilePage() {
   const navigate = useNavigate();
   const params = useParams();
@@ -457,8 +457,8 @@ export default function OnboardingProfilePage() {
     setAttemptedSubmit(true);
     setFormErrors(validate);
     if (Object.keys(validate).length > 0) {
-      // Section note: groups related logic for readability.
-      // Section note: groups related logic for readability.
+      // Section summary: this block is documented for clarity.
+      // Section summary: this block is documented for clarity.
       return;
     }
     if (isCourseMode && courseId) {
@@ -489,7 +489,7 @@ export default function OnboardingProfilePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-accent-50 text-slate-900 flex flex-col">
-      {/* Section note: groups related UI behavior for readability. */}
+      {/* Section summary: this UI block is explained for clarity. */}
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-3 py-3 sm:px-6 sm:py-5">
         <div className="flex items-center gap-3">
           <img
@@ -513,7 +513,7 @@ export default function OnboardingProfilePage() {
         </div>
       </header>
 
-      {/* Section note: groups related UI behavior for readability. */}
+      {/* Section summary: this UI block is explained for clarity. */}
       <main className="flex-1 mx-auto w-full max-w-4xl px-3 py-4 sm:px-6 sm:py-10">
         <section className="mx-auto w-full max-w-2xl">
           <div className="space-y-3 sm:space-y-4">
@@ -553,7 +553,7 @@ export default function OnboardingProfilePage() {
                     Please complete all required fields highlighted in red.
                   </div>
                 ) : null}
-                {/* Section note: groups related UI behavior for readability. */}
+                {/* Section summary: this UI block is explained for clarity. */}
                 <EditSection
                   emoji="🧾"
                   title="Demographic"
@@ -615,7 +615,7 @@ export default function OnboardingProfilePage() {
                   </div>
                 </EditSection>
 
-                {/* Section note: groups related UI behavior for readability. */}
+                {/* Section summary: this UI block is explained for clarity. */}
                 <EditSection
                   emoji="🧠"
                   title="Psychographic"
@@ -660,7 +660,7 @@ export default function OnboardingProfilePage() {
                   />
                 </EditSection>
 
-                {/* Section note: groups related UI behavior for readability. */}
+                {/* Section summary: this UI block is explained for clarity. */}
                 <EditSection
                   emoji="🛒"
                   title="Behavioural / Shopping Habits"
@@ -705,7 +705,7 @@ export default function OnboardingProfilePage() {
                   </div>
                 </EditSection>
 
-                {/* Section note: groups related UI behavior for readability. */}
+                {/* Section summary: this UI block is explained for clarity. */}
                 <EditSection
                   emoji="💬"
                   title="Digital / Social Media"
@@ -741,7 +741,7 @@ export default function OnboardingProfilePage() {
                   </div>
                 </EditSection>
 
-                {/* Section note: groups related UI behavior for readability. */}
+                {/* Section summary: this UI block is explained for clarity. */}
                 <div className="flex items-center justify-end gap-3">
                   <button
                     type="submit"

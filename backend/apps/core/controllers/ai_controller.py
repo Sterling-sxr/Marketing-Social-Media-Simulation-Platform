@@ -10,7 +10,7 @@ from .profile_controller import _ensure_authenticated
 
 
 @csrf_exempt
-# Function note: ai_analyze handles this controller action.
+# Function summary: ai_analyze implements this backend behavior.
 def ai_analyze(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -44,7 +44,7 @@ def ai_analyze(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Function note: ai_tutor handles this controller action.
+# Function summary: ai_tutor implements this backend behavior.
 def ai_tutor(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:

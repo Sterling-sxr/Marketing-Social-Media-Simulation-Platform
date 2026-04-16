@@ -1,4 +1,4 @@
-"""Module note: course_post_service backend module."""
+"""Module summary: course_post_service defines backend functionality with clear intent."""
 from __future__ import annotations
 
 import logging
@@ -24,7 +24,7 @@ from ..repositories import (
     CoursePostLike,
     CoursePostMention,
     CoursePostView,
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     CourseProfileRepository,
     CourseRepository,
     FollowRepository,
@@ -50,15 +50,15 @@ MAX_RECOMMENDATIONS = int(getattr(settings, "POST_RECOMMENDATION_LIMIT", 5))
 
 
 class CourseAccessError(PermissionError):
-    """Class note: CourseAccessError encapsulates related backend behavior."""
+    """Class summary: CourseAccessError groups related behavior in one place."""
 
 
 class CoursePostNotFoundError(ValueError):
-    """Class note: CoursePostNotFoundError encapsulates related backend behavior."""
+    """Class summary: CoursePostNotFoundError groups related behavior in one place."""
 
 
 class CourseReadOnlyError(PermissionError):
-    """Class note: CourseReadOnlyError encapsulates related backend behavior."""
+    """Class summary: CourseReadOnlyError groups related behavior in one place."""
 
 
 def _display_name(user) -> str:
@@ -77,7 +77,7 @@ def _display_name(user) -> str:
 
 
 def _get_course(course_id: int) -> Course:
-    """Function note: _get_course handles this backend operation."""
+    """Function summary: _get_course executes this unit of backend logic."""
     course = CourseRepository.get_by_id(course_id)
     if not course:
         raise ValueError("Course not found.")
@@ -85,7 +85,7 @@ def _get_course(course_id: int) -> Course:
 
 
 def _course_is_read_only(course: Course) -> bool:
-    """Function note: _course_is_read_only handles this backend operation."""
+    """Function summary: _course_is_read_only executes this unit of backend logic."""
     if not course.end_date:
         return False
     today = timezone.localdate()
@@ -93,16 +93,16 @@ def _course_is_read_only(course: Course) -> bool:
 
 
 def _ensure_course_active(course: Course) -> None:
-    """Function note: _ensure_course_active handles this backend operation."""
+    """Function summary: _ensure_course_active executes this unit of backend logic."""
     if _course_is_read_only(course):
         raise CourseReadOnlyError("This course has ended; posts are read-only.")
 
 
 def _ensure_membership(course: Course, user):
-    """Function note: _ensure_membership handles this backend operation."""
+    """Function summary: _ensure_membership executes this unit of backend logic."""
     if not CourseRepository.is_user_member(course.id, user.id):
         raise CourseAccessError("You must join this course before you can access its posts.")
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     role = CourseRepository.get_user_role(course.id, user.id)
     return type('Membership', (), {'course': course, 'user': user, 'role': role or 'student'})()
 
@@ -257,13 +257,13 @@ def _merge_mention_details(
 
 
 def list_course_posts(*, user, course_id: int, hashtag: str | None = None, following_only: bool = False) -> dict[str, Any]:
-    """Function note: list_course_posts handles this backend operation."""
-    # Section note: explains the purpose of this backend block.
+    """Function summary: list_course_posts executes this unit of backend logic."""
+    # Section summary: this block is described for easier reading.
     course = _get_course(course_id)
     membership = _ensure_membership(course, user)
     read_only = _course_is_read_only(course)
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     following_ids = None
     if following_only:
         following_ids = list(FollowRepository.get_following_ids(user.id))
@@ -279,13 +279,13 @@ def list_course_posts(*, user, course_id: int, hashtag: str | None = None, follo
                 "items": [],
             }
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     active_hashtag = None
     if hashtag:
         raw_tag = hashtag.strip().lstrip("#")
         active_hashtag = raw_tag.lower() or raw_tag
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     posts = PostRepository.get_course_posts(
         course_id=course_id,
         hashtag=active_hashtag,
@@ -313,12 +313,12 @@ def list_course_posts(*, user, course_id: int, hashtag: str | None = None, follo
 
     post_ids = [p.id for p in posts]
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     like_count_map = PostLikeRepository.get_like_counts(post_ids)
     liked_ids = PostLikeRepository.get_user_liked_posts(user.id, post_ids)
     comment_count_map = PostCommentRepository.get_comment_counts(post_ids)
     
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     for p in posts:
         setattr(p, "prefetched_comments_count", comment_count_map.get(p.id, 0))
 
@@ -366,18 +366,18 @@ def create_course_post_with_meta(
     hashtags: Sequence[str] | None,
     attachment_ids: Sequence[int] | None,
 ) -> dict[str, Any]:
-    """Function note: create_course_post_with_meta handles this backend operation."""
-    # Section note: explains the purpose of this backend block.
+    """Function summary: create_course_post_with_meta executes this unit of backend logic."""
+    # Section summary: this block is described for easier reading.
     course = _get_course(course_id)
     _ensure_membership(course, user)
     _ensure_course_active(course)
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     sanitized = (content or "").strip()
     if not sanitized:
         raise ValueError("Post content cannot be empty.")
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     extracted_mentions = _extract_mentions(sanitized, mentions)
     mention_entity_map: dict[str, int] = {}
     if mention_entities:
@@ -388,7 +388,7 @@ def create_course_post_with_meta(
                 mention_entity_map[value] = int(user_id)
     extracted_hashtags = _extract_hashtags(sanitized, hashtags)
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     post = PostRepository.create(
         course_id=course_id,
         author_id=user.id,
@@ -397,7 +397,7 @@ def create_course_post_with_meta(
         hashtags=extracted_hashtags,
     )
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     normalized_attachment_ids: list[int] = []
     if attachment_ids:
         seen: set[int] = set()
@@ -414,16 +414,16 @@ def create_course_post_with_meta(
     if len(normalized_attachment_ids) > MAX_POST_ATTACHMENTS:
         raise ValueError(f"You can upload at most {MAX_POST_ATTACHMENTS} attachments.")
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     if normalized_attachment_ids:
         PostAttachmentRepository.attach_to_post(post.id, normalized_attachment_ids)
-        # Section note: explains the purpose of this backend block.
+        # Section summary: this block is described for easier reading.
         post = PostRepository.get_with_details(post.id)
         post.prefetched_attachments = post.attachments.all()
     else:
         post.prefetched_attachments = []
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     if mention_entity_map:
         to_create = []
         for mention_value in extracted_mentions:
@@ -432,10 +432,10 @@ def create_course_post_with_meta(
             if user_id:
                 to_create.append({"user_id": user_id, "identifier": key})
         
-        # Section note: explains the purpose of this backend block.
+        # Section summary: this block is described for easier reading.
         if to_create:
             PostMentionRepository.create_mentions(post.id, to_create)
-            # Section note: explains the purpose of this backend block.
+            # Section summary: this block is described for easier reading.
             post = PostRepository.get_with_details(post.id)
             post.prefetched_mentions = post.mentions_rel.all()
     
@@ -444,7 +444,7 @@ def create_course_post_with_meta(
 
     mention_recipient_ids: set[int] = set()
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     try:
         actor_name = _display_name(user)
         post_link = f"/courses/{course_id}/posts/{post.id}"
@@ -476,7 +476,7 @@ def create_course_post_with_meta(
             if getattr(target_user, "id", None):
                 mention_recipient_ids.add(target_user.id)
 
-        # Section note: explains the purpose of this backend block.
+        # Section summary: this block is described for easier reading.
         follower_ids = FollowRepository.get_follower_ids(getattr(user, "id", None))
         if follower_ids:
             follower_ids.discard(getattr(user, "id", None))
@@ -521,7 +521,7 @@ def create_course_post_with_meta(
             excluded_user_ids.add(author_id)
         _schedule_interest_recommendations(course_id, post.id, list(excluded_user_ids))
     except Exception as e:
-        # Section note: explains the purpose of this backend block.
+        # Section summary: this block is described for easier reading.
         logger.error(f"[NOTIFY] Failed to create notification: {e}", exc_info=True)
 
     def _schedule_post_tasks() -> None:
@@ -544,22 +544,22 @@ def create_course_post_with_meta(
 
 
 def search_course_mentions(*, user, course_id: int, query: str, limit: int = 8) -> list[dict[str, Any]]:
-    """Function note: search_course_mentions handles this backend operation."""
-    # Section note: explains the purpose of this backend block.
+    """Function summary: search_course_mentions executes this unit of backend logic."""
+    # Section summary: this block is described for easier reading.
     course = _get_course(course_id)
     _ensure_membership(course, user)
 
     normalized = (query or "").strip()
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     if normalized:
         found_users = UserRepository.search_in_course(course_id, normalized, limit)
     else:
-        # Section note: explains the purpose of this backend block.
+        # Section summary: this block is described for easier reading.
         members = CourseMemberRepository.get_course_members(course_id)
         found_users = [m.user for m in members if m.user_id != user.id][:limit]
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     results: list[dict[str, Any]] = []
     for target in found_users:
         if target.id == user.id:
@@ -620,21 +620,21 @@ def search_course_hashtags(*, user, course_id: int, query: str, limit: int = 10)
 
 
 def like_course_post(*, user, course_id: int, post_id: int) -> dict[str, Any]:
-    """Function note: like_course_post handles this backend operation."""
-    # Section note: explains the purpose of this backend block.
+    """Function summary: like_course_post executes this unit of backend logic."""
+    # Section summary: this block is described for easier reading.
     course = _get_course(course_id)
     _ensure_membership(course, user)
     _ensure_course_active(course)
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     post = PostRepository.get_with_details(post_id)
     if not post or post.course_id != course_id:
         raise CoursePostNotFoundError("The post does not exist in this course.")
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     _, created = PostLikeRepository.get_or_create_like(post_id, user.id)
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     if created and post.author_id != getattr(user, "id", None):
         try:
             recipient = (
@@ -706,7 +706,7 @@ def add_comment_to_post(
     content: str,
     suppress_notifications: bool = False,
 ) -> dict[str, Any]:
-    """Function note: add_comment_to_post handles this backend operation."""
+    """Function summary: add_comment_to_post executes this unit of backend logic."""
     course = _get_course(course_id)
     _ensure_membership(course, user)
     _ensure_course_active(course)
@@ -917,14 +917,14 @@ def get_course_post_detail(*, user, course_id: int, post_id: int) -> dict[str, A
     like_count = post.likes.count()
     liked_ids = {post.id} if CoursePostLike.objects.filter(post=post, user=user).exists() else set()
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     setattr(
         post,
         "prefetched_comments_count",
         CoursePostComment.objects.filter(post_id=post.id).count(),
     )
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     try:
         PostViewRepository.create_view(post_id=post.id, user_id=getattr(user, "id", None))
     except Exception:
@@ -968,7 +968,7 @@ def get_course_post_analytics(
     post_id: int,
     days: int = 7,
 ) -> dict[str, Any]:
-    """Function note: get_course_post_analytics handles this backend operation."""
+    """Function summary: get_course_post_analytics executes this unit of backend logic."""
     course = _get_course(course_id)
     _ensure_membership(course, user)
 
@@ -1094,15 +1094,15 @@ def get_course_post_analytics(
 
 
 def list_posts_by_user(*, user, target_user_id: int, limit: int | None = None) -> list[dict[str, Any]]:
-    """Function note: list_posts_by_user handles this backend operation."""
-    # Section note: explains the purpose of this backend block.
+    """Function summary: list_posts_by_user executes this unit of backend logic."""
+    # Section summary: this block is described for easier reading.
     user_courses = CourseRepository.get_user_courses(user.id)
     member_course_ids = [c.id for c in user_courses]
     
     if not member_course_ids:
         return []
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     posts = PostRepository.get_user_posts(target_user_id, member_course_ids, limit=limit)
     
     if not posts:
@@ -1110,7 +1110,7 @@ def list_posts_by_user(*, user, target_user_id: int, limit: int | None = None) -
     
     post_ids = [p.id for p in posts]
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     like_count_map = PostLikeRepository.get_like_counts(post_ids)
     liked_ids = PostLikeRepository.get_user_liked_posts(user.id, post_ids)
     comment_count_map = PostCommentRepository.get_comment_counts(post_ids)
@@ -1127,15 +1127,15 @@ def list_posts_by_user(*, user, target_user_id: int, limit: int | None = None) -
 
 
 def list_liked_posts(*, user, target_user_id: int) -> list[dict[str, Any]]:
-    """Function note: list_liked_posts handles this backend operation."""
-    # Section note: explains the purpose of this backend block.
+    """Function summary: list_liked_posts executes this unit of backend logic."""
+    # Section summary: this block is described for easier reading.
     user_courses = CourseRepository.get_user_courses(user.id)
     member_course_ids = [c.id for c in user_courses]
     
     if not member_course_ids:
         return []
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     posts = PostRepository.get_liked_posts(target_user_id, member_course_ids)
 
     if not posts:
@@ -1143,7 +1143,7 @@ def list_liked_posts(*, user, target_user_id: int) -> list[dict[str, Any]]:
     
     post_ids = [p.id for p in posts]
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     like_count_map = PostLikeRepository.get_like_counts(post_ids)
     liked_ids = PostLikeRepository.get_user_liked_posts(user.id, post_ids)
     comment_count_map = PostCommentRepository.get_comment_counts(post_ids)
@@ -1165,7 +1165,7 @@ def list_posts_with_analytics_by_user(
     target_user_id: int,
     limit: int | None = None,
 ) -> list[dict[str, Any]]:
-    """Function note: list_posts_with_analytics_by_user handles this backend operation."""
+    """Function summary: list_posts_with_analytics_by_user executes this unit of backend logic."""
     posts = list_posts_by_user(user=user, target_user_id=target_user_id, limit=limit)
     if not posts:
         return []

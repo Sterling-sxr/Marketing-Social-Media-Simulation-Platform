@@ -11,7 +11,7 @@ from ..services.course_material_service import (
 )
 
 
-# Function note: _ensure_authenticated handles this controller action.
+# Function summary: _ensure_authenticated implements this backend behavior.
 def _ensure_authenticated(request: HttpRequest) -> JsonResponse | None:
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Unauthorized"}, status=401)
@@ -19,9 +19,9 @@ def _ensure_authenticated(request: HttpRequest) -> JsonResponse | None:
 
 
 @csrf_exempt
-# Function note: course_materials_view handles this controller action.
+# Function summary: course_materials_view implements this backend behavior.
 def course_materials_view(request: HttpRequest, course_id: int) -> JsonResponse:
-    """Function note: course_materials_view handles this backend operation."""
+    """Function summary: course_materials_view executes this unit of backend logic."""
     auth_error = _ensure_authenticated(request)
     if auth_error:
         return auth_error
@@ -66,11 +66,11 @@ def course_materials_view(request: HttpRequest, course_id: int) -> JsonResponse:
 
 
 @csrf_exempt
-# Function note: course_material_detail_view handles this controller action.
+# Function summary: course_material_detail_view implements this backend behavior.
 def course_material_detail_view(
     request: HttpRequest, course_id: int, material_id: int
 ) -> JsonResponse:
-    """Function note: course_material_detail_view handles this backend operation."""
+    """Function summary: course_material_detail_view executes this unit of backend logic."""
     auth_error = _ensure_authenticated(request)
     if auth_error:
         return auth_error

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Module note: manage backend module."""
+"""Module summary: manage defines backend functionality with clear intent."""
 import os
 import sys
 
 
 def main() -> None:
-    """Function note: main handles this backend operation."""
+    """Function summary: main executes this unit of backend logic."""
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "apps.conf.settings")
     try:
         from django.core.management import execute_from_command_line

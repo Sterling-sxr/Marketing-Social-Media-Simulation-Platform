@@ -10,7 +10,7 @@ export default function HomePage() {
   const navigate = useNavigate();
   const { authUser, login, logout } = useApp();
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState({

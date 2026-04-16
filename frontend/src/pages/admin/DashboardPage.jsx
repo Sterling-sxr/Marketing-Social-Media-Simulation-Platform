@@ -6,7 +6,7 @@ import { getJson } from "../../lib/api";
 import { isTeacher } from "../../lib/access";
 import AuthenticatedShell from "../components/AuthenticatedShell";
 import Feedback from "../components/Feedback";
-// Section note: groups related logic for readability.
+// Section summary: this block is documented for clarity.
 import {
   BarChart,
   Bar,
@@ -53,7 +53,7 @@ function SectionCard({ title, subtitle, icon, children, tone = "default", right 
     </section>
   );
 }
-/* Section note: groups related logic for readability. */
+/* Section summary: this block is documented for clarity. */
 const DONUT = {
   peach50: "#EEF7F9",
   peach100: "#DCEFF3",
@@ -72,7 +72,7 @@ const DONUT = {
   borderStrong: "#62AFC3",
 };
 
-/* Section note: groups related logic for readability. */
+/* Section summary: this block is documented for clarity. */
 const SUMMARY_TILES = [
   { key: "total_courses", label: "Courses", clickable: true },
   { key: "registered_students", label: "Students" },
@@ -80,14 +80,14 @@ const SUMMARY_TILES = [
   { key: "total_interactions", label: "Total Interactions" },
 ];
 
-/* Section note: groups related logic for readability. */
+/* Section summary: this block is documented for clarity. */
 const SENTIMENT_TEXT_COLORS = {
   positive: "text-emerald-600",
   neutral: "text-accent-600",
   negative: "text-rose-600",
 };
 
-// Function note: CompareTooltip encapsulates this unit of behavior.
+// Function summary: CompareTooltip drives this unit of behavior.
 function CompareTooltip({ active, payload, label }) {
   if (!active || !payload || payload.length === 0) return null;
   const courseName = payload[0]?.payload?.__fullname || label || "";
@@ -112,7 +112,7 @@ function CompareTooltip({ active, payload, label }) {
   );
 }
 
-/* Function note: makeAutoSummary encapsulates this unit of behavior. */
+/* Function summary: makeAutoSummary drives this behavior. */
 function makeAutoSummary(summary) {
   if (!summary || typeof summary !== "object") {
     return "No dashboard data available yet. Once activity is recorded, I’ll generate an automatic summary here.";
@@ -136,13 +136,13 @@ function makeAutoSummary(summary) {
 
   const courses = Array.isArray(summary.courses) ? summary.courses.slice() : [];
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   courses.sort(
     (a, b) =>
       Number(b.total_interactions || 0) - Number(a.total_interactions || 0)
   );
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   const top3 = courses.slice(0, 3).map((c) => ({
     id: c.id,
     code: c.course_code || String(c.id),
@@ -152,7 +152,7 @@ function makeAutoSummary(summary) {
     students: Number(c.registered_students || 0),
   }));
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   const engPerPostRanked = courses
     .map((c) => {
       const posts = Number(c.total_posts || 0);
@@ -169,7 +169,7 @@ function makeAutoSummary(summary) {
 
   const bestEPP = engPerPostRanked[0];
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   const postsPerStudentRanked = courses
     .map((c) => {
       const posts = Number(c.total_posts || 0);
@@ -188,19 +188,19 @@ function makeAutoSummary(summary) {
 
   const lines = [];
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   lines.push(
     `Overview: ${totalCourses} course(s), ${totalStudents} student(s), ${totalPosts} post(s), and ${totalInter} interaction(s) recorded.`
   );
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   if (sPos + sNeu + sNeg > 0) {
     lines.push(
       `Sentiment snapshot: ${sPos}% positive, ${sNeu}% neutral, ${sNeg}% negative.`
     );
   }
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   if (top3.length > 0) {
     const topDesc = top3
       .map(
@@ -215,7 +215,7 @@ function makeAutoSummary(summary) {
     lines.push(`No course activity yet.`);
   }
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   if (bestEPP && bestEPP.value > 0) {
     lines.push(
       `Highest engagement per post: ${bestEPP.code}${
@@ -224,7 +224,7 @@ function makeAutoSummary(summary) {
     );
   }
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   if (bestPPS && bestPPS.value > 0) {
     lines.push(
       `Strongest posting intensity: ${bestPPS.code}${
@@ -233,7 +233,7 @@ function makeAutoSummary(summary) {
     );
   }
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   const hasData = totalPosts > 0 || totalInter > 0;
   if (hasData) {
     if (sNeg >= 30) {
@@ -342,7 +342,7 @@ export default function DashboardPage() {
   );
   const yDomain = [0, Math.ceil(maxY / 100) * 100];
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   const autoSummary = useMemo(() => makeAutoSummary(data), [data]);
   const handleGenerateSummary = useCallback(() => {
     setSparkStatus({ loading: true, error: "" });
@@ -433,7 +433,7 @@ export default function DashboardPage() {
             </SectionCard>
           ) : null}
 
-          {/* Section note: groups related UI behavior for readability. */}
+          {/* Section summary: this UI block is explained for clarity. */}
           <SectionCard
             title="Summary"
             subtitle="Key metrics across all managed courses."
@@ -462,7 +462,7 @@ export default function DashboardPage() {
             </div>
           </SectionCard>
 
-          {/* Section note: groups related UI behavior for readability. */}
+          {/* Section summary: this UI block is explained for clarity. */}
           <SectionCard
             title="Course Comparison Analysis"
             subtitle="Posts and interactions across different courses."
@@ -532,7 +532,7 @@ export default function DashboardPage() {
               )}
           </SectionCard>
 
-          {/* Section note: groups related UI behavior for readability. */}
+          {/* Section summary: this UI block is explained for clarity. */}
           <SectionCard
             title="Sentiment Analysis"
             subtitle="Snapshot of overall tone across managed courses."

@@ -44,7 +44,7 @@ export default function NotificationsPage() {
       ? `${notifications.unread} Unread`
       : "All Notifications";
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   const SLIM_PILL =
     "inline-flex h-9 items-center justify-center rounded-full border border-brand-200 bg-white px-4 " +
     "text-xs font-semibold text-brand-500 leading-none transition whitespace-nowrap " +
@@ -162,7 +162,7 @@ export default function NotificationsPage() {
                     type="button"
                     className={SLIM_PILL}
                     onClick={() => {
-                      // Section note: groups related logic for readability.
+                      // Section summary: this block is documented for clarity.
                       if (!item.is_read) {
                         markNotificationsRead([item.id]).catch(() => {});
                       }

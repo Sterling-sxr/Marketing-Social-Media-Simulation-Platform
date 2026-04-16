@@ -1,4 +1,4 @@
-"""Module note: seed_posts backend module."""
+"""Module summary: seed_posts defines backend functionality with clear intent."""
 
 import random
 import string
@@ -18,7 +18,7 @@ from apps.core.repositories.models import (
 
 User = get_user_model()
 
-# Section note: explains the purpose of this backend block.
+# Section summary: this block is described for easier reading.
 TOPICS = [
     "有没有人觉得这门课的作业太多了？",
     "刚刚看完今天的讲义，感觉收获很大！",
@@ -86,7 +86,7 @@ def rand_hashtags():
     return random.sample(HASHTAGS_POOL, k)
 
 
-# Class note: Command encapsulates related backend behavior.
+# Class summary: Command groups related backend behavior.
 
 
 class Command(BaseCommand):
@@ -104,7 +104,7 @@ class Command(BaseCommand):
         join_code = options["course"].strip()
         clear = options["clear"]
 
-        # Section note: explains the purpose of this backend block.
+        # Section summary: this block is described for easier reading.
         if join_code:
             try:
                 course = Course.objects.get(join_code=join_code)
@@ -128,12 +128,12 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(f"复用课程: {course}  join_code={course.join_code}")
 
-        # Section note: explains the purpose of this backend block.
+        # Section summary: this block is described for easier reading.
         if clear:
             deleted, _ = CoursePost.objects.filter(course=course).delete()
             self.stdout.write(self.style.WARNING(f"已删除 {deleted} 条旧帖子"))
 
-        # Section note: explains the purpose of this backend block.
+        # Section summary: this block is described for easier reading.
         users = []
         for i in range(1, n_users + 1):
             username = f"seed_user_{i}"
@@ -148,7 +148,7 @@ class Command(BaseCommand):
             CourseMember.objects.get_or_create(course=course, user=user, defaults={"role": "student"})
             users.append(user)
 
-        # Section note: explains the purpose of this backend block.
+        # Section summary: this block is described for easier reading.
         posts_created = 0
         now = timezone.now()
         for i in range(n_posts):
@@ -156,12 +156,12 @@ class Command(BaseCommand):
             content = random.choice(TOPICS)
             hashtags = rand_hashtags()
 
-            # Section note: explains the purpose of this backend block.
+            # Section summary: this block is described for easier reading.
             for tag in hashtags:
                 if f"#{tag}" not in content:
                     content += f" #{tag}"
 
-            # Section note: explains the purpose of this backend block.
+            # Section summary: this block is described for easier reading.
             offset_days = random.randint(0, 30)
             offset_hours = random.randint(0, 23)
             created_at = now - timedelta(days=offset_days, hours=offset_hours)
@@ -172,17 +172,17 @@ class Command(BaseCommand):
                 content=content,
                 hashtags=hashtags,
             )
-            # Section note: explains the purpose of this backend block.
+            # Section summary: this block is described for easier reading.
             CoursePost.objects.filter(pk=post.pk).update(created_at=created_at, updated_at=created_at)
             posts_created += 1
 
-            # Section note: explains the purpose of this backend block.
+            # Section summary: this block is described for easier reading.
             likers = random.sample(users, k=random.randint(0, len(users)))
             for liker in likers:
                 if liker != author:
                     CoursePostLike.objects.get_or_create(post=post, user=liker)
 
-            # Section note: explains the purpose of this backend block.
+            # Section summary: this block is described for easier reading.
             n_comments = random.randint(0, 4)
             for _ in range(n_comments):
                 commenter = random.choice(users)

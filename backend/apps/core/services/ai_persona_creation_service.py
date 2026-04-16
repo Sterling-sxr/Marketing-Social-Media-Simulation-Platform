@@ -1,4 +1,4 @@
-"""Module note: ai_persona_creation_service backend module."""
+"""Module summary: ai_persona_creation_service defines backend functionality with clear intent."""
 from __future__ import annotations
 
 import json

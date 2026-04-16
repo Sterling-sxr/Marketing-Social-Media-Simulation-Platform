@@ -4,7 +4,7 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
 
 class NotificationConsumer(AsyncJsonWebsocketConsumer):
-    """Class note: NotificationConsumer encapsulates related backend behavior."""
+    """Class summary: NotificationConsumer groups related behavior in one place."""
 
     async def connect(self):
         query = parse_qs(self.scope.get("query_string", b"").decode())
@@ -22,17 +22,17 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             }
         )
 
-    # Function note: disconnect handles this controller action.
+    # Function summary: disconnect implements this backend behavior.
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
-    # Function note: notification_message handles this controller action.
+    # Function summary: notification_message implements this backend behavior.
     async def notification_message(self, event):
         payload = event.get("payload", {})
         await self.send_json({"type": "notification", **payload})
 
-    # Function note: receive_json handles this controller action.
+    # Function summary: receive_json implements this backend behavior.
     async def receive_json(self, content, **kwargs):
-        # Section note: explains the purpose of this backend block.
+        # Section summary: this block is described for easier reading.
         if content.get("action") == "ping":
             await self.send_json({"type": "pong"})

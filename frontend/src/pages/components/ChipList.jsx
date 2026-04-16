@@ -1,4 +1,4 @@
-// Function note: ChipList encapsulates this unit of behavior.
+// Function summary: ChipList drives this unit of behavior.
 export default function ChipList({ items }) {
   const list = items || [];
   if (!list.length) return <span className="text-xs text-slate-400">None</span>;

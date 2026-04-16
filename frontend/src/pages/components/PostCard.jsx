@@ -87,7 +87,7 @@ export default function PostCard({
     let match;
     let lastIndex = 0;
     
-    // Section note: groups related logic for readability.
+    // Section summary: this block is documented for clarity.
     const mentionMap = {};
     if (post.mentions_detail && Array.isArray(post.mentions_detail)) {
       post.mentions_detail.forEach((m) => {

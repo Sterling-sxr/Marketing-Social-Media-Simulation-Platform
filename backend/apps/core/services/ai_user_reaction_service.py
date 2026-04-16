@@ -1,4 +1,4 @@
-"""Module note: ai_user_reaction_service backend module."""
+"""Module summary: ai_user_reaction_service defines backend functionality with clear intent."""
 
 from __future__ import annotations
 
@@ -28,12 +28,12 @@ except ImportError:  # pragma: no cover – optional dependency
 logger = logging.getLogger(__name__)
 
 
-# Section note: explains the purpose of this backend block.
-# Section note: explains the purpose of this backend block.
-# Function note: _get_client_kwargs handles this backend operation.
+# Section summary: this block is described for easier reading.
+# Section summary: this block is described for easier reading.
+# Function summary: _get_client_kwargs implements this backend behavior.
 
 def _get_client_kwargs() -> dict[str, str] | None:
-    """Function note: _get_client_kwargs handles this backend operation."""
+    """Function summary: _get_client_kwargs executes this unit of backend logic."""
     api_key = getattr(settings, "DEEPSEEK_API_KEY", None)
     if not api_key:
         return None
@@ -46,12 +46,12 @@ def _get_client_kwargs() -> dict[str, str] | None:
     }
 
 
-# Section note: explains the purpose of this backend block.
-# Section note: explains the purpose of this backend block.
-# Function note: schedule_ai_reactions handles this backend operation.
+# Section summary: this block is described for easier reading.
+# Section summary: this block is described for easier reading.
+# Function summary: schedule_ai_reactions implements this backend behavior.
 
 def schedule_ai_reactions(course_id: int, post_id: int, delay_seconds: float = 0.0) -> None:
-    """Function note: schedule_ai_reactions handles this backend operation."""
+    """Function summary: schedule_ai_reactions executes this unit of backend logic."""
     if not getattr(settings, "DEEPSEEK_API_KEY", None):
         logger.debug("DEEPSEEK_API_KEY not configured; skip AI reactions for post=%s", post_id)
         return
@@ -72,9 +72,9 @@ def schedule_ai_reactions(course_id: int, post_id: int, delay_seconds: float = 0
     ).start()
 
 
-# Section note: explains the purpose of this backend block.
-# Section note: explains the purpose of this backend block.
-# Section note: explains the purpose of this backend block.
+# Section summary: this block is described for easier reading.
+# Section summary: this block is described for easier reading.
+# Section summary: this block is described for easier reading.
 
 @dataclass
 class ReactionDecision:
@@ -83,9 +83,9 @@ class ReactionDecision:
     comment_text: str
 
 
-# Section note: explains the purpose of this backend block.
-# Section note: explains the purpose of this backend block.
-# Function note: _build_persona_prompt handles this backend operation.
+# Section summary: this block is described for easier reading.
+# Section summary: this block is described for easier reading.
+# Function summary: _build_persona_prompt implements this backend behavior.
 
 def _build_persona_prompt(ai_user, post: CoursePost) -> str:
     persona_lines = [
@@ -131,12 +131,12 @@ def _parse_decision(raw: str | dict[str, Any]) -> ReactionDecision:
     )
 
 
-# Section note: explains the purpose of this backend block.
-# Section note: explains the purpose of this backend block.
-# Function note: async_handle_post_reactions handles this backend operation.
+# Section summary: this block is described for easier reading.
+# Section summary: this block is described for easier reading.
+# Function summary: async_handle_post_reactions implements this backend behavior.
 
 async def async_handle_post_reactions(course_id: int, post_id: int) -> None:
-    """Function note: async_handle_post_reactions handles this backend operation."""
+    """Function summary: async_handle_post_reactions executes this unit of backend logic."""
     kwargs = _get_client_kwargs()
     if kwargs is None:
         return
@@ -188,13 +188,13 @@ async def async_handle_post_reactions(course_id: int, post_id: int) -> None:
 
 
 async def _handle_single_ai_user(
-    client: Any,  # Inline note: explains the nearby backend logic.
+    client: Any,  # Inline explanation: this statement is clarified for maintainability.
     ai_user: Any,
     post: CoursePost,
     course_id: int,
     post_id: int,
 ) -> None:
-    """Function note: _handle_single_ai_user handles this backend operation."""
+    """Function summary: _handle_single_ai_user executes this unit of backend logic."""
     _db = lambda fn, *a, **kw: sync_to_async(fn, thread_sensitive=False)(*a, **kw)  # noqa: E731
 
     identity = getattr(ai_user, "identity", None)
@@ -203,7 +203,7 @@ async def _handle_single_ai_user(
     if not system_user:
         logger.debug("AI user %s missing identity, attempting repair.", ai_user.id)
         try:
-            from .ai_user_service import ensure_ai_user_identity  # Inline note: explains the nearby backend logic.
+            from .ai_user_service import ensure_ai_user_identity  # Inline explanation: this statement is clarified for maintainability.
 
             if post.course:
                 await _db(ensure_ai_user_identity, ai_user)
@@ -216,7 +216,7 @@ async def _handle_single_ai_user(
     if not system_user:
         return
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     if post.author_id == system_user.id:
         return
 
@@ -276,7 +276,7 @@ async def _handle_single_ai_user(
 
 
 async def _async_request_decision(prompt: str, client: Any) -> ReactionDecision | None:
-    """Function note: _async_request_decision handles this backend operation."""
+    """Function summary: _async_request_decision executes this unit of backend logic."""
     model_name = getattr(settings, "DEEPSEEK_MODEL_NAME", "deepseek-chat")
     try:
         response = await client.chat.completions.create(
@@ -301,17 +301,17 @@ async def _async_request_decision(prompt: str, client: Any) -> ReactionDecision 
         return None
 
 
-# Section note: explains the purpose of this backend block.
-# Section note: explains the purpose of this backend block.
-# Function note: handle_post_reactions handles this backend operation.
+# Section summary: this block is described for easier reading.
+# Section summary: this block is described for easier reading.
+# Function summary: handle_post_reactions implements this backend behavior.
 
 def handle_post_reactions(course_id: int, post_id: int) -> None:
-    """Function note: handle_post_reactions handles this backend operation."""
+    """Function summary: handle_post_reactions executes this unit of backend logic."""
     asyncio.run(async_handle_post_reactions(course_id, post_id))
 
 
 def _request_decision(prompt: str, client: Any = None) -> ReactionDecision | None:
-    """Function note: _request_decision handles this backend operation."""
+    """Function summary: _request_decision executes this unit of backend logic."""
 
     async def _run() -> ReactionDecision | None:
         kwargs = _get_client_kwargs()
@@ -324,7 +324,7 @@ def _request_decision(prompt: str, client: Any = None) -> ReactionDecision | Non
 
 
 def evaluate_persona_prompt(prompt: str) -> ReactionDecision | None:
-    """Function note: evaluate_persona_prompt handles this backend operation."""
+    """Function summary: evaluate_persona_prompt executes this unit of backend logic."""
     return _request_decision(prompt)
 
 

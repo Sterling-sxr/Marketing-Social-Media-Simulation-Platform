@@ -1,4 +1,4 @@
-"""Module note: course_service backend module."""
+"""Module summary: course_service defines backend functionality with clear intent."""
 from __future__ import annotations
 
 import random
@@ -17,8 +17,8 @@ from ..repositories import (
 
 
 def list_courses_for_user(user) -> dict[str, Any]:
-    """Function note: list_courses_for_user handles this backend operation."""
-    # Section note: explains the purpose of this backend block.
+    """Function summary: list_courses_for_user executes this unit of backend logic."""
+    # Section summary: this block is described for easier reading.
     joined_courses = CourseRepository.get_user_courses(user.id)
     course_ids = [course.id for course in joined_courses]
     completion_map = (
@@ -28,7 +28,7 @@ def list_courses_for_user(user) -> dict[str, Any]:
     )
     available_courses = CourseRepository.get_available_courses(user.id)
     
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     joined = []
     for course in joined_courses:
         role = CourseRepository.get_user_role(course.id, user.id)
@@ -64,22 +64,22 @@ def list_courses_for_user(user) -> dict[str, Any]:
 
 @transaction.atomic
 def join_course_by_code(*, user, join_code: str):
-    """Function note: join_course_by_code handles this backend operation."""
-    # Section note: explains the purpose of this backend block.
+    """Function summary: join_course_by_code executes this unit of backend logic."""
+    # Section summary: this block is described for easier reading.
     normalized_code = (join_code or "").strip().upper()
     if not normalized_code:
         raise ValueError("Please enter the course join code.")
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     course = CourseRepository.get_by_join_code(normalized_code)
     if not course:
         raise ValueError("No course was found for that join code.")
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     if CourseRepository.is_user_member(course.id, user.id):
         raise ValueError("You have already joined this course.")
     
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     membership, _created = CourseMemberRepository.get_or_create_member(
         course.id, user.id, role="student"
     )
@@ -103,29 +103,29 @@ def create_course(
     start_date: str | None = None,
     end_date: str | None = None,
 ) -> dict[str, Any]:
-    """Function note: create_course handles this backend operation."""
-    # Section note: explains the purpose of this backend block.
+    """Function summary: create_course executes this unit of backend logic."""
+    # Section summary: this block is described for easier reading.
     if not (getattr(user, "is_superuser", False) or getattr(user, "is_staff", False)):
         raise PermissionError("Only administrators can create courses.")
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     code = (course_code or "").strip().upper()
     name = (course_name or "").strip()
     term_val = (term or "").strip().upper()
     if not code or not name or not term_val:
         raise ValueError("Please provide the course code, name, and term.")
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     existing = CourseRepository.filter(course_code__iexact=code, term__iexact=term_val)
     if existing:
         raise ValueError("A course with this code already exists for the selected term.")
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     join_code = _generate_join_code(8)
     while CourseRepository.get_by_join_code(join_code):
         join_code = _generate_join_code(8)
 
-    # Function note: _parse_date handles this backend operation.
+    # Function summary: _parse_date implements this backend behavior.
     def _parse_date(value: str | None, *, label: str) -> date:
         if not value:
             raise ValueError(f"Please provide the course {label}.")
@@ -138,7 +138,7 @@ def create_course(
     if end_dt < start_dt:
         raise ValueError("Course end date must be on or after the start date.")
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     course = CourseRepository.create(
         course_code=code,
         name=name,
@@ -149,7 +149,7 @@ def create_course(
         created_by=user,
     )
     
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     payload = {
         "id": course.id,
         "name": course.name,
@@ -163,15 +163,15 @@ def create_course(
 
 
 def list_managed_courses(*, user) -> list[dict[str, Any]]:
-    """Function note: list_managed_courses handles this backend operation."""
-    # Section note: explains the purpose of this backend block.
+    """Function summary: list_managed_courses executes this unit of backend logic."""
+    # Section summary: this block is described for easier reading.
     if not (getattr(user, "is_superuser", False) or getattr(user, "is_staff", False)):
         return []
     
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     courses = CourseRepository.get_created_by_user(user.id)
     
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     return [
         {
             "id": c.id,

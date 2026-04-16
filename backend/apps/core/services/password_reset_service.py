@@ -1,4 +1,4 @@
-"""Module note: password_reset_service backend module."""
+"""Module summary: password_reset_service defines backend functionality with clear intent."""
 from __future__ import annotations
 
 import logging
@@ -34,15 +34,15 @@ _RESET_TEMPLATE = (
 
 
 class PasswordResetError(Exception):
-    """Class note: PasswordResetError encapsulates related backend behavior."""
+    """Class summary: PasswordResetError groups related behavior in one place."""
 
 
 class PasswordResetCodeError(PasswordResetError):
-    """Class note: PasswordResetCodeError encapsulates related backend behavior."""
+    """Class summary: PasswordResetCodeError groups related behavior in one place."""
 
 
 class PasswordResetThrottleError(PasswordResetError):
-    """Class note: PasswordResetThrottleError encapsulates related backend behavior."""
+    """Class summary: PasswordResetThrottleError groups related behavior in one place."""
 
 
 @dataclass
@@ -77,10 +77,10 @@ def request_password_reset(email: str) -> PasswordResetRequest:
     if is_throttled(purpose=PURPOSE, email=normalised_email):
         raise PasswordResetThrottleError("Verification code requested too frequently. Please wait before trying again.")
 
-    # Section note: explains the purpose of this backend block.
-    code = "1234"  # Inline note: explains the nearby backend logic.
+    # Section summary: this block is described for easier reading.
+    code = "1234"  # Inline explanation: this statement is clarified for maintainability.
     store_code(purpose=PURPOSE, email=normalised_email, code=code)
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     logger.info("TEST MODE: mock send password reset code %s to %s", code, normalised_email)
 
     return PasswordResetRequest(email=normalised_email, code=code if settings.DEBUG else "****")

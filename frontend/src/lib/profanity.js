@@ -1,11 +1,11 @@
-// Section note: groups related logic for readability.
-// Section note: groups related logic for readability.
-// Section note: groups related logic for readability.
-// Section note: groups related logic for readability.
+// Section summary: this block is documented for clarity.
+// Section summary: this block is documented for clarity.
+// Section summary: this block is documented for clarity.
+// Section summary: this block is documented for clarity.
 
-// Section note: groups related logic for readability.
+// Section summary: this block is documented for clarity.
 const BASE_LIST = [
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   "fuck",
   "f*ck",
   "f**k",
@@ -73,7 +73,7 @@ const BASE_LIST = [
   "fk u",
   "fk off",
   "f off",
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   "傻逼",
   "煞笔",
   "傻b",
@@ -91,12 +91,12 @@ const BASE_LIST = [
   "SB",
 ];
 
-// Function note: normalizeForMatch encapsulates this unit of behavior.
+// Function summary: normalizeForMatch drives this unit of behavior.
 function normalizeForMatch(s) {
   return (
     s
       .toLowerCase()
-      // Section note: groups related logic for readability.
+      // Section summary: this block is documented for clarity.
       .replace(/[¡!]|1|l|\|/g, "i")
       .replace(/[@4]/g, "a")
       .replace(/3/g, "e")
@@ -104,16 +104,16 @@ function normalizeForMatch(s) {
       .replace(/[$5]/g, "s")
       .replace(/7/g, "t")
       .replace(/8/g, "b")
-      // Section note: groups related logic for readability.
+      // Section summary: this block is documented for clarity.
       .replace(/\s+/g, " ")
-      // Section note: groups related logic for readability.
+      // Section summary: this block is documented for clarity.
       .replace(/(.)\1{2,}/g, "$1$1")
   );
 }
 
-// Function note: makeLooseWordRegex encapsulates this unit of behavior.
+// Function summary: makeLooseWordRegex drives this unit of behavior.
 function makeLooseWordRegex(word) {
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   if (!/^[a-z]+$/i.test(word)) return null;
   const letters = word
     .split("")
@@ -122,17 +122,17 @@ function makeLooseWordRegex(word) {
   return new RegExp(`\\b${body}\\b`, "i");
 }
 
-// Function note: hasChineseBadWord encapsulates this unit of behavior.
+// Function summary: hasChineseBadWord drives this unit of behavior.
 function hasChineseBadWord(text, term) {
   return text.includes(term);
 }
 
-/**
- * Entry point: detect whether input contains profanity.
- * @param {string} input
- * @param {string[]} extraList - runtime additions (e.g., from localStorage)
- * @returns {{ok:boolean, hits:string[], message?:string}}
- */
+/* Section summary: this block is documented for clarity.
+  * Additional note: details are clarified for readability.
+  * Additional note: details are clarified for readability.
+  * Additional note: details are clarified for readability.
+  * Additional note: details are clarified for readability.
+  */
 export function hasProfanity(input, extraList = []) {
   if (!input || !input.trim()) return { ok: true, hits: [] };
 
@@ -144,13 +144,13 @@ export function hasProfanity(input, extraList = []) {
     const term = normalizeForMatch(termRaw);
     if (!term) continue;
 
-    // Section note: groups related logic for readability.
+    // Section summary: this block is documented for clarity.
     if (/[^\x00-\x7F]/.test(term)) {
       if (hasChineseBadWord(src, term)) hits.push(termRaw);
       continue;
     }
 
-    // Section note: groups related logic for readability.
+    // Section summary: this block is documented for clarity.
     const m = makeLooseWordRegex(term);
     if (m && m.test(src)) hits.push(termRaw);
   }

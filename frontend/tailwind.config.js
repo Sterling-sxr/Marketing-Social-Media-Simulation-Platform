@@ -1,10 +1,10 @@
-/* Section note: groups related logic for readability. */
+/* Section summary: this block is documented for clarity. */
 export default {
   content: ["./index.html", "./src/**/*.{js,jsx}"],
   theme: {
     extend: {
       colors: {
-        // Section note: groups related logic for readability.
+        // Section summary: this block is documented for clarity.
         brand: {
           50: "#EEF7F9",
           100: "#DCEFF3",
@@ -20,7 +20,7 @@ export default {
           dark: "#1B596E",
           light: "#94C8D8",
         },
-        // Section note: groups related logic for readability.
+        // Section summary: this block is documented for clarity.
         accent: {
           50: "#ECFBF7",
           100: "#D3F5EC",

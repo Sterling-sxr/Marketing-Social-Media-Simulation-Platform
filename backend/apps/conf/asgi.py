@@ -1,4 +1,4 @@
-"""Module note: asgi backend module."""
+"""Module summary: asgi defines backend functionality with clear intent."""
 import os
 
 from channels.auth import AuthMiddlewareStack

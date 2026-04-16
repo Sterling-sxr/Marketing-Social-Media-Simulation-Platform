@@ -1,4 +1,4 @@
-"""Module note: course_repository backend module."""
+"""Module summary: course_repository defines backend functionality with clear intent."""
 from __future__ import annotations
 
 from typing import List, Optional
@@ -10,17 +10,17 @@ from .models import Course, CourseMember
 
 
 class CourseRepository(BaseRepository[Course]):
-    """Class note: CourseRepository encapsulates related backend behavior."""
+    """Class summary: CourseRepository groups related behavior in one place."""
     model = Course
     
     @classmethod
     def get_by_join_code(cls, join_code: str) -> Optional[Course]:
-        """Function note: get_by_join_code handles this backend operation."""
+        """Function summary: get_by_join_code executes this unit of backend logic."""
         return cls.model.objects.filter(join_code=join_code).first()
     
     @classmethod
     def get_user_courses(cls, user_id: int) -> List[Course]:
-        """Function note: get_user_courses handles this backend operation."""
+        """Function summary: get_user_courses executes this unit of backend logic."""
         return list(
             cls.model.objects
             .filter(members__user_id=user_id)
@@ -30,7 +30,7 @@ class CourseRepository(BaseRepository[Course]):
     
     @classmethod
     def get_available_courses(cls, user_id: int) -> List[Course]:
-        """Function note: get_available_courses handles this backend operation."""
+        """Function summary: get_available_courses executes this unit of backend logic."""
         return list(
             cls.model.objects
             .exclude(members__user_id=user_id)
@@ -39,7 +39,7 @@ class CourseRepository(BaseRepository[Course]):
     
     @classmethod
     def get_created_by_user(cls, user_id: int) -> List[Course]:
-        """Function note: get_created_by_user handles this backend operation."""
+        """Function summary: get_created_by_user executes this unit of backend logic."""
         return list(
             cls.model.objects
             .filter(created_by_id=user_id)
@@ -48,7 +48,7 @@ class CourseRepository(BaseRepository[Course]):
     
     @classmethod
     def is_user_member(cls, course_id: int, user_id: int) -> bool:
-        """Function note: is_user_member handles this backend operation."""
+        """Function summary: is_user_member executes this unit of backend logic."""
         return CourseMember.objects.filter(
             course_id=course_id,
             user_id=user_id
@@ -56,7 +56,7 @@ class CourseRepository(BaseRepository[Course]):
     
     @classmethod
     def get_user_role(cls, course_id: int, user_id: int) -> Optional[str]:
-        """Function note: get_user_role handles this backend operation."""
+        """Function summary: get_user_role executes this unit of backend logic."""
         member = CourseMember.objects.filter(
             course_id=course_id,
             user_id=user_id
@@ -65,7 +65,7 @@ class CourseRepository(BaseRepository[Course]):
     
     @classmethod
     def get_with_stats(cls, course_id: int) -> Optional[dict]:
-        """Function note: get_with_stats handles this backend operation."""
+        """Function summary: get_with_stats executes this unit of backend logic."""
         try:
             course = (
                 cls.model.objects
@@ -88,17 +88,17 @@ class CourseRepository(BaseRepository[Course]):
 
 
 class CourseMemberRepository(BaseRepository[CourseMember]):
-    """Class note: CourseMemberRepository encapsulates related backend behavior."""
+    """Class summary: CourseMemberRepository groups related behavior in one place."""
     model = CourseMember
     
     @classmethod
     def add_member(cls, course_id: int, user_id: int, role: str = 'student') -> CourseMember:
-        """Function note: add_member handles this backend operation."""
+        """Function summary: add_member executes this unit of backend logic."""
         return cls.create(course_id=course_id, user_id=user_id, role=role)
     
     @classmethod
     def get_or_create_member(cls, course_id: int, user_id: int, role: str = 'student') -> tuple[CourseMember, bool]:
-        """Function note: get_or_create_member handles this backend operation."""
+        """Function summary: get_or_create_member executes this unit of backend logic."""
         return cls.model.objects.get_or_create(
             course_id=course_id,
             user_id=user_id,
@@ -107,7 +107,7 @@ class CourseMemberRepository(BaseRepository[CourseMember]):
     
     @classmethod
     def get_course_members(cls, course_id: int) -> List[CourseMember]:
-        """Function note: get_course_members handles this backend operation."""
+        """Function summary: get_course_members executes this unit of backend logic."""
         return list(
             cls.model.objects
             .filter(course_id=course_id)

@@ -1,4 +1,4 @@
-"""Module note: ai_user_identity_repository backend module."""
+"""Module summary: ai_user_identity_repository defines backend functionality with clear intent."""
 from __future__ import annotations
 
 from typing import Optional

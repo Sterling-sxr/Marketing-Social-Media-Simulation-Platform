@@ -1,4 +1,4 @@
-"""Module note: profile_service backend module."""
+"""Module summary: profile_service defines backend functionality with clear intent."""
 
 from __future__ import annotations
 
@@ -91,17 +91,17 @@ PROFILE_NUMERIC_FIELDS = [
     ("openness", 5),
 ]
 
-# Section note: explains the purpose of this backend block.
+# Section summary: this block is described for easier reading.
 AI_FIELD_ALIASES: dict[str, str] = {
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     "decision_factors": "decision_factor",
     "buying_behaviour": "buying_behavior",
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     "activity_level": "digital_time",
     "preferred_content": "content_preference",
 }
 
-# Section note: explains the purpose of this backend block.
+# Section summary: this block is described for easier reading.
 PROFILE_OPTIONS_KEY_BY_FIELD: dict[str, str] = {
     "gender": "genders",
     "city": "cities",
@@ -118,7 +118,7 @@ PROFILE_OPTIONS_KEY_BY_FIELD: dict[str, str] = {
     "influencer_type": "influencer_type",
 }
 
-# Section note: explains the purpose of this backend block.
+# Section summary: this block is described for easier reading.
 INTEREST_ALIASES: dict[str, str] = {
     "tech & gaming": "Technology & Gaming",
     "technology and gaming": "Technology & Gaming",
@@ -134,7 +134,7 @@ INTEREST_ALIASES: dict[str, str] = {
 
 
 def _normalize_choice(value: Any, options_key: str) -> str:
-    """Function note: _normalize_choice handles this backend operation."""
+    """Function summary: _normalize_choice executes this unit of backend logic."""
     if not value:
         return ""
     options = PROFILE_OPTIONS.get(options_key) or []
@@ -144,28 +144,28 @@ def _normalize_choice(value: Any, options_key: str) -> str:
     text = (value or "").strip()
     lowered = text.lower()
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     for opt in options:
         if opt.lower() == lowered:
             return opt
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     for opt in options:
         if lowered in opt.lower():
             return opt
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     return text
 
 
 def _normalize_digital_time(value: Any) -> str:
-    """Function note: _normalize_digital_time handles this backend operation."""
+    """Function summary: _normalize_digital_time executes this unit of backend logic."""
     if not value:
         return ""
     text = (value or "").strip()
     lowered = text.lower()
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     if lowered == "high":
         text = "Several times a day"
     elif lowered == "medium":
@@ -177,14 +177,14 @@ def _normalize_digital_time(value: Any) -> str:
 
 
 def _normalize_interests(value: Any) -> list[str]:
-    """Function note: _normalize_interests handles this backend operation."""
+    """Function summary: _normalize_interests executes this unit of backend logic."""
     options = PROFILE_OPTIONS.get("interests") or []
     if not value:
         return []
 
     raw_items: list[str]
     if isinstance(value, str):
-        # Section note: explains the purpose of this backend block.
+        # Section summary: this block is described for easier reading.
         normalized_text = value.replace("\n", ",").replace(";", ",")
         raw_items = [part.strip() for part in normalized_text.split(",") if part.strip()]
     elif isinstance(value, (list, tuple, set)):
@@ -196,20 +196,20 @@ def _normalize_interests(value: Any) -> list[str]:
     for item in raw_items:
         lowered = item.lower()
 
-        # Section note: explains the purpose of this backend block.
+        # Section summary: this block is described for easier reading.
         alias_match = INTEREST_ALIASES.get(lowered)
         if alias_match and alias_match in options and alias_match not in normalized:
             normalized.append(alias_match)
             continue
 
-        # Section note: explains the purpose of this backend block.
+        # Section summary: this block is described for easier reading.
         match = None
         for opt in options:
             if opt.lower() == lowered:
                 match = opt
                 break
         if not match:
-            # Section note: explains the purpose of this backend block.
+            # Section summary: this block is described for easier reading.
             for opt in options:
                 if lowered in opt.lower():
                     match = opt
@@ -221,7 +221,7 @@ def _normalize_interests(value: Any) -> list[str]:
 
 
 def _normalize_numeric(value: Any, default: int = 5) -> int:
-    """Function note: _normalize_numeric handles this backend operation."""
+    """Function summary: _normalize_numeric executes this unit of backend logic."""
     try:
         num = int(value)
     except (TypeError, ValueError):
@@ -234,7 +234,7 @@ def _normalize_numeric(value: Any, default: int = 5) -> int:
 
 
 def normalize_ai_profile_payload(payload: dict[str, Any]) -> dict[str, Any]:
-    """Function note: normalize_ai_profile_payload handles this backend operation."""
+    """Function summary: normalize_ai_profile_payload executes this unit of backend logic."""
     if not isinstance(payload, dict):
         return {}
 
@@ -243,46 +243,46 @@ def normalize_ai_profile_payload(payload: dict[str, Any]) -> dict[str, Any]:
     for raw_key, raw_value in payload.items():
         key = AI_FIELD_ALIASES.get(raw_key, raw_key)
 
-        # Section note: explains the purpose of this backend block.
+        # Section summary: this block is described for easier reading.
         if key in {"social_value", "sociability", "openness"}:
             normalized[key] = _normalize_numeric(raw_value)
             continue
 
-        # Section note: explains the purpose of this backend block.
+        # Section summary: this block is described for easier reading.
         if key == "interests":
             normalized["interests"] = _normalize_interests(raw_value)
             continue
 
-        # Section note: explains the purpose of this backend block.
+        # Section summary: this block is described for easier reading.
         if key == "digital_time":
             normalized["digital_time"] = _normalize_digital_time(raw_value)
             continue
 
-        # Section note: explains the purpose of this backend block.
+        # Section summary: this block is described for easier reading.
         if key in PROFILE_STRING_FIELDS:
             options_key = PROFILE_OPTIONS_KEY_BY_FIELD.get(key)
             if options_key:
                 normalized[key] = _normalize_choice(raw_value, options_key)
             else:
-                # Section note: explains the purpose of this backend block.
+                # Section summary: this block is described for easier reading.
                 if isinstance(raw_value, str):
                     normalized[key] = raw_value.strip()
                 else:
                     normalized[key] = raw_value
             continue
 
-        # Section note: explains the purpose of this backend block.
+        # Section summary: this block is described for easier reading.
 
     return normalized
 
 
 def needs_profile(user) -> bool:
-    """Function note: needs_profile handles this backend operation."""
+    """Function summary: needs_profile executes this unit of backend logic."""
     return False
 
 
 def merge_profile_payload(payload: dict[str, Any], base=None) -> dict[str, Any]:
-    """Function note: merge_profile_payload handles this backend operation."""
+    """Function summary: merge_profile_payload executes this unit of backend logic."""
     profile_data: dict[str, Any] = {}
 
     for field in PROFILE_STRING_FIELDS:
@@ -318,7 +318,7 @@ def merge_profile_payload(payload: dict[str, Any], base=None) -> dict[str, Any]:
 
 @transaction.atomic
 def save_profile(user, payload: dict[str, Any]) -> UserProfile:
-    """Function note: save_profile handles this backend operation."""
+    """Function summary: save_profile executes this unit of backend logic."""
     existing = ProfileRepository.get_by_user_id(user.id)
     profile_data = merge_profile_payload(payload, base=existing)
     profile, _created = ProfileRepository.create_or_update(user.id, profile_data)
@@ -349,12 +349,12 @@ def profile_to_dict(profile: UserProfile) -> dict[str, Any]:
 
 
 def following_count(user_id: int) -> int:
-    """Function note: following_count handles this backend operation."""
+    """Function summary: following_count executes this unit of backend logic."""
     return FollowRepository.get_following_count(user_id)
 
 
 def followers_count(user_id: int) -> int:
-    """Function note: followers_count handles this backend operation."""
+    """Function summary: followers_count executes this unit of backend logic."""
     return FollowRepository.get_followers_count(user_id)
 
 

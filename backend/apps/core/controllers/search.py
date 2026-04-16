@@ -1,4 +1,4 @@
-# Section note: explains the purpose of this backend block.
+# Section summary: this block is described for easier reading.
 import json
 
 from django.contrib.auth import get_user_model
@@ -17,12 +17,12 @@ _RANK_LABELS = {
 }
 
 
-# Function note: _save_search_history handles this controller action.
+# Function summary: _save_search_history implements this backend behavior.
 def _save_search_history(request, query: str) -> None:
     if request.user.is_authenticated:
-        # Section note: explains the purpose of this backend block.
-        # Section note: explains the purpose of this backend block.
-        # Section note: explains the purpose of this backend block.
+        # Section summary: this block is described for easier reading.
+        # Section summary: this block is described for easier reading.
+        # Section summary: this block is described for easier reading.
         profile = UserProfile.objects.filter(user=request.user).first()
         if profile is not None:
             history = profile.search_history or []
@@ -40,16 +40,16 @@ def _save_search_history(request, query: str) -> None:
 
 
 @require_GET
-# Function note: search_posts handles this controller action.
+# Function summary: search_posts implements this backend behavior.
 def search_posts(request):
-    """Function note: search_posts handles this backend operation."""
+    """Function summary: search_posts executes this unit of backend logic."""
     query = request.GET.get("q", "").strip()
     if not query:
         return JsonResponse({"results": []})
 
-    # Section note: explains the purpose of this backend block.
-    # Section note: explains the purpose of this backend block.
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
+    # Section summary: this block is described for easier reading.
+    # Section summary: this block is described for easier reading.
     tokens = [t for t in query.split() if t]
 
     token_filter = Q()
@@ -103,9 +103,9 @@ def search_posts(request):
 
 
 @require_GET
-# Function note: suggested_search handles this controller action.
+# Function summary: suggested_search implements this backend behavior.
 def suggested_search(request):
-    """Function note: suggested_search handles this backend operation."""
+    """Function summary: suggested_search executes this unit of backend logic."""
     top_keywords = (
         SearchLog.objects.values("keyword")
         .annotate(hit_count=Count("keyword"))
@@ -124,9 +124,9 @@ def suggested_search(request):
 
 
 @require_GET
-# Function note: get_search_history handles this controller action.
+# Function summary: get_search_history implements this backend behavior.
 def get_search_history(request):
-    """Function note: get_search_history handles this backend operation."""
+    """Function summary: get_search_history executes this unit of backend logic."""
     if request.user.is_authenticated:
         profile = UserProfile.objects.filter(user=request.user).first()
         history = profile.search_history if profile else []
@@ -136,9 +136,9 @@ def get_search_history(request):
 
 
 @require_POST
-# Function note: add_search_history handles this controller action.
+# Function summary: add_search_history implements this backend behavior.
 def add_search_history(request):
-    """Function note: add_search_history handles this backend operation."""
+    """Function summary: add_search_history executes this unit of backend logic."""
     try:
         body = json.loads(request.body)
         keyword = body.get("keyword", "").strip()

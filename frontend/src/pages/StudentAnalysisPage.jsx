@@ -18,11 +18,11 @@ import {
   Printer,
 } from "lucide-react";
 
-/* Function note: engagementRate encapsulates this unit of behavior. */
+/* Function summary: engagementRate drives this behavior. */
 function engagementRate(p) {
   const likes = Number(p.likes || 0);
   const comments = Number(p.comments || 0);
-  const views = Math.max(1, Number(p.views || 0)); // Inline note: clarifies the nearby code intent.
+  const views = Math.max(1, Number(p.views || 0)); // Inline explanation: this statement is clarified for readability.
   return (likes + comments) / views;
 }
 
@@ -119,7 +119,7 @@ function writeStoredBool(key, value) {
   try {
     localStorage.setItem(key, value ? "1" : "0");
   } catch {
-    /* Section note: groups related logic for readability. */
+    /* Section summary: this block is documented for clarity. */
   }
 }
 
@@ -172,7 +172,7 @@ function postsToCsv(posts) {
   return lines.join("\r\n");
 }
 
-/* Function note: computeLocalInsights encapsulates this unit of behavior. */
+/* Function summary: computeLocalInsights drives this behavior. */
 function computeLocalInsights(posts) {
   if (!posts.length) {
     return [
@@ -371,7 +371,7 @@ function LocalInsightsSection({ lines }) {
   );
 }
 
-/* Function note: KPI encapsulates this unit of behavior. */
+/* Function summary: KPI drives this behavior. */
 function KPI({ label, value }) {
   return (
     <div
@@ -397,7 +397,7 @@ function KPI({ label, value }) {
   );
 }
 
-/* Function note: HourLineChart encapsulates this unit of behavior. */
+/* Function summary: HourLineChart drives this behavior. */
 function HourLineChart({
   title = "Best Hour to Post",
   values = [],
@@ -417,7 +417,7 @@ function HourLineChart({
     ? `${title}: no engagement data yet.`
     : `${title}: likes plus comments totals by hour from 0 to 23. Peak at hour ${peak.i} with value ${peak.v}.`;
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   const H = height;
   const PAD_L = 60,
     PAD_R = 16,
@@ -427,7 +427,7 @@ function HourLineChart({
   const W = innerW + PAD_L + PAD_R;
   const innerH = H - PAD_T - PAD_B;
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   const yMax = Math.max(1, ...safe);
   const yTicks = 5;
   const yVals = Array.from({ length: yTicks + 1 }, (_, i) =>
@@ -436,10 +436,10 @@ function HourLineChart({
   const toX = (i) => PAD_L + (i / 23) * innerW;
   const toY = (v) => PAD_T + innerH - (v / yMax) * innerH;
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   const pts = safe.map((v, i) => `${toX(i)},${toY(v)}`).join(" ");
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   const [hoverIdx, setHoverIdx] = useState(null);
   const onMove = (e) => {
     const svg = e.currentTarget;
@@ -488,7 +488,7 @@ function HourLineChart({
             </filter>
           </defs>
 
-          {/* Section note: groups related UI behavior for readability. */}
+          {/* Section summary: this UI block is explained for clarity. */}
           {yVals.map((t, i) => (
             <g key={`y-${i}`}>
               <line
@@ -512,7 +512,7 @@ function HourLineChart({
             </g>
           ))}
 
-          {/* Section note: groups related UI behavior for readability. */}
+          {/* Section summary: this UI block is explained for clarity. */}
           <line
             x1={PAD_L}
             y1={PAD_T + innerH}
@@ -530,7 +530,7 @@ function HourLineChart({
             strokeWidth="1.5"
           />
 
-          {/* Section note: groups related UI behavior for readability. */}
+          {/* Section summary: this UI block is explained for clarity. */}
           {Array.from({ length: 12 }, (_, k) => k * 2).map((h) => (
             <g key={`xh-${h}`}>
               <line
@@ -553,7 +553,7 @@ function HourLineChart({
             </g>
           ))}
 
-          {/* Section note: groups related UI behavior for readability. */}
+          {/* Section summary: this UI block is explained for clarity. */}
           <polyline
             points={pts}
             fill="none"
@@ -562,14 +562,14 @@ function HourLineChart({
             strokeLinejoin="round"
           />
 
-          {/* Section note: groups related UI behavior for readability. */}
+          {/* Section summary: this UI block is explained for clarity. */}
           {safe.map((v, i) => (
             <circle key={i} cx={toX(i)} cy={toY(v)} r="3.5" fill="#fb923c">
               <title>{`Hour ${i}: ${v}`}</title>
             </circle>
           ))}
 
-          {/* Section note: groups related UI behavior for readability. */}
+          {/* Section summary: this UI block is explained for clarity. */}
           {hoverIdx != null && (
             <>
               <line
@@ -621,7 +621,7 @@ function HourLineChart({
             </>
           )}
 
-          {/* Section note: groups related UI behavior for readability. */}
+          {/* Section summary: this UI block is explained for clarity. */}
           <text
             x={(PAD_L + (W - PAD_R)) / 2}
             y={H - 8}
@@ -662,13 +662,13 @@ function BarChart({
   xTickStep = 1,
   maxLabelLen = 12,
 
-  // Section note: groups related logic for readability.
-  tickFontSize = 16, // Inline note: clarifies the nearby code intent.
-  labelFontSize = 16, // Inline note: clarifies the nearby code intent.
-  valueFontSize = 18, // Inline note: clarifies the nearby code intent.
-  axisTitleFontSize = 16, // Inline note: clarifies the nearby code intent.
-  gapPx = 24, // Inline note: clarifies the nearby code intent.
-  barMaxWidth = 28, // Inline note: clarifies the nearby code intent.
+  // Section summary: this block is documented for clarity.
+  tickFontSize = 16, // Inline explanation: this statement is clarified for readability.
+  labelFontSize = 16, // Inline explanation: this statement is clarified for readability.
+  valueFontSize = 18, // Inline explanation: this statement is clarified for readability.
+  axisTitleFontSize = 16, // Inline explanation: this statement is clarified for readability.
+  gapPx = 24, // Inline explanation: this statement is clarified for readability.
+  barMaxWidth = 28, // Inline explanation: this statement is clarified for readability.
 }) {
   const [hoverIdx, setHoverIdx] = useState(null);
 
@@ -681,7 +681,7 @@ function BarChart({
     ? `${title}: no data yet.`
     : `${title}: bar chart with one bar per weekday showing engagement totals.`;
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   let maxVal;
   if (Number.isFinite(yMax) && yMax > 0) {
     maxVal = yMax;
@@ -707,7 +707,7 @@ function BarChart({
     );
   }
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   const H = height;
   const PAD_L = 70,
     PAD_R = 16,
@@ -717,7 +717,7 @@ function BarChart({
   const W = innerW + PAD_L + PAD_R;
   const innerH = H - PAD_T - PAD_B;
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   const computed = Math.floor(innerW / Math.max(1, labels.length)) - gapPx;
   const barW = Math.max(8, Math.min(barMaxWidth, computed));
   const gap = gapPx;
@@ -745,7 +745,7 @@ function BarChart({
           role="img"
           aria-label={chartAriaLabel}
         >
-          {/* Section note: groups related UI behavior for readability. */}
+          {/* Section summary: this UI block is explained for clarity. */}
           {tickVals.map((t, i) => (
             <g key={`g-${i}`}>
               <line
@@ -769,7 +769,7 @@ function BarChart({
             </g>
           ))}
 
-          {/* Section note: groups related UI behavior for readability. */}
+          {/* Section summary: this UI block is explained for clarity. */}
           <line
             x1={PAD_L}
             y1={PAD_T + innerH}
@@ -787,7 +787,7 @@ function BarChart({
             strokeWidth="1.6"
           />
 
-          {/* Section note: groups related UI behavior for readability. */}
+          {/* Section summary: this UI block is explained for clarity. */}
           {safeVals.map((v, i) => {
             const x = PAD_L + i * (barW + gap) + gap / 2;
             const y = toY(v);
@@ -815,19 +815,19 @@ function BarChart({
                   </title>
                 </rect>
 
-                {/* Section note: groups related UI behavior for readability. */}
+                {/* Section summary: this UI block is explained for clarity. */}
                 <text
                   x={x + barW / 2}
                   y={y - 10}
                   textAnchor="middle"
                   fontSize={valueFontSize}
-                  fill={hovered ? "#7c3aed" : "#ca8a04"} // Inline note: clarifies the nearby code intent.
+                  fill={hovered ? "#7c3aed" : "#ca8a04"} // Inline explanation: this statement is clarified for readability.
                   fontWeight="800"
                 >
                   {allIntegers ? v : valueFormatter(v)}
                 </text>
 
-                {/* Section note: groups related UI behavior for readability. */}
+                {/* Section summary: this UI block is explained for clarity. */}
                 {showLabel && (
                   <text
                     x={x + barW / 2}
@@ -844,7 +844,7 @@ function BarChart({
             );
           })}
 
-          {/* Section note: groups related UI behavior for readability. */}
+          {/* Section summary: this UI block is explained for clarity. */}
           {xLabel ? (
             <text
               x={(PAD_L + (W - PAD_R)) / 2}
@@ -1171,8 +1171,8 @@ function CompareTwoPosts({ posts, navigate }) {
   );
 }
 
-/* Section note: groups related logic for readability. */
-// Function note: TopPostsList encapsulates this unit of behavior.
+/* Section summary: this block is documented for clarity. */
+// Function summary: TopPostsList drives this unit of behavior.
 function TopPostsList({ posts, onOpenAnalytics, totalDatasetSize }) {
   const top = useMemo(
     () =>
@@ -1297,7 +1297,7 @@ function TopPostsList({ posts, onOpenAnalytics, totalDatasetSize }) {
   );
 }
 
-// Function note: BestTimeSection encapsulates this unit of behavior.
+// Function summary: BestTimeSection drives this unit of behavior.
 function BestTimeSection({ posts }) {
   const byHour = useMemo(() => {
     const arr = Array(24).fill(0);
@@ -1334,7 +1334,7 @@ function BestTimeSection({ posts }) {
       </p>
 
       <div className="space-y-8">
-        {/* Section note: groups related UI behavior for readability. */}
+        {/* Section summary: this UI block is explained for clarity. */}
         <HourLineChart
           title="Best Hour to Post"
           values={byHour}
@@ -1343,7 +1343,7 @@ function BestTimeSection({ posts }) {
           yLabel="Engagement (likes + comments)"
         />
 
-        {/* Section note: groups related UI behavior for readability. */}
+        {/* Section summary: this UI block is explained for clarity. */}
         <BarChart
           title="Best Day to Post"
           labels={["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]}
@@ -1352,22 +1352,22 @@ function BestTimeSection({ posts }) {
           yLabel="Engagement (likes + comments)"
           height={300}
           canvasWidth={400}
-          barColorClass="fill-yellow-300" // Inline note: clarifies the nearby code intent.
-          hoverBarClass="fill-accent-300" // Inline note: clarifies the nearby code intent.
-          // Section note: groups related logic for readability.
+          barColorClass="fill-yellow-300" // Inline explanation: this statement is clarified for readability.
+          hoverBarClass="fill-accent-300" // Inline explanation: this statement is clarified for readability.
+          // Section summary: this block is documented for clarity.
           tickFontSize={15}
           labelFontSize={15}
           valueFontSize={15}
           axisTitleFontSize={15}
-          gapPx={30} // Inline note: clarifies the nearby code intent.
-          barMaxWidth={80} // Inline note: clarifies the nearby code intent.
+          gapPx={30} // Inline explanation: this statement is clarified for readability.
+          barMaxWidth={80} // Inline explanation: this statement is clarified for readability.
         />
       </div>
     </section>
   );
 }
 
-/* Function note: StudentAnalysisPage encapsulates this unit of behavior. */
+/* Function summary: StudentAnalysisPage drives this behavior. */
 export default function StudentAnalysisPage() {
   const { authUser, pushToast } = useApp();
   const navigate = useNavigate();
@@ -1422,7 +1422,7 @@ export default function StudentAnalysisPage() {
     setFilterSortKey("engagement_desc");
   };
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   useEffect(() => {
     if (!authUser) return;
     let cancelled = false;
@@ -1487,7 +1487,7 @@ export default function StudentAnalysisPage() {
     };
   }, [authUser]);
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   const metrics = useMemo(() => {
     const totalPosts = filteredPosts.length;
     const totalLikes = filteredPosts.reduce((s, p) => s + (p.likes || 0), 0);
@@ -1564,7 +1564,7 @@ export default function StudentAnalysisPage() {
             </div>
           ) : null}
 
-          {/* Section note: groups related UI behavior for readability. */}
+          {/* Section summary: this UI block is explained for clarity. */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <KPI label="Posts" value={metrics.totalPosts} />
             <KPI label="Likes" value={metrics.totalLikes} />
@@ -1580,7 +1580,7 @@ export default function StudentAnalysisPage() {
             <CompareTwoPosts posts={filteredPosts} navigate={navigate} />
           </div>
 
-          {/* Section note: groups related UI behavior for readability. */}
+          {/* Section summary: this UI block is explained for clarity. */}
           <div className="mt-4">
             <TopPostsList
               posts={filteredPosts}
@@ -1591,7 +1591,7 @@ export default function StudentAnalysisPage() {
             />
           </div>
 
-          {/* Section note: groups related UI behavior for readability. */}
+          {/* Section summary: this UI block is explained for clarity. */}
           <div className="mt-4">
             <BestTimeSection posts={filteredPosts} />
           </div>

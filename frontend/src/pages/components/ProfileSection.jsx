@@ -1,4 +1,4 @@
-// Function note: ProfileSection encapsulates this unit of behavior.
+// Function summary: ProfileSection drives this unit of behavior.
 export default function ProfileSection({
   icon,
   title,

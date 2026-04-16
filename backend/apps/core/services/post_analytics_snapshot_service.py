@@ -1,4 +1,4 @@
-"""Module note: post_analytics_snapshot_service backend module."""
+"""Module summary: post_analytics_snapshot_service defines backend functionality with clear intent."""
 from __future__ import annotations
 
 import logging
@@ -25,7 +25,7 @@ _scheduler_started = False
 
 
 def _calculate_post_snapshot(post: CoursePost, *, days: int = 7) -> PostAnalyticsSnapshot:
-    course = post.course  # Inline note: explains the nearby backend logic.
+    course = post.course  # Inline explanation: this statement is clarified for maintainability.
     end_date = timezone.localdate()
     start_date = end_date - timedelta(days=days - 1)
 

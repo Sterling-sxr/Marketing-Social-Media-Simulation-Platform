@@ -1,4 +1,4 @@
-"""Module note: post_repository backend module."""
+"""Module summary: post_repository defines backend functionality with clear intent."""
 from __future__ import annotations
 
 from typing import List, Optional, Set
@@ -17,12 +17,12 @@ from .models import (
 
 
 class PostRepository(BaseRepository[CoursePost]):
-    """Class note: PostRepository encapsulates related backend behavior."""
+    """Class summary: PostRepository groups related behavior in one place."""
     model = CoursePost
     
     @classmethod
     def get_with_details(cls, post_id: int) -> Optional[CoursePost]:
-        """Function note: get_with_details handles this backend operation."""
+        """Function summary: get_with_details executes this unit of backend logic."""
         try:
             return (
                 cls.model.objects
@@ -51,7 +51,7 @@ class PostRepository(BaseRepository[CoursePost]):
         following_ids: List[int] = None,
         limit: int = 50
     ) -> List[CoursePost]:
-        """Function note: get_course_posts handles this backend operation."""
+        """Function summary: get_course_posts executes this unit of backend logic."""
         queryset = (
             cls.model.objects
             .filter(course_id=course_id)
@@ -69,7 +69,7 @@ class PostRepository(BaseRepository[CoursePost]):
             .order_by('-created_at')
         )
         
-        # Section note: explains the purpose of this backend block.
+        # Section summary: this block is described for easier reading.
         if hashtag:
             normalized = hashtag.lower()
             queryset = queryset.filter(
@@ -77,7 +77,7 @@ class PostRepository(BaseRepository[CoursePost]):
                 Q(hashtags__contains=[hashtag])
             )
         
-        # Section note: explains the purpose of this backend block.
+        # Section summary: this block is described for easier reading.
         if following_only and following_ids:
             queryset = queryset.filter(author_id__in=following_ids)
         
@@ -85,7 +85,7 @@ class PostRepository(BaseRepository[CoursePost]):
     
     @classmethod
     def get_user_posts(cls, user_id: int, course_ids: List[int], limit: int | None = None) -> List[CoursePost]:
-        """Function note: get_user_posts handles this backend operation."""
+        """Function summary: get_user_posts executes this unit of backend logic."""
         queryset = (
             cls.model.objects
             .filter(author_id=user_id, course_id__in=course_ids)
@@ -108,7 +108,7 @@ class PostRepository(BaseRepository[CoursePost]):
     
     @classmethod
     def get_liked_posts(cls, user_id: int, course_ids: List[int]) -> List[CoursePost]:
-        """Function note: get_liked_posts handles this backend operation."""
+        """Function summary: get_liked_posts executes this unit of backend logic."""
         return list(
             cls.model.objects
             .filter(course_id__in=course_ids, likes__user_id=user_id)
@@ -128,27 +128,27 @@ class PostRepository(BaseRepository[CoursePost]):
 
 
 class PostLikeRepository(BaseRepository[CoursePostLike]):
-    """Class note: PostLikeRepository encapsulates related backend behavior."""
+    """Class summary: PostLikeRepository groups related behavior in one place."""
     model = CoursePostLike
     
     @classmethod
     def get_or_create_like(cls, post_id: int, user_id: int) -> tuple[CoursePostLike, bool]:
-        """Function note: get_or_create_like handles this backend operation."""
+        """Function summary: get_or_create_like executes this unit of backend logic."""
         return cls.model.objects.get_or_create(post_id=post_id, user_id=user_id)
     
     @classmethod
     def unlike(cls, post_id: int, user_id: int) -> int:
-        """Function note: unlike handles this backend operation."""
+        """Function summary: unlike executes this unit of backend logic."""
         return cls.delete_by_filter(post_id=post_id, user_id=user_id)
     
     @classmethod
     def get_like_count(cls, post_id: int) -> int:
-        """Function note: get_like_count handles this backend operation."""
+        """Function summary: get_like_count executes this unit of backend logic."""
         return cls.count(post_id=post_id)
     
     @classmethod
     def get_like_counts(cls, post_ids: List[int]) -> dict[int, int]:
-        """Function note: get_like_counts handles this backend operation."""
+        """Function summary: get_like_counts executes this unit of backend logic."""
         counts = (
             cls.model.objects
             .filter(post_id__in=post_ids)
@@ -159,7 +159,7 @@ class PostLikeRepository(BaseRepository[CoursePostLike]):
     
     @classmethod
     def get_user_liked_posts(cls, user_id: int, post_ids: List[int]) -> Set[int]:
-        """Function note: get_user_liked_posts handles this backend operation."""
+        """Function summary: get_user_liked_posts executes this unit of backend logic."""
         return set(
             cls.model.objects
             .filter(post_id__in=post_ids, user_id=user_id)
@@ -168,12 +168,12 @@ class PostLikeRepository(BaseRepository[CoursePostLike]):
 
 
 class PostCommentRepository(BaseRepository[CoursePostComment]):
-    """Class note: PostCommentRepository encapsulates related backend behavior."""
+    """Class summary: PostCommentRepository groups related behavior in one place."""
     model = CoursePostComment
     
     @classmethod
     def get_post_comments(cls, post_id: int) -> List[CoursePostComment]:
-        """Function note: get_post_comments handles this backend operation."""
+        """Function summary: get_post_comments executes this unit of backend logic."""
         return list(
             cls.model.objects
             .filter(post_id=post_id)
@@ -183,12 +183,12 @@ class PostCommentRepository(BaseRepository[CoursePostComment]):
     
     @classmethod
     def get_comment_count(cls, post_id: int) -> int:
-        """Function note: get_comment_count handles this backend operation."""
+        """Function summary: get_comment_count executes this unit of backend logic."""
         return cls.count(post_id=post_id)
     
     @classmethod
     def get_comment_counts(cls, post_ids: List[int]) -> dict[int, int]:
-        """Function note: get_comment_counts handles this backend operation."""
+        """Function summary: get_comment_counts executes this unit of backend logic."""
         counts = (
             cls.model.objects
             .filter(post_id__in=post_ids)
@@ -199,12 +199,12 @@ class PostCommentRepository(BaseRepository[CoursePostComment]):
 
 
 class PostAttachmentRepository(BaseRepository[CoursePostAttachment]):
-    """Class note: PostAttachmentRepository encapsulates related backend behavior."""
+    """Class summary: PostAttachmentRepository groups related behavior in one place."""
     model = CoursePostAttachment
     
     @classmethod
     def attach_to_post(cls, post_id: int, asset_ids: List[int]) -> int:
-        """Function note: attach_to_post handles this backend operation."""
+        """Function summary: attach_to_post executes this unit of backend logic."""
         attachments = [
             cls.model(post_id=post_id, asset_id=asset_id)
             for asset_id in asset_ids
@@ -214,12 +214,12 @@ class PostAttachmentRepository(BaseRepository[CoursePostAttachment]):
 
 
 class PostMentionRepository(BaseRepository[CoursePostMention]):
-    """Class note: PostMentionRepository encapsulates related backend behavior."""
+    """Class summary: PostMentionRepository groups related behavior in one place."""
     model = CoursePostMention
     
     @classmethod
     def create_mentions(cls, post_id: int, mention_entities: List[dict]) -> int:
-        """Function note: create_mentions handles this backend operation."""
+        """Function summary: create_mentions executes this unit of backend logic."""
         mentions = [
             cls.model(
                 post_id=post_id,
@@ -233,17 +233,17 @@ class PostMentionRepository(BaseRepository[CoursePostMention]):
 
 
 class PostViewRepository(BaseRepository[CoursePostView]):
-    """Class note: PostViewRepository encapsulates related backend behavior."""
+    """Class summary: PostViewRepository groups related behavior in one place."""
     model = CoursePostView
 
     @classmethod
     def create_view(cls, post_id: int, user_id: int | None) -> CoursePostView:
-        """Function note: create_view handles this backend operation."""
+        """Function summary: create_view executes this unit of backend logic."""
         return cls.create(post_id=post_id, user_id=user_id)
 
     @classmethod
     def count_views(cls, post_id: int) -> int:
-        """Function note: count_views handles this backend operation."""
+        """Function summary: count_views executes this unit of backend logic."""
         return cls.count(post_id=post_id)
 
 

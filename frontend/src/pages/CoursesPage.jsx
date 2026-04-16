@@ -1,4 +1,4 @@
-// Section note: groups related logic for readability.
+// Section summary: this block is documented for clarity.
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
@@ -6,7 +6,7 @@ import AuthenticatedShell from "./components/AuthenticatedShell";
 import Feedback from "./components/Feedback";
 import { isTeacher } from "../lib/access";
 
-// Function note: RoleBadge encapsulates this unit of behavior.
+// Function summary: RoleBadge drives this unit of behavior.
 function RoleBadge({ courseRole, isStaff, isSuperuser }) {
   const roleFromCourse = (courseRole || "").toString().toLowerCase();
 
@@ -18,11 +18,11 @@ function RoleBadge({ courseRole, isStaff, isSuperuser }) {
 
   const text = isTeacher ? "TEACHER" : "STUDENT";
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   const cls = isTeacher
-    ? // Inline note: clarifies the nearby code intent.
+    ? // Inline explanation: this statement is clarified for readability.
       "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide text-accent-800 shadow-sm border border-accent-200 bg-gradient-to-r from-accent-50 via-accent-100 to-brand-50"
-    : // Inline note: clarifies the nearby code intent.
+    : // Inline explanation: this statement is clarified for readability.
       "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide text-accent-700 shadow-sm border border-accent-200 bg-gradient-to-r from-accent-50 via-accent-50 to-brand-50";
 
   return <span className={cls}>{text}</span>;
@@ -61,8 +61,8 @@ export default function CoursesPage() {
     const roleFromCourse = (course?.role || "").toString().toLowerCase();
     const isCourseTeacher =
       roleFromCourse === "teacher" || roleFromCourse === "instructor";
-    // Section note: groups related logic for readability.
-    // Section note: groups related logic for readability.
+    // Section summary: this block is documented for clarity.
+    // Section summary: this block is documented for clarity.
     if (course.profile_completed || isTeacher(authUser) || isCourseTeacher) {
       navigate(`/courses/${course.id}`);
     } else {
@@ -141,12 +141,12 @@ export default function CoursesPage() {
                     ) : null}
                   </div>
 
-                  {/* Section note: groups related UI behavior for readability. */}
+                  {/* Section summary: this UI block is explained for clarity. */}
                   <div className="self-end sm:self-center">
                     <RoleBadge
-                      courseRole={course.role} // Inline note: clarifies the nearby code intent.
-                      isStaff={!!authUser?.is_staff} // Inline note: clarifies the nearby code intent.
-                      isSuperuser={!!authUser?.is_superuser} // Inline note: clarifies the nearby code intent.
+                      courseRole={course.role} // Inline explanation: this statement is clarified for readability.
+                      isStaff={!!authUser?.is_staff} // Inline explanation: this statement is clarified for readability.
+                      isSuperuser={!!authUser?.is_superuser} // Inline explanation: this statement is clarified for readability.
                     />
                   </div>
                 </button>

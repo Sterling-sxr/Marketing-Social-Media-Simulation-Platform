@@ -17,14 +17,14 @@ from ..services import (
 )
 
 
-# Function note: _ensure_authenticated handles this controller action.
+# Function summary: _ensure_authenticated implements this backend behavior.
 def _ensure_authenticated(request: HttpRequest) -> JsonResponse | None:
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Unauthorized"}, status=401)
     return None
 
 
-# Function note: list_courses handles this controller action.
+# Function summary: list_courses implements this backend behavior.
 def list_courses(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -34,7 +34,7 @@ def list_courses(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Function note: join_course handles this controller action.
+# Function summary: join_course implements this backend behavior.
 def join_course(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -77,7 +77,7 @@ __all__ = [
 
 
 @csrf_exempt
-# Function note: create_course_view handles this controller action.
+# Function summary: create_course_view implements this backend behavior.
 def create_course_view(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -108,7 +108,7 @@ def create_course_view(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"course": item}, status=201)
 
 
-# Function note: list_managed_courses_view handles this controller action.
+# Function summary: list_managed_courses_view implements this backend behavior.
 def list_managed_courses_view(request: HttpRequest) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -117,7 +117,7 @@ def list_managed_courses_view(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"items": items})
 
 
-# Function note: list_user_courses_view handles this controller action.
+# Function summary: list_user_courses_view implements this backend behavior.
 def list_user_courses_view(request: HttpRequest, user_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -150,7 +150,7 @@ def list_user_courses_view(request: HttpRequest, user_id: int) -> JsonResponse:
 
 
 @csrf_exempt
-# Function note: update_course_view handles this controller action.
+# Function summary: update_course_view implements this backend behavior.
 def update_course_view(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -183,7 +183,7 @@ def update_course_view(request: HttpRequest, course_id: int) -> JsonResponse:
 
 
 @csrf_exempt
-# Function note: course_profile_view handles this controller action.
+# Function summary: course_profile_view implements this backend behavior.
 def course_profile_view(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:

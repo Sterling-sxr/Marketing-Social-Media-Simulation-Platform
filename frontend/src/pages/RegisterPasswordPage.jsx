@@ -31,12 +31,12 @@ export default function RegisterPasswordPage() {
     event.preventDefault();
     const success = await completeRegistration();
     if (success) {
-      // Section note: groups related logic for readability.
-      // Section note: groups related logic for readability.
+      // Section summary: this block is documented for clarity.
+      // Section summary: this block is documented for clarity.
       try {
         await login(registerVerifiedEmail, registerPassword);
       } catch {
-        // Section note: groups related logic for readability.
+        // Section summary: this block is documented for clarity.
         resetRegisterFlow();
         navigate("/login", { replace: true });
         return;
@@ -67,13 +67,13 @@ export default function RegisterPasswordPage() {
           >
             ←
           </button>
-          {/* <button
-            type="button"
-            className="rounded-full bg-gradient-to-r from-brand to-brand-dark px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-brand-200 transition hover:from-brand-dark hover:to-brand"
-            onClick={() => navigate("/login")}
-          >
-            Already have an account? Sign in
-          </button> */}
+          {/* Section summary: this UI block is explained for clarity.
+             * Additional note: details are clarified for readability.
+             * Additional note: details are clarified for readability.
+             * Additional note: details are clarified for readability.
+           * Additional note: details are clarified for readability.
+             * Additional note: details are clarified for readability.
+           */}
         </nav>
       </header>
 
@@ -190,7 +190,7 @@ export default function RegisterPasswordPage() {
         </aside>
       </main>
 
-      {/* Section note: groups related UI behavior for readability. */}
+      {/* Section summary: this UI block is explained for clarity. */}
       <footer className="py-6 text-center text-xs text-slate-400">
         © {new Date().getFullYear()} Bread Capstone Team. All rights reserved.
       </footer>

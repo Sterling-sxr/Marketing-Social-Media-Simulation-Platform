@@ -26,7 +26,7 @@ from ..services import (
 )
 
 
-# Function note: _parse_json handles this controller action.
+# Function summary: _parse_json implements this backend behavior.
 def _parse_json(request: HttpRequest) -> dict:
     if not request.body:
         return {}
@@ -37,7 +37,7 @@ def _parse_json(request: HttpRequest) -> dict:
 
 
 @csrf_exempt
-# Function note: send_registration_code handles this controller action.
+# Function summary: send_registration_code implements this backend behavior.
 def send_registration_code(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -64,7 +64,7 @@ def send_registration_code(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Function note: verify_registration_code_view handles this controller action.
+# Function summary: verify_registration_code_view implements this backend behavior.
 def verify_registration_code_view(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -87,7 +87,7 @@ def verify_registration_code_view(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Function note: complete_registration_view handles this controller action.
+# Function summary: complete_registration_view implements this backend behavior.
 def complete_registration_view(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -121,7 +121,7 @@ def complete_registration_view(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Function note: login_user handles this controller action.
+# Function summary: login_user implements this backend behavior.
 def login_user(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -154,9 +154,9 @@ def login_user(request: HttpRequest) -> JsonResponse:
     )
 
 
-# Function note: check_auth_status handles this controller action.
+# Function summary: check_auth_status implements this backend behavior.
 def check_auth_status(request: HttpRequest) -> JsonResponse:
-    """Function note: check_auth_status handles this backend operation."""
+    """Function summary: check_auth_status executes this unit of backend logic."""
     if not request.user.is_authenticated:
         return JsonResponse({"authenticated": False}, status=200)
     
@@ -177,7 +177,7 @@ def check_auth_status(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Function note: logout_view handles this controller action.
+# Function summary: logout_view implements this backend behavior.
 def logout_view(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -187,7 +187,7 @@ def logout_view(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Function note: send_password_reset_code handles this controller action.
+# Function summary: send_password_reset_code implements this backend behavior.
 def send_password_reset_code(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -214,7 +214,7 @@ def send_password_reset_code(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Function note: confirm_password_reset_view handles this controller action.
+# Function summary: confirm_password_reset_view implements this backend behavior.
 def confirm_password_reset_view(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -238,7 +238,7 @@ def confirm_password_reset_view(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Function note: complete_password_reset_view handles this controller action.
+# Function summary: complete_password_reset_view implements this backend behavior.
 def complete_password_reset_view(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)

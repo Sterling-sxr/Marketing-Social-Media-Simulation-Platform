@@ -25,7 +25,7 @@ from ..services import (
 )
 
 
-# Function note: _ensure_authenticated handles this controller action.
+# Function summary: _ensure_authenticated implements this backend behavior.
 def _ensure_authenticated(request: HttpRequest) -> JsonResponse | None:
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Unauthorized"}, status=401)
@@ -33,7 +33,7 @@ def _ensure_authenticated(request: HttpRequest) -> JsonResponse | None:
 
 
 @csrf_exempt
-# Function note: course_posts handles this controller action.
+# Function summary: course_posts implements this backend behavior.
 def course_posts(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -112,7 +112,7 @@ def course_posts(request: HttpRequest, course_id: int) -> JsonResponse:
 
 
 @csrf_exempt
-# Function note: course_post_comments handles this controller action.
+# Function summary: course_post_comments implements this backend behavior.
 def course_post_comments(request: HttpRequest, course_id: int, post_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -159,7 +159,7 @@ def course_post_comments(request: HttpRequest, course_id: int, post_id: int) -> 
             return JsonResponse({"error": "This course has ended; posts are read-only."}, status=403)
         comment = CoursePostComment.objects.create(post=post, user=request.user, content=content)
 
-        # Section note: explains the purpose of this backend block.
+        # Section summary: this block is described for easier reading.
         if post.author_id != request.user.id:
             try:
                 recipient = (
@@ -210,7 +210,7 @@ def course_post_comments(request: HttpRequest, course_id: int, post_id: int) -> 
 
 
 @csrf_exempt
-# Function note: course_post_like handles this controller action.
+# Function summary: course_post_like implements this backend behavior.
 def course_post_like(request: HttpRequest, course_id: int, post_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -247,7 +247,7 @@ def course_post_like(request: HttpRequest, course_id: int, post_id: int) -> Json
 
 
 @csrf_exempt
-# Function note: course_post_detail handles this controller action.
+# Function summary: course_post_detail implements this backend behavior.
 def course_post_detail(request: HttpRequest, course_id: int, post_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -328,7 +328,7 @@ def course_post_detail(request: HttpRequest, course_id: int, post_id: int) -> Js
 
 
 @csrf_exempt
-# Function note: course_post_analytics handles this controller action.
+# Function summary: course_post_analytics implements this backend behavior.
 def course_post_analytics(request: HttpRequest, course_id: int, post_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -357,7 +357,7 @@ def course_post_analytics(request: HttpRequest, course_id: int, post_id: int) ->
 
 
 @csrf_exempt
-# Function note: course_post_suggestions handles this controller action.
+# Function summary: course_post_suggestions implements this backend behavior.
 def course_post_suggestions(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:

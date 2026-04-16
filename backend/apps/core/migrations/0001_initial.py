@@ -1,4 +1,4 @@
-# Section note: explains the purpose of this backend block.
+# Section summary: this block is described for easier reading.
 
 from django.conf import settings
 from django.db import migrations, models

@@ -1,4 +1,4 @@
-"""Module note: auth_user backend module."""
+"""Module summary: auth_user defines backend functionality with clear intent."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -18,17 +18,17 @@ class UserCreationResult:
 
 
 def get_by_email(email: str) -> Optional[AbstractBaseUser]:
-    """Function note: get_by_email handles this backend operation."""
+    """Function summary: get_by_email executes this unit of backend logic."""
     return UserModel.objects.filter(email__iexact=email).first()
 
 
 def get_by_username(username: str) -> Optional[AbstractBaseUser]:
-    """Function note: get_by_username handles this backend operation."""
+    """Function summary: get_by_username executes this unit of backend logic."""
     return UserModel.objects.filter(username__iexact=username).first()
 
 
 def create_user(*, username: str, email: str, password: str) -> UserCreationResult:
-    """Function note: create_user handles this backend operation."""
+    """Function summary: create_user executes this unit of backend logic."""
     try:
         user = UserModel.objects.create_user(
             username=username.lower(),
@@ -37,7 +37,7 @@ def create_user(*, username: str, email: str, password: str) -> UserCreationResu
         )
         return UserCreationResult(user=user, created=True)
     except IntegrityError:
-        # Section note: explains the purpose of this backend block.
+        # Section summary: this block is described for easier reading.
         existing = get_by_username(username)
         if existing is None:
             raise

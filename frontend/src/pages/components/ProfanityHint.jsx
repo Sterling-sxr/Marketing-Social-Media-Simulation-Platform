@@ -1,4 +1,4 @@
-// Function note: ProfanityHint encapsulates this unit of behavior.
+// Function summary: ProfanityHint drives this unit of behavior.
 export default function ProfanityHint({ message }) {
   if (!message) return null;
   return (

@@ -73,7 +73,7 @@ def _get_sentiment_pipeline():
 
 
 def classify_comment_sentiment(text: str) -> str:
-    """Function note: classify_comment_sentiment handles this backend operation."""
+    """Function summary: classify_comment_sentiment executes this unit of backend logic."""
     return _classify_sentiment(text)
 
 
@@ -170,7 +170,7 @@ def _calculate_dashboard_metrics(user) -> dict[str, Any]:
             sentiment_counts["neutral"] = total_comments
         else:
             comment_texts = list(CoursePostComment.objects.filter(post_id__in=post_ids).values_list("content", flat=True))
-            # Section note: explains the purpose of this backend block.
+            # Section summary: this block is described for easier reading.
             for text in comment_texts:
                 try:
                     result = classifier([text[:512] or ""])[0]
@@ -319,7 +319,7 @@ def _calculate_course_metrics_from_data(course, course_data: dict[str, Any]) -> 
     hashtag_stats: dict[str, dict[str, Any]] = {}
     student_stats: dict[int, dict[str, Any]] = {}
 
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     course_sentiment_totals = {"positive": 0, "neutral": 0, "negative": 0}
     for _, sentiment_counts in comment_sentiments.items():
         for label, count in sentiment_counts.items():
@@ -1051,7 +1051,7 @@ def start_dashboard_scheduler() -> None:
         return
     _scheduler_started = True
     interval = int(os.environ.get("DASHBOARD_REFRESH_INTERVAL", "3600"))
-    # Section note: explains the purpose of this backend block.
+    # Section summary: this block is described for easier reading.
     refresh_all_dashboards_async(delay_seconds=60)
     thread = threading.Thread(
         target=_scheduler_loop,

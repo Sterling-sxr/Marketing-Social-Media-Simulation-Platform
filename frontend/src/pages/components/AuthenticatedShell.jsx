@@ -12,7 +12,7 @@ import {
   BotMessageSquare,
   Plus,
 } from "lucide-react";
-import ToastHost from "../../components/ToastHost"; // Inline note: clarifies the nearby code intent.
+import ToastHost from "../../components/ToastHost"; // Inline explanation: this statement is clarified for readability.
 
 function classNames(...values) {
   return values.filter(Boolean).join(" ");
@@ -57,8 +57,8 @@ export default function AuthenticatedShell({
   links,
   mobileNavLinks,
   hideMobileNav = false,
-  showNotifications = false, // Inline note: clarifies the nearby code intent.
-  /* Section note: groups related logic for readability. */
+  showNotifications = false, // Inline explanation: this statement is clarified for readability.
+  /* Section summary: this block is documented for clarity. */
   printFriendlyChrome = false,
 }) {
   const navigate = useNavigate();
@@ -74,7 +74,7 @@ export default function AuthenticatedShell({
   } = useApp();
   const isTeacherUser = Boolean(authUser?.is_superuser || authUser?.is_staff);
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   useEffect(() => {
     if (authUser && showNotifications) {
       fetchNotifications({ silent: true }).catch(() => {});
@@ -86,7 +86,7 @@ export default function AuthenticatedShell({
     fetchCourses().catch(() => {});
   }, [authUser, isTeacherUser, fetchCourses]);
 
-  // Section note: groups related logic for readability.
+  // Section summary: this block is documented for clarity.
   useEffect(() => {
     if (!showNotifications) return;
     const onVis = () => {
@@ -112,8 +112,8 @@ export default function AuthenticatedShell({
     if (links && links.length) return links;
     const isAdminUser = Boolean(authUser?.is_superuser || authUser?.is_staff);
     if (isAdminUser) {
-      // Section note: groups related logic for readability.
-      // Section note: groups related logic for readability.
+      // Section summary: this block is documented for clarity.
+      // Section summary: this block is documented for clarity.
       const dashCourseMatch = location.pathname.match(/^\/dashboard\/courses\/(\d+)/);
       if (dashCourseMatch?.[1]) {
         const currentCourseId = dashCourseMatch[1];
@@ -193,8 +193,8 @@ export default function AuthenticatedShell({
           },
         ];
       }
-      // Section note: groups related logic for readability.
-      // Section note: groups related logic for readability.
+      // Section summary: this block is documented for clarity.
+      // Section summary: this block is documented for clarity.
       return [
         {
           to: "/courses",
@@ -278,7 +278,7 @@ export default function AuthenticatedShell({
     const linksByTo = new Map(sidebarLinks.map((item) => [item.to, item]));
     const picked = preferred.map((to) => linksByTo.get(to)).filter(Boolean);
     if (picked.length >= 4) return picked.slice(0, 5);
-    // Section note: groups related logic for readability.
+    // Section summary: this block is documented for clarity.
     return dedupeByTo(sidebarLinks).slice(0, 5);
   }, [mobileNavLinks, sidebarLinks, authUser?.id]);
 
@@ -289,10 +289,10 @@ export default function AuthenticatedShell({
         printFriendlyChrome && "at-print-student-analysis"
       )}
     >
-      {/* Section note: groups related UI behavior for readability. */}
+      {/* Section summary: this UI block is explained for clarity. */}
       <header className="sticky top-0 z-40 border-b border-brand-100/70 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/60">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 lg:px-6 lg:py-4">
-          {/* Section note: groups related UI behavior for readability. */}
+          {/* Section summary: this UI block is explained for clarity. */}
           <button
             type="button"
             onClick={() => navigate("/studenthome")}
@@ -313,9 +313,9 @@ export default function AuthenticatedShell({
               Bread
             </span>
           </button>
-          {/* Section note: groups related UI behavior for readability. */}
+          {/* Section summary: this UI block is explained for clarity. */}
           <div className="flex min-w-0 items-center gap-2 sm:gap-3 lg:gap-5">
-            {/* Section note: groups related UI behavior for readability. */}
+            {/* Section summary: this UI block is explained for clarity. */}
             <button
               type="button"
               onClick={() => navigate("/profile")}
@@ -352,7 +352,7 @@ export default function AuthenticatedShell({
               </div>
             </button>
 
-            {/* Section note: groups related UI behavior for readability. */}
+            {/* Section summary: this UI block is explained for clarity. */}
             <button
               type="button"
               className="group inline-flex items-center gap-2 rounded-2xl border border-brand-200 bg-white
@@ -434,7 +434,7 @@ export default function AuthenticatedShell({
         ) : null}
       </header>
 
-      {/* Section note: groups related UI behavior for readability. */}
+      {/* Section summary: this UI block is explained for clarity. */}
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-3 py-3 sm:gap-4 sm:px-4 sm:py-4 lg:flex-row lg:gap-6 lg:px-6 lg:py-8">
         <aside className="hidden w-16 flex-shrink-0 flex-col gap-2 rounded-3xl border border-brand-100/80 bg-white/75 p-2 shadow-soft backdrop-blur lg:flex lg:w-60 lg:p-4">
           <div className="hidden lg:block px-2 pb-1">
@@ -444,8 +444,8 @@ export default function AuthenticatedShell({
           </div>
           {sidebarLinks.map((link) => {
             const active = isActiveLink(link.to, location);
-            // Section note: groups related logic for readability.
-            // Section note: groups related logic for readability.
+            // Section summary: this block is documented for clarity.
+            // Section summary: this block is documented for clarity.
             const isMessages = link.to === "/notifications";
             return (
               <NavLink
@@ -473,7 +473,7 @@ export default function AuthenticatedShell({
                   )}
                 >
                   {link.icon}
-                  {/* Section note: groups related UI behavior for readability. */}
+                  {/* Section summary: this UI block is explained for clarity. */}
                   {isMessages && unread > 0 && (
                     <span
                       className="absolute -right-1.5 -top-1.5 inline-flex min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold leading-5 text-white shadow"
