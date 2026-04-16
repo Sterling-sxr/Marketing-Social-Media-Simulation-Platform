@@ -6,7 +6,7 @@ import { getJson } from "../../lib/api";
 import { isTeacher } from "../../lib/access";
 import AuthenticatedShell from "../components/AuthenticatedShell";
 import Feedback from "../components/Feedback";
-// Context: This block prepares shared values used by the request branches below.
+// Context: Compute shared values once so all branches use the same normalized inputs.
 import {
   BarChart,
   Bar,
@@ -53,7 +53,7 @@ function SectionCard({ title, subtitle, icon, children, tone = "default", right 
     </section>
   );
 }
-/* Context: This section groups related logic so shared assumptions, control flow, and side effects are easier to understand. */
+/* Context: Keep related logic in one section so assumptions and control flow stay explicit. Reason: Localizing side effects lowers review cost and reduces accidental regressions. */
 const DONUT = {
   peach50: "#EEF7F9",
   peach100: "#DCEFF3",
@@ -72,7 +72,7 @@ const DONUT = {
   borderStrong: "#62AFC3",
 };
 
-/* Context: This section groups related logic so shared assumptions, control flow, and side effects are easier to understand. */
+/* Context: Keep related logic in one section so assumptions and control flow stay explicit. Reason: Localizing side effects lowers review cost and reduces accidental regressions. */
 const SUMMARY_TILES = [
   { key: "total_courses", label: "Courses", clickable: true },
   { key: "registered_students", label: "Students" },
@@ -80,14 +80,14 @@ const SUMMARY_TILES = [
   { key: "total_interactions", label: "Total Interactions" },
 ];
 
-/* Context: This section groups related logic so shared assumptions, control flow, and side effects are easier to understand. */
+/* Context: Keep related logic in one section so assumptions and control flow stay explicit. Reason: Localizing side effects lowers review cost and reduces accidental regressions. */
 const SENTIMENT_TEXT_COLORS = {
   positive: "text-emerald-600",
   neutral: "text-accent-600",
   negative: "text-rose-600",
 };
 
-// Purpose: `CompareTooltip` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable.
+// Purpose: `CompareTooltip` owns one cohesive concern so state transitions and side effects remain easy to trace.
 function CompareTooltip({ active, payload, label }) {
   if (!active || !payload || payload.length === 0) return null;
   const courseName = payload[0]?.payload?.__fullname || label || "";
@@ -112,7 +112,7 @@ function CompareTooltip({ active, payload, label }) {
   );
 }
 
-/* Purpose: `makeAutoSummary` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
+/* Purpose: `makeAutoSummary` owns one cohesive concern so state transitions and side effects remain easy to trace. */
 function makeAutoSummary(summary) {
   if (!summary || typeof summary !== "object") {
     return "No dashboard data available yet. Once activity is recorded, I’ll generate an automatic summary here.";
@@ -136,13 +136,13 @@ function makeAutoSummary(summary) {
 
   const courses = Array.isArray(summary.courses) ? summary.courses.slice() : [];
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   courses.sort(
     (a, b) =>
       Number(b.total_interactions || 0) - Number(a.total_interactions || 0)
   );
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const top3 = courses.slice(0, 3).map((c) => ({
     id: c.id,
     code: c.course_code || String(c.id),
@@ -152,7 +152,7 @@ function makeAutoSummary(summary) {
     students: Number(c.registered_students || 0),
   }));
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const engPerPostRanked = courses
     .map((c) => {
       const posts = Number(c.total_posts || 0);
@@ -169,7 +169,7 @@ function makeAutoSummary(summary) {
 
   const bestEPP = engPerPostRanked[0];
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const postsPerStudentRanked = courses
     .map((c) => {
       const posts = Number(c.total_posts || 0);
@@ -188,19 +188,19 @@ function makeAutoSummary(summary) {
 
   const lines = [];
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   lines.push(
     `Overview: ${totalCourses} course(s), ${totalStudents} student(s), ${totalPosts} post(s), and ${totalInter} interaction(s) recorded.`
   );
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   if (sPos + sNeu + sNeg > 0) {
     lines.push(
       `Sentiment snapshot: ${sPos}% positive, ${sNeu}% neutral, ${sNeg}% negative.`
     );
   }
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   if (top3.length > 0) {
     const topDesc = top3
       .map(
@@ -215,7 +215,7 @@ function makeAutoSummary(summary) {
     lines.push(`No course activity yet.`);
   }
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   if (bestEPP && bestEPP.value > 0) {
     lines.push(
       `Highest engagement per post: ${bestEPP.code}${
@@ -224,7 +224,7 @@ function makeAutoSummary(summary) {
     );
   }
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   if (bestPPS && bestPPS.value > 0) {
     lines.push(
       `Strongest posting intensity: ${bestPPS.code}${
@@ -233,7 +233,7 @@ function makeAutoSummary(summary) {
     );
   }
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const hasData = totalPosts > 0 || totalInter > 0;
   if (hasData) {
     if (sNeg >= 30) {
@@ -342,7 +342,7 @@ export default function DashboardPage() {
   );
   const yDomain = [0, Math.ceil(maxY / 100) * 100];
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const autoSummary = useMemo(() => makeAutoSummary(data), [data]);
   const handleGenerateSummary = useCallback(() => {
     setSparkStatus({ loading: true, error: "" });
@@ -433,7 +433,7 @@ export default function DashboardPage() {
             </SectionCard>
           ) : null}
 
-          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <SectionCard
             title="Summary"
             subtitle="Key metrics across all managed courses."
@@ -462,7 +462,7 @@ export default function DashboardPage() {
             </div>
           </SectionCard>
 
-          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <SectionCard
             title="Course Comparison Analysis"
             subtitle="Posts and interactions across different courses."
@@ -532,7 +532,7 @@ export default function DashboardPage() {
               )}
           </SectionCard>
 
-          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <SectionCard
             title="Sentiment Analysis"
             subtitle="Snapshot of overall tone across managed courses."

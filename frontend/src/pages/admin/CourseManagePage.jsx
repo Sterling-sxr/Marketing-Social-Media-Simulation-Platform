@@ -156,7 +156,7 @@ export default function CourseManagePage() {
 
   if (!authCheckComplete || !authUser || !isTeacherAdmin) return null;
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const filteredItems = items.filter((c) => {
     const query = search.toLowerCase();
     const matchSearch =
@@ -170,7 +170,7 @@ export default function CourseManagePage() {
   return (
     <AuthenticatedShell title="Course Management" subtitle="Manage all your Bread courses 🍩">
       <main className="flex-1 p-8 bg-gradient-to-b from-brand-50 to-white rounded-2xl min-h-[calc(100vh-8rem)]">
-        {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+        {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-to-br from-accent-400 via-brand-400 to-yellow-300 rounded-full flex items-center justify-center shadow-md animate-pulse">
@@ -196,7 +196,7 @@ export default function CourseManagePage() {
           </button>
         </div>
 
-        {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+        {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
         <div className="flex flex-col sm:flex-row items-center gap-3 mb-6">
           <input
             type="text"
@@ -217,17 +217,17 @@ export default function CourseManagePage() {
           </select>
         </div>
 
-        {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+        {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
         {status.error && <Feedback error={status.error} />}
 
-        {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+        {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
         {status.loading ? (
           <div className="flex flex-col items-center justify-center py-20 text-gray-500">
             <span className="animate-spin text-3xl mb-2">🍩</span>
             Loading your courses...
           </div>
         ) : filteredItems.length === 0 ? (
-          /* Context: This section groups related logic so shared assumptions, control flow, and side effects are easier to understand. */
+          /* Context: Keep related logic in one section so assumptions and control flow stay explicit. Reason: Localizing side effects lowers review cost and reduces accidental regressions. */
           search.trim() ? (
             <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl shadow-sm border border-brand-100">
               <div className="text-6xl mb-3">🔍</div>
@@ -252,7 +252,7 @@ export default function CourseManagePage() {
             </div>
           )
         ) : (
-          /* Context: This section groups related logic so shared assumptions, control flow, and side effects are easier to understand. */
+          /* Context: Keep related logic in one section so assumptions and control flow stay explicit. Reason: Localizing side effects lowers review cost and reduces accidental regressions. */
           <ul className="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredItems.map((c) => (
               <li

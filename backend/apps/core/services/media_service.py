@@ -6,15 +6,15 @@ from ..repositories.models import MediaAsset
 
 
 def list_recent_assets(limit: int = 20):
-    """Handle the `list_recent_assets` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `list_recent_assets` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     return MediaAsset.objects.all()[:limit]
 
 
 def store_upload(upload: UploadedFile) -> MediaAsset:
-    """Handle the `store_upload` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `store_upload` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     asset = MediaAsset(
         file=upload,

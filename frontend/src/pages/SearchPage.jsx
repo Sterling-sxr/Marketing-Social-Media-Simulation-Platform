@@ -218,7 +218,7 @@ export default function SearchPage() {
     inputRef.current?.focus();
   }, [authCheckComplete, authUser]);
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   useEffect(() => {
     if (!authUser) return;
     getJson("/api/search/suggestions/")
@@ -228,7 +228,7 @@ export default function SearchPage() {
       .catch(() => {});
   }, [authUser]);
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   useEffect(() => {
     if (!queryFromUrl || !authUser) {
       setSearchResults([]);
@@ -245,7 +245,7 @@ export default function SearchPage() {
       })
       .catch(() => {
         if (controller.signal.aborted) return;
-        // Context: This block prepares shared values used by the request branches below.
+        // Context: Compute shared values once so all branches use the same normalized inputs.
         setSearchResults(buildCourseResults(queryFromUrl, courses.joined));
       })
       .finally(() => {

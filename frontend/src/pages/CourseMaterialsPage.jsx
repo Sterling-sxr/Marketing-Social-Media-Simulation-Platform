@@ -68,7 +68,7 @@ function fileIcon(contentType, originalName) {
   return "📎";
 }
 
-/* Purpose: `isPreviewable` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
+/* Purpose: `isPreviewable` owns one cohesive concern so state transitions and side effects remain easy to trace. */
 function isPreviewable(contentType, originalName) {
   const ext = (originalName || "").split(".").pop().toLowerCase();
   const previewableExts = ["pdf", "png", "jpg", "jpeg", "gif", "webp", "svg", "mp4", "mov", "webm"];
@@ -114,7 +114,7 @@ function UploadModal({ courseId, onClose, onSuccess }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Upload failed.");
-      // Context: This block prepares shared values used by the request branches below.
+      // Context: Compute shared values once so all branches use the same normalized inputs.
       onSuccess(data.material ?? data);
     } catch (err) {
       setStatus({ loading: false, error: err.message || "Upload failed." });
@@ -372,7 +372,7 @@ export default function CourseMaterialsPage() {
     try {
       const params = activeCategory !== "all" ? `?category=${activeCategory}` : "";
       const data = await getJson(`/api/courses/${courseId}/materials/${params}`);
-      // Context: This block prepares shared values used by the request branches below.
+      // Context: Compute shared values once so all branches use the same normalized inputs.
       setMaterials(Array.isArray(data) ? data : data.items ?? data.materials ?? []);
       setError("");
     } catch (err) {
@@ -413,8 +413,8 @@ export default function CourseMaterialsPage() {
     }
   };
 
-  // Context: This block prepares shared values used by the request branches below.
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const globalMobileNav = useMemo(
     () => [
       { to: "/studenthome", label: "Home", icon: <Home className="h-5 w-5" /> },
@@ -438,7 +438,7 @@ export default function CourseMaterialsPage() {
       mobileNavLinks={globalMobileNav}
     >
       <div className="space-y-5">
-        {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+        {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative w-full sm:max-w-lg">
             <Search
@@ -455,7 +455,7 @@ export default function CourseMaterialsPage() {
           </div>
         </div>
 
-        {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+        {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
         <div className="flex flex-wrap gap-2">
           {CATEGORIES.map((cat) => (
             <button
@@ -473,7 +473,7 @@ export default function CourseMaterialsPage() {
           ))}
         </div>
 
-        {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+        {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-8 w-8 animate-spin text-brand-400" />

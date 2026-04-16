@@ -5,7 +5,7 @@ function classNames(...values) {
 }
 
 export default function CourseSecondaryNav({ courseId, showOverview = true }) {
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const links = [
     ...(showOverview === false
       ? []

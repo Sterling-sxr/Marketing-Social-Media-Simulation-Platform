@@ -1,4 +1,4 @@
-// Purpose: `ProfileSection` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable.
+// Purpose: `ProfileSection` owns one cohesive concern so state transitions and side effects remain easy to trace.
 export default function ProfileSection({
   icon,
   title,

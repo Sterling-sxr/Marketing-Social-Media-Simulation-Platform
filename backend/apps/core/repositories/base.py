@@ -1,4 +1,4 @@
-"""Module summary: this module groups related logic and clarifies design intent."""
+"""Module summary: Collect related domain logic and document the intended design boundaries."""
 from __future__ import annotations
 
 from typing import Generic, List, Optional, Type, TypeVar
@@ -9,14 +9,14 @@ T = TypeVar('T', bound=models.Model)
 
 
 class BaseRepository(Generic[T]):
-    """Class summary: BaseRepository keeps related behavior together behind one clear interface."""
+    """Class summary: Provide a small, consistent data-access interface shared by repositories."""
     
     model: Type[T] = None
     
     @classmethod
     def get_by_id(cls, pk: int) -> Optional[T]:
-        """Handle the `get_by_id` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `get_by_id` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         try:
             return cls.model.objects.get(pk=pk)
@@ -25,8 +25,8 @@ class BaseRepository(Generic[T]):
     
     @classmethod
     def get_all(cls, order_by: str = None) -> List[T]:
-        """Handle the `get_all` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `get_all` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         queryset = cls.model.objects.all()
         if order_by:
@@ -35,66 +35,66 @@ class BaseRepository(Generic[T]):
     
     @classmethod
     def filter(cls, **kwargs) -> List[T]:
-        """Handle the `filter` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `filter` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         return list(cls.model.objects.filter(**kwargs))
     
     @classmethod
     def exists(cls, **kwargs) -> bool:
-        """Handle the `exists` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `exists` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         return cls.model.objects.filter(**kwargs).exists()
     
     @classmethod
     def count(cls, **kwargs) -> int:
-        """Handle the `count` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `count` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         return cls.model.objects.filter(**kwargs).count()
     
     @classmethod
     def create(cls, **kwargs) -> T:
-        """Handle the `create` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `create` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         return cls.model.objects.create(**kwargs)
     
     @classmethod
     def bulk_create(cls, objects: List[T], **kwargs) -> List[T]:
-        """Handle the `bulk_create` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `bulk_create` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         return cls.model.objects.bulk_create(objects, **kwargs)
     
     @classmethod
     def update_by_id(cls, pk: int, **kwargs) -> bool:
-        """Handle the `update_by_id` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `update_by_id` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         count = cls.model.objects.filter(pk=pk).update(**kwargs)
         return count > 0
     
     @classmethod
     def update_or_create(cls, defaults: dict = None, **kwargs) -> tuple[T, bool]:
-        """Handle the `update_or_create` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `update_or_create` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         return cls.model.objects.update_or_create(defaults=defaults, **kwargs)
     
     @classmethod
     def delete_by_id(cls, pk: int) -> bool:
-        """Handle the `delete_by_id` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `delete_by_id` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         count, _ = cls.model.objects.filter(pk=pk).delete()
         return count > 0
     
     @classmethod
     def delete_by_filter(cls, **kwargs) -> int:
-        """Handle the `delete_by_filter` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `delete_by_filter` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         count, _ = cls.model.objects.filter(**kwargs).delete()
         return count

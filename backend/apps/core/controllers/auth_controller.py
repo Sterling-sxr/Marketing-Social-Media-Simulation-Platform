@@ -26,8 +26,9 @@ from ..services import (
 )
 
 
-# Purpose: Handle the `_parse_json` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `_parse_json` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def _parse_json(request: HttpRequest) -> dict:
     if not request.body:
         return {}
@@ -38,8 +39,9 @@ def _parse_json(request: HttpRequest) -> dict:
 
 
 @csrf_exempt
-# Purpose: Handle the `send_registration_code` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `send_registration_code` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def send_registration_code(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -66,8 +68,9 @@ def send_registration_code(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Purpose: Handle the `verify_registration_code_view` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `verify_registration_code_view` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def verify_registration_code_view(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -90,8 +93,9 @@ def verify_registration_code_view(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Purpose: Handle the `complete_registration_view` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `complete_registration_view` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def complete_registration_view(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -125,8 +129,9 @@ def complete_registration_view(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Purpose: Handle the `login_user` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `login_user` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def login_user(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -159,11 +164,12 @@ def login_user(request: HttpRequest) -> JsonResponse:
     )
 
 
-# Purpose: Handle the `check_auth_status` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `check_auth_status` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def check_auth_status(request: HttpRequest) -> JsonResponse:
-    """Handle the `check_auth_status` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `check_auth_status` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     if not request.user.is_authenticated:
         return JsonResponse({"authenticated": False}, status=200)
@@ -185,8 +191,9 @@ def check_auth_status(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Purpose: Handle the `logout_view` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `logout_view` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def logout_view(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -196,8 +203,9 @@ def logout_view(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Purpose: Handle the `send_password_reset_code` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `send_password_reset_code` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def send_password_reset_code(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -224,8 +232,9 @@ def send_password_reset_code(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Purpose: Handle the `confirm_password_reset_view` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `confirm_password_reset_view` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def confirm_password_reset_view(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -249,8 +258,9 @@ def confirm_password_reset_view(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-# Purpose: Handle the `complete_password_reset_view` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `complete_password_reset_view` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def complete_password_reset_view(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)

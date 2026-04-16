@@ -22,20 +22,23 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             }
         )
 
-    # Purpose: Handle the `disconnect` workflow and keep behavior predictable.
-    # Details: Validate incoming data, call dependent services, and return a stable response.
+    # Purpose: Orchestrate `disconnect` with clear validation, dependency calls, and response mapping.
+    # Input contract: Normalize required values early and fail fast on malformed payloads.
+    # Output contract: Return a stable success/error shape after translating service outcomes.
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
-    # Purpose: Handle the `notification_message` workflow and keep behavior predictable.
-    # Details: Validate incoming data, call dependent services, and return a stable response.
+    # Purpose: Orchestrate `notification_message` with clear validation, dependency calls, and response mapping.
+    # Input contract: Normalize required values early and fail fast on malformed payloads.
+    # Output contract: Return a stable success/error shape after translating service outcomes.
     async def notification_message(self, event):
         payload = event.get("payload", {})
         await self.send_json({"type": "notification", **payload})
 
-    # Purpose: Handle the `receive_json` workflow and keep behavior predictable.
-    # Details: Validate incoming data, call dependent services, and return a stable response.
+    # Purpose: Orchestrate `receive_json` with clear validation, dependency calls, and response mapping.
+    # Input contract: Normalize required values early and fail fast on malformed payloads.
+    # Output contract: Return a stable success/error shape after translating service outcomes.
     async def receive_json(self, content, **kwargs):
-        # Context: This block prepares shared values used by the request branches below.
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         if content.get("action") == "ping":
             await self.send_json({"type": "pong"})

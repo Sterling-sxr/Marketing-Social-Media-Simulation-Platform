@@ -1,4 +1,4 @@
-# Context: This block prepares shared values used by the request branches below.
+# Context: Compute shared values once so all branches use the same normalized inputs.
 
 from django.conf import settings
 from django.db import migrations, models

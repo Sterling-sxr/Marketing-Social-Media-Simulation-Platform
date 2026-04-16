@@ -1,4 +1,4 @@
-"""Module summary: this module groups related logic and clarifies design intent."""
+"""Module summary: Collect related domain logic and document the intended design boundaries."""
 import base64
 from email.mime.text import MIMEText
 from typing import Optional
@@ -10,7 +10,7 @@ from googleapiclient.errors import HttpError
 
 
 class GmailNotConfiguredError(RuntimeError):
-    """Class summary: GmailNotConfiguredError keeps related behavior together behind one clear interface."""
+    """Class summary: Signal missing Gmail configuration so callers can return a clear API error."""
 
 
 def _build_credentials() -> Credentials:
@@ -42,8 +42,8 @@ def _build_credentials() -> Credentials:
 def send_gmail_message(
     *, subject: str, body: str, recipient: Optional[str] = None
 ) -> dict:
-    """Handle the `send_gmail_message` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `send_gmail_message` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
 
     to_address = recipient or settings.GMAIL_DEMO_RECIPIENT

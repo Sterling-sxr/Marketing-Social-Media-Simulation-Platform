@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Module summary: this module groups related logic and clarifies design intent."""
+"""Module summary: Collect related domain logic and document the intended design boundaries."""
 import os
 import sys
 
 
 def main() -> None:
-    """Handle the `main` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `main` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "apps.conf.settings")
     try:

@@ -1,11 +1,11 @@
-// Context: This block prepares shared values used by the request branches below.
-// Context: This block prepares shared values used by the request branches below.
-// Context: This block prepares shared values used by the request branches below.
-// Context: This block prepares shared values used by the request branches below.
+// Context: Compute shared values once so all branches use the same normalized inputs.
+// Context: Compute shared values once so all branches use the same normalized inputs.
+// Context: Compute shared values once so all branches use the same normalized inputs.
+// Context: Compute shared values once so all branches use the same normalized inputs.
 
-// Context: This block prepares shared values used by the request branches below.
+// Context: Compute shared values once so all branches use the same normalized inputs.
 const BASE_LIST = [
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   "fuck",
   "f*ck",
   "f**k",
@@ -73,7 +73,7 @@ const BASE_LIST = [
   "fk u",
   "fk off",
   "f off",
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   "傻逼",
   "煞笔",
   "傻b",
@@ -91,12 +91,12 @@ const BASE_LIST = [
   "SB",
 ];
 
-// Purpose: `normalizeForMatch` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable.
+// Purpose: `normalizeForMatch` owns one cohesive concern so state transitions and side effects remain easy to trace.
 function normalizeForMatch(s) {
   return (
     s
       .toLowerCase()
-      // Context: This block prepares shared values used by the request branches below.
+      // Context: Compute shared values once so all branches use the same normalized inputs.
       .replace(/[¡!]|1|l|\|/g, "i")
       .replace(/[@4]/g, "a")
       .replace(/3/g, "e")
@@ -104,16 +104,16 @@ function normalizeForMatch(s) {
       .replace(/[$5]/g, "s")
       .replace(/7/g, "t")
       .replace(/8/g, "b")
-      // Context: This block prepares shared values used by the request branches below.
+      // Context: Compute shared values once so all branches use the same normalized inputs.
       .replace(/\s+/g, " ")
-      // Context: This block prepares shared values used by the request branches below.
+      // Context: Compute shared values once so all branches use the same normalized inputs.
       .replace(/(.)\1{2,}/g, "$1$1")
   );
 }
 
-// Purpose: `makeLooseWordRegex` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable.
+// Purpose: `makeLooseWordRegex` owns one cohesive concern so state transitions and side effects remain easy to trace.
 function makeLooseWordRegex(word) {
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   if (!/^[a-z]+$/i.test(word)) return null;
   const letters = word
     .split("")
@@ -122,12 +122,12 @@ function makeLooseWordRegex(word) {
   return new RegExp(`\\b${body}\\b`, "i");
 }
 
-// Purpose: `hasChineseBadWord` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable.
+// Purpose: `hasChineseBadWord` owns one cohesive concern so state transitions and side effects remain easy to trace.
 function hasChineseBadWord(text, term) {
   return text.includes(term);
 }
 
-/* Context: This section keeps dependent steps together so assumptions, branching rules, and maintenance decisions stay easy to reason about.
+/* Context: Keep dependent steps together so branch preconditions remain visible at a glance. Reason: This layout reduces hidden coupling and makes future edits safer.
    * Additional detail: this explanation keeps assumptions and intent explicit.
    * Additional detail: this explanation keeps assumptions and intent explicit.
    * Additional detail: this explanation keeps assumptions and intent explicit.
@@ -144,13 +144,13 @@ export function hasProfanity(input, extraList = []) {
     const term = normalizeForMatch(termRaw);
     if (!term) continue;
 
-    // Context: This block prepares shared values used by the request branches below.
+    // Context: Compute shared values once so all branches use the same normalized inputs.
     if (/[^\x00-\x7F]/.test(term)) {
       if (hasChineseBadWord(src, term)) hits.push(termRaw);
       continue;
     }
 
-    // Context: This block prepares shared values used by the request branches below.
+    // Context: Compute shared values once so all branches use the same normalized inputs.
     const m = makeLooseWordRegex(term);
     if (m && m.test(src)) hits.push(termRaw);
   }

@@ -1,4 +1,4 @@
-"""Module summary: this module groups related logic and clarifies design intent."""
+"""Module summary: Collect related domain logic and document the intended design boundaries."""
 
 from __future__ import annotations
 
@@ -91,17 +91,17 @@ PROFILE_NUMERIC_FIELDS = [
     ("openness", 5),
 ]
 
-# Context: This block prepares shared values used by the request branches below.
+# Context: Compute shared values once so all branches use the same normalized inputs.
 AI_FIELD_ALIASES: dict[str, str] = {
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     "decision_factors": "decision_factor",
     "buying_behaviour": "buying_behavior",
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     "activity_level": "digital_time",
     "preferred_content": "content_preference",
 }
 
-# Context: This block prepares shared values used by the request branches below.
+# Context: Compute shared values once so all branches use the same normalized inputs.
 PROFILE_OPTIONS_KEY_BY_FIELD: dict[str, str] = {
     "gender": "genders",
     "city": "cities",
@@ -118,7 +118,7 @@ PROFILE_OPTIONS_KEY_BY_FIELD: dict[str, str] = {
     "influencer_type": "influencer_type",
 }
 
-# Context: This block prepares shared values used by the request branches below.
+# Context: Compute shared values once so all branches use the same normalized inputs.
 INTEREST_ALIASES: dict[str, str] = {
     "tech & gaming": "Technology & Gaming",
     "technology and gaming": "Technology & Gaming",
@@ -134,8 +134,8 @@ INTEREST_ALIASES: dict[str, str] = {
 
 
 def _normalize_choice(value: Any, options_key: str) -> str:
-    """Handle the `_normalize_choice` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `_normalize_choice` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     if not value:
         return ""
@@ -146,30 +146,30 @@ def _normalize_choice(value: Any, options_key: str) -> str:
     text = (value or "").strip()
     lowered = text.lower()
 
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     for opt in options:
         if opt.lower() == lowered:
             return opt
 
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     for opt in options:
         if lowered in opt.lower():
             return opt
 
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     return text
 
 
 def _normalize_digital_time(value: Any) -> str:
-    """Handle the `_normalize_digital_time` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `_normalize_digital_time` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     if not value:
         return ""
     text = (value or "").strip()
     lowered = text.lower()
 
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     if lowered == "high":
         text = "Several times a day"
     elif lowered == "medium":
@@ -181,8 +181,8 @@ def _normalize_digital_time(value: Any) -> str:
 
 
 def _normalize_interests(value: Any) -> list[str]:
-    """Handle the `_normalize_interests` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `_normalize_interests` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     options = PROFILE_OPTIONS.get("interests") or []
     if not value:
@@ -190,7 +190,7 @@ def _normalize_interests(value: Any) -> list[str]:
 
     raw_items: list[str]
     if isinstance(value, str):
-        # Context: This block prepares shared values used by the request branches below.
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         normalized_text = value.replace("\n", ",").replace(";", ",")
         raw_items = [part.strip() for part in normalized_text.split(",") if part.strip()]
     elif isinstance(value, (list, tuple, set)):
@@ -202,20 +202,20 @@ def _normalize_interests(value: Any) -> list[str]:
     for item in raw_items:
         lowered = item.lower()
 
-        # Context: This block prepares shared values used by the request branches below.
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         alias_match = INTEREST_ALIASES.get(lowered)
         if alias_match and alias_match in options and alias_match not in normalized:
             normalized.append(alias_match)
             continue
 
-        # Context: This block prepares shared values used by the request branches below.
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         match = None
         for opt in options:
             if opt.lower() == lowered:
                 match = opt
                 break
         if not match:
-            # Context: This block prepares shared values used by the request branches below.
+            # Context: Compute shared values once so all branches use the same normalized inputs.
             for opt in options:
                 if lowered in opt.lower():
                     match = opt
@@ -227,8 +227,8 @@ def _normalize_interests(value: Any) -> list[str]:
 
 
 def _normalize_numeric(value: Any, default: int = 5) -> int:
-    """Handle the `_normalize_numeric` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `_normalize_numeric` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     try:
         num = int(value)
@@ -242,8 +242,8 @@ def _normalize_numeric(value: Any, default: int = 5) -> int:
 
 
 def normalize_ai_profile_payload(payload: dict[str, Any]) -> dict[str, Any]:
-    """Handle the `normalize_ai_profile_payload` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `normalize_ai_profile_payload` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     if not isinstance(payload, dict):
         return {}
@@ -253,49 +253,49 @@ def normalize_ai_profile_payload(payload: dict[str, Any]) -> dict[str, Any]:
     for raw_key, raw_value in payload.items():
         key = AI_FIELD_ALIASES.get(raw_key, raw_key)
 
-        # Context: This block prepares shared values used by the request branches below.
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         if key in {"social_value", "sociability", "openness"}:
             normalized[key] = _normalize_numeric(raw_value)
             continue
 
-        # Context: This block prepares shared values used by the request branches below.
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         if key == "interests":
             normalized["interests"] = _normalize_interests(raw_value)
             continue
 
-        # Context: This block prepares shared values used by the request branches below.
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         if key == "digital_time":
             normalized["digital_time"] = _normalize_digital_time(raw_value)
             continue
 
-        # Context: This block prepares shared values used by the request branches below.
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         if key in PROFILE_STRING_FIELDS:
             options_key = PROFILE_OPTIONS_KEY_BY_FIELD.get(key)
             if options_key:
                 normalized[key] = _normalize_choice(raw_value, options_key)
             else:
-                # Context: This block prepares shared values used by the request branches below.
+                # Context: Compute shared values once so all branches use the same normalized inputs.
                 if isinstance(raw_value, str):
                     normalized[key] = raw_value.strip()
                 else:
                     normalized[key] = raw_value
             continue
 
-        # Context: This block prepares shared values used by the request branches below.
+        # Context: Compute shared values once so all branches use the same normalized inputs.
 
     return normalized
 
 
 def needs_profile(user) -> bool:
-    """Handle the `needs_profile` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `needs_profile` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     return False
 
 
 def merge_profile_payload(payload: dict[str, Any], base=None) -> dict[str, Any]:
-    """Handle the `merge_profile_payload` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `merge_profile_payload` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     profile_data: dict[str, Any] = {}
 
@@ -332,8 +332,8 @@ def merge_profile_payload(payload: dict[str, Any], base=None) -> dict[str, Any]:
 
 @transaction.atomic
 def save_profile(user, payload: dict[str, Any]) -> UserProfile:
-    """Handle the `save_profile` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `save_profile` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     existing = ProfileRepository.get_by_user_id(user.id)
     profile_data = merge_profile_payload(payload, base=existing)
@@ -365,15 +365,15 @@ def profile_to_dict(profile: UserProfile) -> dict[str, Any]:
 
 
 def following_count(user_id: int) -> int:
-    """Handle the `following_count` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `following_count` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     return FollowRepository.get_following_count(user_id)
 
 
 def followers_count(user_id: int) -> int:
-    """Handle the `followers_count` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `followers_count` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     return FollowRepository.get_followers_count(user_id)
 

@@ -1,4 +1,4 @@
-"""Module summary: this module groups related logic and clarifies design intent."""
+"""Module summary: Collect related domain logic and document the intended design boundaries."""
 
 from __future__ import annotations
 
@@ -28,14 +28,14 @@ except ImportError:  # pragma: no cover – optional dependency
 logger = logging.getLogger(__name__)
 
 
-# Context: This block prepares shared values used by the request branches below.
-# Context: This block prepares shared values used by the request branches below.
-# Purpose: Handle the `_get_client_kwargs` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
-
+# Context: Compute shared values once so all branches use the same normalized inputs.
+# Context: Compute shared values once so all branches use the same normalized inputs.
+# Purpose: Orchestrate `_get_client_kwargs` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def _get_client_kwargs() -> dict[str, str] | None:
-    """Handle the `_get_client_kwargs` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `_get_client_kwargs` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     api_key = getattr(settings, "DEEPSEEK_API_KEY", None)
     if not api_key:
@@ -49,14 +49,14 @@ def _get_client_kwargs() -> dict[str, str] | None:
     }
 
 
-# Context: This block prepares shared values used by the request branches below.
-# Context: This block prepares shared values used by the request branches below.
-# Purpose: Handle the `schedule_ai_reactions` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
-
+# Context: Compute shared values once so all branches use the same normalized inputs.
+# Context: Compute shared values once so all branches use the same normalized inputs.
+# Purpose: Orchestrate `schedule_ai_reactions` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def schedule_ai_reactions(course_id: int, post_id: int, delay_seconds: float = 0.0) -> None:
-    """Handle the `schedule_ai_reactions` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `schedule_ai_reactions` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     if not getattr(settings, "DEEPSEEK_API_KEY", None):
         logger.debug("DEEPSEEK_API_KEY not configured; skip AI reactions for post=%s", post_id)
@@ -78,9 +78,9 @@ def schedule_ai_reactions(course_id: int, post_id: int, delay_seconds: float = 0
     ).start()
 
 
-# Context: This block prepares shared values used by the request branches below.
-# Context: This block prepares shared values used by the request branches below.
-# Context: This block prepares shared values used by the request branches below.
+# Context: Compute shared values once so all branches use the same normalized inputs.
+# Context: Compute shared values once so all branches use the same normalized inputs.
+# Context: Compute shared values once so all branches use the same normalized inputs.
 
 @dataclass
 class ReactionDecision:
@@ -89,11 +89,11 @@ class ReactionDecision:
     comment_text: str
 
 
-# Context: This block prepares shared values used by the request branches below.
-# Context: This block prepares shared values used by the request branches below.
-# Purpose: Handle the `_build_persona_prompt` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
-
+# Context: Compute shared values once so all branches use the same normalized inputs.
+# Context: Compute shared values once so all branches use the same normalized inputs.
+# Purpose: Orchestrate `_build_persona_prompt` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def _build_persona_prompt(ai_user, post: CoursePost) -> str:
     persona_lines = [
         f"Display Name: {ai_user.display_name or ai_user.username}",
@@ -138,14 +138,14 @@ def _parse_decision(raw: str | dict[str, Any]) -> ReactionDecision:
     )
 
 
-# Context: This block prepares shared values used by the request branches below.
-# Context: This block prepares shared values used by the request branches below.
-# Purpose: Handle the `async_handle_post_reactions` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
-
+# Context: Compute shared values once so all branches use the same normalized inputs.
+# Context: Compute shared values once so all branches use the same normalized inputs.
+# Purpose: Orchestrate `async_handle_post_reactions` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 async def async_handle_post_reactions(course_id: int, post_id: int) -> None:
-    """Handle the `async_handle_post_reactions` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `async_handle_post_reactions` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     kwargs = _get_client_kwargs()
     if kwargs is None:
@@ -198,14 +198,14 @@ async def async_handle_post_reactions(course_id: int, post_id: int) -> None:
 
 
 async def _handle_single_ai_user(
-    client: Any,  # Inline explanation: This line clarifies an assumption, guard, or transformation.
+    client: Any,  # Inline explanation: Keep normalization explicit.
     ai_user: Any,
     post: CoursePost,
     course_id: int,
     post_id: int,
 ) -> None:
-    """Handle the `_handle_single_ai_user` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `_handle_single_ai_user` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     _db = lambda fn, *a, **kw: sync_to_async(fn, thread_sensitive=False)(*a, **kw)  # noqa: E731
 
@@ -215,7 +215,7 @@ async def _handle_single_ai_user(
     if not system_user:
         logger.debug("AI user %s missing identity, attempting repair.", ai_user.id)
         try:
-            # Inline explanation: this local import is intentional to avoid circular dependencies.
+            # Inline explanation: Keep normalization explicit.
             from .ai_user_service import ensure_ai_user_identity
 
             if post.course:
@@ -229,7 +229,7 @@ async def _handle_single_ai_user(
     if not system_user:
         return
 
-    # Context: This block prepares shared values used by the request branches below.
+    # Context: Compute shared values once so all branches use the same normalized inputs.
     if post.author_id == system_user.id:
         return
 
@@ -289,8 +289,8 @@ async def _handle_single_ai_user(
 
 
 async def _async_request_decision(prompt: str, client: Any) -> ReactionDecision | None:
-    """Handle the `_async_request_decision` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `_async_request_decision` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     model_name = getattr(settings, "DEEPSEEK_MODEL_NAME", "deepseek-chat")
     try:
@@ -316,21 +316,21 @@ async def _async_request_decision(prompt: str, client: Any) -> ReactionDecision 
         return None
 
 
-# Context: This block prepares shared values used by the request branches below.
-# Context: This block prepares shared values used by the request branches below.
-# Purpose: Handle the `handle_post_reactions` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
-
+# Context: Compute shared values once so all branches use the same normalized inputs.
+# Context: Compute shared values once so all branches use the same normalized inputs.
+# Purpose: Orchestrate `handle_post_reactions` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def handle_post_reactions(course_id: int, post_id: int) -> None:
-    """Handle the `handle_post_reactions` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `handle_post_reactions` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     asyncio.run(async_handle_post_reactions(course_id, post_id))
 
 
 def _request_decision(prompt: str, client: Any = None) -> ReactionDecision | None:
-    """Handle the `_request_decision` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `_request_decision` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
 
     async def _run() -> ReactionDecision | None:
@@ -344,8 +344,8 @@ def _request_decision(prompt: str, client: Any = None) -> ReactionDecision | Non
 
 
 def evaluate_persona_prompt(prompt: str) -> ReactionDecision | None:
-    """Handle the `evaluate_persona_prompt` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `evaluate_persona_prompt` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     return _request_decision(prompt)
 

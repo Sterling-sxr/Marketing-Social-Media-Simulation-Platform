@@ -18,11 +18,11 @@ import {
   Printer,
 } from "lucide-react";
 
-/* Purpose: `engagementRate` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
+/* Purpose: `engagementRate` owns one cohesive concern so state transitions and side effects remain easy to trace. */
 function engagementRate(p) {
   const likes = Number(p.likes || 0);
   const comments = Number(p.comments || 0);
-  const views = Math.max(1, Number(p.views || 0)); // Inline explanation: This line clarifies an assumption, guard, or transformation.
+  const views = Math.max(1, Number(p.views || 0)); // Inline explanation: Keep this non-obvious normalization rule explicit.
   return (likes + comments) / views;
 }
 
@@ -119,7 +119,7 @@ function writeStoredBool(key, value) {
   try {
     localStorage.setItem(key, value ? "1" : "0");
   } catch {
-    /* Context: This section groups related logic so shared assumptions, control flow, and side effects are easier to understand. */
+    /* Context: Keep related logic in one section so assumptions and control flow stay explicit. Reason: Localizing side effects lowers review cost and reduces accidental regressions. */
   }
 }
 
@@ -172,7 +172,7 @@ function postsToCsv(posts) {
   return lines.join("\r\n");
 }
 
-/* Purpose: `computeLocalInsights` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
+/* Purpose: `computeLocalInsights` owns one cohesive concern so state transitions and side effects remain easy to trace. */
 function computeLocalInsights(posts) {
   if (!posts.length) {
     return [
@@ -371,7 +371,7 @@ function LocalInsightsSection({ lines }) {
   );
 }
 
-/* Purpose: `KPI` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
+/* Purpose: `KPI` owns one cohesive concern so state transitions and side effects remain easy to trace. */
 function KPI({ label, value }) {
   return (
     <div
@@ -397,7 +397,7 @@ function KPI({ label, value }) {
   );
 }
 
-/* Purpose: `HourLineChart` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
+/* Purpose: `HourLineChart` owns one cohesive concern so state transitions and side effects remain easy to trace. */
 function HourLineChart({
   title = "Best Hour to Post",
   values = [],
@@ -417,7 +417,7 @@ function HourLineChart({
     ? `${title}: no engagement data yet.`
     : `${title}: likes plus comments totals by hour from 0 to 23. Peak at hour ${peak.i} with value ${peak.v}.`;
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const H = height;
   const PAD_L = 60,
     PAD_R = 16,
@@ -427,7 +427,7 @@ function HourLineChart({
   const W = innerW + PAD_L + PAD_R;
   const innerH = H - PAD_T - PAD_B;
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const yMax = Math.max(1, ...safe);
   const yTicks = 5;
   const yVals = Array.from({ length: yTicks + 1 }, (_, i) =>
@@ -436,10 +436,10 @@ function HourLineChart({
   const toX = (i) => PAD_L + (i / 23) * innerW;
   const toY = (v) => PAD_T + innerH - (v / yMax) * innerH;
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const pts = safe.map((v, i) => `${toX(i)},${toY(v)}`).join(" ");
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const [hoverIdx, setHoverIdx] = useState(null);
   const onMove = (e) => {
     const svg = e.currentTarget;
@@ -488,7 +488,7 @@ function HourLineChart({
             </filter>
           </defs>
 
-          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           {yVals.map((t, i) => (
             <g key={`y-${i}`}>
               <line
@@ -512,7 +512,7 @@ function HourLineChart({
             </g>
           ))}
 
-          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <line
             x1={PAD_L}
             y1={PAD_T + innerH}
@@ -530,7 +530,7 @@ function HourLineChart({
             strokeWidth="1.5"
           />
 
-          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           {Array.from({ length: 12 }, (_, k) => k * 2).map((h) => (
             <g key={`xh-${h}`}>
               <line
@@ -553,7 +553,7 @@ function HourLineChart({
             </g>
           ))}
 
-          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <polyline
             points={pts}
             fill="none"
@@ -562,14 +562,14 @@ function HourLineChart({
             strokeLinejoin="round"
           />
 
-          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           {safe.map((v, i) => (
             <circle key={i} cx={toX(i)} cy={toY(v)} r="3.5" fill="#fb923c">
               <title>{`Hour ${i}: ${v}`}</title>
             </circle>
           ))}
 
-          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           {hoverIdx != null && (
             <>
               <line
@@ -621,7 +621,7 @@ function HourLineChart({
             </>
           )}
 
-          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <text
             x={(PAD_L + (W - PAD_R)) / 2}
             y={H - 8}
@@ -662,13 +662,13 @@ function BarChart({
   xTickStep = 1,
   maxLabelLen = 12,
 
-  // Context: This block prepares shared values used by the request branches below.
-  tickFontSize = 16, // Inline explanation: This line clarifies an assumption, guard, or transformation.
-  labelFontSize = 16, // Inline explanation: This line clarifies an assumption, guard, or transformation.
-  valueFontSize = 18, // Inline explanation: This line clarifies an assumption, guard, or transformation.
-  axisTitleFontSize = 16, // Inline explanation: This line clarifies an assumption, guard, or transformation.
-  gapPx = 24, // Inline explanation: This line clarifies an assumption, guard, or transformation.
-  barMaxWidth = 28, // Inline explanation: This line clarifies an assumption, guard, or transformation.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
+  tickFontSize = 16, // Inline explanation: Keep this non-obvious normalization rule explicit.
+  labelFontSize = 16, // Inline explanation: Keep this non-obvious normalization rule explicit.
+  valueFontSize = 18, // Inline explanation: Keep this non-obvious normalization rule explicit.
+  axisTitleFontSize = 16, // Inline explanation: Keep this non-obvious normalization rule explicit.
+  gapPx = 24, // Inline explanation: Keep this non-obvious normalization rule explicit.
+  barMaxWidth = 28, // Inline explanation: Keep this non-obvious normalization rule explicit.
 }) {
   const [hoverIdx, setHoverIdx] = useState(null);
 
@@ -681,7 +681,7 @@ function BarChart({
     ? `${title}: no data yet.`
     : `${title}: bar chart with one bar per weekday showing engagement totals.`;
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   let maxVal;
   if (Number.isFinite(yMax) && yMax > 0) {
     maxVal = yMax;
@@ -707,7 +707,7 @@ function BarChart({
     );
   }
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const H = height;
   const PAD_L = 70,
     PAD_R = 16,
@@ -717,7 +717,7 @@ function BarChart({
   const W = innerW + PAD_L + PAD_R;
   const innerH = H - PAD_T - PAD_B;
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const computed = Math.floor(innerW / Math.max(1, labels.length)) - gapPx;
   const barW = Math.max(8, Math.min(barMaxWidth, computed));
   const gap = gapPx;
@@ -745,7 +745,7 @@ function BarChart({
           role="img"
           aria-label={chartAriaLabel}
         >
-          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           {tickVals.map((t, i) => (
             <g key={`g-${i}`}>
               <line
@@ -769,7 +769,7 @@ function BarChart({
             </g>
           ))}
 
-          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <line
             x1={PAD_L}
             y1={PAD_T + innerH}
@@ -787,7 +787,7 @@ function BarChart({
             strokeWidth="1.6"
           />
 
-          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           {safeVals.map((v, i) => {
             const x = PAD_L + i * (barW + gap) + gap / 2;
             const y = toY(v);
@@ -815,19 +815,19 @@ function BarChart({
                   </title>
                 </rect>
 
-                {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+                {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
                 <text
                   x={x + barW / 2}
                   y={y - 10}
                   textAnchor="middle"
                   fontSize={valueFontSize}
-                  fill={hovered ? "#7c3aed" : "#ca8a04"} // Inline explanation: This line clarifies an assumption, guard, or transformation.
+                  fill={hovered ? "#7c3aed" : "#ca8a04"} // Inline explanation: Keep this non-obvious normalization rule explicit.
                   fontWeight="800"
                 >
                   {allIntegers ? v : valueFormatter(v)}
                 </text>
 
-                {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+                {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
                 {showLabel && (
                   <text
                     x={x + barW / 2}
@@ -844,7 +844,7 @@ function BarChart({
             );
           })}
 
-          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           {xLabel ? (
             <text
               x={(PAD_L + (W - PAD_R)) / 2}
@@ -1171,8 +1171,8 @@ function CompareTwoPosts({ posts, navigate }) {
   );
 }
 
-/* Context: This section groups related logic so shared assumptions, control flow, and side effects are easier to understand. */
-// Purpose: `TopPostsList` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable.
+/* Context: Keep related logic in one section so assumptions and control flow stay explicit. Reason: Localizing side effects lowers review cost and reduces accidental regressions. */
+// Purpose: `TopPostsList` owns one cohesive concern so state transitions and side effects remain easy to trace.
 function TopPostsList({ posts, onOpenAnalytics, totalDatasetSize }) {
   const top = useMemo(
     () =>
@@ -1297,7 +1297,7 @@ function TopPostsList({ posts, onOpenAnalytics, totalDatasetSize }) {
   );
 }
 
-// Purpose: `BestTimeSection` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable.
+// Purpose: `BestTimeSection` owns one cohesive concern so state transitions and side effects remain easy to trace.
 function BestTimeSection({ posts }) {
   const byHour = useMemo(() => {
     const arr = Array(24).fill(0);
@@ -1334,7 +1334,7 @@ function BestTimeSection({ posts }) {
       </p>
 
       <div className="space-y-8">
-        {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+        {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
         <HourLineChart
           title="Best Hour to Post"
           values={byHour}
@@ -1343,7 +1343,7 @@ function BestTimeSection({ posts }) {
           yLabel="Engagement (likes + comments)"
         />
 
-        {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+        {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
         <BarChart
           title="Best Day to Post"
           labels={["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]}
@@ -1352,22 +1352,22 @@ function BestTimeSection({ posts }) {
           yLabel="Engagement (likes + comments)"
           height={300}
           canvasWidth={400}
-          barColorClass="fill-yellow-300" // Inline explanation: This line clarifies an assumption, guard, or transformation.
-          hoverBarClass="fill-accent-300" // Inline explanation: This line clarifies an assumption, guard, or transformation.
-          // Context: This block prepares shared values used by the request branches below.
+          barColorClass="fill-yellow-300" // Inline explanation: Keep this non-obvious normalization rule explicit.
+          hoverBarClass="fill-accent-300" // Inline explanation: Keep this non-obvious normalization rule explicit.
+          // Context: Compute shared values once so all branches use the same normalized inputs.
           tickFontSize={15}
           labelFontSize={15}
           valueFontSize={15}
           axisTitleFontSize={15}
-          gapPx={30} // Inline explanation: This line clarifies an assumption, guard, or transformation.
-          barMaxWidth={80} // Inline explanation: This line clarifies an assumption, guard, or transformation.
+          gapPx={30} // Inline explanation: Keep this non-obvious normalization rule explicit.
+          barMaxWidth={80} // Inline explanation: Keep this non-obvious normalization rule explicit.
         />
       </div>
     </section>
   );
 }
 
-/* Purpose: `StudentAnalysisPage` owns a single responsibility, uses clear input/output boundaries, and keeps behavior predictable. */
+/* Purpose: `StudentAnalysisPage` owns one cohesive concern so state transitions and side effects remain easy to trace. */
 export default function StudentAnalysisPage() {
   const { authUser, pushToast } = useApp();
   const navigate = useNavigate();
@@ -1422,7 +1422,7 @@ export default function StudentAnalysisPage() {
     setFilterSortKey("engagement_desc");
   };
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   useEffect(() => {
     if (!authUser) return;
     let cancelled = false;
@@ -1487,7 +1487,7 @@ export default function StudentAnalysisPage() {
     };
   }, [authUser]);
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   const metrics = useMemo(() => {
     const totalPosts = filteredPosts.length;
     const totalLikes = filteredPosts.reduce((s, p) => s + (p.likes || 0), 0);
@@ -1564,7 +1564,7 @@ export default function StudentAnalysisPage() {
             </div>
           ) : null}
 
-          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <KPI label="Posts" value={metrics.totalPosts} />
             <KPI label="Likes" value={metrics.totalLikes} />
@@ -1580,7 +1580,7 @@ export default function StudentAnalysisPage() {
             <CompareTwoPosts posts={filteredPosts} navigate={navigate} />
           </div>
 
-          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <div className="mt-4">
             <TopPostsList
               posts={filteredPosts}
@@ -1591,7 +1591,7 @@ export default function StudentAnalysisPage() {
             />
           </div>
 
-          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <div className="mt-4">
             <BestTimeSection posts={filteredPosts} />
           </div>

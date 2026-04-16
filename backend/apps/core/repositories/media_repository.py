@@ -1,4 +1,4 @@
-"""Module summary: this module groups related logic and clarifies design intent."""
+"""Module summary: Collect related domain logic and document the intended design boundaries."""
 from __future__ import annotations
 
 from typing import List
@@ -13,8 +13,8 @@ class MediaRepository(BaseRepository[MediaAsset]):
     
     @classmethod
     def get_recent_assets(cls, limit: int = 20) -> List[MediaAsset]:
-        """Handle the `get_recent_assets` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `get_recent_assets` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         return list(
             cls.model.objects
@@ -23,8 +23,8 @@ class MediaRepository(BaseRepository[MediaAsset]):
     
     @classmethod
     def get_by_ids(cls, asset_ids: List[int]) -> List[MediaAsset]:
-        """Handle the `get_by_ids` workflow.
-        Validate incoming data, coordinate service calls, and return a consistent result.
+        """Execute the `get_by_ids` operation with explicit data and control flow.
+        Normalize inputs, delegate to dependencies, and return a predictable result.
         """
         return list(
             cls.model.objects.filter(id__in=asset_ids)

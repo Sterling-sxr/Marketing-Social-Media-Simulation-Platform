@@ -12,7 +12,7 @@ import {
   BotMessageSquare,
   Plus,
 } from "lucide-react";
-import ToastHost from "../../components/ToastHost"; // Inline explanation: This line clarifies an assumption, guard, or transformation.
+import ToastHost from "../../components/ToastHost"; // Inline explanation: Keep this non-obvious normalization rule explicit.
 
 function classNames(...values) {
   return values.filter(Boolean).join(" ");
@@ -57,8 +57,8 @@ export default function AuthenticatedShell({
   links,
   mobileNavLinks,
   hideMobileNav = false,
-  showNotifications = false, // Inline explanation: This line clarifies an assumption, guard, or transformation.
-  /* Context: This section groups related logic so shared assumptions, control flow, and side effects are easier to understand. */
+  showNotifications = false, // Inline explanation: Keep this non-obvious normalization rule explicit.
+  /* Context: Keep related logic in one section so assumptions and control flow stay explicit. Reason: Localizing side effects lowers review cost and reduces accidental regressions. */
   printFriendlyChrome = false,
 }) {
   const navigate = useNavigate();
@@ -74,7 +74,7 @@ export default function AuthenticatedShell({
   } = useApp();
   const isTeacherUser = Boolean(authUser?.is_superuser || authUser?.is_staff);
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   useEffect(() => {
     if (authUser && showNotifications) {
       fetchNotifications({ silent: true }).catch(() => {});
@@ -86,7 +86,7 @@ export default function AuthenticatedShell({
     fetchCourses().catch(() => {});
   }, [authUser, isTeacherUser, fetchCourses]);
 
-  // Context: This block prepares shared values used by the request branches below.
+  // Context: Compute shared values once so all branches use the same normalized inputs.
   useEffect(() => {
     if (!showNotifications) return;
     const onVis = () => {
@@ -112,8 +112,8 @@ export default function AuthenticatedShell({
     if (links && links.length) return links;
     const isAdminUser = Boolean(authUser?.is_superuser || authUser?.is_staff);
     if (isAdminUser) {
-      // Context: This block prepares shared values used by the request branches below.
-      // Context: This block prepares shared values used by the request branches below.
+      // Context: Compute shared values once so all branches use the same normalized inputs.
+      // Context: Compute shared values once so all branches use the same normalized inputs.
       const dashCourseMatch = location.pathname.match(/^\/dashboard\/courses\/(\d+)/);
       if (dashCourseMatch?.[1]) {
         const currentCourseId = dashCourseMatch[1];
@@ -193,8 +193,8 @@ export default function AuthenticatedShell({
           },
         ];
       }
-      // Context: This block prepares shared values used by the request branches below.
-      // Context: This block prepares shared values used by the request branches below.
+      // Context: Compute shared values once so all branches use the same normalized inputs.
+      // Context: Compute shared values once so all branches use the same normalized inputs.
       return [
         {
           to: "/courses",
@@ -278,7 +278,7 @@ export default function AuthenticatedShell({
     const linksByTo = new Map(sidebarLinks.map((item) => [item.to, item]));
     const picked = preferred.map((to) => linksByTo.get(to)).filter(Boolean);
     if (picked.length >= 4) return picked.slice(0, 5);
-    // Context: This block prepares shared values used by the request branches below.
+    // Context: Compute shared values once so all branches use the same normalized inputs.
     return dedupeByTo(sidebarLinks).slice(0, 5);
   }, [mobileNavLinks, sidebarLinks, authUser?.id]);
 
@@ -289,10 +289,10 @@ export default function AuthenticatedShell({
         printFriendlyChrome && "at-print-student-analysis"
       )}
     >
-      {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+      {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
       <header className="sticky top-0 z-40 border-b border-brand-100/70 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/60">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 lg:px-6 lg:py-4">
-          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <button
             type="button"
             onClick={() => navigate("/studenthome")}
@@ -313,9 +313,9 @@ export default function AuthenticatedShell({
               Bread
             </span>
           </button>
-          {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <div className="flex min-w-0 items-center gap-2 sm:gap-3 lg:gap-5">
-            {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+            {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
             <button
               type="button"
               onClick={() => navigate("/profile")}
@@ -352,7 +352,7 @@ export default function AuthenticatedShell({
               </div>
             </button>
 
-            {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+            {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
             <button
               type="button"
               className="group inline-flex items-center gap-2 rounded-2xl border border-brand-200 bg-white
@@ -434,7 +434,7 @@ export default function AuthenticatedShell({
         ) : null}
       </header>
 
-      {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+      {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-3 py-3 sm:gap-4 sm:px-4 sm:py-4 lg:flex-row lg:gap-6 lg:px-6 lg:py-8">
         <aside className="hidden w-16 flex-shrink-0 flex-col gap-2 rounded-3xl border border-brand-100/80 bg-white/75 p-2 shadow-soft backdrop-blur lg:flex lg:w-60 lg:p-4">
           <div className="hidden lg:block px-2 pb-1">
@@ -444,8 +444,8 @@ export default function AuthenticatedShell({
           </div>
           {sidebarLinks.map((link) => {
             const active = isActiveLink(link.to, location);
-            // Context: This block prepares shared values used by the request branches below.
-            // Context: This block prepares shared values used by the request branches below.
+            // Context: Compute shared values once so all branches use the same normalized inputs.
+            // Context: Compute shared values once so all branches use the same normalized inputs.
             const isMessages = link.to === "/notifications";
             return (
               <NavLink
@@ -473,7 +473,7 @@ export default function AuthenticatedShell({
                   )}
                 >
                   {link.icon}
-                  {/* Context: This UI section keeps related rendering and event logic together so state flow and intent are easier to follow. */}
+                  {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
                   {isMessages && unread > 0 && (
                     <span
                       className="absolute -right-1.5 -top-1.5 inline-flex min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold leading-5 text-white shadow"

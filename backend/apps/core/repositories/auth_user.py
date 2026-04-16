@@ -1,4 +1,4 @@
-"""Module summary: this module groups related logic and clarifies design intent."""
+"""Module summary: Collect related domain logic and document the intended design boundaries."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -18,22 +18,22 @@ class UserCreationResult:
 
 
 def get_by_email(email: str) -> Optional[AbstractBaseUser]:
-    """Handle the `get_by_email` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `get_by_email` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     return UserModel.objects.filter(email__iexact=email).first()
 
 
 def get_by_username(username: str) -> Optional[AbstractBaseUser]:
-    """Handle the `get_by_username` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `get_by_username` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     return UserModel.objects.filter(username__iexact=username).first()
 
 
 def create_user(*, username: str, email: str, password: str) -> UserCreationResult:
-    """Handle the `create_user` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `create_user` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     try:
         user = UserModel.objects.create_user(
@@ -43,7 +43,7 @@ def create_user(*, username: str, email: str, password: str) -> UserCreationResu
         )
         return UserCreationResult(user=user, created=True)
     except IntegrityError:
-        # Context: This block prepares shared values used by the request branches below.
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         existing = get_by_username(username)
         if existing is None:
             raise

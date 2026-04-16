@@ -11,8 +11,9 @@ from .course_post_controller import _ensure_authenticated
 
 
 @csrf_exempt
-# Purpose: Handle the `dashboard_course_segmentation` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `dashboard_course_segmentation` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def dashboard_course_segmentation(request: HttpRequest, course_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:
@@ -36,8 +37,9 @@ def dashboard_course_segmentation(request: HttpRequest, course_id: int) -> JsonR
 
 
 @csrf_exempt
-# Purpose: Handle the `admin_course_post_segmentation` workflow and keep behavior predictable.
-# Details: Validate incoming data, call dependent services, and return a stable response.
+# Purpose: Orchestrate `admin_course_post_segmentation` with clear validation, dependency calls, and response mapping.
+# Input contract: Normalize required values early and fail fast on malformed payloads.
+# Output contract: Return a stable success/error shape after translating service outcomes.
 def admin_course_post_segmentation(request: HttpRequest, course_id: int, post_id: int) -> JsonResponse:
     auth_error = _ensure_authenticated(request)
     if auth_error:

@@ -13,7 +13,7 @@ def _parse_optional_course_id(course_id: object) -> int | None:
     if course_id is None:
         return None
     try:
-        # Context: This block prepares shared values used by the request branches below.
+        # Context: Compute shared values once so all branches use the same normalized inputs.
         course_id_int = int(str(course_id).strip())
         return course_id_int
     except (TypeError, ValueError):
@@ -26,8 +26,8 @@ def list_notifications(
     limit: int = 50,
     course_id: object | None = None,
 ) -> tuple[list[Notification], int]:
-    """Handle the `list_notifications` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `list_notifications` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     parsed_course_id = _parse_optional_course_id(course_id)
     queryset = Notification.objects.filter(recipient=recipient)
@@ -38,8 +38,8 @@ def list_notifications(
 
 
 def mark_as_read(*, recipient: str, ids: Iterable[int], course_id: object | None = None) -> int:
-    """Handle the `mark_as_read` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `mark_as_read` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     ids = list(ids)
     if not ids:
@@ -52,8 +52,8 @@ def mark_as_read(*, recipient: str, ids: Iterable[int], course_id: object | None
 
 
 def mark_all_as_read(*, recipient: str, course_id: object | None = None) -> int:
-    """Handle the `mark_all_as_read` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `mark_all_as_read` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     parsed_course_id = _parse_optional_course_id(course_id)
     qs = Notification.objects.filter(recipient=recipient, is_read=False)
@@ -72,8 +72,8 @@ def create_notification(
     link: str,
     metadata: dict | None = None,
 ) -> dict:
-    """Handle the `create_notification` workflow.
-    Validate incoming data, coordinate service calls, and return a consistent result.
+    """Execute the `create_notification` operation with explicit data and control flow.
+    Normalize inputs, delegate to dependencies, and return a predictable result.
     """
     notification = Notification.objects.create(
         recipient=recipient,
