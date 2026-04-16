@@ -121,11 +121,7 @@ def list_user_courses_view(request: HttpRequest, user_id: int) -> JsonResponse:
     if not is_admin and request.user.id != user_id:
         return JsonResponse({"error": "Forbidden"}, status=403)
 
-    memberships = (
-        CourseMemberRepository.model.objects.filter(user_id=user_id)
-        .select_related("course")
-        .order_by("course__course_code")
-    )
+    memberships = CourseMemberRepository.model.objects.filter(user_id=user_id).select_related("course").order_by("course__course_code")
     items = []
     for member in memberships:
         course = member.course

@@ -1,18 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
+import { useAuth } from "../../context/AuthContext";
 import { getJson } from "../../lib/api";
+import { resolveCourseScopedTarget } from "../../lib/courseScopeNavigation";
+import { isTeacher } from "../../lib/access";
 import AuthenticatedShell from "../components/AuthenticatedShell";
 import Feedback from "../components/Feedback";
 // import { Sparkles, X } from "lucide-react";
 import {
-  RadarChart,
-  Radar,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Legend,
-  Tooltip as RadarTooltip,
   BarChart,
   Bar,
   XAxis,
@@ -21,9 +17,6 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-// Added: floating-button icon
-import { Sparkles } from "lucide-react";
-
 /* Dashboard chart palette aligned with global brand tokens */
 const DONUT = {
   peach50: "#EEF7F9",
@@ -58,34 +51,6 @@ const SENTIMENT_TEXT_COLORS = {
   negative: "text-rose-600",
 };
 
-// Kept for potential progress-bar fallback
-function SentimentBar({ label, value }) {
-  const pct = Math.min(Math.max(value ?? 0, 0), 100);
-  const width = `${pct}%`;
-  const SENTIMENT_COLORS = {
-    positive: "bg-accent-500",
-    neutral: "bg-accent-500",
-    negative: "bg-rose-500",
-  };
-  return (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
-        <span className="capitalize">{label}</span>
-        <span>{pct.toFixed(1)}%</span>
-      </div>
-      <div
-        className="h-3 rounded-full"
-        style={{ backgroundColor: DONUT.peach50 }}
-      >
-        <div
-          className={`h-full rounded-full ${SENTIMENT_COLORS[label]} transition-all`}
-          style={{ width }}
-        />
-      </div>
-    </div>
-  );
-}
-
 // Custom tooltip (course name + two lines of data)
 function CompareTooltip({ active, payload, label }) {
   if (!active || !payload || payload.length === 0) return null;
@@ -106,50 +71,6 @@ function CompareTooltip({ active, payload, label }) {
           Interactions : {interactions}
         </div>
         <div style={{ color: DONUT.lilac300 }}>Posts : {posts}</div>
-      </div>
-    </div>
-  );
-}
-
-/* ========================= Circular info badge component (new) ========================= */
-function InfoBubble({ text }) {
-  const [open, setOpen] = useState(false);
-  const wrapperRef = useRef(null);
-
-  useEffect(() => {
-    const onPointerDown = (event) => {
-      if (!wrapperRef.current?.contains(event.target)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("pointerdown", onPointerDown);
-    return () => document.removeEventListener("pointerdown", onPointerDown);
-  }, []);
-
-  return (
-    <div
-      ref={wrapperRef}
-      className="group relative ml-2 inline-flex align-middle"
-    >
-      <button
-        type="button"
-        className="flex h-6 w-6 items-center justify-center rounded-full border border-slate-300 bg-white/80 text-[11px] font-bold text-slate-600 shadow-sm transition hover:bg-slate-50 active:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-200"
-        aria-label="More information"
-        aria-expanded={open}
-        onClick={() => setOpen((prev) => !prev)}
-      >
-        ?
-      </button>
-
-      <div
-        className={[
-          "absolute left-1/2 z-30 mt-2 w-56 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl bg-slate-900/95 px-3 py-2 text-xs leading-5 text-slate-50 shadow-lg transition-opacity duration-150 sm:w-64",
-          open
-            ? "pointer-events-auto opacity-100"
-            : "pointer-events-none opacity-0 group-hover:opacity-100 group-focus-within:opacity-100",
-        ].join(" ")}
-      >
-        {text}
       </div>
     </div>
   );
@@ -298,14 +219,12 @@ function makeAutoSummary(summary) {
 }
 
 export default function DashboardPage() {
-  const { authUser, authCheckComplete } = useApp();
+  const { pushToast } = useApp();
+  const { authUser, authCheckComplete } = useAuth();
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [status, setStatus] = useState({ loading: true, error: "" });
   const [showCoursesModal, setShowCoursesModal] = useState(false);
-
-  // Added: summary floating-button state
-  const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [sparkSummary, setSparkSummary] = useState("");
   const [sparkStatus, setSparkStatus] = useState({ loading: false, error: "" });
   const [isMobile, setIsMobile] = useState(() =>
@@ -314,9 +233,28 @@ export default function DashboardPage() {
       : false
   );
 
-  const isAdmin = useMemo(
-    () => Boolean(authUser && (authUser.is_superuser || authUser.is_staff)),
-    [authUser]
+  const isAdmin = useMemo(() => isTeacher(authUser), [authUser]);
+  const dashboardCourses = data?.courses || [];
+  const handleNeedCourse = useCallback(() => {
+    pushToast({
+      title: "Course required",
+      message: "Please create or join a course first.",
+    });
+  }, [pushToast]);
+  const openCourseScoped = useCallback(
+    (pathBuilder) => {
+      const target = resolveCourseScopedTarget(dashboardCourses);
+      if (target.state === "single" && target.courseId) {
+        navigate(pathBuilder(target.courseId));
+        return;
+      }
+      if (target.state === "multi") {
+        navigate("/courses/manage");
+        return;
+      }
+      handleNeedCourse();
+    },
+    [dashboardCourses, handleNeedCourse, navigate]
   );
 
   const reloadDashboard = useCallback(() => {
@@ -353,7 +291,8 @@ export default function DashboardPage() {
 
   const sentiment = data?.sentiment || {};
   const lastUpdated = data?.calculated_at ? new Date(data.calculated_at) : null;
-  const courses = data?.courses || [];
+  const courses = dashboardCourses;
+  const topCourse = courses[0] || null;
 
   const sPos = Math.round(
     Math.min(Math.max(Number(sentiment.positive || 0), 0), 100)
@@ -388,15 +327,7 @@ export default function DashboardPage() {
 
   // Added: auto-generated summary text (reacts to data)
   const autoSummary = useMemo(() => makeAutoSummary(data), [data]);
-  const summaryPayloadKey = useMemo(() => JSON.stringify(data || {}), [data]);
-
-  useEffect(() => {
-    setSparkSummary("");
-    setSparkStatus({ loading: false, error: "" });
-  }, [summaryPayloadKey]);
-
-  useEffect(() => {
-    if (!showSummaryModal) return;
+  const handleGenerateSummary = useCallback(() => {
     setSparkStatus({ loading: true, error: "" });
     const controller = new AbortController();
     fetch("/api/ai/analyze/", {
@@ -427,20 +358,17 @@ export default function DashboardPage() {
           error: error.message || "Unable to generate AI summary.",
         });
       });
-    return () => controller.abort();
-  }, [showSummaryModal, summaryPayloadKey, data]);
+  }, [data]);
 
   useEffect(() => {
     setSparkSummary("");
     setSparkStatus({ loading: false, error: "" });
-  }, [summaryPayloadKey]);
+  }, [data]);
 
-  // Shortcut: press ESC to close any modal
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape") {
         setShowCoursesModal(false);
-        setShowSummaryModal(false);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -457,8 +385,6 @@ export default function DashboardPage() {
   }, []);
 
   const barChartWidth = Math.max(compareData.length * 88, 560);
-  const radarWidth = isMobile ? 560 : 720;
-  const radarHeight = isMobile ? 340 : 420;
 
   return (
     <AuthenticatedShell
@@ -476,6 +402,126 @@ export default function DashboardPage() {
 
       {!status.loading && data ? (
         <div className="pb-24 sm:pb-8">
+          <section className="mt-1 rounded-3xl border border-brand-100 bg-white p-4 shadow-sm sm:p-5">
+            <h2 className="text-sm font-semibold text-slate-800 sm:text-base">
+              Insight Navigation
+            </h2>
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
+              <div className="rounded-2xl border border-brand-100 bg-brand-50/60 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Teaching Insights
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand transition hover:border-brand"
+                    onClick={() =>
+                      courses.length === 0 ? handleNeedCourse() : setShowCoursesModal(true)
+                    }
+                  >
+                    Course Dashboard
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand transition hover:border-brand"
+                    onClick={() =>
+                      topCourse
+                        ? navigate(`/dashboard/courses/${topCourse.id}/students`)
+                        : handleNeedCourse()
+                    }
+                  >
+                    Student Dashboard
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand transition hover:border-brand"
+                    onClick={() =>
+                      topCourse
+                        ? navigate(`/dashboard/courses/${topCourse.id}`)
+                        : handleNeedCourse()
+                    }
+                  >
+                    Segmentation
+                  </button>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-brand-100 bg-brand-50/60 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Dashboard Actions
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand transition hover:border-brand"
+                    onClick={reloadDashboard}
+                    disabled={status.loading}
+                  >
+                    {status.loading ? "Refreshing..." : "Refresh"}
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand transition hover:border-brand"
+                    onClick={() =>
+                      topCourse ? navigate(`/courses/${topCourse.id}`) : openCourseScoped((id) => `/courses/${id}`)
+                    }
+                  >
+                    View Course
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand transition hover:border-brand"
+                    onClick={() =>
+                      topCourse
+                        ? navigate(`/courses/${topCourse.id}/community`)
+                        : openCourseScoped((id) => `/courses/${id}/community`)
+                    }
+                  >
+                    Open Community
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="mt-4 rounded-3xl border border-brand-100 bg-white p-4 shadow-sm sm:p-5">
+            <h2 className="text-sm font-semibold text-slate-800 sm:text-base">
+              Recent Discussions Requiring Attention
+            </h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Jump directly into course-scoped community discussions.
+            </p>
+            {courses.length === 0 ? (
+              <p className="mt-3 rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-3 text-sm text-slate-500">
+                No managed courses yet. Create or join a course first.
+              </p>
+            ) : (
+              <ul className="mt-3 space-y-2">
+                {courses.slice(0, 5).map((course) => (
+                  <li
+                    key={course.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-brand-100 bg-brand-50/40 px-3 py-2"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800">
+                        {course.course_code} · {course.name}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Interactions: {course.total_interactions || 0}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      className="rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand transition hover:border-brand"
+                      onClick={() => navigate(`/courses/${course.id}/community`)}
+                    >
+                      Open Community
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
           {lastUpdated ? (
             <div className="mt-1 flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-xs text-slate-500">
@@ -535,49 +581,6 @@ export default function DashboardPage() {
             })}
           </section>
 
-          {/* ======================= Sentiment ======================= */}
-          <section
-            className="rounded-3xl shadow-sm mt-4"
-            style={{
-              border: `1px solid ${DONUT.border}`,
-              background: "#FFFFFF",
-            }}
-          >
-            <div className="p-4 sm:p-6">
-              <h2 className="text-lg font-semibold text-slate-800 sm:text-2xl">
-                Sentiment Analysis
-              </h2>
-              <p className="text-xs text-slate-500">
-                Student post sentiment distribution
-              </p>
-
-              <div className="mt-4 grid grid-cols-1 gap-4 sm:mt-6 sm:gap-6 sm:grid-cols-3">
-                {[
-                  { key: "positive", label: "Positive", value: sPos },
-                  { key: "neutral", label: "Neutral", value: sNeu },
-                  { key: "negative", label: "Negative", value: sNeg },
-                ].map((item) => (
-                  <div
-                    key={item.key}
-                    className="flex min-h-32 flex-col items-center justify-center rounded-2xl py-5 sm:min-h-36 sm:py-8"
-                    style={{ background: "rgba(255, 241, 235, 0.9)" }}
-                  >
-                    <div
-                      className={`text-3xl font-extrabold tracking-tight sm:text-5xl ${
-                        SENTIMENT_TEXT_COLORS[item.key]
-                      }`}
-                    >
-                      {item.value}%
-                    </div>
-                    <div className="mt-2 text-sm font-medium text-slate-600 sm:text-base">
-                      {item.label}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-
           {/* ====================== Course Comparison (BarChart) ====================== */}
           <section
             className="rounded-3xl shadow-sm mt-4"
@@ -587,9 +590,8 @@ export default function DashboardPage() {
             }}
           >
             <div className="p-4 sm:p-6">
-              <h2 className="flex items-center text-lg font-semibold text-slate-800 sm:text-2xl">
+              <h2 className="text-lg font-semibold text-slate-800 sm:text-2xl">
                 Course Comparison Analysis
-                <InfoBubble text="This bar chart compares how many posts and total interactions each course has. Taller bars indicate more activity and engagement in that course." />
               </h2>
               <p className="text-xs text-slate-500">
                 Posts and interactions across different courses
@@ -656,6 +658,74 @@ export default function DashboardPage() {
                 </div>
               )}
             </div>
+          </section>
+
+          {/* ======================= Sentiment ======================= */}
+          <section
+            className="rounded-3xl border border-brand-100 bg-white/90 mt-4 shadow-sm"
+          >
+            <div className="p-4 sm:p-6">
+              <h2 className="text-base font-semibold text-slate-800 sm:text-lg">
+                Sentiment Analysis
+              </h2>
+              <p className="text-xs text-slate-500">
+                Supporting context for the overall tone across managed courses.
+              </p>
+
+              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                {[
+                  { key: "positive", label: "Positive", value: sPos },
+                  { key: "neutral", label: "Neutral", value: sNeu },
+                  { key: "negative", label: "Negative", value: sNeg },
+                ].map((item) => (
+                  <div
+                    key={item.key}
+                    className="rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-4"
+                  >
+                    <div
+                      className={`text-2xl font-extrabold tracking-tight ${
+                        SENTIMENT_TEXT_COLORS[item.key]
+                      }`}
+                    >
+                      {item.value}%
+                    </div>
+                    <div className="mt-1 text-sm font-medium text-slate-600">
+                      {item.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="mt-4 rounded-3xl border border-brand-100 bg-white/90 p-4 shadow-sm sm:p-6">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="text-base font-semibold text-slate-800 sm:text-lg">
+                  AI Summary
+                </h2>
+                <p className="text-xs text-slate-500">
+                  Supporting narrative generated from the same dashboard evidence.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand transition hover:border-brand disabled:opacity-60"
+                onClick={handleGenerateSummary}
+                disabled={sparkStatus.loading}
+              >
+                {sparkStatus.loading ? "Generating..." : "Refresh AI summary"}
+              </button>
+            </div>
+
+            <div className="mt-4 rounded-2xl border border-brand-100 bg-brand-50/50 px-4 py-4 text-sm leading-6 text-slate-700">
+              {sparkSummary || autoSummary}
+            </div>
+            {sparkStatus.error ? (
+              <p className="mt-2 text-xs text-rose-600">
+                {sparkStatus.error} Showing the built-in summary instead.
+              </p>
+            ) : null}
           </section>
         </div>
       ) : null}
@@ -739,277 +809,6 @@ export default function DashboardPage() {
         </div>
       ) : null}
 
-      {/* ====== Radar comparison chart ====== */}
-      <section
-        className="rounded-3xl shadow-sm mt-4"
-        style={{ border: `1px solid ${DONUT.border}`, background: "#FFFFFF" }}
-      >
-        <div className="p-4 sm:p-6">
-          <h2 className="flex items-center text-lg font-semibold text-slate-800 sm:text-2xl">
-            Course Comparison Radar
-            <InfoBubble text="This radar chart normalizes each course on four dimensions: total posts, total interactions, interactions per post, and posts per student. Larger area suggests stronger overall engagement." />
-          </h2>
-          <p className="text-xs text-slate-500 mb-3">
-            Compare each course across multiple engagement dimensions.
-          </p>
-
-          {courses.length === 0 ? (
-            <p className="text-sm text-slate-500">No course data available.</p>
-          ) : (
-            (() => {
-              const maxPosts = Math.max(
-                1,
-                ...courses.map((c) => Number(c.total_posts || 0))
-              );
-              const maxInter = Math.max(
-                1,
-                ...courses.map((c) => Number(c.total_interactions || 0))
-              );
-
-              const metrics = [
-                "Posts",
-                "Interactions",
-                "Engagement/Post",
-                "Post/Student",
-              ];
-
-              const radarData = metrics.map((metric) => {
-                const row = { metric };
-                courses.forEach((c) => {
-                  const key = String(c.course_code || c.id);
-                  const posts = Number(c.total_posts || 0);
-                  const inter = Number(c.total_interactions || 0);
-                  const students = Number(c.registered_students || 0);
-                  const engPerPost = posts > 0 ? inter / posts : 0;
-                  const perStudent = students > 0 ? posts / students : 0;
-
-                  let value = 0;
-                  let raw = 0;
-
-                  if (metric === "Posts") {
-                    value = posts / maxPosts;
-                    raw = posts;
-                  }
-                  if (metric === "Interactions") {
-                    value = inter / maxInter;
-                    raw = inter;
-                  }
-                  if (metric === "Engagement/Post") {
-                    value = Math.min(engPerPost / 10, 1);
-                    raw = engPerPost;
-                  }
-                  if (metric === "Post/Student") {
-                    value = Math.min(perStudent / 10, 1);
-                    raw = perStudent;
-                  }
-
-                  row[key] = value;
-                  row[`${key}__raw`] = raw;
-                });
-                return row;
-              });
-
-              return (
-                <div className="w-full overflow-x-auto">
-                  <div
-                    className="mx-auto h-[360px] min-w-[560px] sm:h-[440px]"
-                    style={{ width: `${radarWidth}px` }}
-                  >
-                    <RadarChart
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={isMobile ? "66%" : "72%"}
-                      width={radarWidth}
-                      height={radarHeight}
-                      data={radarData}
-                    >
-                      <PolarGrid stroke={DONUT.grid} />
-                      <PolarAngleAxis
-                        dataKey="metric"
-                        tick={{ fill: "#64748b", fontSize: isMobile ? 11 : 13 }}
-                      />
-                      <PolarRadiusAxis
-                        angle={30}
-                        domain={[0, 1]}
-                        tick={false}
-                      />
-                      {courses.map((c, i) => {
-                        const hues = [280, 18, 320, 36, 260, 12];
-                        const hue = hues[i % hues.length];
-                        const color = `hsla(${hue}, 70%, 72%, 1)`;
-                        return (
-                          <Radar
-                            key={String(c.course_code || c.id)}
-                            name={`${c.course_code} · ${c.name}`}
-                            dataKey={String(c.course_code || c.id)}
-                            stroke={color}
-                            fill={color}
-                            fillOpacity={0.22}
-                            dot
-                          />
-                        );
-                      })}
-                      <Legend
-                        wrapperStyle={{
-                          fontSize: isMobile ? 10 : 12,
-                          whiteSpace: "normal",
-                        }}
-                      />
-                      <RadarTooltip
-                        contentStyle={{
-                          backgroundColor: "white",
-                          borderRadius: 10,
-                          border: `1px solid ${DONUT.border}`,
-                          fontSize: isMobile ? 11 : 12,
-                        }}
-                        formatter={(val, _seriesName, ctx) => {
-                          const metric = ctx?.payload?.metric;
-                          const dataKey = ctx?.dataKey;
-                          const raw = ctx?.payload?.[`${dataKey}__raw`];
-                          if (metric === "Engagement/Post")
-                            return [
-                              `${(raw ?? 0).toFixed(2)} interactions/post`,
-                              metric,
-                            ];
-                          if (metric === "Post/Student")
-                            return [
-                              `${(raw ?? 0).toFixed(2)} posts/student`,
-                              metric,
-                            ];
-                          if (metric === "Posts" || metric === "Interactions")
-                            return [`${raw ?? 0}`, metric];
-                          return [`${(Number(val) * 100).toFixed(1)}%`, metric];
-                        }}
-                      />
-                    </RadarChart>
-                  </div>
-                </div>
-              );
-            })()
-          )}
-        </div>
-      </section>
-
-      {/* ============ Floating Spark Summary ============ */}
-      <button
-        type="button"
-        aria-label="Open auto summary"
-        title="Spark Summary"
-        onClick={() => setShowSummaryModal(true)}
-        className={[
-          "fixed z-40 bottom-4 right-4 h-12 w-12 rounded-full sm:bottom-6 sm:right-6 sm:h-14 sm:w-14",
-          "shadow-lg transition-all focus:outline-none focus-visible:ring-4",
-          "flex items-center justify-center",
-        ].join(" ")}
-        style={{
-          background:
-            "conic-gradient(from 180deg, #FDBA94, #EDEAFF, #FFF1EB, #FDBA94)",
-          border: `1px solid ${DONUT.borderStrong}`,
-        }}
-      >
-        <Sparkles
-          className="h-5 w-5 text-slate-800 sm:h-6 sm:w-6"
-          aria-hidden="true"
-        />
-      </button>
-
-      {/* ============ Summary modal ============ */}
-      {showSummaryModal ? (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/35 p-0 sm:items-center sm:p-4"
-          onClick={() => setShowSummaryModal(false)}
-          role="presentation"
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="spark-summary-title"
-            className="flex max-h-[90vh] w-full flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:max-h-[80vh] sm:max-w-2xl sm:rounded-3xl"
-            style={{ border: `1px solid ${DONUT.border}` }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div
-              className="sticky top-0 z-10 flex items-center justify-between border-b px-4 py-3 sm:px-5 sm:py-4"
-              style={{
-                borderColor: DONUT.border,
-                background: "linear-gradient(135deg, #FFE6DA 0%, #EDEAFF 100%)",
-              }}
-            >
-              <div>
-                <h3
-                  id="spark-summary-title"
-                  className="text-lg font-semibold text-slate-800 sm:text-xl"
-                >
-                  Spark Summary
-                </h3>
-                <p className="text-xs text-slate-500">
-                  Auto-generated from your current dashboard data.
-                </p>
-              </div>
-              <button
-                type="button"
-                aria-label="Close"
-                title="Close"
-                onClick={() => setShowSummaryModal(false)}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-rose-300 bg-rose-100 text-xl font-bold text-rose-700 transition hover:bg-rose-300 hover:text-white focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-200"
-                style={{
-                  lineHeight: "1",
-                }}
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="min-h-0 flex-1 overflow-y-auto">
-              <div className="px-4 py-4 sm:px-5">
-                <div
-                  className="whitespace-pre-wrap rounded-xl px-3 py-3 text-sm leading-6 text-slate-800 sm:text-[15px] sm:leading-7"
-                  style={{
-                    background: "#FFFFFF",
-                    border: `1px solid ${DONUT.peach100}`,
-                    minHeight: 120,
-                  }}
-                >
-                  {sparkStatus.loading
-                    ? "Generating AI summary..."
-                    : sparkSummary || autoSummary}
-                </div>
-                {sparkStatus.error ? (
-                  <p className="mt-2 text-xs text-red-500">
-                    {sparkStatus.error} Using a fallback summary instead.
-                  </p>
-                ) : null}
-
-                <div className="mt-4 flex flex-col items-start gap-2 sm:flex-row sm:items-center">
-                  <button
-                    type="button"
-                    className="rounded-xl px-3 py-2 text-xs font-semibold transition"
-                    style={{
-                      border: `1px solid ${DONUT.border}`,
-                      background: DONUT.peach50,
-                      color: DONUT.slate600,
-                    }}
-                    onClick={() => {
-                      navigator.clipboard?.writeText(
-                        sparkSummary || autoSummary
-                      );
-                    }}
-                    disabled={sparkStatus.loading}
-                  >
-                    Copy Summary
-                  </button>
-                  {lastUpdated ? (
-                    <span className="text-xs text-slate-500">
-                      Generated from data updated at{" "}
-                      {lastUpdated.toLocaleString("en-US", { hour12: false })}
-                    </span>
-                  ) : null}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </AuthenticatedShell>
   );
 }

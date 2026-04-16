@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { useApp } from "../context/AppContext";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { useCourse } from "../context/CourseContext";
 import AuthenticatedShell from "./components/AuthenticatedShell";
+import CourseSecondaryNav from "./components/CourseSecondaryNav";
 import { getJson, deleteJson } from "../lib/api";
+import { canManageCourse } from "../lib/access";
 import {
-  ArrowLeft,
   Bell,
   BookOpen,
   BotMessageSquare,
@@ -336,7 +338,8 @@ export default function CourseMaterialsPage() {
   const { courseId: courseIdParam } = useParams();
   const courseId = Number(courseIdParam);
   const navigate = useNavigate();
-  const { authUser, authCheckComplete, courses, fetchCourses } = useApp();
+  const { authUser, authCheckComplete } = useAuth();
+  const { courses, fetchCourses } = useCourse();
 
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -346,11 +349,9 @@ export default function CourseMaterialsPage() {
   const [courseName, setCourseName] = useState("");
 
   const isTeacherOrAdmin = useMemo(() => {
-    if (!authUser) return false;
-    if (authUser.is_superuser || authUser.is_staff) return true;
     const allCourses = [...(courses.joined || []), ...(courses.available || [])];
     const membership = allCourses.find((c) => c.id === courseId);
-    return membership?.role === "teacher";
+    return canManageCourse(authUser, membership);
   }, [authUser, courses, courseId]);
 
   useEffect(() => {
@@ -403,22 +404,6 @@ export default function CourseMaterialsPage() {
     }
   };
 
-  const courseLinks = useMemo(
-    () => [
-      {
-        to: `/courses/${courseId}`,
-        label: "Course Feed",
-        icon: <MessageSquare className="h-5 w-5" />,
-      },
-      {
-        to: `/courses/${courseId}/materials`,
-        label: "Materials",
-        icon: <BookOpen className="h-5 w-5" />,
-      },
-    ],
-    [courseId]
-  );
-
   // Mobile bottom nav always shows the 5 global destinations so users
   // are never stranded when inside a course-specific page.
   const globalMobileNav = useMemo(
@@ -432,25 +417,36 @@ export default function CourseMaterialsPage() {
     []
   );
 
+  if (authCheckComplete && !authUser) {
+    return <Navigate to="/login" replace />;
+  }
   if (!authCheckComplete || !authUser) return null;
 
   return (
     <AuthenticatedShell
       title={courseName ? `${courseName} — Materials` : "Course Materials"}
       subtitle="Download lecture slides, assignments, and resources for this course."
-      links={courseLinks}
       mobileNavLinks={globalMobileNav}
     >
       <div className="space-y-5">
+        <CourseSecondaryNav courseId={courseId} />
         {/* Header row */}
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <Link
-            to={`/courses/${courseId}`}
-            className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-brand"
+          <button
+            type="button"
+            onClick={() => navigate(`/courses/${courseId}`)}
+            className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand transition hover:border-brand"
           >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Feed
-          </Link>
+            View Course
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate(`/courses/${courseId}/community`)}
+            className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand transition hover:border-brand"
+          >
+            Open Community
+          </button>
 
           <button
             type="button"

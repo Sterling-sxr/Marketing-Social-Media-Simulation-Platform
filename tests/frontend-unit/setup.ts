@@ -76,3 +76,18 @@ afterEach(() => {
   vi.useRealTimers();
   vi.restoreAllMocks();
 });
+if (!globalThis.window.matchMedia) {
+  Object.defineProperty(globalThis.window, 'matchMedia', {
+    writable: true,
+    value: (query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    }),
+  });
+}

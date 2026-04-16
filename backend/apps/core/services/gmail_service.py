@@ -16,8 +16,7 @@ def build_gmail_flow() -> Flow:
     ]
     if not all(required):
         raise GmailNotConfiguredError(
-            "Missing Gmail OAuth configuration. Set GMAIL_CLIENT_ID, "
-            "GMAIL_CLIENT_SECRET and GMAIL_REDIRECT_URI in the environment."
+            "Missing Gmail OAuth configuration. Set GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET and GMAIL_REDIRECT_URI in the environment."
         )
 
     client_config = {

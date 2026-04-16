@@ -9,8 +9,8 @@ import {
   FileText,
   BarChart3,
   LayoutDashboard,
-  Wrench,
   BotMessageSquare,
+  Plus,
 } from "lucide-react";
 import ToastHost from "../../components/ToastHost"; // Global Toast host
 
@@ -58,6 +58,8 @@ export default function AuthenticatedShell({
   mobileNavLinks,
   hideMobileNav = false,
   showNotifications = false, // Pages that need auto-polling pass true
+  /** When true, @media print hides chrome so the page can print main content only. */
+  printFriendlyChrome = false,
 }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -67,7 +69,10 @@ export default function AuthenticatedShell({
     notifications,
     notificationStatus,
     fetchNotifications,
+    courses,
+    fetchCourses,
   } = useApp();
+  const isTeacherUser = Boolean(authUser?.is_superuser || authUser?.is_staff);
 
   // On first load or account switch, fetch once when auto-polling is enabled
   useEffect(() => {
@@ -75,6 +80,11 @@ export default function AuthenticatedShell({
       fetchNotifications({ silent: true }).catch(() => {});
     }
   }, [authUser, showNotifications, fetchNotifications]);
+
+  useEffect(() => {
+    if (!authUser || !isTeacherUser) return;
+    fetchCourses().catch(() => {});
+  }, [authUser, isTeacherUser, fetchCourses]);
 
   // Refresh once when the tab/window becomes visible (prevents missed notifications)
   useEffect(() => {
@@ -100,6 +110,70 @@ export default function AuthenticatedShell({
 
   const sidebarLinks = useMemo(() => {
     if (links && links.length) return links;
+    const isAdminUser = Boolean(authUser?.is_superuser || authUser?.is_staff);
+    if (isAdminUser) {
+      if (
+        location.pathname === "/courses" ||
+        location.pathname === "/courses/manage" ||
+        location.pathname === "/courses/create" ||
+        location.pathname === "/ai-users" ||
+        location.pathname.startsWith("/dashboard") ||
+        location.pathname.endsWith("/ai-users")
+      ) {
+        return [
+          {
+            to: "/courses/manage",
+            label: "Course Manage",
+            icon: <BookOpen className="h-5 w-5" />,
+          },
+          {
+            to: "/ai-users",
+            label: "AI User",
+            icon: <BotMessageSquare className="h-5 w-5" />,
+          },
+          {
+            to: "/dashboard",
+            label: "Dashboard",
+            icon: <LayoutDashboard className="h-5 w-5" />,
+          },
+        ];
+      }
+      const courseMatch = location.pathname.match(/^\/courses\/(\d+)/);
+      if (courseMatch?.[1]) {
+        const currentCourseId = courseMatch[1];
+        return [
+          {
+            to: `/courses/${currentCourseId}/community`,
+            label: "Posts",
+            icon: <FileText className="h-5 w-5" />,
+          },
+          {
+            to: `/dashboard/courses/${currentCourseId}`,
+            label: "Analyze",
+            icon: <BarChart3 className="h-5 w-5" />,
+          },
+          {
+            to: "/notifications",
+            label: "Messages",
+            icon: <Bell className="h-5 w-5" />,
+          },
+        ];
+      }
+      // Teacher console keeps only two top-level modules:
+      // Courses / Dashboard.
+      return [
+        {
+          to: "/courses",
+          label: "Courses",
+          icon: <BookOpen className="h-5 w-5" />,
+        },
+        {
+          to: "/dashboard",
+          label: "Dashboard",
+          icon: <LayoutDashboard className="h-5 w-5" />,
+        },
+      ];
+    }
     const uid = authUser?.id;
     const base = [
       {
@@ -139,28 +213,14 @@ export default function AuthenticatedShell({
       },
     ];
 
-    const admin =
-      authUser?.is_superuser || authUser?.is_staff
-        ? [
-            {
-              to: "/dashboard",
-              label: "Dashboard",
-              icon: <LayoutDashboard className="h-5 w-5" />,
-            },
-            {
-              to: "/courses/manage",
-              label: "Course Manage",
-              icon: <Wrench className="h-5 w-5" />,
-            },
-          ]
-        : [];
-
-    const merged = [...base.slice(0, 2), ...admin, ...base.slice(2)];
-    const uniq = Array.from(new Map(merged.map((i) => [i.to, i])).values());
-    return uniq;
-  }, [links, authUser?.id, authUser?.is_superuser, authUser?.is_staff]);
+    return base;
+  }, [links, authUser?.id, authUser?.is_superuser, authUser?.is_staff, location.pathname]);
 
   const compactName = displayName || "User";
+  const teacherCourses = useMemo(() => {
+    if (!isTeacherUser) return [];
+    return [...(courses?.joined || [])];
+  }, [isTeacherUser, courses?.joined]);
   const compactLinks = useMemo(() => {
     const dedupeByTo = (items) =>
       Array.from(
@@ -170,16 +230,17 @@ export default function AuthenticatedShell({
     if (mobileNavLinks && mobileNavLinks.length) {
       return dedupeByTo(mobileNavLinks).slice(0, 5);
     }
-    const uid = authUser?.id;
-    const preferred = Array.from(
-      new Set([
-        "/studenthome",
-        "/courses",
-        "/search",
-        "/notifications",
-        "/ai-tutor",
-      ])
-    );
+    const preferred = authUser?.is_superuser || authUser?.is_staff
+      ? ["/courses", "/dashboard"]
+      : Array.from(
+          new Set([
+            "/studenthome",
+            "/courses",
+            "/search",
+            "/notifications",
+            "/ai-tutor",
+          ])
+        );
     const linksByTo = new Map(sidebarLinks.map((item) => [item.to, item]));
     const picked = preferred.map((to) => linksByTo.get(to)).filter(Boolean);
     if (picked.length >= 4) return picked.slice(0, 5);
@@ -188,23 +249,28 @@ export default function AuthenticatedShell({
   }, [mobileNavLinks, sidebarLinks, authUser?.id]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-accent-50">
+    <div
+      className={classNames(
+        "min-h-screen bg-gradient-to-br from-brand-50 via-white to-accent-50",
+        printFriendlyChrome && "at-print-student-analysis"
+      )}
+    >
       {/* Top navigation bar */}
-      <header className="border-b border-brand-100/70 bg-white/80 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-brand-100/70 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/60">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 lg:px-6 lg:py-4">
           {/* Bread brand section */}
           <button
             type="button"
             onClick={() => navigate("/studenthome")}
             aria-label="Return to student home"
-            className="group relative flex items-center gap-2.5 text-xl font-bold rounded-lg
+            className="group relative flex min-w-0 items-center gap-2.5 rounded-lg text-xl font-bold
                        leading-none focus:outline-none focus:ring-2 focus:ring-brand/30 transition"
           >
             <img
               src="/logo.jpg"
               alt="Bread logo"
-              className="shrink-0 h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 rounded-lg object-cover
-                         transition-transform duration-200 group-hover:scale-105"
+              className="shrink-0 h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 rounded-xl object-cover
+                         ring-1 ring-brand-100 shadow-sm transition-transform duration-200 group-hover:scale-105"
             />
             <span
               className="bg-[linear-gradient(90deg,#1B596E_0%,#206F88_38%,#1DAF92_100%)]
@@ -286,11 +352,62 @@ export default function AuthenticatedShell({
             </button>
           </div>
         </div>
+        {isTeacherUser ? (
+          <div className="mx-auto w-full max-w-6xl px-3 pb-3 sm:px-4 lg:px-6">
+            <div className="flex items-center gap-2 rounded-2xl border border-brand-100/80 bg-white/80 px-3 py-2">
+              <button
+                type="button"
+                onClick={() => navigate("/courses")}
+                className="shrink-0 rounded-full border border-brand bg-gradient-to-r from-brand to-brand-dark px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:brightness-110 hover:shadow-md"
+              >
+                Course Center
+              </button>
+              <div className="min-w-0 flex-1 overflow-x-auto">
+                <div className="flex items-center gap-2">
+                  {teacherCourses.length > 0 ? (
+                    teacherCourses.map((course) => (
+                      <button
+                        key={course.id}
+                        type="button"
+                        onClick={() => navigate(`/courses/${course.id}`)}
+                        className="shrink-0 rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand transition hover:border-brand hover:bg-brand-50"
+                        title={`${course.course_code || ""} ${course.name || ""}`.trim()}
+                      >
+                        {course.course_code || `Course ${course.id}`}
+                      </button>
+                    ))
+                  ) : (
+                    <p className="text-xs font-medium text-slate-500">
+                      You do not have any courses yet. Please create a course.
+                    </p>
+                  )}
+                </div>
+              </div>
+              <button
+                type="button"
+                className="group inline-flex shrink-0 items-center gap-2 rounded-full border border-brand bg-brand
+                        px-3 py-1.5 text-xs font-semibold text-white
+                        shadow-soft transition-all duration-200 hover:bg-brand/90
+                        hover:shadow-brand hover:scale-[1.02] active:scale-[0.99]
+                        focus:outline-none focus:ring-2 focus:ring-brand/30"
+                onClick={() => navigate("/courses")}
+              >
+                <Plus className="h-4 w-4" />
+                <span>Join Course</span>
+              </button>
+            </div>
+          </div>
+        ) : null}
       </header>
 
       {/* Main content region */}
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-3 py-3 sm:gap-4 sm:px-4 sm:py-4 lg:flex-row lg:gap-6 lg:px-6 lg:py-8">
-        <aside className="hidden w-16 flex-shrink-0 flex-col gap-2 rounded-3xl border border-brand-100/80 bg-white/85 p-2 shadow-soft lg:flex lg:w-60 lg:p-4">
+        <aside className="hidden w-16 flex-shrink-0 flex-col gap-2 rounded-3xl border border-brand-100/80 bg-white/75 p-2 shadow-soft backdrop-blur lg:flex lg:w-60 lg:p-4">
+          <div className="hidden lg:block px-2 pb-1">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              Navigation
+            </p>
+          </div>
           {sidebarLinks.map((link) => {
             const active = isActiveLink(link.to, location);
             const isMessages = link.to === "/notifications";
@@ -302,7 +419,7 @@ export default function AuthenticatedShell({
                   classNames(
                     "group relative inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold transition lg:justify-start lg:gap-3 focus:outline-none focus:ring-2 focus:ring-brand/40",
                     active
-                      ? "bg-gradient-to-r from-brand-100 to-accent-50 text-brand-800"
+                      ? "bg-gradient-to-r from-brand-100 to-accent-50 text-brand-800 shadow-sm"
                       : "text-slate-600 hover:bg-brand-50 hover:text-brand-700"
                   )
                 }
@@ -340,7 +457,7 @@ export default function AuthenticatedShell({
           })}
         </aside>
 
-        <main className="flex-1 space-y-4 rounded-2xl border border-brand-100/80 bg-white/92 p-4 pb-24 shadow-soft sm:space-y-5 sm:p-5 sm:pb-24 lg:space-y-6 lg:rounded-3xl lg:p-6 lg:pb-6 lg:shadow-brand">
+        <main className="min-w-0 flex-1 space-y-4 rounded-2xl border border-brand-100/80 bg-white/78 p-4 pb-24 shadow-soft backdrop-blur sm:space-y-5 sm:p-5 sm:pb-24 lg:space-y-6 lg:rounded-3xl lg:p-6 lg:pb-6 lg:shadow-brand">
           <div className="space-y-1">
             {title ? (
               <h1 className="break-words text-xl font-bold text-slate-900 sm:text-2xl">
@@ -361,7 +478,7 @@ export default function AuthenticatedShell({
 
       {!hideMobileNav ? (
         <nav
-          className="fixed inset-x-0 bottom-0 z-40 border-t border-brand-100/80 bg-white/95 px-2 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] shadow-[0_-8px_24px_rgba(15,23,42,0.10)] backdrop-blur lg:hidden"
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-brand-100/80 bg-white/80 px-2 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] shadow-[0_-10px_30px_rgba(15,23,42,0.12)] backdrop-blur lg:hidden"
           aria-label="Mobile navigation"
         >
           <div className="mx-auto grid w-full max-w-6xl grid-cols-5 gap-1">

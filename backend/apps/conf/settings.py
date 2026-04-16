@@ -11,11 +11,7 @@ load_dotenv(env_path)
 APPS_DIR = BASE_DIR / "apps"
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-secret")
 DEBUG = os.environ.get("DJANGO_DEBUG", "0") == "1"
-ALLOWED_HOSTS = [
-    host.strip()
-    for host in os.environ.get("ALLOWED_HOSTS", "*").split(",")
-    if host.strip()
-] or ["*"]
+ALLOWED_HOSTS = [host.strip() for host in os.environ.get("ALLOWED_HOSTS", "*").split(",") if host.strip()] or ["*"]
 
 INSTALLED_APPS = [
     "channels",
@@ -66,15 +62,27 @@ _database_url = os.environ.get("DATABASE_URL")
 if _database_url:
     _default_database = dj_database_url.parse(_database_url, conn_max_age=600)
 else:
-    _default_database = {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("PG_DB"),
-        "USER": os.environ.get("PG_USER"),
-        "PASSWORD": os.environ.get("PG_PASSWORD"),
-        "HOST": os.environ.get("PG_HOST"),
-        "PORT": os.environ.get("PG_PORT"),
-        "CONN_MAX_AGE": 600,
-    }
+    _pg_db = os.environ.get("PG_DB")
+    _pg_user = os.environ.get("PG_USER")
+    _pg_password = os.environ.get("PG_PASSWORD")
+    _pg_host = os.environ.get("PG_HOST")
+    _pg_port = os.environ.get("PG_PORT")
+    if _pg_db and _pg_user and _pg_password and _pg_host and _pg_port:
+        _default_database = {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": _pg_db,
+            "USER": _pg_user,
+            "PASSWORD": _pg_password,
+            "HOST": _pg_host,
+            "PORT": _pg_port,
+            "CONN_MAX_AGE": 600,
+        }
+    else:
+        # CI (and local dev) may not provide Postgres env vars. Fall back to SQLite so tests can run.
+        _default_database = {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": str(BASE_DIR / "db.sqlite3"),
+        }
 
 DATABASES = {"default": _default_database}
 

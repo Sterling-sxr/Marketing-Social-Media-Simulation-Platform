@@ -15,10 +15,10 @@ export default function ConfirmDialog({
 
   const confirmStyles =
     tone === "danger"
-      ? "bg-red-500 hover:bg-red-600 text-white"
+      ? "border border-red-200 bg-gradient-to-r from-red-500 to-rose-600 text-white hover:from-red-600 hover:to-rose-600"
       : tone === "primary"
-      ? "bg-brand hover:bg-brand-dark text-white"
-      : "bg-slate-600 hover:bg-slate-700 text-white";
+      ? "border border-brand bg-gradient-to-r from-brand to-brand-dark text-white hover:from-brand-dark hover:to-brand"
+      : "border border-slate-300 bg-gradient-to-r from-slate-600 to-slate-700 text-white hover:from-slate-700 hover:to-slate-700";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
@@ -42,7 +42,7 @@ export default function ConfirmDialog({
           </button>
           <button
             type="button"
-            className={`rounded-full px-4 py-2 text-xs font-semibold transition disabled:opacity-60 ${confirmStyles}`}
+            className={`inline-flex items-center justify-center rounded-full px-4 py-2 text-xs font-semibold shadow-sm transition will-change-transform hover:-translate-y-[1px] active:translate-y-0 disabled:opacity-60 ${confirmStyles}`}
             onClick={onConfirm}
             disabled={processing}
           >

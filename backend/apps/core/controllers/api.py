@@ -209,8 +209,7 @@ def gmail_oauth_callback(request: HttpRequest):
     if not refresh_token:
         return JsonResponse(
             {
-                "error": "Refresh token was not returned. Ensure you request "
-                "offline access and remove previous consents before retrying.",
+                "error": "Refresh token was not returned. Ensure you request offline access and remove previous consents before retrying.",
             },
             status=400,
         )
