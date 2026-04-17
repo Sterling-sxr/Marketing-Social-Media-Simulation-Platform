@@ -5,6 +5,10 @@ import { getJson } from "../lib/api";
 import { useApp } from "../context/AppContext";
 import AuthenticatedShell from "./components/AuthenticatedShell";
 import Feedback from "./components/Feedback";
+import {
+  AnalyticsCoverageBanner,
+  AnalyticsSegmentTable,
+} from "./components/AnalyticsShared";
 
 function downloadJsonFile(filename, data) {
   const blob = new Blob([JSON.stringify(data, null, 2)], {
@@ -22,6 +26,13 @@ const METRICS = [
   { key: "likes", label: "Likes" },
   { key: "comments", label: "Comments" },
   { key: "views", label: "Views" },
+];
+
+const SEGMENT_METRICS = [
+  { key: "engagement_rate", label: "Engagement Rate" },
+  { key: "views", label: "Views" },
+  { key: "likes", label: "Likes" },
+  { key: "comments", label: "Comments" },
 ];
 
 function SummaryCard({ title, value, active, onClick }) {
@@ -208,10 +219,13 @@ function RadarChart({ comparison }) {
         />
         {metrics.map((metric, index) => {
           const angle = (Math.PI * 2 * index) / metrics.length - Math.PI / 2;
-      const labelRadius = radius + 36;
-      const x = center + labelRadius * Math.cos(angle);
-      const y = center + labelRadius * Math.sin(angle);
-      const align = Math.abs(Math.cos(angle)) > 0.35 ? (Math.cos(angle) > 0 ? "start" : "end") : "middle";
+          const labelRadius = radius + 36;
+          const x = center + labelRadius * Math.cos(angle);
+          const y = center + labelRadius * Math.sin(angle);
+          const align =
+            Math.abs(Math.cos(angle)) > 0.35
+              ? (Math.cos(angle) > 0 ? "start" : "end")
+              : "middle";
           return (
             <text
               key={`label-${metric.key}`}
@@ -237,24 +251,65 @@ function RadarChart({ comparison }) {
   );
 }
 
-function SentimentDistribution({ sentiment }) {
+function formatRate(value) {
+  const num = Number(value ?? 0);
+  if (!Number.isFinite(num)) return "0.0%";
+  return `${(num * 100).toFixed(1)}%`;
+}
+
+function formatMetricValue(metricKey, value) {
+  if (metricKey === "engagement_rate") {
+    return formatRate(value);
+  }
+  return `${Number(value ?? 0)}`;
+}
+
+function getSentimentInterpretation(percentages) {
+  const entries = [
+    { key: "positive", label: "positive" },
+    { key: "neutral", label: "neutral" },
+    { key: "negative", label: "negative" },
+  ];
+  const top = entries.reduce((best, current) =>
+    Number(percentages?.[current.key] ?? 0) > Number(percentages?.[best.key] ?? 0)
+      ? current
+      : best
+  );
+  const share = Number(percentages?.[top.key] ?? 0).toFixed(1);
+  return `Most comments were ${top.label}, making up ${share}% of the discussion.`;
+}
+
+function SentimentComposition({ sentiment }) {
   const total = sentiment?.total_comments ?? 0;
   const counts = sentiment?.counts || {};
   const percentages = sentiment?.percentages || {};
   const bars = [
-    { key: "positive", label: "Positive", bar: "bg-emerald-400" },
-    { key: "neutral", label: "Neutral", bar: "bg-accent-400" },
-    { key: "negative", label: "Negative", bar: "bg-rose-400" },
+    {
+      key: "positive",
+      label: "Positive",
+      bar: "bg-emerald-400",
+      text: "text-emerald-700",
+    },
+    {
+      key: "neutral",
+      label: "Neutral",
+      bar: "bg-accent-400",
+      text: "text-amber-700",
+    },
+    {
+      key: "negative",
+      label: "Negative",
+      bar: "bg-rose-400",
+      text: "text-rose-700",
+    },
   ];
 
   return (
-    <section className="rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
-      <header className="mb-4">
-        <h2 className="text-lg font-semibold text-slate-800">
-          Student post sentiment distribution
-        </h2>
+    <section className="space-y-4 rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
+      <header className="space-y-1">
+        <h3 className="text-lg font-semibold text-slate-800">Sentiment Composition</h3>
         <p className="text-xs text-slate-500">
-          Based on the classified sentiments of this post's comments.
+          A quick view of the emotional balance in the comments for classroom discussion.
         </p>
       </header>
       {total === 0 ? (
@@ -262,60 +317,60 @@ function SentimentDistribution({ sentiment }) {
           No comments yet. Sentiment breakdown will appear once comments are added.
         </p>
       ) : (
-        <div className="space-y-4">
-          {bars.map((item) => {
-            const percent = Number(percentages[item.key] ?? 0);
-            return (
-              <div key={item.key} className="space-y-1">
-                <div className="flex items-center justify-between text-sm font-semibold text-slate-600">
-                  <span>{item.label}</span>
-                  <span>{percent.toFixed(1)}%</span>
-                </div>
-                <div className="h-3 w-full rounded-full bg-brand-50">
+        <>
+          <div className="rounded-2xl border border-brand-100 bg-brand-50/30 p-4">
+            <div
+              className="flex h-6 overflow-hidden rounded-full bg-brand-50"
+              role="img"
+              aria-label="Sentiment composition chart"
+            >
+              {bars.map((item, index) => {
+                const percent = Number(percentages[item.key] ?? 0);
+                return (
                   <div
-                    className={`h-full rounded-full transition-all ${item.bar}`}
-                    style={{ width: `${Math.min(100, Math.max(0, percent))}%` }}
+                    key={item.key}
+                    className={`${item.bar} ${index === 0 ? "rounded-l-full" : ""} ${
+                      index === bars.length - 1 ? "rounded-r-full" : ""
+                    }`}
+                    style={{ width: `${Math.max(0, percent)}%` }}
+                    title={`${item.label}: ${counts[item.key] || 0} comments (${percent.toFixed(1)}%)`}
                   />
-                </div>
-                <p className="text-[11px] text-slate-400">
-                  {counts[item.key] || 0} comment{counts[item.key] === 1 ? "" : "s"}
-                </p>
-              </div>
-            );
-          })}
-        </div>
+                );
+              })}
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              {bars.map((item) => {
+                const percent = Number(percentages[item.key] ?? 0);
+                return (
+                  <div
+                    key={item.key}
+                    className="rounded-2xl border border-brand-100 bg-white px-4 py-3"
+                  >
+                    <p className={`text-xs font-semibold uppercase tracking-wide ${item.text}`}>
+                      {item.label}
+                    </p>
+                    <p className="mt-1 text-lg font-semibold text-slate-800">
+                      {percent.toFixed(1)}%
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {counts[item.key] || 0} comment{counts[item.key] === 1 ? "" : "s"}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <p className="text-sm text-slate-600">
+            {getSentimentInterpretation(percentages)} Based on {total} classified
+            comment{total === 1 ? "" : "s"}.
+          </p>
+        </>
       )}
     </section>
   );
 }
 
-function formatRate(value) {
-  const num = Number(value ?? 0);
-  if (!Number.isFinite(num)) return "0.0%";
-  return `${(num * 100).toFixed(1)}%`;
-}
-
-function CoverageBanner({ coverage, overlapping }) {
-  if (!coverage) return null;
-  return (
-    <div className="rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-3 text-xs text-slate-600">
-      <p>
-        Audience size: <span className="font-semibold text-slate-800">{coverage.total_audience ?? 0}</span>
-        {" · "}
-        Missing profile data: <span className="font-semibold text-slate-800">{coverage.missing_profile_count ?? 0}</span>
-        {" · "}
-        Unattributed interactions: <span className="font-semibold text-slate-800">{coverage.missing_actor_identity_count ?? 0}</span>
-      </p>
-      <p className="mt-1">
-        {overlapping
-          ? "Interest buckets overlap, so the segment totals can exceed the total audience."
-          : "This lens assigns each student to at most one bucket."}
-      </p>
-    </div>
-  );
-}
-
-function SegmentMetricsTable({ segments }) {
+function SegmentResponseChart({ segments, metricKey }) {
   if (!segments?.length) {
     return (
       <p className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-3 text-sm text-slate-600">
@@ -323,34 +378,119 @@ function SegmentMetricsTable({ segments }) {
       </p>
     );
   }
+
+  const ranked = [...segments].sort((a, b) => {
+    const aValue = Number(a.metrics?.[metricKey] ?? 0);
+    const bValue = Number(b.metrics?.[metricKey] ?? 0);
+    return bValue - aValue;
+  });
+  const maxValue = Math.max(
+    ...ranked.map((segment) => Number(segment.metrics?.[metricKey] ?? 0)),
+    1
+  );
+
   return (
-    <div className="overflow-hidden rounded-2xl ring-1 ring-brand-100 shadow-sm">
-      <table className="min-w-full text-sm">
-        <thead className="bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] border-b border-accent-100">
-          <tr className="text-left text-[12px] font-semibold uppercase tracking-wider text-slate-700">
-            <th className="px-4 py-3">Segment</th>
-            <th className="px-4 py-3">Audience</th>
-            <th className="px-4 py-3">Engaged</th>
-            <th className="px-4 py-3">Views</th>
-            <th className="px-4 py-3">Likes</th>
-            <th className="px-4 py-3">Comments</th>
-            <th className="px-4 py-3 text-right">Engagement</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-brand-100">
-          {segments.map((segment) => (
-            <tr key={segment.key} className="odd:bg-white even:bg-brand-50/30">
-              <td className="px-4 py-3 font-semibold text-slate-800">{segment.label}</td>
-              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.audience_count}</td>
-              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.engaged_user_count}</td>
-              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.metrics?.views ?? 0}</td>
-              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.metrics?.likes ?? 0}</td>
-              <td className="px-4 py-3 font-mono tabular-nums text-slate-700">{segment.metrics?.comments ?? 0}</td>
-              <td className="px-4 py-3 text-right font-semibold text-brand">{formatRate(segment.metrics?.engagement_rate)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="space-y-3">
+      {ranked.map((segment) => {
+        const rawValue = Number(segment.metrics?.[metricKey] ?? 0);
+        const width = metricKey === "engagement_rate"
+          ? Math.max(0, Math.min(100, rawValue * 100))
+          : (rawValue / maxValue) * 100;
+        return (
+          <div key={segment.key} className="space-y-1.5">
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <span className="font-semibold text-slate-800">{segment.label}</span>
+              <span className="text-slate-600">
+                {formatMetricValue(metricKey, rawValue)}
+              </span>
+            </div>
+            <div className="h-3 overflow-hidden rounded-full bg-brand-50">
+              <div
+                className="h-full rounded-full bg-brand transition-all"
+                style={{ width: `${width}%` }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function calculateDelta(postValue, averageValue) {
+  const post = Number(postValue ?? 0);
+  const average = Number(averageValue ?? 0);
+  if (average === 0) {
+    if (post === 0) return 0;
+    return 100;
+  }
+  return ((post - average) / average) * 100;
+}
+
+function RelativePerformanceChart({ comparison }) {
+  if (!comparison) {
+    return (
+      <p className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-3 text-sm text-slate-600">
+        No hashtag benchmark is available for this post yet.
+      </p>
+    );
+  }
+
+  const deltas = METRICS.map((metric) => ({
+    key: metric.key,
+    label: metric.label,
+    delta: calculateDelta(
+      comparison.post?.[metric.key],
+      comparison.average?.[metric.key]
+    ),
+    postValue: Number(comparison.post?.[metric.key] ?? 0),
+    averageValue: Number(comparison.average?.[metric.key] ?? 0),
+  }));
+  const maxDelta = Math.max(...deltas.map((item) => Math.abs(item.delta)), 1);
+  const strongest = deltas.reduce((best, current) =>
+    Math.abs(current.delta) > Math.abs(best.delta) ? current : best
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-3 rounded-2xl border border-brand-100 bg-brand-50/30 p-4">
+        {deltas.map((item) => {
+          const width = (Math.abs(item.delta) / maxDelta) * 100;
+          const positive = item.delta >= 0;
+          return (
+            <div key={item.key} className="space-y-1.5">
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span className="font-semibold text-slate-800">{item.label}</span>
+                <span className={positive ? "text-emerald-700" : "text-rose-700"}>
+                  {positive ? "+" : ""}
+                  {item.delta.toFixed(1)}%
+                </span>
+              </div>
+              <div className="relative h-4 rounded-full bg-white">
+                <div className="absolute inset-y-0 left-1/2 w-px bg-slate-300" />
+                <div
+                  className={`absolute top-0 h-4 rounded-full ${
+                    positive ? "bg-emerald-400" : "bg-rose-400"
+                  }`}
+                  style={
+                    positive
+                      ? { left: "50%", width: `${Math.max(4, width / 2)}%` }
+                      : { right: "50%", width: `${Math.max(4, width / 2)}%` }
+                  }
+                />
+              </div>
+              <p className="text-xs text-slate-500">
+                Post {item.postValue} vs hashtag average {item.averageValue}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+      <p className="text-sm text-slate-600">
+        Against #{comparison.hashtag}, the strongest gap is in {strongest.label.toLowerCase()},
+        which is {strongest.delta >= 0 ? "above" : "below"} the hashtag average by{" "}
+        {Math.abs(strongest.delta).toFixed(1)}%.
+      </p>
     </div>
   );
 }
@@ -400,9 +540,12 @@ export default function PostAnalyticsPage() {
   const [analytics, setAnalytics] = useState(null);
   const [status, setStatus] = useState({ loading: true, error: "" });
   const [activeMetric, setActiveMetric] = useState("likes");
+  const [activeSegmentMetric, setActiveSegmentMetric] = useState("engagement_rate");
   const [activeHashtag, setActiveHashtag] = useState(null);
   const [selectedLens, setSelectedLens] = useState("interests");
   const [comparePostId, setComparePostId] = useState("");
+  const [showSegmentTable, setShowSegmentTable] = useState(false);
+  const [showComparisonDetails, setShowComparisonDetails] = useState(false);
   const [segmentation, setSegmentation] = useState(null);
   const [segmentationStatus, setSegmentationStatus] = useState({
     loading: false,
@@ -580,152 +723,151 @@ export default function PostAnalyticsPage() {
             ))}
           </section>
 
-          <section className="rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
-            <header className="flex items-center justify-between pb-4">
-              <div>
-                <h2 className="text-lg font-semibold text-slate-800">
-                  {METRICS.find((m) => m.key === activeMetric)?.label} · 7-day trend
-                </h2>
-                <p className="text-xs text-slate-500">
-                  {analytics.range?.start} → {analytics.range?.end}
-                </p>
-              </div>
-            </header>
-            <LineChart data={chartSeries} />
-          </section>
-
-          <SentimentDistribution sentiment={sentimentData} />
-
-          <section className="space-y-3 rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
-            <header className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-semibold text-slate-800">
-                  Hashtag comparison
-                </h2>
-                <p className="text-xs text-slate-500">
-                  Supporting evidence showing how this post compares with other posts using the same hashtag.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {hashtagComparisons.map((item) => (
-                  <button
-                    key={item.hashtag}
-                    type="button"
-                    className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                      activeHashtag === item.hashtag
-                        ? "bg-brand-100 text-brand"
-                        : "border border-brand-200 bg-white text-slate-600 hover:border-brand hover:text-brand"
-                    }`}
-                    onClick={() => setActiveHashtag(item.hashtag)}
-                  >
-                    #{item.hashtag}
-                  </button>
-                ))}
-              </div>
-            </header>
-
-            {hashtagComparisons.length === 0 ? (
-              <p className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-3 text-sm text-slate-600">
-                No hashtags detected in this post.
+          <section className="space-y-4 rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
+            <header className="space-y-2">
+              <h2 className="text-lg font-semibold text-slate-800">Why It Performed This Way</h2>
+              <p className="text-xs text-slate-500">
+                Use these teaching cues to explain why this post resonated, stalled, or drew mixed feedback.
               </p>
-            ) : activeComparison ? (
-              <div className="grid gap-6 lg:grid-cols-[1fr_auto]">
-                <div className="space-y-3">
-                  {METRICS.map((metric) => (
-                    <div
-                      key={metric.key}
-                      className="flex items-center justify-between rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-3"
-                    >
-                      <div>
-                        <p className="text-sm font-semibold text-slate-800">
+            </header>
+
+            <div className="space-y-4">
+              <SentimentComposition sentiment={sentimentData} />
+
+              {isAdmin ? (
+                <section className="space-y-4 rounded-3xl border border-brand-100 bg-brand-50/30 p-6 shadow-sm">
+                  <header className="space-y-3">
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-800">Audience Segment Response</h3>
+                      <p className="text-xs text-slate-500">
+                        Show which persona-based audience buckets responded most strongly to this post.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {(segmentation?.available_lenses || []).map((lens) => (
+                        <button
+                          key={lens.key}
+                          type="button"
+                          className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                            selectedLens === lens.key
+                              ? "bg-brand-100 text-brand"
+                              : "border border-brand-200 bg-white text-slate-600 hover:border-brand hover:text-brand"
+                          }`}
+                          onClick={() => setSelectedLens(lens.key)}
+                        >
+                          {lens.label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {SEGMENT_METRICS.map((metric) => (
+                        <button
+                          key={metric.key}
+                          type="button"
+                          aria-pressed={activeSegmentMetric === metric.key}
+                          className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                            activeSegmentMetric === metric.key
+                              ? "bg-slate-800 text-white"
+                              : "border border-brand-200 bg-white text-slate-600 hover:border-brand hover:text-brand"
+                          }`}
+                          onClick={() => setActiveSegmentMetric(metric.key)}
+                        >
                           {metric.label}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          Average across {activeComparison.cohort_size} post
-                          {activeComparison.cohort_size === 1 ? "" : "s"}
-                        </p>
-                      </div>
-                      <div className="text-right text-sm">
-                        <p className="font-semibold text-rose-500">
-                          Post: {activeComparison.post?.[metric.key] ?? 0}
-                        </p>
-                        <p className="text-slate-500">
-                          Avg: {activeComparison.average?.[metric.key] ?? 0}
-                        </p>
-                      </div>
+                        </button>
+                      ))}
                     </div>
-                  ))}
-                </div>
-                <RadarChart comparison={activeComparison} />
-              </div>
-            ) : (
-              <p className="text-sm text-slate-500">Select a hashtag to view details.</p>
-            )}
-          </section>
+                  </header>
 
-          {isAdmin ? (
-            <section className="space-y-4 rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
-              <header className="space-y-3">
-                <div>
-                  <h2 className="text-lg font-semibold text-slate-800">Audience Segments</h2>
-                  <p className="text-xs text-slate-500">
-                    Understand which persona-derived audience buckets interacted with this post.
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {(segmentation?.available_lenses || []).map((lens) => (
-                    <button
-                      key={lens.key}
-                      type="button"
-                      className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                        selectedLens === lens.key
-                          ? "bg-brand-100 text-brand"
-                          : "border border-brand-200 bg-white text-slate-600 hover:border-brand hover:text-brand"
-                      }`}
-                      onClick={() => setSelectedLens(lens.key)}
-                    >
-                      {lens.label}
-                    </button>
-                  ))}
-                </div>
-              </header>
+                  {segmentationStatus.error ? (
+                    <Feedback error={segmentationStatus.error} />
+                  ) : null}
+                  {segmentationStatus.loading ? (
+                    <p className="text-sm text-slate-500">Loading audience segmentation...</p>
+                  ) : segmentation ? (
+                    <>
+                      <AnalyticsCoverageBanner
+                        coverage={segmentation.coverage}
+                        overlapping={segmentation.lens_meta?.overlapping}
+                      />
+                      <div className="rounded-2xl border border-brand-100 bg-white p-4">
+                        <p className="text-sm text-slate-700">
+                          {segmentation.insights?.summary_text ||
+                            "No insight summary available yet."}
+                        </p>
+                        <div className="mt-3 grid gap-3 sm:grid-cols-2 text-sm">
+                          <div className="rounded-2xl bg-brand-50/50 px-4 py-3">
+                            <p className="text-slate-500">Top-performing segment</p>
+                            <p className="mt-1 font-semibold text-slate-800">
+                              {segmentation.insights?.top_segment?.label || "—"}
+                            </p>
+                          </div>
+                          <div className="rounded-2xl bg-brand-50/50 px-4 py-3">
+                            <p className="text-slate-500">Under-engaged segment</p>
+                            <p className="mt-1 font-semibold text-slate-800">
+                              {segmentation.insights?.under_engaged_segment?.label || "—"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <SegmentResponseChart
+                        segments={segmentation.segments}
+                        metricKey={activeSegmentMetric}
+                      />
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
+                          onClick={() => setShowSegmentTable((value) => !value)}
+                        >
+                          {showSegmentTable ? "Hide segment table" : "View segment table"}
+                        </button>
+                      </div>
+                      {showSegmentTable ? (
+                        <AnalyticsSegmentTable
+                          segments={segmentation.segments}
+                          emptyMessage="No segment data available for this post yet."
+                        />
+                      ) : null}
+                    </>
+                  ) : null}
+                </section>
+              ) : null}
 
-              {segmentationStatus.error ? <Feedback error={segmentationStatus.error} /> : null}
-              {segmentationStatus.loading ? (
-                <p className="text-sm text-slate-500">Loading audience segmentation...</p>
-              ) : segmentation ? (
-                <>
-                  <CoverageBanner
-                    coverage={segmentation.coverage}
-                    overlapping={segmentation.lens_meta?.overlapping}
-                  />
-                  <div className="rounded-2xl border border-brand-100 bg-brand-50/60 p-4">
-                    <p className="text-sm text-slate-700">
-                      {segmentation.insights?.summary_text || "No insight summary available yet."}
+              <section className="space-y-4 rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
+                <header className="space-y-2">
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-800">Relative Performance</h3>
+                    <p className="text-xs text-slate-500">
+                      Compare this post against hashtag peers before moving into deeper case-to-case analysis.
                     </p>
-                    <div className="mt-3 grid gap-3 sm:grid-cols-2 text-sm">
-                      <div className="rounded-2xl bg-white px-4 py-3">
-                        <p className="text-slate-500">Top-performing segment</p>
-                        <p className="mt-1 font-semibold text-slate-800">
-                          {segmentation.insights?.top_segment?.label || "—"}
-                        </p>
-                      </div>
-                      <div className="rounded-2xl bg-white px-4 py-3">
-                        <p className="text-slate-500">Under-engaged segment</p>
-                        <p className="mt-1 font-semibold text-slate-800">
-                          {segmentation.insights?.under_engaged_segment?.label || "—"}
-                        </p>
-                      </div>
-                    </div>
                   </div>
-                  <SegmentMetricsTable segments={segmentation.segments} />
+                  <div className="flex flex-wrap gap-2">
+                    {hashtagComparisons.map((item) => (
+                      <button
+                        key={item.hashtag}
+                        type="button"
+                        className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                          activeHashtag === item.hashtag
+                            ? "bg-brand-100 text-brand"
+                            : "border border-brand-200 bg-white text-slate-600 hover:border-brand hover:text-brand"
+                        }`}
+                        onClick={() => setActiveHashtag(item.hashtag)}
+                      >
+                        #{item.hashtag}
+                      </button>
+                    ))}
+                  </div>
+                </header>
 
-                  <div className="space-y-3">
+                <RelativePerformanceChart comparison={activeComparison} />
+
+                {isAdmin ? (
+                  <div className="space-y-3 rounded-2xl border border-brand-100 bg-brand-50/40 p-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
-                        <h3 className="text-base font-semibold text-slate-800">Compare with another post</h3>
+                        <h4 className="text-base font-semibold text-slate-800">Compare with another post</h4>
                         <p className="text-xs text-slate-500">
-                          Compare this post against another post from the same course under the same segment lens.
+                          Keep this optional so teachers can stay in the chart-first flow until they need evidence details.
                         </p>
                       </div>
                       <select
@@ -734,22 +876,124 @@ export default function PostAnalyticsPage() {
                         className="rounded-full border border-brand-200 bg-white px-4 py-2 text-sm text-slate-700"
                       >
                         <option value="">No comparison</option>
-                        {(segmentation.compare_options || []).map((item) => (
+                        {(segmentation?.compare_options || []).map((item) => (
                           <option key={item.post_id} value={item.post_id}>
                             {item.label}
                           </option>
                         ))}
                       </select>
                     </div>
-                    {segmentation.insights?.comparison_summary_text ? (
-                      <p className="text-sm text-slate-600">{segmentation.insights.comparison_summary_text}</p>
+                    {segmentation?.insights?.comparison_summary_text ? (
+                      <p className="text-sm text-slate-600">
+                        {segmentation.insights.comparison_summary_text}
+                      </p>
                     ) : null}
-                    <ComparisonMatrix comparison={segmentation.comparison} />
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
+                        onClick={() => setShowComparisonDetails((value) => !value)}
+                      >
+                        {showComparisonDetails
+                          ? "Hide comparison details"
+                          : "View comparison details"}
+                      </button>
+                    </div>
+                    {showComparisonDetails ? (
+                      <ComparisonMatrix comparison={segmentation?.comparison} />
+                    ) : null}
                   </div>
-                </>
-              ) : null}
-            </section>
-          ) : null}
+                ) : null}
+              </section>
+            </div>
+          </section>
+
+          <section className="rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
+            <header className="flex items-center justify-between pb-4">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-800">Trend and Momentum</h2>
+                <p className="text-xs text-slate-500">
+                  {METRICS.find((m) => m.key === activeMetric)?.label} across{" "}
+                  {analytics.range?.start} → {analytics.range?.end}
+                </p>
+              </div>
+            </header>
+            <LineChart data={chartSeries} />
+          </section>
+
+          <section className="space-y-4 rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
+            <header className="space-y-2">
+              <h2 className="text-lg font-semibold text-slate-800">Comparison Evidence</h2>
+              <p className="text-xs text-slate-500">
+                Supporting visuals for when you want to go beyond the quick teaching view.
+              </p>
+            </header>
+
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-base font-semibold text-slate-800">Hashtag shape comparison</h3>
+                  <p className="text-xs text-slate-500">
+                    A secondary profile view of the same hashtag benchmark across likes, comments, and views.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {hashtagComparisons.map((item) => (
+                    <button
+                      key={item.hashtag}
+                      type="button"
+                      className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                        activeHashtag === item.hashtag
+                          ? "bg-brand-100 text-brand"
+                          : "border border-brand-200 bg-white text-slate-600 hover:border-brand hover:text-brand"
+                      }`}
+                      onClick={() => setActiveHashtag(item.hashtag)}
+                    >
+                      #{item.hashtag}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {hashtagComparisons.length === 0 ? (
+                <p className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-3 text-sm text-slate-600">
+                  No hashtags detected in this post.
+                </p>
+              ) : activeComparison ? (
+                <div className="grid gap-6 lg:grid-cols-[1fr_auto]">
+                  <div className="space-y-3">
+                    {METRICS.map((metric) => (
+                      <div
+                        key={metric.key}
+                        className="flex items-center justify-between rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-3"
+                      >
+                        <div>
+                          <p className="text-sm font-semibold text-slate-800">
+                            {metric.label}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            Average across {activeComparison.cohort_size} post
+                            {activeComparison.cohort_size === 1 ? "" : "s"}
+                          </p>
+                        </div>
+                        <div className="text-right text-sm">
+                          <p className="font-semibold text-rose-500">
+                            Post: {activeComparison.post?.[metric.key] ?? 0}
+                          </p>
+                          <p className="text-slate-500">
+                            Avg: {activeComparison.average?.[metric.key] ?? 0}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <RadarChart comparison={activeComparison} />
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500">Select a hashtag to view details.</p>
+              )}
+            </div>
+          </section>
         </>
       ) : null}
     </AuthenticatedShell>

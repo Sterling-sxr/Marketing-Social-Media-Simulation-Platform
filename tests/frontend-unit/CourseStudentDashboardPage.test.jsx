@@ -56,13 +56,6 @@ describe("CourseStudentDashboardPage", () => {
           total_comments: 10,
           total_views: 120,
         },
-        sentiment: {
-          breakdown: {
-            positive: 60,
-            neutral: 25,
-            negative: 15,
-          },
-        },
         top_posts: [
           {
             post_id: 101,
@@ -100,5 +93,15 @@ describe("CourseStudentDashboardPage", () => {
     expect(
       screen.getByRole("columnheader", { name: /post/i })
     ).toHaveClass("sticky");
+  });
+
+  test("removes student-level sentiment and links posts to post analysis", async () => {
+    renderPage();
+
+    expect(await screen.findByText("First post")).toBeInTheDocument();
+    expect(
+      screen.queryByText(/student post sentiment distribution/i)
+    ).not.toBeInTheDocument();
+    expect(screen.getAllByText(/view post analysis/i)).not.toHaveLength(0);
   });
 });

@@ -4,6 +4,7 @@ import { useApp } from "../../context/AppContext";
 import { getJson } from "../../lib/api";
 import AuthenticatedShell from "../components/AuthenticatedShell";
 import Feedback from "../components/Feedback";
+import { ViewPostAnalysisButton } from "../components/AnalyticsShared";
 
 const SUMMARY_TILES = [
   { key: "total_posts", label: "Total Posts", icon: "✏️" },
@@ -11,30 +12,6 @@ const SUMMARY_TILES = [
   { key: "total_comments", label: "Total Comments", icon: "💬" },
   { key: "total_views", label: "Total Views", icon: "👀" },
 ];
-
-const SENTIMENT_COLORS = {
-  positive: "bg-emerald-500",
-  neutral: "bg-accent-500",
-  negative: "bg-rose-500",
-};
-
-function SentimentBar({ label, value }) {
-  const pct = Math.min(Math.max(value ?? 0, 0), 100);
-  return (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
-        <span className="capitalize">{label}</span>
-        <span>{pct.toFixed(1)}%</span>
-      </div>
-      <div className="h-3 rounded-full bg-brand-100">
-        <div
-          className={`h-full rounded-full ${SENTIMENT_COLORS[label]} transition-all`}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-    </div>
-  );
-}
 
 function SummaryCard({ item, value }) {
   return (
@@ -105,7 +82,6 @@ export default function CourseHashtagDashboardPage() {
   }
 
   const summary = data?.summary || {};
-  const sentiment = data?.sentiment?.breakdown || {};
   const topPosts = data?.top_posts || [];
   const courseMeta = data?.course;
 
@@ -163,20 +139,6 @@ export default function CourseHashtagDashboardPage() {
             ))}
           </section>
 
-          <section className="rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-800">
-              Student post sentiment distribution
-            </h2>
-            <p className="text-xs text-slate-500">
-              Based on comments from posts tagged with #{hashtag}.
-            </p>
-            <div className="mt-4 space-y-3">
-              {Object.keys(SENTIMENT_COLORS).map((key) => (
-                <SentimentBar key={key} label={key} value={sentiment[key] || 0} />
-              ))}
-            </div>
-          </section>
-
           <section className="space-y-4 rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
             <header className="flex items-center justify-between">
               <div>
@@ -226,15 +188,13 @@ export default function CourseHashtagDashboardPage() {
                             {formatDate(post.created_at)}
                           </td>
                           <td className="px-4 py-3 text-right">
-                            <button
-                              type="button"
-                              className="rounded-full border border-brand bg-brand-100 px-3 py-1 text-xs font-semibold text-brand transition hover:bg-brand-200"
+                            <ViewPostAnalysisButton
                               onClick={() =>
-                                navigate(`/courses/${courseId}/posts/${post.post_id}`)
+                                navigate(
+                                  `/courses/${courseId}/posts/${post.post_id}/analytics`
+                                )
                               }
-                            >
-                              View
-                            </button>
+                            />
                           </td>
                         </tr>
                       ))}

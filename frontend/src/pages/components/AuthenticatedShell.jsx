@@ -112,35 +112,6 @@ export default function AuthenticatedShell({
     if (links && links.length) return links;
     const isAdminUser = Boolean(authUser?.is_superuser || authUser?.is_staff);
     if (isAdminUser) {
-      // Context: Compute shared values once so all branches use the same normalized inputs.
-      // Context: Compute shared values once so all branches use the same normalized inputs.
-      const dashCourseMatch = location.pathname.match(/^\/dashboard\/courses\/(\d+)/);
-      if (dashCourseMatch?.[1]) {
-        const currentCourseId = dashCourseMatch[1];
-        return [
-          {
-            to: `/courses/${currentCourseId}/community`,
-            label: "Community",
-            icon: <FileText className="h-5 w-5" />,
-          },
-          {
-            to: `/courses/${currentCourseId}/materials`,
-            label: "Materials",
-            icon: <BookOpen className="h-5 w-5" />,
-          },
-          {
-            to: `/dashboard/courses/${currentCourseId}`,
-            label: "Analyze",
-            icon: <BarChart3 className="h-5 w-5" />,
-          },
-          {
-            to: `/courses/${currentCourseId}/messages`,
-            label: "Messages",
-            icon: <Bell className="h-5 w-5" />,
-          },
-        ];
-      }
-
       if (
         location.pathname === "/courses" ||
         location.pathname === "/courses/manage" ||
@@ -180,11 +151,6 @@ export default function AuthenticatedShell({
             to: `/courses/${currentCourseId}/materials`,
             label: "Materials",
             icon: <BookOpen className="h-5 w-5" />,
-          },
-          {
-            to: `/dashboard/courses/${currentCourseId}`,
-            label: "Analyze",
-            icon: <BarChart3 className="h-5 w-5" />,
           },
           {
             to: `/courses/${currentCourseId}/messages`,
