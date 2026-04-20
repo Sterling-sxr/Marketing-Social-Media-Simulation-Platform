@@ -386,7 +386,7 @@ export default function CourseDashboardPage() {
     >
       {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
       <div className="flex items-center gap-2">
-        <Btn variant="secondary" onClick={() => navigate("/dashboard")}>
+        <Btn variant="secondary" onClick={() => navigate(-1)}>
           ← Back
         </Btn>
         <Btn

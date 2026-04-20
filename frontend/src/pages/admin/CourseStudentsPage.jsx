@@ -177,7 +177,7 @@ export default function CourseStudentsPage() {
     <AuthenticatedShell title="All Students" subtitle={subtitle}>
       {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
       <div className="flex flex-wrap items-center gap-2">
-        <Btn variant="secondary" onClick={() => navigate("/dashboard")}>
+        <Btn variant="secondary" onClick={() => navigate(-1)}>
           ← Back
         </Btn>
         {/* Context: Keep dependent steps together so branch preconditions remain visible at a glance. Reason: This layout reduces hidden coupling and makes future edits safer.
