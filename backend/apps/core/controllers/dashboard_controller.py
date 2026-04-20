@@ -25,12 +25,9 @@ def dashboard_summary(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"error": "Method not allowed"}, status=405)
 
     try:
-        range_days = int(request.GET.get("range_days", "7"))
-        if range_days <= 0 or range_days > 365:
-            raise ValueError("range_days must be between 1 and 365.")
-        data = refresh_dashboard_snapshot(user=request.user, range_days=range_days)
-    except ValueError as exc:
-        return JsonResponse({"error": str(exc)}, status=400)
+        # Context: Compute shared values once so all branches use the same normalized inputs.
+        # Context: Compute shared values once so all branches use the same normalized inputs.
+        data = refresh_dashboard_snapshot(user=request.user)
     except PermissionError as exc:
         return JsonResponse({"error": str(exc)}, status=403)
 
