@@ -17,16 +17,6 @@ import {
   Users,
   Zap,
 } from "lucide-react";
-
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
 import { useAuth } from "../../context/AuthContext";
 import { getJson } from "../../lib/api";
 import { isTeacher } from "../../lib/access";
@@ -116,7 +106,7 @@ const SENTIMENT_TEXT_COLORS = {
 // Purpose: `CompareTooltip` owns one cohesive concern so state transitions and side effects remain easy to trace.
 function CompareTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
-  const courseName = payload[0]?.payload?.fullName || label || "";
+  const courseName = payload[0]?.payload?.__fullname || label || "";
   const interactions =
     payload.find((p) => p.dataKey === "interactions")?.value ?? 0;
   const posts = payload.find((p) => p.dataKey === "posts")?.value ?? 0;
@@ -138,6 +128,81 @@ function CompareTooltip({ active, payload, label }) {
   );
 }
 
+function makeAutoSummary(summary) {
+  if (!summary || typeof summary !== "object") {
+    return "No dashboard data available yet. Once activity is recorded, I’ll generate an automatic summary here.";
+  }
+
+  const totalCourses = Number(summary.total_courses ?? 0);
+  const totalStudents = Number(summary.registered_students ?? 0);
+  const totalPosts = Number(summary.total_posts ?? 0);
+  const totalInter = Number(summary.total_interactions ?? 0);
+
+  const sentiment = summary.sentiment || {};
+  const sPos = Math.round(
+    Math.min(Math.max(Number(sentiment.positive || 0), 0), 100)
+  );
+  const sNeu = Math.round(
+    Math.min(Math.max(Number(sentiment.neutral || 0), 0), 100)
+  );
+  const sNeg = Math.round(
+    Math.min(Math.max(Number(sentiment.negative || 0), 0), 100)
+  );
+
+  const courses = Array.isArray(summary.courses) ? summary.courses.slice() : [];
+  courses.sort(
+    (a, b) =>
+      Number(b.total_interactions || 0) - Number(a.total_interactions || 0)
+  );
+
+  const top3 = courses.slice(0, 3).map((course) => ({
+    code: course.course_code || String(course.id),
+    name: course.name || "",
+    posts: Number(course.total_posts || 0),
+    inter: Number(course.total_interactions || 0),
+  }));
+
+  const lines = [
+    `Overview: ${totalCourses} course(s), ${totalStudents} student(s), ${totalPosts} post(s), and ${totalInter} interaction(s) recorded.`,
+  ];
+
+  if (sPos + sNeu + sNeg > 0) {
+    lines.push(
+      `Sentiment snapshot: ${sPos}% positive, ${sNeu}% neutral, ${sNeg}% negative.`
+    );
+  }
+
+  if (top3.length > 0) {
+    const topDesc = top3
+      .map(
+        (course, index) =>
+          `${index + 1}) ${course.code}${course.name ? ` · ${course.name}` : ""} — ${course.inter} interactions from ${course.posts} posts`
+      )
+      .join("; ");
+    lines.push(`Top courses by interactions: ${topDesc}.`);
+  } else {
+    lines.push("No course activity yet.");
+  }
+
+  if (totalPosts > 0 || totalInter > 0) {
+    if (sNeg >= 30) {
+      lines.push(
+        "Recommendation: investigate recurring pain points in negative threads and introduce quick-win fixes or office hours."
+      );
+    } else if (totalPosts > 0 && totalInter / Math.max(totalPosts, 1) < 1) {
+      lines.push(
+        "Recommendation: encourage replies and reactions (e.g., pin engaging prompts, highlight best answers) to boost interactions per post."
+      );
+    } else {
+      lines.push(
+        "Recommendation: sustain momentum by spotlighting top-performing posts and replicating their formats."
+      );
+    }
+  }
+
+  return lines.join(" ");
+}
+
 export default function DashboardPage() {
   const { authUser, authCheckComplete } = useAuth();
   const navigate = useNavigate();
@@ -145,6 +210,7 @@ export default function DashboardPage() {
   const [status, setStatus] = useState({ loading: true, error: "" });
   const [sparkSummary, setSparkSummary] = useState("");
   const [sparkStatus, setSparkStatus] = useState({ loading: false, error: "" });
+  const [selectedRangeDays] = useState(7);
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== "undefined"
       ? window.matchMedia("(max-width: 639px)").matches
@@ -338,9 +404,8 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </SectionCard>
 
-          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <SectionCard
             title="Course Comparison Analysis"
             subtitle="Posts and interactions across different courses."
@@ -348,66 +413,66 @@ export default function DashboardPage() {
             tone="peach"
           >
 
-              {compareData.length === 0 ? (
-                <p className="text-sm text-slate-500 mt-3">
-                  No course data available.
-                </p>
-              ) : (
-                <div className="mt-4 w-full overflow-x-auto">
-                  <div
-                    className="h-[320px] min-w-[560px] sm:h-[380px]"
-                    style={{ width: `${barChartWidth}px` }}
-                  >
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={compareData}
-                        margin={{
-                          top: 10,
-                          right: isMobile ? 8 : 20,
-                          bottom: isMobile ? 48 : 28,
-                          left: 0,
+            {compareData.length === 0 ? (
+              <p className="mt-3 text-sm text-slate-500">
+                No course data available.
+              </p>
+            ) : (
+              <div className="mt-4 w-full overflow-x-auto">
+                <div
+                  className="h-[320px] min-w-[560px] sm:h-[380px]"
+                  style={{ width: `${barChartWidth}px` }}
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={compareData}
+                      margin={{
+                        top: 10,
+                        right: isMobile ? 8 : 20,
+                        bottom: isMobile ? 48 : 28,
+                        left: 0,
+                      }}
+                      barCategoryGap={isMobile ? 12 : 18}
+                    >
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke={DONUT.grid}
+                      />
+                      <XAxis
+                        dataKey="name"
+                        tick={{
+                          fill: DONUT.slate600,
+                          fontSize: isMobile ? 11 : 13,
                         }}
-                        barCategoryGap={isMobile ? 12 : 18}
-                      >
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          stroke={DONUT.grid}
-                        />
-                        <XAxis
-                          dataKey="name"
-                          tick={{
-                            fill: DONUT.slate600,
-                            fontSize: isMobile ? 11 : 13,
-                          }}
-                          interval={0}
-                          angle={0}
-                          tickMargin={isMobile ? 10 : 12}
-                        />
-                        <YAxis
-                          domain={yDomain}
-                          tick={{
-                            fill: DONUT.slate600,
-                            fontSize: isMobile ? 11 : 13,
-                          }}
-                        />
-                        <Tooltip content={<CompareTooltip />} />
-                        <Bar
-                          dataKey="posts"
-                          name="Posts"
-                          fill={DONUT.lilac300}
-                          radius={[8, 8, 0, 0]}
-                        />
-                        <Bar
-                          dataKey="interactions"
-                          name="Interactions"
-                          fill={DONUT.peach300}
-                          radius={[8, 8, 0, 0]}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
+                        interval={0}
+                        angle={0}
+                        tickMargin={isMobile ? 10 : 12}
+                      />
+                      <YAxis
+                        domain={yDomain}
+                        tick={{
+                          fill: DONUT.slate600,
+                          fontSize: isMobile ? 11 : 13,
+                        }}
+                      />
+                      <Tooltip content={<CompareTooltip />} />
+                      <Bar
+                        dataKey="posts"
+                        name="Posts"
+                        fill={DONUT.lilac300}
+                        radius={[8, 8, 0, 0]}
+                      />
+                      <Bar
+                        dataKey="interactions"
+                        name="Interactions"
+                        fill={DONUT.peach300}
+                        radius={[8, 8, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
-              )}
+              </div>
+            )}
           </SectionCard>
 
           {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
