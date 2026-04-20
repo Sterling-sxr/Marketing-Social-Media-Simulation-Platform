@@ -23,6 +23,7 @@ import CourseMessagesPage from "./pages/CourseMessagesPage";
 import PostDetailPage from "./pages/PostDetailPage";
 import PostAnalyticsPage from "./pages/PostAnalyticsPage";
 import DashboardPage from "./pages/admin/DashboardPage";
+import EngagementDistributionDetailPage from "./pages/admin/EngagementDistributionDetailPage";
 import CreateCoursePage from "./pages/admin/CreateCoursePage";
 import CourseManagePage from "./pages/admin/CourseManagePage";
 import CourseDashboardPage from "./pages/admin/CourseDashboardPage";
@@ -160,6 +161,14 @@ export default function App() {
             element={
               <RequireTeacher>
                 <DashboardPage />
+              </RequireTeacher>
+            }
+          />
+          <Route
+            path="/dashboard/engagement-distribution"
+            element={
+              <RequireTeacher>
+                <EngagementDistributionDetailPage />
               </RequireTeacher>
             }
           />

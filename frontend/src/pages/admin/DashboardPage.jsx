@@ -187,10 +187,11 @@ function InsightItem({ eyebrow, title, detail }) {
   );
 }
 
-function DetailButton({ children }) {
+function DetailButton({ children, onClick }) {
   return (
     <button
       type="button"
+      onClick={onClick}
       className="inline-flex h-9 items-center justify-center rounded-full border border-brand-100 bg-white px-4 text-[13px] font-semibold text-brand transition hover:border-brand"
     >
       {children}
@@ -937,7 +938,9 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <div className="mt-3.5 flex justify-center">
-                  <DetailButton>View Details</DetailButton>
+                  <DetailButton onClick={() => navigate("/dashboard/engagement-distribution")}>
+                    View Details
+                  </DetailButton>
                 </div>
               </div>
             </SectionCard>

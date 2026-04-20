@@ -30,6 +30,7 @@ from .controllers import (
     dashboard_course_hashtag_detail,
     dashboard_course_segmentation,
     dashboard_course_student_detail,
+    dashboard_engagement_distribution_detail,
     dashboard_summary,
     files_endpoint,
     follow_user,
@@ -95,6 +96,11 @@ urlpatterns = [
     path("users/<int:user_id>/following/", list_following, name="user-following"),
     path("users/<int:user_id>/followers/", list_followers, name="user-followers"),
     path("admin/dashboard/", dashboard_summary, name="admin-dashboard"),
+    path(
+        "admin/dashboard/engagement-distribution/",
+        dashboard_engagement_distribution_detail,
+        name="admin-dashboard-engagement-distribution",
+    ),
     path(
         "admin/dashboard/courses/<int:course_id>/",
         dashboard_course_detail,

@@ -4,6 +4,7 @@ from django.http import HttpRequest, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from ..services import (
+    get_admin_engagement_distribution,
     get_course_dashboard,
     get_course_hashtag_dashboard,
     get_course_student_dashboard,
@@ -35,6 +36,28 @@ def dashboard_summary(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"error": str(exc)}, status=403)
 
     return JsonResponse({"summary": data})
+
+
+@csrf_exempt
+def dashboard_engagement_distribution_detail(request: HttpRequest) -> JsonResponse:
+    auth_error = _ensure_authenticated(request)
+    if auth_error:
+        return auth_error
+
+    if request.method != "GET":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    try:
+        range_days = int(request.GET.get("range_days", "7"))
+        if range_days <= 0 or range_days > 365:
+            raise ValueError("range_days must be between 1 and 365.")
+        data = get_admin_engagement_distribution(user=request.user, range_days=range_days)
+    except ValueError as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
+    except PermissionError as exc:
+        return JsonResponse({"error": str(exc)}, status=403)
+
+    return JsonResponse({"detail": data})
 
 
 @csrf_exempt
@@ -115,6 +138,7 @@ def dashboard_course_student_detail(
 
 __all__ = [
     "dashboard_summary",
+    "dashboard_engagement_distribution_detail",
     "dashboard_course_detail",
     "dashboard_course_hashtag_detail",
     "dashboard_course_student_detail",

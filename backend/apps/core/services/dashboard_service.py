@@ -675,6 +675,116 @@ def refresh_dashboard_snapshot_async(user) -> None:
     ).start()
 
 
+def get_admin_engagement_distribution(*, user, range_days: int = 7) -> dict[str, Any]:
+    _ensure_admin(user)
+    safe_range_days = max(int(range_days or 7), 1)
+    today = timezone.localdate()
+    range_start = (timezone.now() - timedelta(days=safe_range_days)).date()
+    courses = CourseRepository.filter(created_by_id=user.id)
+
+    course_rows: list[dict[str, Any]] = []
+    total_likes = 0
+    total_comments = 0
+    total_views = 0
+    total_other = 0
+
+    for course in courses:
+        course_data = _collect_course_post_data(course, range_days=safe_range_days)
+        likes = int(course_data.get("total_likes", 0))
+        comments = int(course_data.get("total_comments", 0))
+        views = int(course_data.get("total_views", 0))
+        other = 0
+        total = likes + comments + views + other
+
+        total_likes += likes
+        total_comments += comments
+        total_views += views
+        total_other += other
+
+        course_rows.append(
+            {
+                "id": course.id,
+                "course_code": course.course_code,
+                "name": course.name,
+                "term": course.term,
+                "likes": likes,
+                "comments": comments,
+                "views": views,
+                "other": other,
+                "total_interactions": total,
+            }
+        )
+
+    total_interactions = total_likes + total_comments + total_views + total_other
+    denominator = max(total_interactions, 1)
+    breakdown = [
+        {
+            "key": "likes",
+            "label": "Likes",
+            "count": total_likes,
+            "percentage": round(total_likes * 100 / denominator, 1) if total_interactions else 0,
+            "color": "#62C6A5",
+        },
+        {
+            "key": "comments",
+            "label": "Comments",
+            "count": total_comments,
+            "percentage": round(total_comments * 100 / denominator, 1) if total_interactions else 0,
+            "color": "#4F86E8",
+        },
+        {
+            "key": "views",
+            "label": "Views",
+            "count": total_views,
+            "percentage": round(total_views * 100 / denominator, 1) if total_interactions else 0,
+            "color": "#8B5CF6",
+        },
+        {
+            "key": "other",
+            "label": "Other",
+            "count": total_other,
+            "percentage": round(total_other * 100 / denominator, 1) if total_interactions else 0,
+            "color": "#F2A06B",
+        },
+    ]
+
+    course_rows.sort(key=lambda item: item["total_interactions"], reverse=True)
+    for row in course_rows:
+        row["share_percent"] = (
+            round(row["total_interactions"] * 100 / denominator, 1) if total_interactions else 0
+        )
+
+    top_course = course_rows[0] if course_rows else None
+    top_type = max(breakdown, key=lambda item: item["count"], default=None)
+    insight_parts = []
+    if top_course and top_course["total_interactions"] > 0:
+        insight_parts.append(
+            f'{top_course["course_code"] or "Top course"} sees the highest engagement with {top_course["total_interactions"]} total interactions.'
+        )
+    if top_type and top_type["count"] > 0:
+        insight_parts.append(
+            f'{top_type["label"]} are currently the dominant interaction type at {top_type["percentage"]}%.'
+        )
+    if total_comments < total_likes and total_likes > 0:
+        insight_parts.append("Comments remain lighter than likes, suggesting response depth could be improved.")
+
+    return {
+        "range_days": safe_range_days,
+        "range_start": range_start.isoformat(),
+        "range_end": today.isoformat(),
+        "summary": {
+            "total_interactions": total_interactions,
+            "likes": total_likes,
+            "comments": total_comments,
+            "views": total_views,
+            "other": total_other,
+        },
+        "breakdown": breakdown,
+        "courses": course_rows,
+        "insight": " ".join(insight_parts).strip(),
+    }
+
+
 def refresh_course_hashtag_snapshot(course, hashtag: str, course_data: dict[str, Any]) -> None:
     normalized = _normalize_hashtag(hashtag)
     if not normalized:

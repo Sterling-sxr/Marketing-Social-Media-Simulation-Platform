@@ -50,6 +50,7 @@ from .course_post_controller import (
     course_posts,
 )
 from .dashboard_controller import (
+    dashboard_engagement_distribution_detail,
     dashboard_course_detail,
     dashboard_course_hashtag_detail,
     dashboard_course_student_detail,
@@ -134,6 +135,7 @@ __all__ = [
     "course_ai_users_generate_preview",
     "course_ai_users_generate_commit",
     "dashboard_summary",
+    "dashboard_engagement_distribution_detail",
     "dashboard_course_detail",
     "dashboard_course_hashtag_detail",
     "dashboard_course_student_detail",
