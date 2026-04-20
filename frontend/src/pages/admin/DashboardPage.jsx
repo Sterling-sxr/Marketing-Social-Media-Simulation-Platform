@@ -1025,7 +1025,13 @@ export default function DashboardPage() {
                     <div className="mt-1.5 text-[14px] text-slate-500">Interactions</div>
                   </div>
                   <div className="mt-4 flex justify-center">
-                    <DetailButton>View Course Analytics</DetailButton>
+                    <DetailButton
+                      onClick={() => {
+                        if (topCourse?.id) navigate(`/dashboard/courses/${topCourse.id}`);
+                      }}
+                    >
+                      View Course Analytics
+                    </DetailButton>
                   </div>
                 </div>
               ) : (
