@@ -132,7 +132,7 @@ export default function CourseStudentDashboardPage() {
         <button
           type="button"
           className="rounded-full border border-brand-200 bg-white px-3 py-2 text-xs font-semibold text-brand transition hover:border-brand"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate("/dashboard")}
         >
           ← Back
         </button>
