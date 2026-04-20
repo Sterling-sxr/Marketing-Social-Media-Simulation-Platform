@@ -31,6 +31,7 @@ from .controllers import (
     dashboard_course_segmentation,
     dashboard_course_student_detail,
     dashboard_engagement_distribution_detail,
+    dashboard_sentiment_distribution_detail,
     dashboard_summary,
     files_endpoint,
     follow_user,
@@ -100,6 +101,11 @@ urlpatterns = [
         "admin/dashboard/engagement-distribution/",
         dashboard_engagement_distribution_detail,
         name="admin-dashboard-engagement-distribution",
+    ),
+    path(
+        "admin/dashboard/sentiment-analysis/",
+        dashboard_sentiment_distribution_detail,
+        name="admin-dashboard-sentiment-analysis",
     ),
     path(
         "admin/dashboard/courses/<int:course_id>/",

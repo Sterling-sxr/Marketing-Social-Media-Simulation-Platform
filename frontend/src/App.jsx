@@ -24,6 +24,7 @@ import PostDetailPage from "./pages/PostDetailPage";
 import PostAnalyticsPage from "./pages/PostAnalyticsPage";
 import DashboardPage from "./pages/admin/DashboardPage";
 import EngagementDistributionDetailPage from "./pages/admin/EngagementDistributionDetailPage";
+import SentimentAnalysisDetailPage from "./pages/admin/SentimentAnalysisDetailPage";
 import CreateCoursePage from "./pages/admin/CreateCoursePage";
 import CourseManagePage from "./pages/admin/CourseManagePage";
 import CourseDashboardPage from "./pages/admin/CourseDashboardPage";
@@ -169,6 +170,14 @@ export default function App() {
             element={
               <RequireTeacher>
                 <EngagementDistributionDetailPage />
+              </RequireTeacher>
+            }
+          />
+          <Route
+            path="/dashboard/sentiment-analysis"
+            element={
+              <RequireTeacher>
+                <SentimentAnalysisDetailPage />
               </RequireTeacher>
             }
           />

@@ -992,7 +992,9 @@ export default function DashboardPage() {
                   ))}
                 </div>
                 <div className="mt-3.5 flex justify-center">
-                  <DetailButton>View Details</DetailButton>
+                  <DetailButton onClick={() => navigate("/dashboard/sentiment-analysis")}>
+                    View Details
+                  </DetailButton>
                 </div>
               </div>
             </SectionCard>

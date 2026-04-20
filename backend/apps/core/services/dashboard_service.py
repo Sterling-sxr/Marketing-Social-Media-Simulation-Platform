@@ -785,6 +785,119 @@ def get_admin_engagement_distribution(*, user, range_days: int = 7) -> dict[str,
     }
 
 
+def get_admin_sentiment_distribution(*, user, range_days: int = 7) -> dict[str, Any]:
+    _ensure_admin(user)
+    safe_range_days = max(int(range_days or 7), 1)
+    today = timezone.localdate()
+    range_start = (timezone.now() - timedelta(days=safe_range_days)).date()
+    courses = CourseRepository.filter(created_by_id=user.id)
+
+    course_rows: list[dict[str, Any]] = []
+    total_counts = {"positive": 0, "neutral": 0, "negative": 0}
+
+    for course in courses:
+        course_data = _collect_course_post_data(course, range_days=safe_range_days)
+        sentiment_totals = {"positive": 0, "neutral": 0, "negative": 0}
+
+        for sentiment_counts in course_data.get("comment_sentiments", {}).values():
+            for label in ("positive", "neutral", "negative"):
+                sentiment_totals[label] += int(sentiment_counts.get(label, 0) or 0)
+
+        total_comments = sum(sentiment_totals.values())
+        for label in ("positive", "neutral", "negative"):
+            total_counts[label] += sentiment_totals[label]
+
+        course_rows.append(
+            {
+                "id": course.id,
+                "course_code": course.course_code,
+                "name": course.name,
+                "term": course.term,
+                "positive": sentiment_totals["positive"],
+                "neutral": sentiment_totals["neutral"],
+                "negative": sentiment_totals["negative"],
+                "total_comments": total_comments,
+                "positive_percent": round(sentiment_totals["positive"] * 100 / total_comments, 1)
+                if total_comments
+                else 0,
+                "neutral_percent": round(sentiment_totals["neutral"] * 100 / total_comments, 1)
+                if total_comments
+                else 0,
+                "negative_percent": round(sentiment_totals["negative"] * 100 / total_comments, 1)
+                if total_comments
+                else 0,
+            }
+        )
+
+    total_comments = sum(total_counts.values())
+    breakdown = [
+        {
+            "key": "positive",
+            "label": "Positive",
+            "count": total_counts["positive"],
+            "percentage": round(total_counts["positive"] * 100 / total_comments, 1) if total_comments else 0,
+            "color": "#4FBF8B",
+        },
+        {
+            "key": "neutral",
+            "label": "Neutral",
+            "count": total_counts["neutral"],
+            "percentage": round(total_counts["neutral"] * 100 / total_comments, 1) if total_comments else 0,
+            "color": "#F5B544",
+        },
+        {
+            "key": "negative",
+            "label": "Negative",
+            "count": total_counts["negative"],
+            "percentage": round(total_counts["negative"] * 100 / total_comments, 1) if total_comments else 0,
+            "color": "#F36A7D",
+        },
+    ]
+
+    course_rows.sort(key=lambda item: item["total_comments"], reverse=True)
+    for row in course_rows:
+        row["share_percent"] = round(row["total_comments"] * 100 / total_comments, 1) if total_comments else 0
+
+    top_course = course_rows[0] if course_rows else None
+    dominant_type = max(breakdown, key=lambda item: item["count"], default=None)
+    insight_parts: list[str] = []
+
+    if dominant_type and dominant_type["count"] > 0:
+        if dominant_type["key"] == "neutral":
+            insight_parts.append(
+                f'Neutral sentiment dominates the current snapshot at {dominant_type["percentage"]}% of analyzed comments.'
+            )
+            insight_parts.append(
+                "Most course interactions appear informational rather than strongly emotional, which is common in teaching contexts."
+            )
+        else:
+            insight_parts.append(
+                f'{dominant_type["label"]} sentiment currently leads at {dominant_type["percentage"]}% of analyzed comments.'
+            )
+
+    if total_counts["negative"] == 0 and total_comments > 0:
+        insight_parts.append("No strong negative sentiment is detected in the current time range.")
+    elif top_course and top_course["negative"] > 0:
+        insight_parts.append(
+            f'{top_course["course_code"] or "One course"} shows the highest negative volume with {top_course["negative"]} negative comments.'
+        )
+
+    return {
+        "range_days": safe_range_days,
+        "range_start": range_start.isoformat(),
+        "range_end": today.isoformat(),
+        "summary": {
+            "total_comments": total_comments,
+            "positive": total_counts["positive"],
+            "neutral": total_counts["neutral"],
+            "negative": total_counts["negative"],
+        },
+        "breakdown": breakdown,
+        "courses": course_rows,
+        "insight": " ".join(insight_parts[:2]).strip(),
+    }
+
+
 def refresh_course_hashtag_snapshot(course, hashtag: str, course_data: dict[str, Any]) -> None:
     normalized = _normalize_hashtag(hashtag)
     if not normalized:
