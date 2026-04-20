@@ -130,8 +130,10 @@ def _summarize_sentiment(counts: dict[str, int]) -> dict[str, Any]:
     }
 
 
-def _calculate_dashboard_metrics(user) -> dict[str, Any]:
+def _calculate_dashboard_metrics(user, *, range_days: int = 7) -> dict[str, Any]:
     today = timezone.localdate()
+    now = timezone.now()
+    range_start = now - timedelta(days=max(range_days, 1))
     courses = CourseRepository.filter(created_by_id=user.id)
     if not courses:
         return {
@@ -145,6 +147,9 @@ def _calculate_dashboard_metrics(user) -> dict[str, Any]:
                 "neutral": 0,
                 "negative": 0,
             },
+            "range_days": range_days,
+            "range_start": range_start.date().isoformat(),
+            "range_end": today.isoformat(),
         }
 
     total_courses = len(courses)
@@ -157,12 +162,16 @@ def _calculate_dashboard_metrics(user) -> dict[str, Any]:
     ).values_list("user_id", flat=True)
     registered_students = len(set(members))
 
-    posts = PostRepository.model.objects.filter(course_id__in=course_ids)
+    posts = PostRepository.model.objects.filter(
+        course_id__in=course_ids,
+        created_at__gte=range_start,
+    )
     post_ids = list(posts.values_list("id", flat=True))
     total_posts = len(post_ids)
 
     total_likes = PostLikeRepository.model.objects.filter(post_id__in=post_ids).count()
     total_comments = PostCommentRepository.model.objects.filter(post_id__in=post_ids).count()
+    total_views = PostViewRepository.model.objects.filter(post_id__in=post_ids).count()
     total_interactions = total_likes + total_comments
 
     sentiment_counts = {"positive": 0, "neutral": 0, "negative": 0}
@@ -198,8 +207,14 @@ def _calculate_dashboard_metrics(user) -> dict[str, Any]:
         "active_courses": active_courses,
         "registered_students": registered_students,
         "total_posts": total_posts,
+        "total_likes": total_likes,
+        "total_comments": total_comments,
+        "total_views": total_views,
         "total_interactions": total_interactions,
         "sentiment": sentiment_percentages,
+        "range_days": range_days,
+        "range_start": range_start.date().isoformat(),
+        "range_end": today.isoformat(),
         "refreshing": False,
     }
 
@@ -232,8 +247,12 @@ def _get_post_interactions(
     return interactions_per_post, total_interactions, like_counts, comment_counts
 
 
-def _collect_course_post_data(course) -> dict[str, Any]:
-    posts_qs = PostRepository.model.objects.filter(course_id=course.id)
+def _collect_course_post_data(course, *, range_days: int = 7) -> dict[str, Any]:
+    range_start = timezone.now() - timedelta(days=max(range_days, 1))
+    posts_qs = PostRepository.model.objects.filter(
+        course_id=course.id,
+        created_at__gte=range_start,
+    )
     post_records = list(posts_qs.values("id", "author_id", "hashtags", "created_at", "content"))
     post_ids = [record["id"] for record in post_records]
 
@@ -315,8 +334,9 @@ def _calculate_course_metrics_from_data(course, course_data: dict[str, Any]) -> 
     comment_sentiments = course_data["comment_sentiments"]
     registered_students = _get_registered_student_count(course.id)
     now = timezone.now()
-    current_start = now - timedelta(days=7)
-    previous_start = now - timedelta(days=14)
+    range_days = max(int(course_data.get("range_days") or 7), 1)
+    current_start = now - timedelta(days=range_days)
+    previous_start = now - timedelta(days=range_days * 2)
 
     hashtag_stats: dict[str, dict[str, Any]] = {}
     student_stats: dict[int, dict[str, Any]] = {}
@@ -446,6 +466,9 @@ def _placeholder_dashboard_data() -> dict[str, Any]:
         "total_courses": 0,
         "registered_students": 0,
         "total_posts": 0,
+        "total_likes": 0,
+        "total_comments": 0,
+        "total_views": 0,
         "total_interactions": 0,
         "sentiment": {"positive": 0, "neutral": 0, "negative": 0},
         "courses": [],
@@ -549,8 +572,10 @@ def _placeholder_student_data(course, student_id: int, student=None) -> dict[str
     }
 
 
-def refresh_course_snapshot(course) -> dict[str, Any]:
-    metrics, course_data = _calculate_course_metrics(course)
+def refresh_course_snapshot(course, *, range_days: int = 7) -> dict[str, Any]:
+    course_data = _collect_course_post_data(course, range_days=range_days)
+    course_data["range_days"] = range_days
+    metrics = _calculate_course_metrics_from_data(course, course_data)
     today = timezone.localdate()
     course_info = {
         "id": course.id,
@@ -559,7 +584,14 @@ def refresh_course_snapshot(course) -> dict[str, Any]:
         "term": course.term,
         "active": bool(getattr(course, "end_date", None) is None or course.end_date >= today),
     }
-    payload = {**metrics, "course": course_info, "refreshing": False}
+    payload = {
+        **metrics,
+        "course": course_info,
+        "range_days": range_days,
+        "range_start": (timezone.now() - timedelta(days=max(range_days, 1))).date().isoformat(),
+        "range_end": today.isoformat(),
+        "refreshing": False,
+    }
     snapshot, _ = CourseDashboardSnapshot.objects.update_or_create(
         course=course,
         defaults={"data": payload, "calculated_at": timezone.now()},
@@ -578,14 +610,14 @@ def refresh_course_snapshot(course) -> dict[str, Any]:
     return result
 
 
-def refresh_dashboard_snapshot(user) -> dict[str, Any]:
+def refresh_dashboard_snapshot(user, *, range_days: int = 7) -> dict[str, Any]:
     _ensure_admin(user)
-    data = _calculate_dashboard_metrics(user)
+    data = _calculate_dashboard_metrics(user, range_days=range_days)
     courses = CourseRepository.filter(created_by_id=user.id)
     course_summaries: list[dict[str, Any]] = []
     for course in courses:
         try:
-            course_snapshot = refresh_course_snapshot(course)
+            course_snapshot = refresh_course_snapshot(course, range_days=range_days)
         except Exception:
             _logger.exception("Failed to refresh course snapshot for course=%s", course.id)
             continue
@@ -602,6 +634,7 @@ def refresh_dashboard_snapshot(user) -> dict[str, Any]:
                 "total_interactions": summary.get("total_interactions", 0),
                 "registered_students": summary.get("registered_students", 0),
                 "calculated_at": course_snapshot.get("calculated_at"),
+                "range_days": course_snapshot.get("range_days", range_days),
             }
         )
 
