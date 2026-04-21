@@ -130,8 +130,10 @@ def _summarize_sentiment(counts: dict[str, int]) -> dict[str, Any]:
     }
 
 
-def _calculate_dashboard_metrics(user) -> dict[str, Any]:
+def _calculate_dashboard_metrics(user, *, range_days: int = 7) -> dict[str, Any]:
     today = timezone.localdate()
+    now = timezone.now()
+    range_start = now - timedelta(days=max(range_days, 1))
     courses = CourseRepository.filter(created_by_id=user.id)
     if not courses:
         return {
@@ -145,6 +147,9 @@ def _calculate_dashboard_metrics(user) -> dict[str, Any]:
                 "neutral": 0,
                 "negative": 0,
             },
+            "range_days": range_days,
+            "range_start": range_start.date().isoformat(),
+            "range_end": today.isoformat(),
         }
 
     total_courses = len(courses)
@@ -157,12 +162,16 @@ def _calculate_dashboard_metrics(user) -> dict[str, Any]:
     ).values_list("user_id", flat=True)
     registered_students = len(set(members))
 
-    posts = PostRepository.model.objects.filter(course_id__in=course_ids)
+    posts = PostRepository.model.objects.filter(
+        course_id__in=course_ids,
+        created_at__gte=range_start,
+    )
     post_ids = list(posts.values_list("id", flat=True))
     total_posts = len(post_ids)
 
     total_likes = PostLikeRepository.model.objects.filter(post_id__in=post_ids).count()
     total_comments = PostCommentRepository.model.objects.filter(post_id__in=post_ids).count()
+    total_views = PostViewRepository.model.objects.filter(post_id__in=post_ids).count()
     total_interactions = total_likes + total_comments
 
     sentiment_counts = {"positive": 0, "neutral": 0, "negative": 0}
@@ -198,8 +207,14 @@ def _calculate_dashboard_metrics(user) -> dict[str, Any]:
         "active_courses": active_courses,
         "registered_students": registered_students,
         "total_posts": total_posts,
+        "total_likes": total_likes,
+        "total_comments": total_comments,
+        "total_views": total_views,
         "total_interactions": total_interactions,
         "sentiment": sentiment_percentages,
+        "range_days": range_days,
+        "range_start": range_start.date().isoformat(),
+        "range_end": today.isoformat(),
         "refreshing": False,
     }
 
@@ -232,8 +247,12 @@ def _get_post_interactions(
     return interactions_per_post, total_interactions, like_counts, comment_counts
 
 
-def _collect_course_post_data(course) -> dict[str, Any]:
-    posts_qs = PostRepository.model.objects.filter(course_id=course.id)
+def _collect_course_post_data(course, *, range_days: int = 7) -> dict[str, Any]:
+    range_start = timezone.now() - timedelta(days=max(range_days, 1))
+    posts_qs = PostRepository.model.objects.filter(
+        course_id=course.id,
+        created_at__gte=range_start,
+    )
     post_records = list(posts_qs.values("id", "author_id", "hashtags", "created_at", "content"))
     post_ids = [record["id"] for record in post_records]
 
@@ -315,8 +334,9 @@ def _calculate_course_metrics_from_data(course, course_data: dict[str, Any]) -> 
     comment_sentiments = course_data["comment_sentiments"]
     registered_students = _get_registered_student_count(course.id)
     now = timezone.now()
-    current_start = now - timedelta(days=7)
-    previous_start = now - timedelta(days=14)
+    range_days = max(int(course_data.get("range_days") or 7), 1)
+    current_start = now - timedelta(days=range_days)
+    previous_start = now - timedelta(days=range_days * 2)
 
     hashtag_stats: dict[str, dict[str, Any]] = {}
     student_stats: dict[int, dict[str, Any]] = {}
@@ -446,6 +466,9 @@ def _placeholder_dashboard_data() -> dict[str, Any]:
         "total_courses": 0,
         "registered_students": 0,
         "total_posts": 0,
+        "total_likes": 0,
+        "total_comments": 0,
+        "total_views": 0,
         "total_interactions": 0,
         "sentiment": {"positive": 0, "neutral": 0, "negative": 0},
         "courses": [],
@@ -549,8 +572,10 @@ def _placeholder_student_data(course, student_id: int, student=None) -> dict[str
     }
 
 
-def refresh_course_snapshot(course) -> dict[str, Any]:
-    metrics, course_data = _calculate_course_metrics(course)
+def refresh_course_snapshot(course, *, range_days: int = 7) -> dict[str, Any]:
+    course_data = _collect_course_post_data(course, range_days=range_days)
+    course_data["range_days"] = range_days
+    metrics = _calculate_course_metrics_from_data(course, course_data)
     today = timezone.localdate()
     course_info = {
         "id": course.id,
@@ -559,7 +584,14 @@ def refresh_course_snapshot(course) -> dict[str, Any]:
         "term": course.term,
         "active": bool(getattr(course, "end_date", None) is None or course.end_date >= today),
     }
-    payload = {**metrics, "course": course_info, "refreshing": False}
+    payload = {
+        **metrics,
+        "course": course_info,
+        "range_days": range_days,
+        "range_start": (timezone.now() - timedelta(days=max(range_days, 1))).date().isoformat(),
+        "range_end": today.isoformat(),
+        "refreshing": False,
+    }
     snapshot, _ = CourseDashboardSnapshot.objects.update_or_create(
         course=course,
         defaults={"data": payload, "calculated_at": timezone.now()},
@@ -578,14 +610,14 @@ def refresh_course_snapshot(course) -> dict[str, Any]:
     return result
 
 
-def refresh_dashboard_snapshot(user) -> dict[str, Any]:
+def refresh_dashboard_snapshot(user, *, range_days: int = 7) -> dict[str, Any]:
     _ensure_admin(user)
-    data = _calculate_dashboard_metrics(user)
+    data = _calculate_dashboard_metrics(user, range_days=range_days)
     courses = CourseRepository.filter(created_by_id=user.id)
     course_summaries: list[dict[str, Any]] = []
     for course in courses:
         try:
-            course_snapshot = refresh_course_snapshot(course)
+            course_snapshot = refresh_course_snapshot(course, range_days=range_days)
         except Exception:
             _logger.exception("Failed to refresh course snapshot for course=%s", course.id)
             continue
@@ -602,6 +634,7 @@ def refresh_dashboard_snapshot(user) -> dict[str, Any]:
                 "total_interactions": summary.get("total_interactions", 0),
                 "registered_students": summary.get("registered_students", 0),
                 "calculated_at": course_snapshot.get("calculated_at"),
+                "range_days": course_snapshot.get("range_days", range_days),
             }
         )
 
@@ -640,6 +673,229 @@ def refresh_dashboard_snapshot_async(user) -> None:
         name=f"dashboard-refresh-user-{user_id}",
         daemon=True,
     ).start()
+
+
+def get_admin_engagement_distribution(*, user, range_days: int = 7) -> dict[str, Any]:
+    _ensure_admin(user)
+    safe_range_days = max(int(range_days or 7), 1)
+    today = timezone.localdate()
+    range_start = (timezone.now() - timedelta(days=safe_range_days)).date()
+    courses = CourseRepository.filter(created_by_id=user.id)
+
+    course_rows: list[dict[str, Any]] = []
+    total_likes = 0
+    total_comments = 0
+    total_views = 0
+    total_other = 0
+
+    for course in courses:
+        course_data = _collect_course_post_data(course, range_days=safe_range_days)
+        likes = int(course_data.get("total_likes", 0))
+        comments = int(course_data.get("total_comments", 0))
+        views = int(course_data.get("total_views", 0))
+        other = 0
+        total = likes + comments + views + other
+
+        total_likes += likes
+        total_comments += comments
+        total_views += views
+        total_other += other
+
+        course_rows.append(
+            {
+                "id": course.id,
+                "course_code": course.course_code,
+                "name": course.name,
+                "term": course.term,
+                "likes": likes,
+                "comments": comments,
+                "views": views,
+                "other": other,
+                "total_interactions": total,
+            }
+        )
+
+    total_interactions = total_likes + total_comments + total_views + total_other
+    denominator = max(total_interactions, 1)
+    breakdown = [
+        {
+            "key": "likes",
+            "label": "Likes",
+            "count": total_likes,
+            "percentage": round(total_likes * 100 / denominator, 1) if total_interactions else 0,
+            "color": "#62C6A5",
+        },
+        {
+            "key": "comments",
+            "label": "Comments",
+            "count": total_comments,
+            "percentage": round(total_comments * 100 / denominator, 1) if total_interactions else 0,
+            "color": "#4F86E8",
+        },
+        {
+            "key": "views",
+            "label": "Views",
+            "count": total_views,
+            "percentage": round(total_views * 100 / denominator, 1) if total_interactions else 0,
+            "color": "#8B5CF6",
+        },
+        {
+            "key": "other",
+            "label": "Other",
+            "count": total_other,
+            "percentage": round(total_other * 100 / denominator, 1) if total_interactions else 0,
+            "color": "#F2A06B",
+        },
+    ]
+
+    course_rows.sort(key=lambda item: item["total_interactions"], reverse=True)
+    for row in course_rows:
+        row["share_percent"] = (
+            round(row["total_interactions"] * 100 / denominator, 1) if total_interactions else 0
+        )
+
+    top_course = course_rows[0] if course_rows else None
+    top_type = max(breakdown, key=lambda item: item["count"], default=None)
+    insight_parts = []
+    if top_course and top_course["total_interactions"] > 0:
+        insight_parts.append(
+            f'{top_course["course_code"] or "Top course"} sees the highest engagement with {top_course["total_interactions"]} total interactions.'
+        )
+    if top_type and top_type["count"] > 0:
+        insight_parts.append(
+            f'{top_type["label"]} are currently the dominant interaction type at {top_type["percentage"]}%.'
+        )
+    if total_comments < total_likes and total_likes > 0:
+        insight_parts.append("Comments remain lighter than likes, suggesting response depth could be improved.")
+
+    return {
+        "range_days": safe_range_days,
+        "range_start": range_start.isoformat(),
+        "range_end": today.isoformat(),
+        "summary": {
+            "total_interactions": total_interactions,
+            "likes": total_likes,
+            "comments": total_comments,
+            "views": total_views,
+            "other": total_other,
+        },
+        "breakdown": breakdown,
+        "courses": course_rows,
+        "insight": " ".join(insight_parts).strip(),
+    }
+
+
+def get_admin_sentiment_distribution(*, user, range_days: int = 7) -> dict[str, Any]:
+    _ensure_admin(user)
+    safe_range_days = max(int(range_days or 7), 1)
+    today = timezone.localdate()
+    range_start = (timezone.now() - timedelta(days=safe_range_days)).date()
+    courses = CourseRepository.filter(created_by_id=user.id)
+
+    course_rows: list[dict[str, Any]] = []
+    total_counts = {"positive": 0, "neutral": 0, "negative": 0}
+
+    for course in courses:
+        course_data = _collect_course_post_data(course, range_days=safe_range_days)
+        sentiment_totals = {"positive": 0, "neutral": 0, "negative": 0}
+
+        for sentiment_counts in course_data.get("comment_sentiments", {}).values():
+            for label in ("positive", "neutral", "negative"):
+                sentiment_totals[label] += int(sentiment_counts.get(label, 0) or 0)
+
+        total_comments = sum(sentiment_totals.values())
+        for label in ("positive", "neutral", "negative"):
+            total_counts[label] += sentiment_totals[label]
+
+        course_rows.append(
+            {
+                "id": course.id,
+                "course_code": course.course_code,
+                "name": course.name,
+                "term": course.term,
+                "positive": sentiment_totals["positive"],
+                "neutral": sentiment_totals["neutral"],
+                "negative": sentiment_totals["negative"],
+                "total_comments": total_comments,
+                "positive_percent": round(sentiment_totals["positive"] * 100 / total_comments, 1)
+                if total_comments
+                else 0,
+                "neutral_percent": round(sentiment_totals["neutral"] * 100 / total_comments, 1)
+                if total_comments
+                else 0,
+                "negative_percent": round(sentiment_totals["negative"] * 100 / total_comments, 1)
+                if total_comments
+                else 0,
+            }
+        )
+
+    total_comments = sum(total_counts.values())
+    breakdown = [
+        {
+            "key": "positive",
+            "label": "Positive",
+            "count": total_counts["positive"],
+            "percentage": round(total_counts["positive"] * 100 / total_comments, 1) if total_comments else 0,
+            "color": "#4FBF8B",
+        },
+        {
+            "key": "neutral",
+            "label": "Neutral",
+            "count": total_counts["neutral"],
+            "percentage": round(total_counts["neutral"] * 100 / total_comments, 1) if total_comments else 0,
+            "color": "#F5B544",
+        },
+        {
+            "key": "negative",
+            "label": "Negative",
+            "count": total_counts["negative"],
+            "percentage": round(total_counts["negative"] * 100 / total_comments, 1) if total_comments else 0,
+            "color": "#F36A7D",
+        },
+    ]
+
+    course_rows.sort(key=lambda item: item["total_comments"], reverse=True)
+    for row in course_rows:
+        row["share_percent"] = round(row["total_comments"] * 100 / total_comments, 1) if total_comments else 0
+
+    top_course = course_rows[0] if course_rows else None
+    dominant_type = max(breakdown, key=lambda item: item["count"], default=None)
+    insight_parts: list[str] = []
+
+    if dominant_type and dominant_type["count"] > 0:
+        if dominant_type["key"] == "neutral":
+            insight_parts.append(
+                f'Neutral sentiment dominates the current snapshot at {dominant_type["percentage"]}% of analyzed comments.'
+            )
+            insight_parts.append(
+                "Most course interactions appear informational rather than strongly emotional, which is common in teaching contexts."
+            )
+        else:
+            insight_parts.append(
+                f'{dominant_type["label"]} sentiment currently leads at {dominant_type["percentage"]}% of analyzed comments.'
+            )
+
+    if total_counts["negative"] == 0 and total_comments > 0:
+        insight_parts.append("No strong negative sentiment is detected in the current time range.")
+    elif top_course and top_course["negative"] > 0:
+        insight_parts.append(
+            f'{top_course["course_code"] or "One course"} shows the highest negative volume with {top_course["negative"]} negative comments.'
+        )
+
+    return {
+        "range_days": safe_range_days,
+        "range_start": range_start.isoformat(),
+        "range_end": today.isoformat(),
+        "summary": {
+            "total_comments": total_comments,
+            "positive": total_counts["positive"],
+            "neutral": total_counts["neutral"],
+            "negative": total_counts["negative"],
+        },
+        "breakdown": breakdown,
+        "courses": course_rows,
+        "insight": " ".join(insight_parts[:2]).strip(),
+    }
 
 
 def refresh_course_hashtag_snapshot(course, hashtag: str, course_data: dict[str, Any]) -> None:

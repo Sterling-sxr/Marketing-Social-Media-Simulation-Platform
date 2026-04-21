@@ -63,6 +63,8 @@ from .course_service import (
 from .dashboard_service import (
     classify_comment_sentiment,
     get_admin_dashboard,
+    get_admin_engagement_distribution,
+    get_admin_sentiment_distribution,
     get_course_dashboard,
     get_course_hashtag_dashboard,
     get_course_student_dashboard,
@@ -175,6 +177,8 @@ __all__ = [
     "search_course_mentions",
     "search_course_hashtags",
     "get_admin_dashboard",
+    "get_admin_engagement_distribution",
+    "get_admin_sentiment_distribution",
     "refresh_dashboard_snapshot",
     "get_course_dashboard",
     "get_course_hashtag_dashboard",

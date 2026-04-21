@@ -58,6 +58,7 @@ export default function AuthenticatedShell({
   mobileNavLinks,
   hideMobileNav = false,
   showNotifications = false, // Inline explanation: Keep this non-obvious normalization rule explicit.
+  wideContent = false,
   /* Context: Keep related logic in one section so assumptions and control flow stay explicit. Reason: Localizing side effects lowers review cost and reduces accidental regressions. */
   printFriendlyChrome = false,
 }) {
@@ -112,35 +113,6 @@ export default function AuthenticatedShell({
     if (links && links.length) return links;
     const isAdminUser = Boolean(authUser?.is_superuser || authUser?.is_staff);
     if (isAdminUser) {
-      // Context: Compute shared values once so all branches use the same normalized inputs.
-      // Context: Compute shared values once so all branches use the same normalized inputs.
-      const dashCourseMatch = location.pathname.match(/^\/dashboard\/courses\/(\d+)/);
-      if (dashCourseMatch?.[1]) {
-        const currentCourseId = dashCourseMatch[1];
-        return [
-          {
-            to: `/courses/${currentCourseId}/community`,
-            label: "Community",
-            icon: <FileText className="h-5 w-5" />,
-          },
-          {
-            to: `/courses/${currentCourseId}/materials`,
-            label: "Materials",
-            icon: <BookOpen className="h-5 w-5" />,
-          },
-          {
-            to: `/dashboard/courses/${currentCourseId}`,
-            label: "Analyze",
-            icon: <BarChart3 className="h-5 w-5" />,
-          },
-          {
-            to: `/courses/${currentCourseId}/messages`,
-            label: "Messages",
-            icon: <Bell className="h-5 w-5" />,
-          },
-        ];
-      }
-
       if (
         location.pathname === "/courses" ||
         location.pathname === "/courses/manage" ||
@@ -180,11 +152,6 @@ export default function AuthenticatedShell({
             to: `/courses/${currentCourseId}/materials`,
             label: "Materials",
             icon: <BookOpen className="h-5 w-5" />,
-          },
-          {
-            to: `/dashboard/courses/${currentCourseId}`,
-            label: "Analyze",
-            icon: <BarChart3 className="h-5 w-5" />,
           },
           {
             to: `/courses/${currentCourseId}/messages`,
@@ -436,6 +403,7 @@ export default function AuthenticatedShell({
 
       {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-3 py-3 sm:gap-4 sm:px-4 sm:py-4 lg:flex-row lg:gap-6 lg:px-6 lg:py-8">
+        {!wideContent ? (
         <aside className="hidden w-16 flex-shrink-0 flex-col gap-2 rounded-3xl border border-brand-100/80 bg-white/75 p-2 shadow-soft backdrop-blur lg:flex lg:w-60 lg:p-4">
           <div className="hidden lg:block px-2 pb-1">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
@@ -492,8 +460,14 @@ export default function AuthenticatedShell({
             );
           })}
         </aside>
+        ) : null}
 
-        <main className="min-w-0 flex-1 space-y-4 rounded-2xl border border-brand-100/80 bg-white/78 p-4 pb-24 shadow-soft backdrop-blur sm:space-y-5 sm:p-5 sm:pb-24 lg:space-y-6 lg:rounded-3xl lg:p-6 lg:pb-6 lg:shadow-brand">
+        <main
+          className={classNames(
+            "min-w-0 flex-1 space-y-4 rounded-2xl border border-brand-100/80 bg-white/78 p-4 pb-24 shadow-soft backdrop-blur sm:space-y-5 sm:p-5 sm:pb-24 lg:space-y-6 lg:rounded-3xl lg:p-6 lg:pb-6 lg:shadow-brand",
+            wideContent && "w-full"
+          )}
+        >
           <div className="space-y-1">
             {title ? (
               <h1 className="break-words text-xl font-bold text-slate-900 sm:text-2xl">

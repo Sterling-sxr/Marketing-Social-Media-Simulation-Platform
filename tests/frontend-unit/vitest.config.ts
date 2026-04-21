@@ -7,6 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const localNodeModules = path.resolve(__dirname, 'node_modules');
+const frontendNodeModules = path.resolve(__dirname, '../../frontend/node_modules');
 
 export default defineConfig({
   plugins: [react({ jsxRuntime: 'classic' })],
@@ -18,7 +19,7 @@ export default defineConfig({
       'react-dom/client': path.resolve(localNodeModules, 'react-dom', 'client'),
       'react-router-dom': path.resolve(localNodeModules, 'react-router-dom'),
       'lucide-react': path.resolve(localNodeModules, 'lucide-react'),
-      recharts: path.resolve(localNodeModules, 'recharts'),
+      recharts: path.resolve(frontendNodeModules, 'recharts'),
     },
   },
   test: {

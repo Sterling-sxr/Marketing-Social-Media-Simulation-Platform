@@ -244,9 +244,9 @@ export default function PostDetailPage() {
                     className="inline-flex h-9 items-center gap-2 rounded-full border-2 bg-white px-4 text-xs font-semibold
                                text-accent-700 border-accent-400/80 transition hover:bg-accent-50 hover:shadow-md sm:h-10 sm:px-5 sm:text-sm
                                text-accent-700 border-accent-400/80 transition hover:bg-accent-50 hover:shadow-md"
-                    title="View analytics of this post"
+                    title="View post analysis"
                   >
-                    Analyze
+                    View Post Analysis
                   </button>
                 )}
 
