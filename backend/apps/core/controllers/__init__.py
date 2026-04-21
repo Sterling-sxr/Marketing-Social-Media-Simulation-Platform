@@ -50,11 +50,11 @@ from .course_post_controller import (
     course_posts,
 )
 from .dashboard_controller import (
-    dashboard_engagement_distribution_detail,
-    dashboard_sentiment_distribution_detail,
     dashboard_course_detail,
     dashboard_course_hashtag_detail,
     dashboard_course_student_detail,
+    dashboard_engagement_distribution_detail,
+    dashboard_sentiment_distribution_detail,
     dashboard_summary,
 )
 from .notifications import NotificationConsumer
