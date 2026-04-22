@@ -108,12 +108,8 @@ function buildCourseResults(query, courses) {
       id: `course-${course.id}`,
       type: "course",
       title: `${course.course_code} ${course.name}`.trim(),
-      snippet: course.profile_completed
-        ? "Open the course community and continue browsing discussions."
-        : "Complete your course profile first, then continue into the class feed.",
-      href: course.profile_completed
-        ? `/courses/${course.id}`
-        : `/courses/${course.id}/profile`,
+      snippet: "Open the course community and continue browsing discussions.",
+      href: `/courses/${course.id}`,
       courseName: course.term || "Course",
       authorName: course.role || "Member",
       createdAt: "",

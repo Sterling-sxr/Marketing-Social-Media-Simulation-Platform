@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
+import { getDefaultLandingPath } from "../lib/access";
 import Feedback from "./components/Feedback";
 import AuthLayout from "./components/AuthLayout";
 
@@ -24,11 +25,7 @@ export default function LoginPage() {
     try {
       const result = await login(email, password);
       setStatus({ loading: false, message: "Login Success!", error: "" });
-      if (result?.needsProfile) {
-        navigate("/onboarding/profile", { replace: true });
-        return;
-      }
-      navigate("/studenthome");
+      navigate(getDefaultLandingPath(result?.user), { replace: true });
     } catch (error) {
       setStatus({ loading: false, message: "", error: error.message });
     }

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from typing import Literal, cast
 
 from django.conf import settings
 
@@ -31,6 +32,7 @@ _VERIFICATION_TEMPLATE = (
 
 MIN_PASSWORD_LENGTH = 8
 PURPOSE = "register"
+ALLOWED_REGISTER_ROLES = {"student", "teacher"}
 
 
 class RegistrationError(Exception):
@@ -65,7 +67,15 @@ def _send_code_email(email: str, code: str) -> None:
         raise RegistrationError("Failed to send verification code. Please try again later.") from exc
 
 
-def request_verification_code(email: str) -> VerificationRequest:
+def _normalise_role(role: str) -> Literal["student", "teacher"]:
+    candidate = (role or "").strip().lower()
+    if candidate not in ALLOWED_REGISTER_ROLES:
+        raise RegistrationError("Invalid account role. Please choose student or teacher.")
+    return cast(Literal["student", "teacher"], candidate)
+
+
+def request_verification_code(email: str, role: str = "student") -> VerificationRequest:
+    _normalise_role(role)
     normalised_email = normalise_email(email)
     if not EMAIL_REGEX.match(normalised_email):
         raise RegistrationError("Please use an email from a .edu.au domain.")
@@ -106,7 +116,8 @@ def verify_registration_code(*, email: str, code: str) -> None:
     clear_state(purpose=PURPOSE, email=normalised_email)
 
 
-def complete_registration(*, email: str, password: str) -> UserCreationResult:
+def complete_registration(*, email: str, password: str, role: str = "student") -> UserCreationResult:
+    normalised_role = _normalise_role(role)
     normalised_email = normalise_email(email)
     if not EMAIL_REGEX.match(normalised_email):
         raise RegistrationError("Please use an email from a .edu.au domain.")
@@ -124,7 +135,12 @@ def complete_registration(*, email: str, password: str) -> UserCreationResult:
     if get_by_username(zid):
         raise RegistrationError("This user identifier is already registered. Please sign in.")
 
-    result = create_user(username=zid, email=normalised_email, password=password)
+    result = create_user(
+        username=zid,
+        email=normalised_email,
+        password=password,
+        role=normalised_role,
+    )
     if not result.created:
         raise RegistrationError("This user identifier is already registered. Please sign in.")
 

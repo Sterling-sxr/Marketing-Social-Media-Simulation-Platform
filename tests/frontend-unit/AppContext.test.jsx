@@ -1,4 +1,4 @@
-﻿import { act, render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import { AppProvider, useApp, createEmptyProfileData } from '../../frontend/src/context/AppContext.jsx';
 import { postJson } from '../../frontend/src/lib/api';
 
@@ -58,7 +58,10 @@ describe('AppContext behaviours', () => {
 
     await act(async () => {
       const result = await getCtx().login('user@example.com', 'secret');
-      expect(result).toEqual({ needsProfile: true });
+      expect(result).toEqual({
+        needsProfile: true,
+        user: { id: 42, username: 'demo' },
+      });
     });
 
     expect(getCtx().authUser).toMatchObject({ id: 42, username: 'demo' });

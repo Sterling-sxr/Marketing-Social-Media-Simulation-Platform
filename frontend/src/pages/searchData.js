@@ -83,7 +83,7 @@ export const MOCK_SEARCH_RESULTS = [
     title: "Weekly check-in template for studio-style courses",
     snippet:
       "A reusable format for blockers, wins, and next steps that keeps updates fast without losing project context.",
-    href: "/studenthome",
+    href: "/courses",
     courseName: "Studio Community",
     authorName: "Noah Wilson",
     createdAt: "2026-03-10T08:30:00Z",

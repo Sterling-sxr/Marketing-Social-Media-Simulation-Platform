@@ -61,6 +61,7 @@ export function AppProvider({ children }) {
 
   // Context: Compute shared values once so all branches use the same normalized inputs.
   const [registerEmail, setRegisterEmail] = useState("");
+  const [registerRole, setRegisterRole] = useState("student");
   const [registerStatus, setRegisterStatus] = useState(makeStatus);
   const [verifyDigits, setVerifyDigits] = useState(["", "", "", ""]);
   const [verifyStatus, setVerifyStatus] = useState(makeStatus);
@@ -217,6 +218,7 @@ export function AppProvider({ children }) {
 
   const resetRegisterFlow = useCallback(() => {
     setRegisterEmail("");
+    setRegisterRole("student");
     setRegisterStatus(makeStatus());
     setVerifyDigits(["", "", "", ""]);
     setVerifyStatus(makeStatus());
@@ -253,9 +255,10 @@ export function AppProvider({ children }) {
     try {
       const data = await postJson(AUTH_ENDPOINTS.registerStart, {
         email: trimmed,
+        role: registerRole,
       });
       setRegisterEmail(trimmed);
-      setVerifyContext({ mode: "register", email: trimmed });
+      setVerifyContext({ mode: "register", email: trimmed, role: registerRole });
       setVerifyDigits(["", "", "", ""]);
       setRegisterStatus({
         loading: false,
@@ -279,7 +282,7 @@ export function AppProvider({ children }) {
       });
       return false;
     }
-  }, [registerEmail]);
+  }, [registerEmail, registerRole]);
 
   const startReset = useCallback(async () => {
     const trimmed = resetEmail.trim();
@@ -343,7 +346,11 @@ export function AppProvider({ children }) {
         verifyContext.mode === "register"
           ? AUTH_ENDPOINTS.registerStart
           : AUTH_ENDPOINTS.resetStart;
-      const data = await postJson(endpoint, { email: verifyContext.email });
+      const payload =
+        verifyContext.mode === "register"
+          ? { email: verifyContext.email, role: verifyContext.role || "student" }
+          : { email: verifyContext.email };
+      const data = await postJson(endpoint, payload);
       setVerifyDigits(["", "", "", ""]);
       setVerifyStatus({
         loading: false,
@@ -489,6 +496,7 @@ export function AppProvider({ children }) {
       await postJson(AUTH_ENDPOINTS.registerComplete, {
         email: registerVerifiedEmail,
         password: registerPassword,
+        role: registerRole,
       });
       setRegisterCompleteStatus({
         loading: false,
@@ -504,7 +512,7 @@ export function AppProvider({ children }) {
       });
       return false;
     }
-  }, [registerPassword, registerPasswordConfirm, registerVerifiedEmail]);
+  }, [registerPassword, registerPasswordConfirm, registerRole, registerVerifiedEmail]);
 
   const completeReset = useCallback(async () => {
     if (!resetVerifiedEmail) {
@@ -555,8 +563,9 @@ export function AppProvider({ children }) {
 
   const login = useCallback(async (email, password) => {
     const data = await postJson(AUTH_ENDPOINTS.login, { email, password });
-    setAuthUser(data.user || null);
-    return { needsProfile: Boolean(data.needs_profile) };
+    const user = data.user || null;
+    setAuthUser(user);
+    return { needsProfile: Boolean(data.needs_profile), user };
   }, []);
 
   const logout = useCallback(async () => {
@@ -962,6 +971,8 @@ export function AppProvider({ children }) {
     setAuthUser,
     registerEmail,
     setRegisterEmail,
+    registerRole,
+    setRegisterRole,
     registerStatus,
     startRegister,
     resetRegisterFlow,

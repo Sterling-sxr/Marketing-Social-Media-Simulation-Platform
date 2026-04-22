@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
+import { getDefaultLandingPath } from "../lib/access";
 import Feedback from "./components/Feedback";
 import CircleImage from "./components/CircleImage";
 import { Eye, EyeOff } from "lucide-react";
@@ -24,9 +25,9 @@ export default function HomePage() {
     e.preventDefault();
     setStatus({ loading: true, message: "", error: "" });
     try {
-      await login(email, password);
+      const result = await login(email, password);
       setStatus({ loading: false, message: "Login Success!", error: "" });
-      navigate("/studenthome");
+      navigate(getDefaultLandingPath(result?.user), { replace: true });
     } catch (error) {
       setStatus({ loading: false, message: "", error: error.message });
     }

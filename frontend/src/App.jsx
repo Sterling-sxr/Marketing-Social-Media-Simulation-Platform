@@ -33,7 +33,6 @@ import CourseStudentDashboardPage from "./pages/admin/CourseStudentDashboardPage
 import CourseAIUsersPage from "./pages/admin/CourseAIUsersPage";
 import PeopleFollowsPage from "./pages/PeopleFollowsPage";
 import OnboardingProfilePage from "./pages/OnboardingProfilePage";
-import StudentHomePage from "./pages/StudentHomePage";
 import StudentAnalysisPage from "./pages/StudentAnalysisPage";
 import CourseStudentsPage from "./pages/admin/CourseStudentsPage.jsx";
 import SearchPage from "./pages/SearchPage";
@@ -78,8 +77,8 @@ export default function App() {
           <Route path="/reset/verify" element={<ResetVerifyPage />} />
           <Route path="/reset/password" element={<ResetPasswordPage />} />
           <Route path="/reset/success" element={<ResetSuccessPage />} />
-          <Route path="/studenthome" element={<StudentHomePage />} />
-          <Route path="/student/analysis" element={<StudentAnalysisPage />} />
+          <Route path="/studenthome" element={<Navigate to="/courses" replace />} />
+          <Route path="/student/analysis" element={<Navigate to="/courses" replace />} />
           <Route path="/ai-tutor" element={<AITutorPage />} />
           <Route path="/profile" element={<MyProfileRedirect />} />
           <Route path="/profile/edit" element={<ProfilePage />} />

@@ -14,7 +14,7 @@ import Feedback from "./components/Feedback";
 import { hasProfanity } from "../lib/profanity";
 import ProfanityHint from "./components/ProfanityHint";
 import AuthenticatedShell from "./components/AuthenticatedShell";
-import { isTeacher } from "../lib/access";
+import { getDefaultLandingPath } from "../lib/access";
 
 /* Context: Keep related logic in one section so assumptions and control flow stay explicit. Reason: Localizing side effects lowers review cost and reduces accidental regressions. */
 const initialComposerStatus = { loading: false, error: "", message: "" };
@@ -85,6 +85,7 @@ export default function CourseFeedPage() {
     logout,
     loadCourseProfile,
   } = useApp();
+  const homePath = getDefaultLandingPath(authUser);
 
   // Context: Compute shared values once so all branches use the same normalized inputs.
   const searchParams = new URLSearchParams(location.search);
@@ -163,8 +164,9 @@ export default function CourseFeedPage() {
     const s = String(v).trim().toLowerCase();
     return s === "true" || s === "1" || s === "yes" || s === "y";
   };
-  const courseReadOnly = normalizeBool(headerCourse?.read_only);
-  const courseEndDate = headerCourse?.end_date || null;
+  // Use community payload as source of truth for posting state.
+  const courseReadOnly = normalizeBool(courseSummary?.read_only);
+  const courseEndDate = courseSummary?.end_date || headerCourse?.end_date || null;
   const createPostDisabledTitle = courseReadOnly
     ? courseEndDate
       ? `This course ended on ${courseEndDate}. Posting is disabled.`
@@ -239,40 +241,11 @@ export default function CourseFeedPage() {
   }, [routeHashtagParam, location.search]);
 
   useEffect(() => {
-    if (
-      !authCheckComplete ||
-      !authUser ||
-      !Number.isFinite(courseId) ||
-      !courses.joined.length
-    ) {
-      return;
-    }
-    const membership = courses.joined.find((c) => c.id === courseId);
-    const roleFromCourse = (membership?.role || "")
-      .toString()
-      .toLowerCase();
-    const isCourseTeacher =
-      roleFromCourse === "teacher" || roleFromCourse === "instructor";
-    // Context: Compute shared values once so all branches use the same normalized inputs.
-    // Context: Compute shared values once so all branches use the same normalized inputs.
-    if (
-      membership &&
-      membership.profile_completed === false &&
-      !(isTeacher(authUser) || isCourseTeacher)
-    ) {
-      navigate(`/courses/${courseId}/profile`, {
-        replace: true,
-        state: { from: location.pathname + location.search },
-      });
-    }
+    if (!authCheckComplete || !authUser || !Number.isFinite(courseId)) return;
   }, [
     authCheckComplete,
     authUser,
-    courses.joined,
     courseId,
-    navigate,
-    location.pathname,
-    location.search,
   ]);
 
   // Context: Compute shared values once so all branches use the same normalized inputs.
@@ -322,21 +295,8 @@ export default function CourseFeedPage() {
 
   useEffect(() => {
     if (!authUser) return;
-    const membership = courses.joined.find((c) => c.id === courseId);
-    if (!membership) return;
-    const roleFromCourse = (membership?.role || "")
-      .toString()
-      .toLowerCase();
-    const isCourseTeacher =
-      roleFromCourse === "teacher" || roleFromCourse === "instructor";
-    if (
-      membership.profile_completed === false &&
-      !(isTeacher(authUser) || isCourseTeacher)
-    ) {
-      return;
-    }
     loadFeed();
-  }, [authUser, courses.joined, courseId, loadFeed]);
+  }, [authUser, courseId, loadFeed]);
 
   useEffect(() => {
     if (courseReadOnly) {
@@ -771,6 +731,8 @@ export default function CourseFeedPage() {
       const text = (p.content || "").toLowerCase();
       const tags = (p.hashtags || []).join(" ").toLowerCase();
       const author = (
+        p.author?.name ||
+        p.author?.username ||
         p.author_display_name ||
         p.author_username ||
         ""
@@ -1160,8 +1122,8 @@ export default function CourseFeedPage() {
           {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <button
             type="button"
-            onClick={() => navigate("/studenthome")}
-            aria-label="Return to student home"
+            onClick={() => navigate(homePath)}
+            aria-label="Return to home"
             className="group relative flex items-center gap-2.5 text-xl font-bold rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30 transition"
           >
             <img
@@ -1290,7 +1252,7 @@ export default function CourseFeedPage() {
             </button>
             <button
               type="button"
-              onClick={() => navigate("/studenthome")}
+              onClick={() => navigate(homePath)}
               className="inline-flex h-9 items-center rounded-full border border-brand-300 bg-white px-4 text-xs font-semibold text-brand-700 transition hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-300"
             >
               Back

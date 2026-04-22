@@ -58,26 +58,16 @@ export default function ProfilePage() {
                   </div>
                   <div className="flex flex-wrap items-center gap-3">
                     <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        course.profile_completed
-                          ? "bg-emerald-50 text-emerald-600"
-                          : "bg-brand-50 text-brand-600"
-                      }`}
+                      className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600"
                     >
-                      {course.profile_completed ? "Ready" : "Profile required"}
+                      Ready
                     </span>
                     <button
                       type="button"
                       className="rounded-full border border-brand-200 px-3 py-1 text-xs font-semibold text-brand transition hover:border-brand"
-                      onClick={() =>
-                        navigate(
-                          course.profile_completed
-                            ? `/courses/${course.id}`
-                            : `/courses/${course.id}/profile`
-                        )
-                      }
+                      onClick={() => navigate(`/courses/${course.id}`)}
                     >
-                      {course.profile_completed ? "View course" : "Complete profile"}
+                      View course
                     </button>
                   </div>
                 </li>

@@ -5,6 +5,17 @@ import { useApp } from "../context/AppContext";
 import AuthenticatedShell from "./components/AuthenticatedShell";
 import Feedback from "./components/Feedback";
 
+function formatDateLabel(value) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString("en-AU", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
 export default function CourseOverviewPage() {
   const { courseId: courseIdParam } = useParams();
   const courseId = Number(courseIdParam);
@@ -13,11 +24,36 @@ export default function CourseOverviewPage() {
   const [status, setStatus] = useState({ loading: true, error: "" });
   const [stats, setStats] = useState(null);
 
-  const isTeacher = Boolean(authUser?.is_superuser || authUser?.is_staff);
   const courseMeta = useMemo(() => {
     const allCourses = [...(courses.joined || []), ...(courses.available || [])];
     return allCourses.find((c) => c.id === courseId) || null;
   }, [courses, courseId]);
+  const courseOverview = useMemo(() => {
+    const startDate = courseMeta?.start_date || null;
+    const endDate = courseMeta?.end_date || null;
+    const isExpired = Boolean(courseMeta?.read_only);
+    const description =
+      courseMeta?.course_summary ||
+      courseMeta?.description ||
+      courseMeta?.summary ||
+      courseMeta?.overview ||
+      "";
+    const fallbackDescription = courseMeta
+      ? `${courseMeta.course_code || "This course"} focuses on ${courseMeta.name || "core learning outcomes"}${
+          courseMeta.term ? ` in ${courseMeta.term}` : ""
+        }.`
+      : "No course description is available yet.";
+    return {
+      startDate,
+      endDate,
+      validityLabel:
+        startDate || endDate
+          ? `${formatDateLabel(startDate)} — ${formatDateLabel(endDate)}`
+          : "Not set",
+      statusLabel: isExpired ? "Ended" : "Active",
+      description: description || fallbackDescription,
+    };
+  }, [courseMeta]);
 
   useEffect(() => {
     if (!authCheckComplete) return;
@@ -93,31 +129,30 @@ export default function CourseOverviewPage() {
           </section>
 
           <section className="rounded-2xl border border-brand-100 bg-white p-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-800">Next Steps</h2>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button
-                type="button"
-                className="rounded-full border border-brand bg-brand px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-brand/90"
-                onClick={() => navigate(`/courses/${courseId}/community`)}
-              >
-                Open Community
-              </button>
-              {isTeacher ? (
-                <button
-                  type="button"
-                  className="rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand transition hover:border-brand"
-                  onClick={() => navigate(`/dashboard/courses/${courseId}`)}
-                >
-                  View Course Analytics
-                </button>
-              ) : null}
-              <button
-                type="button"
-                className="rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand transition hover:border-brand"
-                onClick={() => navigate(`/courses/${courseId}/materials`)}
-              >
-                Open Materials
-              </button>
+            <h2 className="text-sm font-semibold text-slate-800">Course Details</h2>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-brand-50 bg-brand-50/40 px-3 py-2">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                  Validity Period
+                </p>
+                <p className="mt-1 text-sm font-medium text-slate-800">
+                  {courseOverview.validityLabel}
+                </p>
+              </div>
+              <div className="rounded-xl border border-brand-50 bg-brand-50/40 px-3 py-2">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                  Course Status
+                </p>
+                <p className="mt-1 text-sm font-medium text-slate-800">
+                  {courseOverview.statusLabel}
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 rounded-xl border border-brand-50 bg-brand-50/40 px-3 py-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                Course Summary
+              </p>
+              <p className="mt-1 text-sm text-slate-700">{courseOverview.description}</p>
             </div>
           </section>
 

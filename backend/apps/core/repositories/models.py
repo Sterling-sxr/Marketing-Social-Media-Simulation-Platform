@@ -77,6 +77,7 @@ class Course(models.Model):
     name = models.CharField(max_length=120)
     course_code = models.CharField(max_length=32)
     term = models.CharField(max_length=32)
+    course_summary = models.TextField(blank=True, default="")
     join_code = models.CharField(max_length=16, unique=True)
     start_date = models.DateField()
     end_date = models.DateField()

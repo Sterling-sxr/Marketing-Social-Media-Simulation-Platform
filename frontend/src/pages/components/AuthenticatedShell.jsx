@@ -1,13 +1,12 @@
 import { useEffect, useMemo } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
+import { getDefaultLandingPath } from "../../lib/access";
 import {
-  Home,
   BookOpen,
   Search,
   Bell,
   FileText,
-  BarChart3,
   LayoutDashboard,
   BotMessageSquare,
   Plus,
@@ -50,6 +49,30 @@ function isActiveLink(to, location) {
   }
 }
 
+function isMessagesLink(to) {
+  if (!to) return false;
+  return to === "/notifications" || /\/messages(?:\?|$)/.test(to);
+}
+
+function getCourseIdFromPath(path) {
+  if (!path) return null;
+  const match = String(path).match(/\/courses\/(\d+)/);
+  if (!match?.[1]) return null;
+  const id = Number(match[1]);
+  return Number.isFinite(id) ? id : null;
+}
+
+function getNotificationCourseId(item) {
+  const candidate =
+    item?.course_id ??
+    item?.metadata?.course_id ??
+    item?.payload?.course_id ??
+    item?.context?.course_id;
+  if (candidate == null || candidate === "") return null;
+  const id = Number(candidate);
+  return Number.isFinite(id) ? id : null;
+}
+
 export default function AuthenticatedShell({
   title,
   subtitle,
@@ -74,22 +97,22 @@ export default function AuthenticatedShell({
     fetchCourses,
   } = useApp();
   const isTeacherUser = Boolean(authUser?.is_superuser || authUser?.is_staff);
+  const defaultLandingPath = getDefaultLandingPath(authUser);
 
   // Context: Compute shared values once so all branches use the same normalized inputs.
   useEffect(() => {
-    if (authUser && showNotifications) {
+    if (authUser) {
       fetchNotifications({ silent: true }).catch(() => {});
     }
-  }, [authUser, showNotifications, fetchNotifications]);
+  }, [authUser, fetchNotifications]);
 
   useEffect(() => {
-    if (!authUser || !isTeacherUser) return;
+    if (!authUser) return;
     fetchCourses().catch(() => {});
-  }, [authUser, isTeacherUser, fetchCourses]);
+  }, [authUser, fetchCourses]);
 
   // Context: Compute shared values once so all branches use the same normalized inputs.
   useEffect(() => {
-    if (!showNotifications) return;
     const onVis = () => {
       if (document.visibilityState === "visible" && authUser) {
         fetchNotifications({ silent: true }).catch(() => {});
@@ -97,10 +120,20 @@ export default function AuthenticatedShell({
     };
     document.addEventListener("visibilitychange", onVis);
     return () => document.removeEventListener("visibilitychange", onVis);
-  }, [authUser, showNotifications, fetchNotifications]);
+  }, [authUser, fetchNotifications]);
 
   const { initials, displayName, photoUrl } = useAvatar(authUser);
   const unread = notifications.unread ?? 0;
+  const unreadByCourse = useMemo(() => {
+    const byCourse = new Map();
+    (notifications.items || []).forEach((item) => {
+      if (item?.is_read) return;
+      const courseId = getNotificationCourseId(item);
+      if (!courseId) return;
+      byCourse.set(courseId, (byCourse.get(courseId) || 0) + 1);
+    });
+    return byCourse;
+  }, [notifications.items]);
   const notificationLabel = notificationStatus.error
     ? notificationStatus.error
     : unread > 0
@@ -111,16 +144,44 @@ export default function AuthenticatedShell({
 
   const sidebarLinks = useMemo(() => {
     if (links && links.length) return links;
+    const uid = authUser?.id;
+    const profileLink = {
+      to: uid ? `/people/${uid}` : "/login",
+      label: "Profile",
+      icon: <FileText className="h-5 w-5" />,
+    };
     const isAdminUser = Boolean(authUser?.is_superuser || authUser?.is_staff);
+    const isTeacherManagePath =
+      location.pathname === "/courses" ||
+      location.pathname === "/courses/manage" ||
+      location.pathname === "/courses/create" ||
+      location.pathname === "/ai-users" ||
+      location.pathname.startsWith("/people/") ||
+      location.pathname.startsWith("/dashboard") ||
+      location.pathname.endsWith("/ai-users");
+    const courseMatch = location.pathname.match(/^\/courses\/(\d+)/);
+    if (courseMatch?.[1] && !(isAdminUser && isTeacherManagePath)) {
+      const currentCourseId = courseMatch[1];
+      return [
+        {
+          to: `/courses/${currentCourseId}/community`,
+          label: "Community",
+          icon: <FileText className="h-5 w-5" />,
+        },
+        {
+          to: `/courses/${currentCourseId}/materials`,
+          label: "Materials",
+          icon: <BookOpen className="h-5 w-5" />,
+        },
+        {
+          to: `/courses/${currentCourseId}/messages`,
+          label: "Messages",
+          icon: <Bell className="h-5 w-5" />,
+        },
+      ];
+    }
     if (isAdminUser) {
-      if (
-        location.pathname === "/courses" ||
-        location.pathname === "/courses/manage" ||
-        location.pathname === "/courses/create" ||
-        location.pathname === "/ai-users" ||
-        location.pathname.startsWith("/dashboard") ||
-        location.pathname.endsWith("/ai-users")
-      ) {
+      if (isTeacherManagePath) {
         return [
           {
             to: "/courses/manage",
@@ -137,27 +198,7 @@ export default function AuthenticatedShell({
             label: "Dashboard",
             icon: <LayoutDashboard className="h-5 w-5" />,
           },
-        ];
-      }
-      const courseMatch = location.pathname.match(/^\/courses\/(\d+)/);
-      if (courseMatch?.[1]) {
-        const currentCourseId = courseMatch[1];
-        return [
-          {
-            to: `/courses/${currentCourseId}/community`,
-            label: "Community",
-            icon: <FileText className="h-5 w-5" />,
-          },
-          {
-            to: `/courses/${currentCourseId}/materials`,
-            label: "Materials",
-            icon: <BookOpen className="h-5 w-5" />,
-          },
-          {
-            to: `/courses/${currentCourseId}/messages`,
-            label: "Messages",
-            icon: <Bell className="h-5 w-5" />,
-          },
+          profileLink,
         ];
       }
       // Context: Compute shared values once so all branches use the same normalized inputs.
@@ -173,55 +214,26 @@ export default function AuthenticatedShell({
           label: "Dashboard",
           icon: <LayoutDashboard className="h-5 w-5" />,
         },
+        profileLink,
       ];
     }
-    const uid = authUser?.id;
     const base = [
-      {
-        to: "/studenthome",
-        label: "Homepage",
-        icon: <Home className="h-5 w-5" />,
-      },
       {
         to: "/courses",
         label: "Course Center",
         icon: <BookOpen className="h-5 w-5" />,
       },
-      {
-        to: "/search",
-        label: "Search",
-        icon: <Search className="h-5 w-5" />,
-      },
-      {
-        to: "/notifications",
-        label: "Messages",
-        icon: <Bell className="h-5 w-5" />,
-      },
-      {
-        to: uid ? `/people/${uid}?tab=posts` : "/login",
-        label: "Posts",
-        icon: <FileText className="h-5 w-5" />,
-      },
-      {
-        to: uid ? `/student/analysis` : "/login",
-        label: "Analysis",
-        icon: <BarChart3 className="h-5 w-5" />,
-      },
-      {
-        to: "/ai-tutor",
-        label: "AI Tutor",
-        icon: <BotMessageSquare className="h-5 w-5" />,
-      },
+      profileLink,
     ];
 
     return base;
   }, [links, authUser?.id, authUser?.is_superuser, authUser?.is_staff, location.pathname]);
 
   const compactName = displayName || "User";
-  const teacherCourses = useMemo(() => {
-    if (!isTeacherUser) return [];
-    return [...(courses?.joined || [])];
-  }, [isTeacherUser, courses?.joined]);
+  const joinedCourses = useMemo(
+    () => [...(courses?.joined || [])],
+    [courses?.joined]
+  );
   const compactLinks = useMemo(() => {
     const dedupeByTo = (items) =>
       Array.from(
@@ -233,15 +245,7 @@ export default function AuthenticatedShell({
     }
     const preferred = authUser?.is_superuser || authUser?.is_staff
       ? ["/courses", "/dashboard"]
-      : Array.from(
-          new Set([
-            "/studenthome",
-            "/courses",
-            "/search",
-            "/notifications",
-            "/ai-tutor",
-          ])
-        );
+      : ["/courses"];
     const linksByTo = new Map(sidebarLinks.map((item) => [item.to, item]));
     const picked = preferred.map((to) => linksByTo.get(to)).filter(Boolean);
     if (picked.length >= 4) return picked.slice(0, 5);
@@ -262,8 +266,8 @@ export default function AuthenticatedShell({
           {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
           <button
             type="button"
-            onClick={() => navigate("/studenthome")}
-            aria-label="Return to student home"
+            onClick={() => navigate(defaultLandingPath)}
+            aria-label="Return to home"
             className="group relative flex min-w-0 items-center gap-2.5 rounded-lg text-xl font-bold
                        leading-none focus:outline-none focus:ring-2 focus:ring-brand/30 transition"
           >
@@ -365,8 +369,8 @@ export default function AuthenticatedShell({
               </button>
               <div className="min-w-0 flex-1 overflow-x-auto">
                 <div className="flex items-center gap-2">
-                  {teacherCourses.length > 0 ? (
-                    teacherCourses.map((course) => (
+                  {joinedCourses.length > 0 ? (
+                    joinedCourses.map((course) => (
                       <button
                         key={course.id}
                         type="button"
@@ -398,7 +402,52 @@ export default function AuthenticatedShell({
               </button>
             </div>
           </div>
-        ) : null}
+        ) : (
+          <div className="mx-auto w-full max-w-6xl px-3 pb-3 sm:px-4 lg:px-6">
+            <div className="flex items-center gap-2 rounded-2xl border border-brand-100/80 bg-white/80 px-3 py-2">
+              <button
+                type="button"
+                onClick={() => navigate("/courses")}
+                className="shrink-0 rounded-full border border-brand bg-gradient-to-r from-brand to-brand-dark px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:brightness-110 hover:shadow-md"
+              >
+                Course Center
+              </button>
+              <div className="min-w-0 flex-1 overflow-x-auto">
+                <div className="flex items-center gap-2">
+                  {joinedCourses.length > 0 ? (
+                    joinedCourses.map((course) => (
+                      <button
+                        key={course.id}
+                        type="button"
+                        onClick={() => navigate(`/courses/${course.id}`)}
+                        className="shrink-0 rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-semibold text-brand transition hover:border-brand hover:bg-brand-50"
+                        title={`${course.course_code || ""} ${course.name || ""}`.trim()}
+                      >
+                        {course.course_code || `Course ${course.id}`}
+                      </button>
+                    ))
+                  ) : (
+                    <p className="text-xs font-medium text-slate-500">
+                      You are not enrolled in any courses yet.
+                    </p>
+                  )}
+                </div>
+              </div>
+              <button
+                type="button"
+                className="group inline-flex shrink-0 items-center gap-2 rounded-full border border-brand bg-brand
+                        px-3 py-1.5 text-xs font-semibold text-white
+                        shadow-soft transition-all duration-200 hover:bg-brand/90
+                        hover:shadow-brand hover:scale-[1.02] active:scale-[0.99]
+                        focus:outline-none focus:ring-2 focus:ring-brand/30"
+                onClick={() => navigate("/courses")}
+              >
+                <Plus className="h-4 w-4" />
+                <span>Join Course</span>
+              </button>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
@@ -412,9 +461,13 @@ export default function AuthenticatedShell({
           </div>
           {sidebarLinks.map((link) => {
             const active = isActiveLink(link.to, location);
-            // Context: Compute shared values once so all branches use the same normalized inputs.
-            // Context: Compute shared values once so all branches use the same normalized inputs.
-            const isMessages = link.to === "/notifications";
+            const isMessages = isMessagesLink(link.to);
+            const linkCourseId = getCourseIdFromPath(link.to);
+            const linkUnread = isMessages
+              ? link.to === "/notifications"
+                ? unread
+                : unreadByCourse.get(linkCourseId || -1) || 0
+              : 0;
             return (
               <NavLink
                 key={link.to}
@@ -429,7 +482,11 @@ export default function AuthenticatedShell({
                 }
                 end
                 aria-label={
-                  isMessages ? `Messages, ${notificationLabel}` : link.label
+                  isMessages
+                    ? link.to === "/notifications"
+                      ? `Messages, ${notificationLabel}`
+                      : `Messages, ${linkUnread} unread in this course`
+                    : link.label
                 }
               >
                 <span
@@ -442,19 +499,19 @@ export default function AuthenticatedShell({
                 >
                   {link.icon}
                   {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
-                  {isMessages && unread > 0 && (
+                  {isMessages && linkUnread > 0 && (
                     <span
                       className="absolute -right-1.5 -top-1.5 inline-flex min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold leading-5 text-white shadow"
                       aria-hidden="true"
-                      title={`${unread} unread`}
+                      title={`${linkUnread} unread`}
                     >
-                      {unread >= 99 ? "99+" : unread}
+                      {linkUnread >= 99 ? "99+" : linkUnread}
                     </span>
                   )}
                 </span>
                 <span className="hidden lg:inline">
                   {link.label}
-                  {isMessages && unread > 0 ? ` (${unread})` : ""}
+                  {isMessages && linkUnread > 0 ? ` (${linkUnread})` : ""}
                 </span>
               </NavLink>
             );
@@ -494,7 +551,13 @@ export default function AuthenticatedShell({
           <div className="mx-auto grid w-full max-w-6xl grid-cols-5 gap-1">
             {compactLinks.map((link) => {
               const active = isActiveLink(link.to, location);
-              const isMessages = link.to === "/notifications";
+              const isMessages = isMessagesLink(link.to);
+              const linkCourseId = getCourseIdFromPath(link.to);
+              const linkUnread = isMessages
+                ? link.to === "/notifications"
+                  ? unread
+                  : unreadByCourse.get(linkCourseId || -1) || 0
+                : 0;
               return (
                 <NavLink
                   key={`mobile-${link.to}`}
@@ -509,7 +572,11 @@ export default function AuthenticatedShell({
                     )
                   }
                   aria-label={
-                    isMessages ? `Messages, ${notificationLabel}` : link.label
+                    isMessages
+                      ? link.to === "/notifications"
+                        ? `Messages, ${notificationLabel}`
+                        : `Messages, ${linkUnread} unread in this course`
+                      : link.label
                   }
                 >
                   <span
@@ -521,13 +588,13 @@ export default function AuthenticatedShell({
                     )}
                   >
                     {link.icon}
-                    {isMessages && unread > 0 ? (
+                    {isMessages && linkUnread > 0 ? (
                       <span
                         className="absolute -right-1.5 -top-1.5 inline-flex min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold leading-5 text-white shadow"
                         aria-hidden="true"
-                        title={`${unread} unread`}
+                        title={`${linkUnread} unread`}
                       >
-                        {unread >= 99 ? "99+" : unread}
+                        {linkUnread >= 99 ? "99+" : linkUnread}
                       </span>
                     ) : null}
                   </span>

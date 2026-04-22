@@ -253,6 +253,7 @@ export default function OnboardingProfilePage() {
     authCheckComplete,
     profileOptions,
     fetchProfileOptions,
+    loadMyProfile,
     profileData,
     updateProfileField,
     toggleInterest,
@@ -322,7 +323,7 @@ export default function OnboardingProfilePage() {
     : "Complete your profile";
   const heroCopy = isCourseMode
     ? "Share how you want to present yourself in this course. You only need to complete it once per course and can update it later."
-    : "When you first log in, you need to complete your information so that we can provide you with more relevant content and course recommendations. You can update this information at any time in your profile.";
+    : "";
   const submitButtonLabel = activeStatus.loading
     ? "Saving..."
     : isCourseMode
@@ -408,9 +409,10 @@ export default function OnboardingProfilePage() {
     if (!authUser) return;
     if (!isCourseMode) {
       setUsername((authUser.username || "").trim());
+      loadMyProfile().catch(() => {});
     }
     fetchProfileOptions().catch(() => {});
-  }, [authUser, fetchProfileOptions, isCourseMode]);
+  }, [authUser, fetchProfileOptions, isCourseMode, loadMyProfile]);
 
   useEffect(() => {
     if (!authUser || !isCourseMode) return;
@@ -506,11 +508,7 @@ export default function OnboardingProfilePage() {
             </div>
           </div>
         </div>
-        <div className="hidden sm:flex items-center gap-2">
-          <span className="rounded-full border border-brand-100 bg-white/70 px-3 py-1 text-[11px] font-semibold text-slate-600">
-            Step 2 of 2
-          </span>
-        </div>
+        <div className="hidden sm:flex items-center gap-2" />
       </header>
 
       {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
@@ -531,9 +529,6 @@ export default function OnboardingProfilePage() {
             <div className="flex flex-wrap items-center gap-2 pt-1">
               <span className="rounded-full border border-brand-100 bg-white/70 px-3 py-1 text-[11px] font-semibold text-slate-600">
                 Takes about 1 minute
-              </span>
-              <span className="rounded-full border border-brand-100 bg-white/70 px-3 py-1 text-[11px] font-semibold text-slate-600">
-                You can edit later in Profile
               </span>
             </div>
           </div>
@@ -557,7 +552,6 @@ export default function OnboardingProfilePage() {
                 <EditSection
                   emoji="🧾"
                   title="Demographic"
-                  desc="Prompts are on the left; options are on the right."
                   tone="mint"
                   defaultOpen
                   forceOpen={attemptedSubmit && sectionHasError.demographic}
@@ -619,7 +613,6 @@ export default function OnboardingProfilePage() {
                 <EditSection
                   emoji="🧠"
                   title="Psychographic"
-                  desc="Your attitudes and preferences."
                   tone="peach"
                   forceOpen={attemptedSubmit && sectionHasError.psychographic}
                   hasError={attemptedSubmit && sectionHasError.psychographic}
@@ -664,7 +657,6 @@ export default function OnboardingProfilePage() {
                 <EditSection
                   emoji="🛒"
                   title="Behavioural / Shopping Habits"
-                  desc="How you shop and decide."
                   tone="lilac"
                   forceOpen={attemptedSubmit && sectionHasError.behavioural}
                   hasError={attemptedSubmit && sectionHasError.behavioural}
@@ -709,7 +701,6 @@ export default function OnboardingProfilePage() {
                 <EditSection
                   emoji="💬"
                   title="Digital / Social Media"
-                  desc="Online time and interaction style."
                   tone="mint"
                   forceOpen={attemptedSubmit && sectionHasError.digital}
                   hasError={attemptedSubmit && sectionHasError.digital}
