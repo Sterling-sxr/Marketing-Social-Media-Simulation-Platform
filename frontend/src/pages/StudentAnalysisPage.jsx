@@ -912,7 +912,7 @@ function EmptyAnalysisGuidance() {
           Go to courses
         </Link>
         <Link
-          to="/studenthome"
+          to="/courses"
           className="rounded-full border border-brand-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-600 transition hover:border-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2"
         >
           Home

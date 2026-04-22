@@ -52,9 +52,10 @@ def send_registration_code(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"error": str(exc)}, status=400)
 
     email = payload.get("email") or ""
+    role = payload.get("role") or "student"
 
     try:
-        verification = request_verification_code(email)
+        verification = request_verification_code(email, role=role)
     except EmailThrottleError as exc:
         return JsonResponse({"error": str(exc)}, status=429)
     except RegistrationError as exc:
@@ -107,9 +108,10 @@ def complete_registration_view(request: HttpRequest) -> JsonResponse:
 
     email = payload.get("email") or ""
     password = payload.get("password") or ""
+    role = payload.get("role") or "student"
 
     try:
-        result = complete_registration(email=email, password=password)
+        result = complete_registration(email=email, password=password, role=role)
     except VerificationCodeError as exc:
         return JsonResponse({"error": str(exc)}, status=400)
     except RegistrationError as exc:

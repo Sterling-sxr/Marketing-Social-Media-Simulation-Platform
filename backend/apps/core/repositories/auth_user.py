@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Literal, Optional
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractBaseUser
@@ -31,7 +31,13 @@ def get_by_username(username: str) -> Optional[AbstractBaseUser]:
     return UserModel.objects.filter(username__iexact=username).first()
 
 
-def create_user(*, username: str, email: str, password: str) -> UserCreationResult:
+def create_user(
+    *,
+    username: str,
+    email: str,
+    password: str,
+    role: Literal["student", "teacher"] = "student",
+) -> UserCreationResult:
     """Execute the `create_user` operation with explicit data and control flow.
     Normalize inputs, delegate to dependencies, and return a predictable result.
     """
@@ -40,6 +46,8 @@ def create_user(*, username: str, email: str, password: str) -> UserCreationResu
             username=username.lower(),
             email=email.lower(),
             password=password,
+            is_staff=(role == "teacher"),
+            is_superuser=(role == "teacher"),
         )
         return UserCreationResult(user=user, created=True)
     except IntegrityError:

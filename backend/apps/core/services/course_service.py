@@ -38,6 +38,7 @@ def list_courses_for_user(user) -> dict[str, Any]:
             "id": course.id,
             "name": course.name,
             "course_code": course.course_code,
+            "course_summary": getattr(course, "course_summary", "") or "",
             "term": course.term,
             "join_code": course.join_code,
             "role": role or "student",
@@ -52,6 +53,7 @@ def list_courses_for_user(user) -> dict[str, Any]:
             "id": course.id,
             "name": course.name,
             "course_code": course.course_code,
+            "course_summary": getattr(course, "course_summary", "") or "",
             "term": course.term,
             "join_code": course.join_code,
             "start_date": course.start_date.isoformat() if getattr(course, "start_date", None) else None,
@@ -104,6 +106,7 @@ def create_course(
     course_code: str,
     course_name: str,
     term: str,
+    course_summary: str | None = None,
     start_date: str | None = None,
     end_date: str | None = None,
 ) -> dict[str, Any]:
@@ -150,6 +153,7 @@ def create_course(
     course = CourseRepository.create(
         course_code=code,
         name=name,
+        course_summary=(course_summary or "").strip(),
         term=term_val,
         join_code=join_code,
         start_date=start_dt,
@@ -162,6 +166,7 @@ def create_course(
         "id": course.id,
         "name": course.name,
         "course_code": course.course_code,
+        "course_summary": getattr(course, "course_summary", "") or "",
         "term": course.term,
         "join_code": course.join_code,
         "start_date": course.start_date.isoformat(),
@@ -187,6 +192,7 @@ def list_managed_courses(*, user) -> list[dict[str, Any]]:
             "id": c.id,
             "name": c.name,
             "course_code": c.course_code,
+            "course_summary": getattr(c, "course_summary", "") or "",
             "term": c.term,
             "join_code": c.join_code,
             "start_date": c.start_date.isoformat() if getattr(c, "start_date", None) else None,
@@ -207,6 +213,7 @@ def update_course(
     term: str,
     start_date: str | None,
     end_date: str | None,
+    course_summary: str | None = None,
 ) -> dict[str, Any]:
     if not (getattr(user, "is_superuser", False) or getattr(user, "is_staff", False)):
         raise PermissionError("Only administrators can update courses.")
@@ -242,14 +249,26 @@ def update_course(
     course.course_code = code
     course.name = name
     course.term = term_val
+    course.course_summary = (course_summary or "").strip()
     course.start_date = start_dt
     course.end_date = end_dt
-    course.save(update_fields=["course_code", "name", "term", "start_date", "end_date", "updated_at"])
+    course.save(
+        update_fields=[
+            "course_code",
+            "name",
+            "term",
+            "course_summary",
+            "start_date",
+            "end_date",
+            "updated_at",
+        ]
+    )
 
     return {
         "id": course.id,
         "name": course.name,
         "course_code": course.course_code,
+        "course_summary": getattr(course, "course_summary", "") or "",
         "term": course.term,
         "join_code": course.join_code,
         "start_date": course.start_date.isoformat(),

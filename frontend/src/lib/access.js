@@ -2,6 +2,10 @@ export function isTeacher(user) {
   return Boolean(user?.is_superuser || user?.is_staff);
 }
 
+export function getDefaultLandingPath(user) {
+  return "/courses";
+}
+
 export function canViewDashboard(user) {
   return isTeacher(user);
 }

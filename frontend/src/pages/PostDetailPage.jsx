@@ -8,6 +8,7 @@ import PostCard from "./components/PostCard";
 import { hasProfanity } from "../lib/profanity";
 import ProfanityHint from "./components/ProfanityHint";
 import AuthenticatedShell from "./components/AuthenticatedShell";
+import { getDefaultLandingPath } from "../lib/access";
 
 export default function PostDetailPage() {
   const { courseId: courseIdParam, postId: postIdParam } = useParams();
@@ -15,6 +16,7 @@ export default function PostDetailPage() {
   const postId = Number(postIdParam);
   const navigate = useNavigate();
   const { authUser, authCheckComplete } = useApp();
+  const homePath = getDefaultLandingPath(authUser);
 
   const [post, setPost] = useState(null);
   const [courseInfo, setCourseInfo] = useState(null);
@@ -170,7 +172,7 @@ export default function PostDetailPage() {
           </button>
           <button
             type="button"
-            onClick={() => navigate("/studenthome")}
+            onClick={() => navigate(homePath)}
             aria-label="Return to home"
             className="hidden items-center gap-2.5 text-xl font-bold sm:flex"
           >

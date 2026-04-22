@@ -127,6 +127,7 @@ export default function CreateCoursePage() {
   const [form, setForm] = useState({
     course_code: "",
     course_name: "",
+    course_summary: "",
     term: "",
     start_date: "",
     end_date: "",
@@ -288,6 +289,18 @@ export default function CreateCoursePage() {
               placeholder="e.g. Capstone Project"
               className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
               required
+            />
+          </label>
+          <label className="block text-xs font-semibold text-slate-600 sm:col-span-2">
+            Course Summary
+            <textarea
+              rows={4}
+              value={form.course_summary}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, course_summary: e.target.value }))
+              }
+              placeholder="Briefly describe this course for students."
+              className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
             />
           </label>
           <DatePartsInput

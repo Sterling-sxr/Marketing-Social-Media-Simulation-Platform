@@ -125,6 +125,7 @@ export default function CourseManagePage() {
   const [editForm, setEditForm] = useState({
     course_code: "",
     course_name: "",
+    course_summary: "",
     term: "",
     start_date: "",
     end_date: "",
@@ -331,6 +332,7 @@ export default function CourseManagePage() {
                         setEditForm({
                           course_code: c.course_code || "",
                           course_name: c.course_name || c.name || "",
+                          course_summary: c.course_summary || "",
                           term: c.term || "",
                           start_date: c.start_date || "",
                           end_date: c.end_date || "",
@@ -455,6 +457,21 @@ export default function CourseManagePage() {
                   onChange={(e) => setEditForm((prev) => ({ ...prev, course_name: e.target.value }))}
                   className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
                   required
+                />
+              </label>
+
+              <label className="block text-xs font-semibold text-slate-600">
+                Course Summary
+                <textarea
+                  value={editForm.course_summary}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({
+                      ...prev,
+                      course_summary: e.target.value,
+                    }))
+                  }
+                  className="mt-1 min-h-[88px] w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
+                  placeholder="Briefly describe what this course covers."
                 />
               </label>
 

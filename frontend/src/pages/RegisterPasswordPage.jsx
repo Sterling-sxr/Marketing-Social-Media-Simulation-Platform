@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
+import { getDefaultLandingPath } from "../lib/access";
 import Feedback from "./components/Feedback";
 import CircleImage from "./components/CircleImage";
 
@@ -34,15 +35,16 @@ export default function RegisterPasswordPage() {
       // Context: Compute shared values once so all branches use the same normalized inputs.
       // Context: Compute shared values once so all branches use the same normalized inputs.
       try {
-        await login(registerVerifiedEmail, registerPassword);
+        const result = await login(registerVerifiedEmail, registerPassword);
+        const nextPath = getDefaultLandingPath(result?.user);
+        resetRegisterFlow();
+        navigate(nextPath, { replace: true });
       } catch {
         // Context: Compute shared values once so all branches use the same normalized inputs.
         resetRegisterFlow();
         navigate("/login", { replace: true });
         return;
       }
-      resetRegisterFlow();
-      navigate("/onboarding/profile", { replace: true });
     }
   };
 

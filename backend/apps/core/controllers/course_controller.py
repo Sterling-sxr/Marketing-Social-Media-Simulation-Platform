@@ -105,6 +105,7 @@ def create_course_view(request: HttpRequest) -> JsonResponse:
             course_code=payload.get("course_code") or payload.get("courseCode") or "",
             course_name=payload.get("course_name") or payload.get("courseName") or "",
             term=payload.get("term") or "",
+            course_summary=payload.get("course_summary") or payload.get("courseSummary") or "",
             start_date=payload.get("start_date") or payload.get("startDate"),
             end_date=payload.get("end_date") or payload.get("endDate"),
         )
@@ -185,6 +186,7 @@ def update_course_view(request: HttpRequest, course_id: int) -> JsonResponse:
             course_code=payload.get("course_code") or payload.get("courseCode") or "",
             course_name=payload.get("course_name") or payload.get("courseName") or "",
             term=payload.get("term") or "",
+            course_summary=payload.get("course_summary") or payload.get("courseSummary") or "",
             start_date=payload.get("start_date") or payload.get("startDate"),
             end_date=payload.get("end_date") or payload.get("endDate"),
         )

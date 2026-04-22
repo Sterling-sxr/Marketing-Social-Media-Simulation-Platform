@@ -12,7 +12,6 @@ import {
   Download,
   Eye,
   FileText,
-  Home,
   Loader2,
   Search,
   Trash2,
@@ -417,7 +416,6 @@ export default function CourseMaterialsPage() {
   // Context: Compute shared values once so all branches use the same normalized inputs.
   const globalMobileNav = useMemo(
     () => [
-      { to: "/studenthome", label: "Home", icon: <Home className="h-5 w-5" /> },
       { to: "/courses", label: "Courses", icon: <BookOpen className="h-5 w-5" /> },
       { to: "/search", label: "Search", icon: <Search className="h-5 w-5" /> },
       { to: "/notifications", label: "Messages", icon: <Bell className="h-5 w-5" /> },

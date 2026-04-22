@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import AuthenticatedShell from "./components/AuthenticatedShell";
 import Feedback from "./components/Feedback";
-import { isTeacher } from "../lib/access";
 
 // Purpose: `RoleBadge` owns one cohesive concern so state transitions and side effects remain easy to trace.
 function RoleBadge({ courseRole, isStaff, isSuperuser }) {
@@ -58,16 +57,7 @@ export default function CoursesPage() {
 
   const handleEnterCourse = (course) => {
     if (!course) return;
-    const roleFromCourse = (course?.role || "").toString().toLowerCase();
-    const isCourseTeacher =
-      roleFromCourse === "teacher" || roleFromCourse === "instructor";
-    // Context: Compute shared values once so all branches use the same normalized inputs.
-    // Context: Compute shared values once so all branches use the same normalized inputs.
-    if (course.profile_completed || isTeacher(authUser) || isCourseTeacher) {
-      navigate(`/courses/${course.id}`);
-    } else {
-      navigate(`/courses/${course.id}/profile`);
-    }
+    navigate(`/courses/${course.id}`);
   };
 
   const handleSubmit = async (event) => {
@@ -134,11 +124,6 @@ export default function CoursesPage() {
                       {course.course_code} · {course.name}
                     </p>
                     <p className="text-xs text-slate-400">{course.term}</p>
-                    {!course.profile_completed ? (
-                      <p className="mt-1 rounded-lg bg-brand-50 px-2 py-1 text-xs font-medium text-brand-600">
-                        Complete your course profile to enter
-                      </p>
-                    ) : null}
                   </div>
 
                   {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}

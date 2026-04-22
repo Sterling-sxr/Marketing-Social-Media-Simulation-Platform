@@ -9,6 +9,8 @@ export default function RegisterEmailPage() {
   const {
     registerEmail,
     setRegisterEmail,
+    registerRole,
+    setRegisterRole,
     registerStatus,
     startRegister,
     resetRegisterFlow,
@@ -33,8 +35,36 @@ export default function RegisterEmailPage() {
       backTo="/"
     >
       <form className="space-y-4" onSubmit={handleSubmit}>
+        <fieldset className="space-y-2">
+          <legend className="field-label">Account type</legend>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              className={`rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+                registerRole === "student"
+                  ? "border-brand bg-brand/10 text-brand-dark"
+                  : "border-slate-200 text-slate-600 hover:border-brand/50"
+              }`}
+              onClick={() => setRegisterRole("student")}
+            >
+              Student
+            </button>
+            <button
+              type="button"
+              className={`rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+                registerRole === "teacher"
+                  ? "border-brand bg-brand/10 text-brand-dark"
+                  : "border-slate-200 text-slate-600 hover:border-brand/50"
+              }`}
+              onClick={() => setRegisterRole("teacher")}
+            >
+              Teacher
+            </button>
+          </div>
+        </fieldset>
+
         <label className="field-label">
-          Student email
+          {registerRole === "teacher" ? "Teacher email" : "Student email"}
           <input
             type="email"
             value={registerEmail}
