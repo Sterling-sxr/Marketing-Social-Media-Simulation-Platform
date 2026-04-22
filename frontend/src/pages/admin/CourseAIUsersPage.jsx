@@ -50,6 +50,7 @@ export default function CourseAIUsersPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [formBusy, setFormBusy] = useState(false);
   const [formError, setFormError] = useState("");
+  const [showAdvancedForm, setShowAdvancedForm] = useState(false);
   const [formData, setFormData] = useState(INITIAL_FORM);
   const [importBusy, setImportBusy] = useState(false);
   const [importMessage, setImportMessage] = useState("");
@@ -105,6 +106,7 @@ export default function CourseAIUsersPage() {
     setFormData({ ...INITIAL_FORM, interests: [] });
     setFormError("");
     setFormBusy(false);
+    setShowAdvancedForm(false);
   };
 
   const openCreate = () => {
@@ -116,11 +118,6 @@ export default function CourseAIUsersPage() {
   const openSmartGenerate = () => {
     setCreationMessage("");
     setCreationMode("smart_guided");
-  };
-
-  const openAIBulkGenerate = () => {
-    setCreationMessage("");
-    setCreationMode("ai_bulk");
   };
 
   const openEdit = (item) => {
@@ -149,6 +146,7 @@ export default function CourseAIUsersPage() {
       influencer_type: item.influencer_type || "",
       notes: item.notes || "",
     });
+    setShowAdvancedForm(false);
     setFormOpen(true);
   };
 
@@ -330,13 +328,6 @@ export default function CourseAIUsersPage() {
             </button>
             <button
               type="button"
-              className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
-              onClick={openAIBulkGenerate}
-            >
-              Generate
-            </button>
-            <button
-              type="button"
               className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand disabled:opacity-60"
               onClick={() => fileInputRef.current?.click()}
               disabled={importBusy}
@@ -495,20 +486,11 @@ export default function CourseAIUsersPage() {
               </div>
             </section>
 
-            <Section title="Demographic">
+            <Section title="Core tags (quick edit)">
+              <p className="text-[11px] text-slate-500">
+                Edit only key labels here. Unchanged advanced fields keep their current values.
+              </p>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <SelectField
-                  label="Gender"
-                  value={formData.gender}
-                  onChange={(value) => handleFormChange("gender", value)}
-                  options={profileOptions?.genders}
-                />
-                <SelectField
-                  label="City"
-                  value={formData.city}
-                  onChange={(value) => handleFormChange("city", value)}
-                  options={profileOptions?.cities}
-                />
                 <SelectField
                   label="Age group"
                   value={formData.age_group}
@@ -516,48 +498,36 @@ export default function CourseAIUsersPage() {
                   options={profileOptions?.age_groups}
                 />
                 <SelectField
-                  label="Education level"
-                  value={formData.education_level}
+                  label="Preferred content"
+                  value={formData.content_preference}
                   onChange={(value) =>
-                    handleFormChange("education_level", value)
+                    handleFormChange("content_preference", value)
                   }
-                  options={profileOptions?.education_levels}
+                  options={profileOptions?.content_preference}
                 />
                 <SelectField
-                  label="Income level"
-                  value={formData.income_level}
-                  onChange={(value) => handleFormChange("income_level", value)}
-                  options={profileOptions?.income_levels}
+                  label="Decision factor"
+                  value={formData.decision_factor}
+                  onChange={(value) =>
+                    handleFormChange("decision_factor", value)
+                  }
+                  options={profileOptions?.decision_factors}
+                />
+                <SelectField
+                  label="Interaction style"
+                  value={formData.interaction_style}
+                  onChange={(value) =>
+                    handleFormChange("interaction_style", value)
+                  }
+                  options={profileOptions?.interaction_style}
+                />
+                <SelectField
+                  label="Social media usage"
+                  value={formData.digital_time}
+                  onChange={(value) => handleFormChange("digital_time", value)}
+                  options={profileOptions?.digital_time}
                 />
               </div>
-            </Section>
-
-            <Section title="Psychographic">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <SliderField
-                  label="Social value"
-                  value={formData.social_value}
-                  onChange={(value) => handleFormChange("social_value", value)}
-                />
-                <SliderField
-                  label="Sociability"
-                  value={formData.sociability}
-                  onChange={(value) => handleFormChange("sociability", value)}
-                />
-                <SliderField
-                  label="Openness"
-                  value={formData.openness}
-                  onChange={(value) => handleFormChange("openness", value)}
-                />
-              </div>
-              <SelectField
-                label="Preferred content"
-                value={formData.content_preference}
-                onChange={(value) =>
-                  handleFormChange("content_preference", value)
-                }
-                options={profileOptions?.content_preference}
-              />
               <div className="mt-4">
                 <p className="text-xs font-semibold text-slate-600">
                   Lifestyle interests
@@ -588,83 +558,129 @@ export default function CourseAIUsersPage() {
               </div>
             </Section>
 
-            <Section title="Behavioural / Shopping">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <SelectField
-                  label="Shopping frequency"
-                  value={formData.shopping_frequency}
-                  onChange={(value) =>
-                    handleFormChange("shopping_frequency", value)
-                  }
-                  options={profileOptions?.shopping_frequency}
-                />
-                <SelectField
-                  label="Buying behaviour"
-                  value={formData.buying_behavior}
-                  onChange={(value) =>
-                    handleFormChange("buying_behavior", value)
-                  }
-                  options={profileOptions?.buying_behavior}
-                />
-                <SelectField
-                  label="Decision factor"
-                  value={formData.decision_factor}
-                  onChange={(value) =>
-                    handleFormChange("decision_factor", value)
-                  }
-                  options={profileOptions?.decision_factors}
-                />
-                <SelectField
-                  label="Shopping preference"
-                  value={formData.shopping_preference}
-                  onChange={(value) =>
-                    handleFormChange("shopping_preference", value)
-                  }
-                  options={profileOptions?.shopping_preference}
-                />
-              </div>
-            </Section>
+            <section className="mt-4 rounded-2xl border border-brand-100 bg-white p-4">
+              <button
+                type="button"
+                className="flex w-full items-center justify-between text-left"
+                onClick={() => setShowAdvancedForm((prev) => !prev)}
+              >
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-700">Advanced fields</h3>
+                  <p className="text-xs text-slate-500">
+                    Optional: edit demographic and behavioral details when needed.
+                  </p>
+                </div>
+                <span className="text-xs font-semibold text-brand">
+                  {showAdvancedForm ? "Hide" : "Show"}
+                </span>
+              </button>
+            </section>
 
-            <Section title="Digital / Social Media">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <SelectField
-                  label="Social media usage"
-                  value={formData.digital_time}
-                  onChange={(value) => handleFormChange("digital_time", value)}
-                  options={profileOptions?.digital_time}
-                />
-                <SelectField
-                  label="Interaction style"
-                  value={formData.interaction_style}
-                  onChange={(value) =>
-                    handleFormChange("interaction_style", value)
-                  }
-                  options={profileOptions?.interaction_style}
-                />
-                <SelectField
-                  label="Influencer type"
-                  value={formData.influencer_type}
-                  onChange={(value) =>
-                    handleFormChange("influencer_type", value)
-                  }
-                  options={profileOptions?.influencer_type}
-                />
-              </div>
-            </Section>
+            {showAdvancedForm ? (
+              <>
+                <Section title="Demographic">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <SelectField
+                      label="Gender"
+                      value={formData.gender}
+                      onChange={(value) => handleFormChange("gender", value)}
+                      options={profileOptions?.genders}
+                    />
+                    <SelectField
+                      label="City"
+                      value={formData.city}
+                      onChange={(value) => handleFormChange("city", value)}
+                      options={profileOptions?.cities}
+                    />
+                    <SelectField
+                      label="Education level"
+                      value={formData.education_level}
+                      onChange={(value) =>
+                        handleFormChange("education_level", value)
+                      }
+                      options={profileOptions?.education_levels}
+                    />
+                    <SelectField
+                      label="Income level"
+                      value={formData.income_level}
+                      onChange={(value) => handleFormChange("income_level", value)}
+                      options={profileOptions?.income_levels}
+                    />
+                  </div>
+                </Section>
 
-            <div className="mt-4">
-              <label className="block text-xs font-semibold text-slate-600">
-                Notes
-              </label>
-              <textarea
-                rows={3}
-                value={formData.notes}
-                onChange={(e) => handleFormChange("notes", e.target.value)}
-                className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
-                placeholder="Additional notes about this AI persona"
-                disabled={formBusy}
-              />
-            </div>
+                <Section title="Psychographic">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <SliderField
+                      label="Social value"
+                      value={formData.social_value}
+                      onChange={(value) => handleFormChange("social_value", value)}
+                    />
+                    <SliderField
+                      label="Sociability"
+                      value={formData.sociability}
+                      onChange={(value) => handleFormChange("sociability", value)}
+                    />
+                    <SliderField
+                      label="Openness"
+                      value={formData.openness}
+                      onChange={(value) => handleFormChange("openness", value)}
+                    />
+                  </div>
+                </Section>
+
+                <Section title="Behavioural / Shopping">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <SelectField
+                      label="Shopping frequency"
+                      value={formData.shopping_frequency}
+                      onChange={(value) =>
+                        handleFormChange("shopping_frequency", value)
+                      }
+                      options={profileOptions?.shopping_frequency}
+                    />
+                    <SelectField
+                      label="Buying behaviour"
+                      value={formData.buying_behavior}
+                      onChange={(value) =>
+                        handleFormChange("buying_behavior", value)
+                      }
+                      options={profileOptions?.buying_behavior}
+                    />
+                    <SelectField
+                      label="Shopping preference"
+                      value={formData.shopping_preference}
+                      onChange={(value) =>
+                        handleFormChange("shopping_preference", value)
+                      }
+                      options={profileOptions?.shopping_preference}
+                    />
+                    <SelectField
+                      label="Influencer type"
+                      value={formData.influencer_type}
+                      onChange={(value) =>
+                        handleFormChange("influencer_type", value)
+                      }
+                      options={profileOptions?.influencer_type}
+                    />
+                  </div>
+                </Section>
+
+                <div className="mt-4">
+                  <label className="block text-xs font-semibold text-slate-600">
+                    Notes
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={formData.notes}
+                    onChange={(e) => handleFormChange("notes", e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
+                    placeholder="Additional notes about this AI persona"
+                    disabled={formBusy}
+                  />
+                </div>
+              </>
+            ) : null}
 
             <div className="mt-6 flex items-center justify-end gap-3">
               <button

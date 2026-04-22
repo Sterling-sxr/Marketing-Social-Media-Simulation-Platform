@@ -13,6 +13,8 @@ from .controllers import (
     course_ai_users,
     course_ai_users_generate_commit,
     course_ai_users_generate_preview,
+    course_ai_users_generate_preview_async_start,
+    course_ai_users_generate_preview_task_status,
     course_ai_users_guided_commit,
     course_ai_users_guided_preview,
     course_ai_users_import,
@@ -160,6 +162,16 @@ urlpatterns = [
         "courses/<int:course_id>/ai-users/generate-preview/",
         course_ai_users_generate_preview,
         name="course-ai-users-generate-preview",
+    ),
+    path(
+        "courses/<int:course_id>/ai-users/generate-preview/async/",
+        course_ai_users_generate_preview_async_start,
+        name="course-ai-users-generate-preview-async",
+    ),
+    path(
+        "courses/<int:course_id>/ai-users/generate-preview/tasks/<str:task_id>/",
+        course_ai_users_generate_preview_task_status,
+        name="course-ai-users-generate-preview-task-status",
     ),
     path(
         "courses/<int:course_id>/ai-users/generate-commit/",

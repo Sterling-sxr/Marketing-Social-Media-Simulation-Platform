@@ -4,6 +4,9 @@ from __future__ import annotations
 import json
 import logging
 import random
+import csv
+import io
+import math
 from typing import Any
 
 from django.conf import settings
@@ -11,6 +14,7 @@ from django.utils.text import slugify
 
 from ..repositories import CourseAIUserRepository
 from .ai_user_service import (
+    CSV_COLUMNS,
     create_course_ai_user,
     ensure_ai_user_username_available,
     ensure_can_manage_course_ai_users,
@@ -26,7 +30,10 @@ except ImportError:  # pragma: no cover - optional dependency
 
 logger = logging.getLogger(__name__)
 
-MAX_PERSONA_PREVIEW_COUNT = 100
+MAX_PERSONA_PREVIEW_COUNT = 1000
+MAX_SIGNATURE_REPAIR_ATTEMPTS = 24
+MIN_SEED_COUNT = 10
+MAX_SEED_COUNT = 40
 _client_cache: OpenAI | None = None  # type: ignore[assignment]
 GENERATION_MODE_AI_BULK = "ai_bulk"
 GENERATION_CONSTRAINT_OPTIONS = {
@@ -389,6 +396,21 @@ def _validate_count(value: Any) -> int:
     return count
 
 
+def _compute_seed_count(*, target_count: int, payload: dict[str, Any]) -> int:
+    explicit_seed = payload.get("seed_count")
+    if explicit_seed not in (None, ""):
+        try:
+            seed_count = int(explicit_seed)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("Field seed_count must be an integer.") from exc
+        if seed_count < 1:
+            raise ValueError("Field seed_count must be at least 1.")
+        return max(1, min(seed_count, target_count))
+    dynamic = round(math.sqrt(target_count) * 1.2)
+    bounded = max(MIN_SEED_COUNT, min(MAX_SEED_COUNT, dynamic))
+    return max(1, min(bounded, target_count))
+
+
 def _cycle(options: list[str], index: int, fallback_key: str) -> str:
     values = [value for value in options if value]
     if not values:
@@ -453,7 +475,8 @@ def _build_guided_draft(
 
 
 def _normalize_preview_items(*, course_id: int, raw_items: list[dict[str, Any]], warnings: list[str] | None = None) -> dict[str, Any]:
-    seen_usernames: set[str] = set()
+    existing_usernames = {item.username.lower() for item in CourseAIUserRepository.list_for_course(course_id)}
+    seen_usernames: set[str] = set(existing_usernames)
     normalized_items: list[dict[str, Any]] = []
     all_warnings = list(warnings or [])
 
@@ -465,6 +488,7 @@ def _normalize_preview_items(*, course_id: int, raw_items: list[dict[str, Any]],
                 course_id=course_id,
                 username=normalized["username"],
                 seen_usernames=seen_usernames,
+                check_database=False,
             )
             normalized_items.append(serialize_ai_user_draft(normalized, warnings=current_warnings))
         except ValueError as exc:
@@ -672,7 +696,8 @@ def _compute_score(base: int, variance: int, index: int, shift: int = 0) -> int:
 
 
 def _compose_smart_drafts(*, profile: dict[str, Any], course_id: int) -> list[dict[str, Any]]:
-    seen_usernames: set[str] = set()
+    existing_usernames = {item.username.lower() for item in CourseAIUserRepository.list_for_course(course_id)}
+    seen_usernames: set[str] = set(existing_usernames)
     used_signatures: set[tuple[str, str, str]] = set()
     interest_sequence = _build_interest_sequence(profile)
     interaction_pool = list(profile["interaction_pool"])
@@ -702,6 +727,7 @@ def _compose_smart_drafts(*, profile: dict[str, Any], course_id: int) -> list[di
             course_id=course_id,
             username=slugify(f"{display_root}-{index + 1}") or f"persona-{index + 1}",
             seen_usernames=seen_usernames,
+            check_database=False,
         )
         score_seed = profile["activity_rule"]["score_seed"]
         variance = profile["coverage_rule"]["variance"]
@@ -866,11 +892,13 @@ def _validate_constraints(payload: dict[str, Any]) -> dict[str, list[str]]:
 
 def _normalize_generation_payload(payload: dict[str, Any]) -> dict[str, Any]:
     count = _validate_count(payload.get("count"))
+    seed_count = _compute_seed_count(target_count=count, payload=payload)
     generation_mode = (payload.get("generation_mode") or "").strip()
     if generation_mode and generation_mode != GENERATION_MODE_AI_BULK:
         raise ValueError(f"Field `generation_mode` must be `{GENERATION_MODE_AI_BULK}` when provided.")
     return {
         "count": count,
+        "seed_count": seed_count,
         "scenario_prompt": (payload.get("scenario_prompt") or "").strip(),
         "template_seed": (payload.get("template_seed") or payload.get("template_id") or "").strip(),
         "guided_answers_seed": payload.get("guided_answers_seed") or {},
@@ -1028,19 +1056,36 @@ def _attempt_duplicate_signature_repair(
     if not interest_options:
         interest_options = [tuple(interests[:2])] if interests else [tuple()]
 
-    decision_candidates = _ordered_unique(
+    decision_candidates = [
+        value
+        for value in _ordered_unique(
         [str(draft.get("decision_factor") or "").strip()]
         + [str(item).strip() for item in normalized_payload["constraints"].get("decision_factor", [])]
-    )
-    digital_time_candidates = _ordered_unique(
-        [str(draft.get("digital_time") or "").strip()]
-        + [str(item).strip() for item in normalized_payload["constraints"].get("digital_time", [])]
-        + [str(blueprint.get("activity_profile") or "").strip()]
-    )
+        )
+        if value in PROFILE_OPTIONS["decision_factors"]
+    ]
+    if not decision_candidates:
+        decision_candidates = list(PROFILE_OPTIONS["decision_factors"])
 
+    digital_time_candidates = [
+        value
+        for value in _ordered_unique(
+            [str(draft.get("digital_time") or "").strip()]
+            + [str(item).strip() for item in normalized_payload["constraints"].get("digital_time", [])]
+            + [str(blueprint.get("activity_profile") or "").strip()]
+        )
+        if value in PROFILE_OPTIONS["digital_time"]
+    ]
+    if not digital_time_candidates:
+        digital_time_candidates = list(PROFILE_OPTIONS["digital_time"])
+
+    attempt_count = 0
     for interest_option in interest_options:
         for decision_candidate in decision_candidates:
             for digital_time_candidate in digital_time_candidates:
+                attempt_count += 1
+                if attempt_count > MAX_SIGNATURE_REPAIR_ATTEMPTS:
+                    return draft, False
                 candidate = {
                     **draft,
                     "interests": list(interest_option)[:2],
@@ -1119,6 +1164,7 @@ def _seed_to_draft(
         course_id=course_id,
         username=username_hint,
         seen_usernames=seen_usernames,
+        check_database=False,
     )
 
     behavior_signals = _normalize_seed_list_field(
@@ -1293,10 +1339,11 @@ def _materialize_generated_personas(
     course_id: int,
     normalized_payload: dict[str, Any],
     generated: dict[str, Any],
+    existing_usernames: set[str] | None = None,
 ) -> dict[str, Any]:
     blueprint = generated["cohort_blueprint"]
     raw_seeds = generated["persona_seeds"]
-    seen_usernames: set[str] = set()
+    seen_usernames: set[str] = set(existing_usernames or set())
     signature_counts: dict[tuple[tuple[str, ...], str, str, str, str], int] = {}
     drafts: list[dict[str, Any]] = []
     warnings: list[str] = []
@@ -1316,6 +1363,7 @@ def _materialize_generated_personas(
                     course_id=course_id,
                     username=normalized["username"],
                     seen_usernames=seen_usernames,
+                    check_database=False,
                 )
                 normalized, repaired_signature = _attempt_duplicate_signature_repair(
                     draft=normalized,
@@ -1392,6 +1440,7 @@ def _materialize_generated_personas(
 def _build_generation_prompt(*, payload: dict[str, Any], course) -> str:
     normalized_payload = _normalize_generation_payload(payload)
     count = normalized_payload["count"]
+    seed_count = normalized_payload["seed_count"]
     scenario_prompt = normalized_payload["scenario_prompt"]
     template_seed = normalized_payload["template_seed"]
     constraints = normalized_payload["constraints"]
@@ -1399,7 +1448,8 @@ def _build_generation_prompt(*, payload: dict[str, Any], course) -> str:
     return (
         "Generate AI persona seeds for a university social media simulation platform.\n"
         f"Course: {course.course_code} - {course.name}\n"
-        f"Count: {count}\n"
+        f"Target persona count after expansion: {count}\n"
+        f"Seed persona count to generate: {seed_count}\n"
         f"Generation mode: {normalized_payload['generation_mode']}\n"
         f"Template seed: {template_seed or 'none'}\n"
         f"Scenario prompt: {scenario_prompt or 'none'}\n"
@@ -1418,7 +1468,9 @@ def _build_generation_prompt(*, payload: dict[str, Any], course) -> str:
         "Return at least one persona seed unless the constraints make it impossible.\n"
         "Prioritize contrast across interests, response tendencies, and decision drivers "
         "so students can compare which content attracts which audience segments.\n"
-        "Do not invent new schema fields beyond those listed above. Prefer allowed values where possible.\n"
+        "Do not invent new schema fields beyond those listed above.\n"
+        "For enum-like fields, you must choose values only from the allowed lists below.\n"
+        "If a field is unconstrained in Constraints, distribute personas as evenly as possible across that field's allowed values.\n"
         "Allowed values by field:\n"
         f"{_format_allowed_values_by_field()}\n"
         "Valid example:\n"
@@ -1461,31 +1513,149 @@ def _request_generated_drafts(*, payload: dict[str, Any], course, existing_usern
     raise RuntimeError("AI persona generation returned an unexpected JSON shape.")
 
 
+def _expand_personas_from_seeds(
+    *,
+    course_id: int,
+    seed_items: list[dict[str, Any]],
+    normalized_payload: dict[str, Any],
+    existing_usernames: set[str],
+) -> list[dict[str, Any]]:
+    target_count = normalized_payload["count"]
+    if len(seed_items) >= target_count:
+        return seed_items[:target_count]
+
+    constraints = normalized_payload["constraints"]
+    seen_usernames = set(existing_usernames)
+    for item in seed_items:
+        uname = (item.get("username") or "").strip().lower()
+        if uname:
+            seen_usernames.add(uname)
+    expanded = [dict(item) for item in seed_items]
+
+    option_map = {
+        "city": PROFILE_OPTIONS["cities"],
+        "age_group": PROFILE_OPTIONS["age_groups"],
+        "education_level": PROFILE_OPTIONS["education_levels"],
+        "income_level": PROFILE_OPTIONS["income_levels"],
+        "content_preference": PROFILE_OPTIONS["content_preference"],
+        "shopping_frequency": PROFILE_OPTIONS["shopping_frequency"],
+        "buying_behavior": PROFILE_OPTIONS["buying_behavior"],
+        "decision_factor": PROFILE_OPTIONS["decision_factors"],
+        "shopping_preference": PROFILE_OPTIONS["shopping_preference"],
+        "digital_time": PROFILE_OPTIONS["digital_time"],
+        "interaction_style": PROFILE_OPTIONS["interaction_style"],
+        "influencer_type": PROFILE_OPTIONS["influencer_type"],
+    }
+    constraint_map = {
+        "age_group": "age_group",
+        "education_level": "education_level",
+        "income_level": "income_level",
+        "content_preference": "content_preference",
+        "shopping_frequency": "shopping_frequency",
+        "buying_behavior": "buying_behavior",
+        "decision_factor": "decision_factor",
+        "shopping_preference": "shopping_preference",
+        "digital_time": "digital_time",
+        "interaction_style": "interaction_style",
+        "influencer_type": "influencer_type",
+    }
+
+    variant_index = 0
+    while len(expanded) < target_count:
+        expansion_index = len(expanded)
+        seed = seed_items[variant_index % len(seed_items)]
+        draft = dict(seed)
+        draft["interests"] = list(seed.get("interests") or [])
+        draft["warnings"] = list(seed.get("warnings") or [])
+        for field, options in option_map.items():
+            constrained = constraints.get(constraint_map.get(field, ""), [])
+            pool = [value for value in constrained if value] or list(options)
+            if not pool:
+                continue
+            draft[field] = pool[expansion_index % len(pool)]
+
+        for score_key, shift in (("social_value", 0), ("sociability", 1), ("openness", 2)):
+            base_score = int(draft.get(score_key) or 5)
+            delta = ((len(expanded) + shift) % 3) - 1
+            draft[score_key] = max(1, min(10, base_score + delta))
+
+        interest_pool = constraints.get("interests") or PROFILE_OPTIONS["interests"]
+        if interest_pool:
+            first = interest_pool[expansion_index % len(interest_pool)]
+            second = interest_pool[(expansion_index + 1) % len(interest_pool)]
+            draft["interests"] = [first] if first == second else [first, second]
+
+        display_name = (draft.get("display_name") or seed.get("display_name") or "Generated Persona").strip()
+        draft["display_name"] = f"{display_name} v{(variant_index // max(1, len(seed_items))) + 2}"
+        base_username = f"{seed.get('username') or 'persona'}-v{variant_index + 1}"
+        draft["username"] = ensure_ai_user_username_available(
+            course_id=course_id,
+            username=base_username,
+            seen_usernames=seen_usernames,
+            check_database=False,
+        )
+        note_suffix = "Expanded from seed persona."
+        draft["notes"] = f"{(draft.get('notes') or '').strip()} | {note_suffix}".strip(" |")
+        expanded.append(serialize_ai_user_draft(draft, warnings=draft.get("warnings") or []))
+        variant_index += 1
+    return expanded[:target_count]
+
+
 def preview_generated_personas(*, user, course_id: int, payload: dict[str, Any]) -> dict[str, Any]:
     course = ensure_can_manage_course_ai_users(user=user, course_id=course_id)
     normalized_payload = _normalize_generation_payload(payload)
     existing_usernames = {item.username.lower() for item in CourseAIUserRepository.list_for_course(course_id)}
-    raw_response = _request_generated_drafts(payload=payload, course=course, existing_usernames=existing_usernames)
+    raw_response = _request_generated_drafts(
+        payload={**normalized_payload, "count": normalized_payload["seed_count"]},
+        course=course,
+        existing_usernames=existing_usernames,
+    )
     generated = _ensure_generated_response_shape(raw_response, normalized_payload=normalized_payload)
     normalized = _materialize_generated_personas(
         course_id=course_id,
         normalized_payload=normalized_payload,
         generated=generated,
+        existing_usernames=existing_usernames,
     )
     if not normalized["items"]:
         raise RuntimeError("AI persona generation did not produce any valid preview personas.")
+    expanded_items = _expand_personas_from_seeds(
+        course_id=course_id,
+        seed_items=normalized["items"],
+        normalized_payload=normalized_payload,
+        existing_usernames=existing_usernames,
+    )
     return {
-        "items": normalized["items"],
-        "count": len(normalized["items"]),
+        "items": expanded_items,
+        "count": len(expanded_items),
         "warnings": normalized["warnings"],
         "cohort_blueprint": normalized["cohort_blueprint"],
         "generation_meta": {
-            "model_strategy": "single_call_blueprint_seed",
+            "model_strategy": "seed_then_rule_expansion",
+            "seed_count": normalized_payload["seed_count"],
+            "target_count": normalized_payload["count"],
             "repaired_count": normalized["repaired_count"],
             "rejected_count": normalized["rejected_count"],
         },
         "limits": {"max_count": MAX_PERSONA_PREVIEW_COUNT, "mode": "generated"},
     }
+
+
+def build_csv_preview_from_items(items: list[dict[str, Any]]) -> dict[str, Any]:
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=CSV_COLUMNS)
+    writer.writeheader()
+    rows: list[dict[str, Any]] = []
+    for item in items:
+        row = {}
+        for col in CSV_COLUMNS:
+            value = item.get(col, "")
+            if isinstance(value, list):
+                value = ", ".join(str(v) for v in value if str(v).strip())
+            row[col] = value
+        writer.writerow(row)
+        rows.append(row)
+    return {"columns": CSV_COLUMNS, "rows": rows, "csv_text": output.getvalue()}
 
 
 def commit_generated_personas(*, user, course_id: int, payload: dict[str, Any]) -> dict[str, Any]:
@@ -1499,4 +1669,5 @@ __all__ = [
     "commit_guided_personas",
     "preview_generated_personas",
     "preview_guided_personas",
+    "build_csv_preview_from_items",
 ]

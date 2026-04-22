@@ -19,7 +19,7 @@ from ..repositories import (
     CourseRepository,
     create_user,
 )
-from .profile_service import PROFILE_OPTIONS
+from .profile_service import PROFILE_OPTIONS, PROFILE_OPTIONS_KEY_BY_FIELD
 
 AI_USER_NUMERIC_FIELDS = ("social_value", "sociability", "openness")
 AI_USER_TEXT_FIELDS = (
@@ -166,22 +166,7 @@ def _normalize_interests(value: Any) -> list[str]:
 def _validate_choices(field: str, value: str) -> str:
     if not value:
         return ""
-    mapping = {
-        "gender": "genders",
-        "city": "cities",
-        "age_group": "age_groups",
-        "education_level": "education_levels",
-        "income_level": "income_levels",
-        "shopping_frequency": "shopping_frequency",
-        "buying_behavior": "buying_behavior",
-        "decision_factor": "decision_factors",
-        "shopping_preference": "shopping_preference",
-        "digital_time": "digital_time",
-        "content_preference": "content_preference",
-        "interaction_style": "interaction_style",
-        "influencer_type": "influencer_type",
-    }
-    key = mapping.get(field)
+    key = PROFILE_OPTIONS_KEY_BY_FIELD.get(field)
     if key and value not in PROFILE_OPTIONS.get(key, []):
         raise ValueError(f"Invalid value for {field}: {value}")
     return value
@@ -226,12 +211,15 @@ def ensure_ai_user_username_available(
     course_id: int,
     username: str,
     seen_usernames: MutableSet[str] | None = None,
+    check_database: bool = True,
 ) -> str:
     normalized = slugify(username or "") or "ai-user"
     candidate = normalized
     counter = 1
     lowered_seen = seen_usernames if seen_usernames is not None else set()
-    while CourseAIUserRepository.exists_username(course_id=course_id, username=candidate) or candidate.lower() in lowered_seen:
+    while (check_database and CourseAIUserRepository.exists_username(course_id=course_id, username=candidate)) or (
+        candidate.lower() in lowered_seen
+    ):
         counter += 1
         candidate = f"{normalized}-{counter}"
     lowered_seen.add(candidate.lower())

@@ -1,11 +1,16 @@
 from .ai_analysis_service import generate_ai_analysis, generate_tutor_response
 from .ai_persona_creation_service import (
+    build_csv_preview_from_items,
     GUIDED_TEMPLATES,
     MAX_PERSONA_PREVIEW_COUNT,
     commit_generated_personas,
     commit_guided_personas,
     preview_generated_personas,
     preview_guided_personas,
+)
+from .ai_persona_task_service import (
+    get_generated_preview_task,
+    start_generated_preview_task,
 )
 from .ai_user_reaction_service import (
     handle_post_reactions,
@@ -200,9 +205,12 @@ __all__ = [
     "generate_ai_analysis",
     "generate_tutor_response",
     "preview_guided_personas",
+    "build_csv_preview_from_items",
     "commit_guided_personas",
     "preview_generated_personas",
     "commit_generated_personas",
     "GUIDED_TEMPLATES",
     "MAX_PERSONA_PREVIEW_COUNT",
+    "start_generated_preview_task",
+    "get_generated_preview_task",
 ]

@@ -16,6 +16,8 @@ from ..services import (
     list_course_ai_users,
     preview_generated_personas,
     preview_guided_personas,
+    get_generated_preview_task,
+    start_generated_preview_task,
     update_course_ai_user,
 )
 
@@ -237,6 +239,46 @@ def course_ai_users_generate_preview(request: HttpRequest, course_id: int) -> Js
     except RuntimeError as exc:
         return JsonResponse({"error": str(exc)}, status=503)
     return JsonResponse(result)
+
+
+@csrf_exempt
+def course_ai_users_generate_preview_async_start(request: HttpRequest, course_id: int) -> JsonResponse:
+    auth_error = _ensure_authenticated(request)
+    if auth_error:
+        return auth_error
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    payload, error = _load_json_body(request)
+    if error:
+        return error
+
+    try:
+        task = start_generated_preview_task(user=request.user, course_id=course_id, payload=payload)
+    except PermissionError as exc:
+        return JsonResponse({"error": str(exc)}, status=403)
+    except ValueError as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
+    return JsonResponse(task, status=202)
+
+
+def course_ai_users_generate_preview_task_status(
+    request: HttpRequest, course_id: int, task_id: str
+) -> JsonResponse:
+    auth_error = _ensure_authenticated(request)
+    if auth_error:
+        return auth_error
+    if request.method != "GET":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+    try:
+        task = get_generated_preview_task(user=request.user, course_id=course_id, task_id=task_id)
+    except PermissionError as exc:
+        return JsonResponse({"error": str(exc)}, status=403)
+    except ValueError as exc:
+        return JsonResponse({"error": str(exc)}, status=404)
+    status = task.get("status")
+    http_status = 202 if status in {"pending", "running"} else 200
+    return JsonResponse(task, status=http_status)
 
 
 @csrf_exempt
