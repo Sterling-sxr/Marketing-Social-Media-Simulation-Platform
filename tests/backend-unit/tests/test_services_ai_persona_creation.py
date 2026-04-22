@@ -147,7 +147,7 @@ def test_generate_preview_skips_invalid_ai_drafts_and_surfaces_warnings(monkeypa
         payload={"count": 2, "scenario_prompt": "Generate a demo cohort"},
     )
 
-    assert result["count"] == 1
+    assert result["count"] == 2
     assert result["items"][0]["username"] == "valid-one"
     assert any("bad-one" in warning for warning in result["warnings"])
 
@@ -202,7 +202,7 @@ def test_generate_preview_returns_blueprint_and_generation_meta(monkeypatch):
 
     assert result["count"] == 1
     assert "segments" in result["cohort_blueprint"]["summary"].lower()
-    assert result["generation_meta"]["model_strategy"] == "single_call_blueprint_seed"
+    assert result["generation_meta"]["model_strategy"] == "seed_then_rule_expansion"
     assert result["generation_meta"]["repaired_count"] == 0
     assert result["generation_meta"]["rejected_count"] == 0
     assert result["items"][0]["content_preference"] in PROFILE_OPTIONS["content_preference"]
@@ -297,7 +297,7 @@ def test_generate_preview_repairs_invalid_seed_values_and_tracks_meta(monkeypatc
         payload={"count": 2, "scenario_prompt": "Generate a review cohort", "generation_mode": "ai_bulk"},
     )
 
-    assert result["count"] == 1
+    assert result["count"] == 2
     assert result["generation_meta"]["repaired_count"] >= 1
     assert result["generation_meta"]["rejected_count"] == 1
     assert result["items"][0]["content_preference"] in PROFILE_OPTIONS["content_preference"]
@@ -586,7 +586,7 @@ def test_generate_preview_skips_seed_with_invalid_score_hints_when_other_details
         payload={"count": 2, "scenario_prompt": "Generate resilient preview output"},
     )
 
-    assert result["count"] == 1
+    assert result["count"] == 2
     assert result["items"][0]["username"] == "keep-me"
     assert result["generation_meta"]["rejected_count"] == 1
     assert any("skip-me" in warning for warning in result["warnings"])
