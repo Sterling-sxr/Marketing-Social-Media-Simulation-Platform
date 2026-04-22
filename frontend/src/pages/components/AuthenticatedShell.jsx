@@ -163,7 +163,7 @@ export default function AuthenticatedShell({
     const courseMatch = location.pathname.match(/^\/courses\/(\d+)/);
     if (courseMatch?.[1] && !(isAdminUser && isTeacherManagePath)) {
       const currentCourseId = courseMatch[1];
-      return [
+      const courseLinks = [
         {
           to: `/courses/${currentCourseId}/community`,
           label: "Community",
@@ -180,6 +180,14 @@ export default function AuthenticatedShell({
           icon: <Bell className="h-5 w-5" />,
         },
       ];
+      if (isAdminUser) {
+        courseLinks.unshift({
+          to: `/dashboard/courses/${currentCourseId}`,
+          label: "Course Dashboard",
+          icon: <LayoutDashboard className="h-5 w-5" />,
+        });
+      }
+      return courseLinks;
     }
     if (isAdminUser) {
       if (isTeacherManagePath) {
