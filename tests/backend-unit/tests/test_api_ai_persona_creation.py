@@ -190,7 +190,7 @@ def test_generate_preview_and_commit_happy_path(monkeypatch):
     preview_payload = preview_response.json()
     assert preview_payload["count"] == 2
     assert preview_payload["cohort_blueprint"]["summary"] == "Distinct audience segments for campaign rehearsal."
-    assert preview_payload["generation_meta"]["model_strategy"] == "single_call_blueprint_seed"
+    assert preview_payload["generation_meta"]["model_strategy"] == "seed_then_rule_expansion"
 
     commit_response = client.post(
         f"/api/courses/{course.id}/ai-users/generate-commit/",

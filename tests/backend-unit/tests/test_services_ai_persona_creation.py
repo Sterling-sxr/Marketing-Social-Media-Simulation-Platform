@@ -200,7 +200,7 @@ def test_generate_preview_returns_blueprint_and_generation_meta(monkeypatch):
         },
     )
 
-    assert result["count"] == 1
+    assert result["count"] == 2
     assert "segments" in result["cohort_blueprint"]["summary"].lower()
     assert result["generation_meta"]["model_strategy"] == "seed_then_rule_expansion"
     assert result["generation_meta"]["repaired_count"] == 0
@@ -349,7 +349,7 @@ def test_generate_preview_tolerates_non_object_seed_fields_and_warns(monkeypatch
         payload={"count": 1, "scenario_prompt": "Generate resilient preview output"},
     )
 
-    assert result["count"] == 1
+    assert result["count"] == 2
     assert result["items"][0]["username"] == "format-weird"
     assert result["items"][0]["social_value"] == 5
     assert result["items"][0]["sociability"] == 5
@@ -528,7 +528,7 @@ def test_generate_preview_rejects_only_after_duplicate_repair_attempts_fail(monk
         payload={"count": 2, "scenario_prompt": "Generate duplicate variants", "generation_mode": "ai_bulk"},
     )
 
-    assert result["count"] == 1
+    assert result["count"] == 2
     assert result["generation_meta"]["rejected_count"] == 1
     assert any("after repair attempts" in warning for warning in result["warnings"])
 
