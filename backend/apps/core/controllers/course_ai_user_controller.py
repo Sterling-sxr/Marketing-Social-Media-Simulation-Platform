@@ -12,11 +12,11 @@ from ..services import (
     create_course_ai_user,
     delete_course_ai_user,
     get_course_ai_user,
+    get_generated_preview_task,
     import_course_ai_users,
     list_course_ai_users,
     preview_generated_personas,
     preview_guided_personas,
-    get_generated_preview_task,
     start_generated_preview_task,
     update_course_ai_user,
 )
