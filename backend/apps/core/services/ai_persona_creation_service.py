@@ -1,12 +1,12 @@
 """Module summary: Collect related domain logic and document the intended design boundaries."""
 from __future__ import annotations
 
-import json
-import logging
-import random
 import csv
 import io
+import json
+import logging
 import math
+import random
 from typing import Any
 
 from django.conf import settings
