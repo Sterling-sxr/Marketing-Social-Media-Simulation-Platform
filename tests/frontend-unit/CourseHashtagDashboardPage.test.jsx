@@ -13,14 +13,16 @@ vi.mock("../../frontend/src/lib/api", () => ({
   getJson: vi.fn(),
 }));
 
+const authenticatedShellMock = vi.fn(({ title, subtitle, children }) => (
+  <div>
+    <div>{title}</div>
+    <div>{subtitle}</div>
+    <div>{children}</div>
+  </div>
+));
+
 vi.mock("../../frontend/src/pages/components/AuthenticatedShell", () => ({
-  default: ({ title, subtitle, children }) => (
-    <div>
-      <div>{title}</div>
-      <div>{subtitle}</div>
-      <div>{children}</div>
-    </div>
-  ),
+  default: (props) => authenticatedShellMock(props),
 }));
 
 const mockedUseApp = useApp;
@@ -75,7 +77,11 @@ describe("CourseHashtagDashboardPage", () => {
     renderPage();
 
     expect(await screen.findByText(/campaign post/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "#campaign" })).toBeInTheDocument();
+    expect(screen.getByText(/hashtag performance snapshot/i)).toBeInTheDocument();
     expect(screen.queryByText(/student post sentiment distribution/i)).not.toBeInTheDocument();
     expect(screen.getByText(/view post analysis/i)).toBeInTheDocument();
+    const shellProps = authenticatedShellMock.mock.calls.at(-1)?.[0];
+    expect(shellProps?.hideSidebar).toBe(true);
   });
 });

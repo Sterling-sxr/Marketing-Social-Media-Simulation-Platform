@@ -57,10 +57,30 @@ describe("AuthenticatedShell teacher sidebar", () => {
   test("removes analyze from teacher course-page sidebar", () => {
     renderShell("/courses/9");
 
+    expect(screen.getByText("Course Dashboard")).toBeInTheDocument();
     expect(screen.getByText("Community")).toBeInTheDocument();
     expect(screen.getByText("Materials")).toBeInTheDocument();
     expect(screen.getByText("Messages")).toBeInTheDocument();
     expect(screen.queryByText("Analyze")).not.toBeInTheDocument();
+  });
+
+  test("does not show course dashboard in course-page sidebar for students", () => {
+    mockedUseApp.mockReturnValue({
+      authUser: { id: 2, is_staff: false, is_superuser: false, full_name: "Student" },
+      logout: vi.fn(),
+      notifications: { unread: 0 },
+      notificationStatus: { loading: false, error: "" },
+      fetchNotifications: vi.fn(() => Promise.resolve()),
+      courses: { joined: [], available: [] },
+      fetchCourses: vi.fn(() => Promise.resolve()),
+    });
+
+    renderShell("/courses/9");
+
+    expect(screen.queryByText("Course Dashboard")).not.toBeInTheDocument();
+    expect(screen.getByText("Community")).toBeInTheDocument();
+    expect(screen.getByText("Materials")).toBeInTheDocument();
+    expect(screen.getByText("Messages")).toBeInTheDocument();
   });
 
   test("can hide the desktop sidebar for full-width pages", () => {

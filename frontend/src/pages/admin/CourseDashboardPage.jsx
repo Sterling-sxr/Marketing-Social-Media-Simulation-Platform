@@ -216,44 +216,14 @@ function DetailButton({ children, onClick }) {
   );
 }
 
-function ChangeBadge({ value }) {
-  if (typeof value !== "number" || Number.isNaN(value)) {
-    return (
-      <span className="inline-flex rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-500">
-        —
-      </span>
-    );
-  }
-  if (value === 0) {
-    return (
-      <span className="inline-flex rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-500">
-        0%
-      </span>
-    );
-  }
-  const positive = value > 0;
-  return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${
-        positive ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
-      }`}
-    >
-      <span aria-hidden="true">{positive ? "▲" : "▼"}</span>
-      {positive ? "+" : ""}
-      {value.toFixed(1)}%
-    </span>
-  );
-}
-
-function DrillDownCard({ rankLabel, title, changePercent, stats, actionLabel, onAction }) {
+function DrillDownCard({ rankLabel, title, stats, actionLabel, onAction }) {
   return (
     <article className="rounded-[20px] border border-brand-100 bg-white/85 p-4 shadow-[0_8px_20px_rgba(15,23,42,0.05)]">
-      <div className="flex items-start justify-between gap-3">
+      <div>
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{rankLabel}</p>
           <h3 className="mt-2 text-base font-semibold text-slate-900">{title}</h3>
         </div>
-        <ChangeBadge value={changePercent} />
       </div>
       <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
         {stats.map((item) => (
@@ -330,6 +300,13 @@ export default function CourseDashboardPage() {
   });
 
   const isAdmin = useMemo(() => isTeacher(authUser), [authUser]);
+  const handleBack = useCallback(() => {
+    if (window.history?.state?.idx > 0) {
+      navigate(-1);
+      return;
+    }
+    navigate(`/courses/${courseId}`);
+  }, [courseId, navigate]);
 
   const loadCourseDashboard = useCallback(() => {
     if (!Number.isFinite(courseId)) {
@@ -559,7 +536,7 @@ export default function CourseDashboardPage() {
               <button
                 type="button"
                 className="inline-flex h-[44px] items-center justify-center gap-2 self-start rounded-2xl border border-slate-200 bg-white px-4 text-[13px] font-semibold text-slate-600 shadow-[0_4px_14px_rgba(15,23,42,0.05)] transition hover:border-brand hover:text-brand"
-                onClick={() => navigate(`/courses/${courseId}`)}
+                onClick={handleBack}
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back
@@ -843,7 +820,6 @@ export default function CourseDashboardPage() {
                       key={item.user_id}
                       rankLabel={`Visible Leader ${index + 1}`}
                       title={item.name}
-                      changePercent={item.change_percent}
                       stats={[
                         { label: "Posts", value: item.posts_total },
                         { label: "Interactions", value: item.interactions_total },
@@ -884,7 +860,6 @@ export default function CourseDashboardPage() {
                       key={item.hashtag}
                       rankLabel={`Visible Topic ${index + 1}`}
                       title={`#${item.hashtag}`}
-                      changePercent={item.change_percent}
                       stats={[
                         { label: "Posts", value: item.total_posts },
                         { label: "Interactions", value: item.total_interactions },
