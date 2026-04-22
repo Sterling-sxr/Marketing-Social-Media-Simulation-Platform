@@ -14,14 +14,14 @@ vi.mock("../../frontend/src/components/ToastHost", () => ({
 
 const mockedUseApp = useApp;
 
-function renderShell(initialEntry) {
+function renderShell(initialEntry, extraProps = {}) {
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
       <Routes>
         <Route
           path="*"
           element={
-            <AuthenticatedShell title="Shell" subtitle="Test shell">
+            <AuthenticatedShell title="Shell" subtitle="Test shell" {...extraProps}>
               <div>Body</div>
             </AuthenticatedShell>
           }
@@ -61,5 +61,13 @@ describe("AuthenticatedShell teacher sidebar", () => {
     expect(screen.getByText("Materials")).toBeInTheDocument();
     expect(screen.getByText("Messages")).toBeInTheDocument();
     expect(screen.queryByText("Analyze")).not.toBeInTheDocument();
+  });
+
+  test("can hide the desktop sidebar for full-width pages", () => {
+    renderShell("/courses/9/posts/101/analytics", { hideSidebar: true });
+
+    expect(screen.queryByText("Navigation")).not.toBeInTheDocument();
+    expect(screen.queryByText("Community")).not.toBeInTheDocument();
+    expect(screen.getByText("Body")).toBeInTheDocument();
   });
 });
