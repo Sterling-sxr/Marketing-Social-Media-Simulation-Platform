@@ -1,7 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Download } from "lucide-react";
-import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { getJson } from "../lib/api";
 import { useApp } from "../context/AppContext";
 import AuthenticatedShell from "./components/AuthenticatedShell";
@@ -36,7 +47,17 @@ const SEGMENT_METRICS = [
   { key: "comments", label: "Comments" },
 ];
 
+const COMPARISON_METRICS = [
+  { key: "engagement_rate", label: "Engagement Rate" },
+  { key: "likes", label: "Likes" },
+  { key: "comments", label: "Comments" },
+];
+
 const SEGMENT_PIE_COLORS = ["#46B97A", "#4F86E8", "#8B5CF6", "#F2A06B", "#F87171"];
+const COMPARISON_BAR_COLORS = {
+  current: "#46B97A",
+  compare: "#F2A06B",
+};
 
 function formatCount(value) {
   return new Intl.NumberFormat("en-US").format(Number(value || 0));
@@ -309,7 +330,38 @@ function formatMetricValue(metricKey, value) {
   if (metricKey === "engagement_rate") {
     return formatRate(value);
   }
-  return `${Number(value ?? 0)}`;
+  return formatCount(value);
+}
+
+function getMetricLabel(metricKey, metrics = SEGMENT_METRICS) {
+  return metrics.find((metric) => metric.key === metricKey)?.label || metricKey;
+}
+
+function getComparisonSummaryText(metricKey, comparison, strongest, weakest) {
+  if (metricKey === "engagement_rate") {
+    return (
+      comparison?.summary_text ||
+      "No comparison summary is available yet."
+    );
+  }
+  if (!strongest && !weakest) {
+    return "No comparison summary is available yet.";
+  }
+  const metricLabel = getMetricLabel(metricKey, COMPARISON_METRICS).toLowerCase();
+  const strongestDelta = Number(strongest?.delta ?? 0);
+  const direction = strongestDelta >= 0 ? "more" : "fewer";
+  const strongestText = strongest
+    ? `${strongest.label} shows the biggest ${metricLabel} gap, with this post drawing ${formatCount(
+        Math.abs(strongestDelta)
+      )} ${direction} than the compare post.`
+    : "";
+  const weakestText = weakest
+    ? ` The closest segment is ${weakest.label}, where the gap narrows to ${formatMetricValue(
+        metricKey,
+        Math.abs(Number(weakest.delta ?? 0))
+      )}.`
+    : "";
+  return `${strongestText}${weakestText}`.trim();
 }
 
 function getSentimentInterpretation(percentages) {
@@ -635,35 +687,127 @@ function RelativePerformanceChart({ comparison }) {
   );
 }
 
-function ComparisonMatrix({ comparison }) {
-  if (!comparison?.segments?.length) return null;
+function ComparisonMatrix({ rows, metricKey }) {
+  if (!rows.length) return null;
   return (
-    <div className="space-y-3">
-      <p className="text-sm text-slate-600">{comparison.summary_text}</p>
-      <div className="overflow-hidden rounded-2xl ring-1 ring-brand-100 shadow-sm">
-        <table className="min-w-full text-sm">
-          <thead className="bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] border-b border-accent-100">
-            <tr className="text-left text-[12px] font-semibold uppercase tracking-wider text-slate-700">
-              <th className="px-4 py-3">Segment</th>
-              <th className="px-4 py-3">This Post</th>
-              <th className="px-4 py-3">Compare Post</th>
-              <th className="px-4 py-3 text-right">Delta</th>
+    <div className="overflow-hidden rounded-2xl ring-1 ring-brand-100 shadow-sm">
+      <table className="min-w-full text-sm">
+        <thead className="bg-gradient-to-br from-[#ffdfc8] to-[#fffcdb] border-b border-accent-100">
+          <tr className="text-left text-[12px] font-semibold uppercase tracking-wider text-slate-700">
+            <th className="px-4 py-3">Segment</th>
+            <th className="px-4 py-3">This Post</th>
+            <th className="px-4 py-3">Compare Post</th>
+            <th className="px-4 py-3 text-right">Delta</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-brand-100">
+          {rows.map((row) => (
+            <tr key={row.key} className="odd:bg-white even:bg-brand-50/30">
+              <td className="px-4 py-3 font-semibold text-slate-800">{row.label}</td>
+              <td className="px-4 py-3 text-slate-700">{formatMetricValue(metricKey, row.postValue)}</td>
+              <td className="px-4 py-3 text-slate-700">{formatMetricValue(metricKey, row.compareValue)}</td>
+              <td className={`px-4 py-3 text-right font-semibold ${row.delta >= 0 ? "text-emerald-700" : "text-rose-600"}`}>
+                {row.delta >= 0 ? "+" : ""}
+                {formatMetricValue(metricKey, row.delta)}
+              </td>
             </tr>
-          </thead>
-          <tbody className="divide-y divide-brand-100">
-            {comparison.segments.map((segment) => (
-              <tr key={segment.key} className="odd:bg-white even:bg-brand-50/30">
-                <td className="px-4 py-3 font-semibold text-slate-800">{segment.label}</td>
-                <td className="px-4 py-3 text-slate-700">{formatRate(segment.post_metrics?.engagement_rate)}</td>
-                <td className="px-4 py-3 text-slate-700">{formatRate(segment.compare_metrics?.engagement_rate)}</td>
-                <td className={`px-4 py-3 text-right font-semibold ${segment.delta_engagement_rate >= 0 ? "text-emerald-700" : "text-rose-600"}`}>
-                  {segment.delta_engagement_rate >= 0 ? "+" : ""}
-                  {formatRate(segment.delta_engagement_rate)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function getComparisonRows(comparison, metricKey) {
+  return (comparison?.segments || [])
+    .map((segment) => ({
+      key: segment.key,
+      label: segment.label,
+      postValue: Number(segment.post_metrics?.[metricKey] ?? 0),
+      compareValue: Number(segment.compare_metrics?.[metricKey] ?? 0),
+      delta:
+        metricKey === "engagement_rate"
+          ? Number(segment.delta_engagement_rate ?? 0)
+          : Number(segment.post_metrics?.[metricKey] ?? 0) -
+            Number(segment.compare_metrics?.[metricKey] ?? 0),
+    }))
+    .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+}
+
+function ComparisonGroupedBarChart({ rows, metricKey }) {
+  if (!rows.length) {
+    return (
+      <p className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-3 text-sm text-slate-600">
+        No audience segment comparison is available for this post pair yet.
+      </p>
+    );
+  }
+
+  return (
+    <div className="rounded-[20px] border border-brand-100 bg-white/90 p-4">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h4 className="text-sm font-semibold text-slate-800">Segment comparison</h4>
+          <p className="text-xs text-slate-500">
+            Grouped {getMetricLabel(metricKey, COMPARISON_METRICS).toLowerCase()} view across audience segments.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3 text-xs text-slate-500">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: COMPARISON_BAR_COLORS.current }} />
+            Current post
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: COMPARISON_BAR_COLORS.compare }} />
+            Compare post
+          </span>
+        </div>
+      </div>
+      <div className="w-full" style={{ height: `${Math.max(260, rows.length * 56)}px` }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            layout="vertical"
+            data={rows}
+            margin={{ top: 8, right: 12, bottom: 12, left: 12 }}
+            barCategoryGap={18}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#DCEFF3" horizontal={false} />
+            <XAxis
+              type="number"
+              domain={[0, metricKey === "engagement_rate" ? "dataMax + 0.1" : "dataMax + 1"]}
+              tickFormatter={(value) =>
+                metricKey === "engagement_rate"
+                  ? `${Math.round(Number(value) * 100)}%`
+                  : formatCount(value)
+              }
+              tick={{ fill: "#475569", fontSize: 11 }}
+              tickLine={false}
+              axisLine={false}
+            />
+            <YAxis
+              type="category"
+              dataKey="label"
+              interval={0}
+              tickLine={false}
+              axisLine={false}
+              width={132}
+              tickFormatter={(value) =>
+                String(value).length > 18 ? `${String(value).slice(0, 18)}…` : value
+              }
+              tick={{ fill: "#475569", fontSize: 11 }}
+            />
+            <Tooltip
+              formatter={(value) => formatMetricValue(metricKey, value)}
+              contentStyle={{
+                borderRadius: 16,
+                border: "1px solid #BDDDE7",
+                boxShadow: "0 10px 24px rgba(15,23,42,0.08)",
+              }}
+            />
+            <Bar dataKey="postValue" name="Current post" fill={COMPARISON_BAR_COLORS.current} radius={[8, 8, 0, 0]} />
+            <Bar dataKey="compareValue" name="Compare post" fill={COMPARISON_BAR_COLORS.compare} radius={[8, 8, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
@@ -681,6 +825,7 @@ export default function PostAnalyticsPage() {
   const [status, setStatus] = useState({ loading: true, error: "" });
   const [activeMetric, setActiveMetric] = useState("likes");
   const [activeSegmentMetric, setActiveSegmentMetric] = useState("engagement_rate");
+  const [comparisonMetric, setComparisonMetric] = useState("engagement_rate");
   const [activeHashtag, setActiveHashtag] = useState(null);
   const [selectedLens, setSelectedLens] = useState("interests");
   const [comparePostId, setComparePostId] = useState("");
@@ -744,8 +889,8 @@ export default function PostAnalyticsPage() {
         setSegmentation(next);
         const options = next?.compare_options || [];
         const compareExists = options.some((item) => String(item.post_id) === String(comparePostId));
-        if (!compareExists) {
-          setComparePostId(options[0]?.post_id ? String(options[0].post_id) : "");
+        if (comparePostId && !compareExists) {
+          setComparePostId("");
         }
         setSegmentationStatus({ loading: false, error: "" });
       })
@@ -800,6 +945,31 @@ export default function PostAnalyticsPage() {
     () => hashtagComparisons.find((item) => item.hashtag === activeHashtag),
     [hashtagComparisons, activeHashtag]
   );
+  const comparisonRows = useMemo(
+    () => getComparisonRows(segmentation?.comparison, comparisonMetric),
+    [comparisonMetric, segmentation?.comparison]
+  );
+  const comparisonSummary = useMemo(() => {
+    if (!comparisonRows.length) return null;
+    return {
+      strongest: comparisonRows[0],
+      weakest: comparisonRows[comparisonRows.length - 1],
+    };
+  }, [comparisonRows]);
+  const comparisonSummaryText = useMemo(
+    () =>
+      getComparisonSummaryText(
+        comparisonMetric,
+        segmentation?.comparison,
+        comparisonSummary?.strongest,
+        comparisonSummary?.weakest
+      ),
+    [comparisonMetric, comparisonSummary?.strongest, comparisonSummary?.weakest, segmentation?.comparison]
+  );
+
+  useEffect(() => {
+    setShowComparisonDetails(false);
+  }, [comparePostId]);
 
   const pageTitle = "Post Analytics";
   const pageSubtitle = `Course #${courseId} · Post #${postId}`;
@@ -1036,114 +1206,203 @@ export default function PostAnalyticsPage() {
 
           <SectionCard
             title="Comparison Evidence"
-            subtitle="Supporting visuals for when you want to go beyond the quick teaching view."
+            subtitle="Compare this post against another post with the same audience-segment structure used above."
           >
             <div className="grid gap-4">
-              <div className="space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <h3 className="text-base font-semibold text-slate-800">Hashtag shape comparison</h3>
-                    <p className="text-xs text-slate-500">
-                      A secondary profile view of the same hashtag benchmark across likes, comments, and views.
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {hashtagComparisons.map((item) => (
-                      <button
-                        key={item.hashtag}
-                        type="button"
-                        className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                          activeHashtag === item.hashtag
-                            ? "bg-brand-100 text-brand"
-                            : "border border-brand-200 bg-white text-slate-600 hover:border-brand hover:text-brand"
-                        }`}
-                        onClick={() => setActiveHashtag(item.hashtag)}
+              {isAdmin ? (
+                <div className="space-y-4 rounded-[20px] border border-brand-100 bg-brand-50/40 p-4">
+                  <header className="space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <h4 className="text-base font-semibold text-slate-800">Post-to-post audience comparison</h4>
+                        <p className="text-xs text-slate-500">
+                          Switch between engagement rate, likes, and comments without leaving the audience-segment view.
+                        </p>
+                      </div>
+                      <select
+                        value={comparePostId}
+                        onChange={(event) => setComparePostId(event.target.value)}
+                        className="rounded-full border border-brand-200 bg-white px-4 py-2 text-sm text-slate-700"
                       >
-                        #{item.hashtag}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {hashtagComparisons.length === 0 ? (
-                  <p className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-3 text-sm text-slate-600">
-                    No hashtags detected in this post.
-                  </p>
-                ) : activeComparison ? (
-                  <div className="grid gap-6 lg:grid-cols-[1fr_auto]">
-                    <div className="space-y-3">
-                      {METRICS.map((metric) => (
-                        <div
+                        <option value="">No comparison</option>
+                        {(segmentation?.compare_options || []).map((item) => (
+                          <option key={item.post_id} value={item.post_id}>
+                            {item.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {COMPARISON_METRICS.map((metric) => (
+                        <button
                           key={metric.key}
-                          className="flex items-center justify-between rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-3"
+                          type="button"
+                          aria-pressed={comparisonMetric === metric.key}
+                          className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                            comparisonMetric === metric.key
+                              ? "bg-slate-800 text-white"
+                              : "border border-brand-200 bg-white text-slate-600 hover:border-brand hover:text-brand"
+                          }`}
+                          onClick={() => setComparisonMetric(metric.key)}
                         >
-                          <div>
-                            <p className="text-sm font-semibold text-slate-800">
-                              {metric.label}
+                          {metric.label}
+                        </button>
+                      ))}
+                    </div>
+                  </header>
+
+                  {!comparePostId ? (
+                    <p className="rounded-2xl border border-dashed border-brand-200 bg-white/90 px-4 py-3 text-sm text-slate-600">
+                      Choose another post to compare audience-segment metrics side by side.
+                    </p>
+                  ) : segmentationStatus.loading ? (
+                    <p className="text-sm text-slate-500">Loading post comparison...</p>
+                  ) : segmentationStatus.error ? (
+                    <Feedback error={segmentationStatus.error} />
+                  ) : null}
+
+                  {comparePostId && !segmentationStatus.loading && !segmentationStatus.error ? (
+                    <>
+                      <div className="rounded-[20px] border border-brand-100 bg-white p-4">
+                        <p className="text-sm text-slate-700">
+                          {comparisonSummaryText}
+                        </p>
+                        <div className="mt-3 grid gap-3 sm:grid-cols-2 text-sm">
+                          <div className="rounded-2xl bg-brand-50/50 px-4 py-3">
+                            <p className="text-slate-500">Strongest gap</p>
+                            <p className="mt-1 font-semibold text-slate-800">
+                              {comparisonSummary?.strongest?.label || "—"}
                             </p>
-                            <p className="text-xs text-slate-500">
-                              Average across {activeComparison.cohort_size} post
-                              {activeComparison.cohort_size === 1 ? "" : "s"}
+                            <p className={`mt-1 text-xs font-semibold ${Number(comparisonSummary?.strongest?.delta ?? 0) >= 0 ? "text-emerald-700" : "text-rose-600"}`}>
+                              {comparisonSummary?.strongest
+                                ? `${comparisonSummary.strongest.delta >= 0 ? "+" : ""}${formatMetricValue(comparisonMetric, comparisonSummary.strongest.delta)}`
+                                : "—"}
                             </p>
                           </div>
-                          <div className="text-right text-sm">
-                            <p className="font-semibold text-rose-500">
-                              Post: {activeComparison.post?.[metric.key] ?? 0}
+                          <div className="rounded-2xl bg-brand-50/50 px-4 py-3">
+                            <p className="text-slate-500">Smallest gap</p>
+                            <p className="mt-1 font-semibold text-slate-800">
+                              {comparisonSummary?.weakest?.label || "—"}
                             </p>
-                            <p className="text-slate-500">
-                              Avg: {activeComparison.average?.[metric.key] ?? 0}
+                            <p className={`mt-1 text-xs font-semibold ${Number(comparisonSummary?.weakest?.delta ?? 0) >= 0 ? "text-emerald-700" : "text-rose-600"}`}>
+                              {comparisonSummary?.weakest
+                                ? `${comparisonSummary.weakest.delta >= 0 ? "+" : ""}${formatMetricValue(comparisonMetric, comparisonSummary.weakest.delta)}`
+                                : "—"}
                             </p>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                    <RadarChart comparison={activeComparison} />
-                  </div>
-                ) : (
-                  <p className="text-sm text-slate-500">Select a hashtag to view details.</p>
-                )}
-              </div>
+                      </div>
 
-              {isAdmin ? (
-                <div className="space-y-3 rounded-[20px] border border-brand-100 bg-brand-50/40 p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <h4 className="text-base font-semibold text-slate-800">Compare with another post</h4>
-                      <p className="text-xs text-slate-500">
-                        Keep this optional so teachers can stay in the chart-first flow until they need evidence details.
-                      </p>
-                    </div>
-                    <select
-                      value={comparePostId}
-                      onChange={(event) => setComparePostId(event.target.value)}
-                      className="rounded-full border border-brand-200 bg-white px-4 py-2 text-sm text-slate-700"
-                    >
-                      <option value="">No comparison</option>
-                      {(segmentation?.compare_options || []).map((item) => (
-                        <option key={item.post_id} value={item.post_id}>
-                          {item.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  {segmentation?.insights?.comparison_summary_text ? (
-                    <p className="text-sm text-slate-600">
-                      {segmentation.insights.comparison_summary_text}
-                    </p>
+                      <div className="grid gap-4 xl:grid-cols-[minmax(320px,1.05fr)_minmax(0,0.95fr)]">
+                        <ComparisonGroupedBarChart rows={comparisonRows} metricKey={comparisonMetric} />
+                        <div className="space-y-3 rounded-[20px] border border-brand-100 bg-white/90 p-4">
+                          <div>
+                            <h4 className="text-sm font-semibold text-slate-800">Segment ranking</h4>
+                            <p className="mt-1 text-xs text-slate-500">
+                              Sorted by absolute {getMetricLabel(comparisonMetric, COMPARISON_METRICS).toLowerCase()} difference so the most meaningful gaps stay at the top.
+                            </p>
+                          </div>
+                          {comparisonRows.length ? (
+                            <div className="space-y-3">
+                              {comparisonRows.map((row) => (
+                                <div key={row.key} className="rounded-2xl border border-brand-100 bg-brand-50/30 px-3 py-3">
+                                  <div className="flex items-center justify-between gap-3 text-sm">
+                                    <span className="truncate font-semibold text-slate-800" title={row.label}>
+                                      {row.label}
+                                    </span>
+                                    <span className={row.delta >= 0 ? "font-semibold text-emerald-700" : "font-semibold text-rose-600"}>
+                                      {row.delta >= 0 ? "+" : ""}
+                                      {formatMetricValue(comparisonMetric, row.delta)}
+                                    </span>
+                                  </div>
+                                  <div className="mt-2 flex items-center justify-between gap-3 text-xs text-slate-500">
+                                    <span>Current {formatMetricValue(comparisonMetric, row.postValue)}</span>
+                                    <span>Compare {formatMetricValue(comparisonMetric, row.compareValue)}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-3 text-sm text-slate-600">
+                              No segment comparison data available for this post pair.
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
+                          onClick={() => setShowComparisonDetails((value) => !value)}
+                        >
+                          {showComparisonDetails
+                            ? "Hide comparison details"
+                            : "View comparison details"}
+                        </button>
+                      </div>
+                      {showComparisonDetails ? (
+                        <ComparisonMatrix rows={comparisonRows} metricKey={comparisonMetric} />
+                      ) : null}
+                    </>
                   ) : null}
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
-                      onClick={() => setShowComparisonDetails((value) => !value)}
-                    >
-                      {showComparisonDetails
-                        ? "Hide comparison details"
-                        : "View comparison details"}
-                    </button>
-                  </div>
-                  {showComparisonDetails ? (
-                    <ComparisonMatrix comparison={segmentation?.comparison} />
+
+                  {hashtagComparisons.length && activeComparison ? (
+                    <div className="rounded-[20px] border border-brand-100 bg-white/90 p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <h4 className="text-sm font-semibold text-slate-800">Hashtag benchmark reference</h4>
+                          <p className="mt-1 text-xs text-slate-500">
+                            Keep the hashtag radar as a secondary benchmark, separate from the post-to-post audience comparison above.
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {hashtagComparisons.map((item) => (
+                            <button
+                              key={item.hashtag}
+                              type="button"
+                              className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                                activeHashtag === item.hashtag
+                                  ? "bg-brand-100 text-brand"
+                                  : "border border-brand-200 bg-white text-slate-600 hover:border-brand hover:text-brand"
+                              }`}
+                              onClick={() => setActiveHashtag(item.hashtag)}
+                            >
+                              #{item.hashtag}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_auto]">
+                        <div className="space-y-3">
+                          {METRICS.map((metric) => (
+                            <div
+                              key={metric.key}
+                              className="flex items-center justify-between rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-3"
+                            >
+                              <div>
+                                <p className="text-sm font-semibold text-slate-800">
+                                  {metric.label}
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                  Average across {activeComparison.cohort_size} post
+                                  {activeComparison.cohort_size === 1 ? "" : "s"}
+                                </p>
+                              </div>
+                              <div className="text-right text-sm">
+                                <p className="font-semibold text-rose-500">
+                                  Post: {activeComparison.post?.[metric.key] ?? 0}
+                                </p>
+                                <p className="text-slate-500">
+                                  Avg: {activeComparison.average?.[metric.key] ?? 0}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <RadarChart comparison={activeComparison} />
+                      </div>
+                    </div>
                   ) : null}
                 </div>
               ) : null}
