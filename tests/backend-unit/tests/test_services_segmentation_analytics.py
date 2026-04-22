@@ -113,6 +113,16 @@ def test_course_segmentation_aggregates_interest_buckets_and_marks_partial_data(
     assert segments["Unknown"]["audience_count"] == 1
 
     assert len(course_payload["posts"]) == 2
+    first_post = next(item for item in course_payload["posts"] if item["post_id"] == post_a.id)
+    second_post = next(item for item in course_payload["posts"] if item["post_id"] == post_b.id)
+    assert first_post["likes"] == 1
+    assert first_post["comments"] == 1
+    assert first_post["views"] == 3
+    assert first_post["interactions"] == 2
+    assert second_post["likes"] == 1
+    assert second_post["comments"] == 1
+    assert second_post["views"] == 1
+    assert second_post["interactions"] == 2
     assert course_payload["insights"]["top_segment"]["label"] in segments
     assert course_payload["insights"]["summary_text"]
 

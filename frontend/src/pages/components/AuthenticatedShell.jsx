@@ -80,6 +80,7 @@ export default function AuthenticatedShell({
   links,
   mobileNavLinks,
   hideMobileNav = false,
+  hideSidebar = false,
   showNotifications = false, // Inline explanation: Keep this non-obvious normalization rule explicit.
   wideContent = false,
   /* Context: Keep related logic in one section so assumptions and control flow stay explicit. Reason: Localizing side effects lowers review cost and reduces accidental regressions. */
@@ -452,7 +453,7 @@ export default function AuthenticatedShell({
 
       {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-3 py-3 sm:gap-4 sm:px-4 sm:py-4 lg:flex-row lg:gap-6 lg:px-6 lg:py-8">
-        {!wideContent ? (
+        {!wideContent && !hideSidebar ? (
         <aside className="hidden w-16 flex-shrink-0 flex-col gap-2 rounded-3xl border border-brand-100/80 bg-white/75 p-2 shadow-soft backdrop-blur lg:flex lg:w-60 lg:p-4">
           <div className="hidden lg:block px-2 pb-1">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 
 import PostAnalyticsPage from "../../frontend/src/pages/PostAnalyticsPage.jsx";
@@ -13,12 +13,18 @@ vi.mock("../../frontend/src/lib/api", () => ({
   getJson: vi.fn(),
 }));
 
+const mockedAuthenticatedShell = vi.fn(({ title, subtitle, children }) => (
+  <div>
+    <div>{title}</div>
+    <div>{subtitle}</div>
+    <div>{children}</div>
+  </div>
+));
+
 vi.mock("../../frontend/src/pages/components/AuthenticatedShell", () => ({
-  default: ({ title, subtitle, children }) => (
+  default: (props) => (
     <div>
-      <div>{title}</div>
-      <div>{subtitle}</div>
-      <div>{children}</div>
+      {mockedAuthenticatedShell(props)}
     </div>
   ),
 }));
@@ -134,6 +140,9 @@ describe("PostAnalyticsPage", () => {
     expect(
       screen.queryByRole("columnheader", { name: /compare post/i })
     ).not.toBeInTheDocument();
+    expect(mockedAuthenticatedShell).toHaveBeenCalledWith(
+      expect.objectContaining({ hideSidebar: true, wideContent: true })
+    );
   });
 
   test("reveals segment and comparison tables only when the local detail toggles are opened", async () => {
@@ -152,5 +161,25 @@ describe("PostAnalyticsPage", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /view comparison details/i }));
     expect(screen.getByRole("columnheader", { name: /compare post/i })).toBeInTheDocument();
+  });
+
+  test("renders a segment pie breakdown that follows the selected metric", async () => {
+    renderPage();
+
+    expect(await screen.findByText(/audience segment response/i)).toBeInTheDocument();
+    expect(screen.getByText(/^segment share$/i)).toBeInTheDocument();
+    expect(screen.getByText(/based on engagement rate/i)).toBeInTheDocument();
+    expect(screen.getByText(/^95\.0%$/i)).toBeInTheDocument();
+    expect(screen.queryByText(/combined visible value/i)).not.toBeInTheDocument();
+
+    let practicalLegend = screen.getByText("Practical learners").closest("div");
+    expect(within(practicalLegend).getByText(/70\.0%/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /^likes$/i }));
+
+    expect(screen.getByText(/based on likes/i)).toBeInTheDocument();
+    expect(screen.getByText(/^10$/i)).toBeInTheDocument();
+    practicalLegend = screen.getByText("Practical learners").closest("div");
+    expect(within(practicalLegend).getByText(/80\.0%/i)).toBeInTheDocument();
   });
 });

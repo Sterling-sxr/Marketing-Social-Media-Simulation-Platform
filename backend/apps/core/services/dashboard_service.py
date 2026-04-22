@@ -4,7 +4,7 @@ import logging
 import os
 import threading
 import time
-from datetime import timedelta
+from datetime import date, timedelta
 from typing import Any
 
 from django.contrib.auth import get_user_model
@@ -247,12 +247,11 @@ def _get_post_interactions(
     return interactions_per_post, total_interactions, like_counts, comment_counts
 
 
-def _collect_course_post_data(course, *, range_days: int = 7) -> dict[str, Any]:
-    range_start = timezone.now() - timedelta(days=max(range_days, 1))
-    posts_qs = PostRepository.model.objects.filter(
-        course_id=course.id,
-        created_at__gte=range_start,
-    )
+def _collect_course_post_data(course, *, range_days: int | None = 7) -> dict[str, Any]:
+    posts_qs = PostRepository.model.objects.filter(course_id=course.id)
+    if range_days is not None:
+        range_start = timezone.now() - timedelta(days=max(range_days, 1))
+        posts_qs = posts_qs.filter(created_at__gte=range_start)
     post_records = list(posts_qs.values("id", "author_id", "hashtags", "created_at", "content"))
     post_ids = [record["id"] for record in post_records]
 
@@ -318,6 +317,17 @@ def _collect_course_post_data(course, *, range_days: int = 7) -> dict[str, Any]:
         "total_views": total_views,
         "comment_sentiments": comment_sentiments,
     }
+
+
+def _resolve_course_range(course, range_days: int | None) -> tuple[int, date]:
+    today = timezone.localdate()
+    if range_days is not None:
+        safe_range_days = max(int(range_days), 1)
+        return safe_range_days, today - timedelta(days=safe_range_days)
+
+    start_date = getattr(course, "start_date", None) or today
+    safe_range_days = max((today - start_date).days, 1)
+    return safe_range_days, start_date
 
 
 def _get_registered_student_count(course_id: int) -> int:
@@ -572,9 +582,10 @@ def _placeholder_student_data(course, student_id: int, student=None) -> dict[str
     }
 
 
-def refresh_course_snapshot(course, *, range_days: int = 7) -> dict[str, Any]:
+def refresh_course_snapshot(course, *, range_days: int | None = None) -> dict[str, Any]:
     course_data = _collect_course_post_data(course, range_days=range_days)
-    course_data["range_days"] = range_days
+    resolved_range_days, resolved_start = _resolve_course_range(course, range_days)
+    course_data["range_days"] = resolved_range_days
     metrics = _calculate_course_metrics_from_data(course, course_data)
     today = timezone.localdate()
     course_info = {
@@ -587,8 +598,8 @@ def refresh_course_snapshot(course, *, range_days: int = 7) -> dict[str, Any]:
     payload = {
         **metrics,
         "course": course_info,
-        "range_days": range_days,
-        "range_start": (timezone.now() - timedelta(days=max(range_days, 1))).date().isoformat(),
+        "range_days": resolved_range_days,
+        "range_start": resolved_start.isoformat(),
         "range_end": today.isoformat(),
         "refreshing": False,
     }
@@ -987,13 +998,7 @@ def get_course_dashboard(*, user, course_id: int) -> dict[str, Any]:
     course = CourseRepository.model.objects.filter(id=course_id, created_by_id=user.id).first()
     if not course:
         raise PermissionError("Course not found or not managed by current user.")
-
-    snapshot = CourseDashboardSnapshot.objects.filter(course=course).first()
-    if snapshot:
-        payload = dict(snapshot.data)
-        payload["calculated_at"] = snapshot.calculated_at.isoformat()
-        return payload
-    return _placeholder_course_data(course)
+    return refresh_course_snapshot(course, range_days=None)
 
 
 def get_course_hashtag_dashboard(*, user, course_id: int, hashtag: str) -> dict[str, Any]:
@@ -1004,6 +1009,7 @@ def get_course_hashtag_dashboard(*, user, course_id: int, hashtag: str) -> dict[
     ).first()
     if not course:
         raise PermissionError("Course not found or not managed by current user.")
+    refresh_course_snapshot(course, range_days=None)
     normalized = _normalize_hashtag(hashtag)
     snapshot = CourseHashtagDashboardSnapshot.objects.filter(
         course=course,
@@ -1042,6 +1048,8 @@ def get_course_student_dashboard(*, user, course_id: int, student_id: int) -> di
     ).exists()
     if not target_member_exists:
         raise ValueError("Student not enrolled in this course.")
+    if is_admin:
+        refresh_course_snapshot(course, range_days=None)
 
     snapshot = CourseStudentDashboardSnapshot.objects.filter(
         course=course,

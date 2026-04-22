@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
+from django.db.models import Count
 
 from ..repositories import (
     CourseAIUserIdentityRepository,
@@ -239,6 +240,29 @@ def _compare_options(posts: list[CoursePost], *, exclude_post_id: int | None = N
     return items
 
 
+def _post_metric_maps(post_ids: list[int]) -> dict[str, dict[int, int]]:
+    if not post_ids:
+        return {
+            "views": {},
+            "likes": {},
+            "comments": {},
+        }
+
+    def _count_map(model) -> dict[int, int]:
+        return {
+            item["post_id"]: item["total"]
+            for item in model.objects.filter(post_id__in=post_ids)
+            .values("post_id")
+            .annotate(total=Count("id"))
+        }
+
+    return {
+        "views": _count_map(CoursePostView),
+        "likes": _count_map(CoursePostLike),
+        "comments": _count_map(CoursePostComment),
+    }
+
+
 def _aggregate_for_posts(*, course_id: int, lens: str, audience_user_ids: list[int], post_ids: list[int]) -> dict[str, Any]:
     profile_map = _persona_sources_by_user(course_id, audience_user_ids)
     memberships_by_user: dict[int, list[tuple[str, str]]] = {}
@@ -302,13 +326,23 @@ def _aggregate_for_posts(*, course_id: int, lens: str, audience_user_ids: list[i
     }
 
 
-def _post_segmentation_summary(post: CoursePost, aggregated: dict[str, Any], lens: str) -> dict[str, Any]:
+def _post_segmentation_summary(
+    post: CoursePost,
+    aggregated: dict[str, Any],
+    lens: str,
+    post_metrics: dict[str, int] | None = None,
+) -> dict[str, Any]:
     top_segment = aggregated["insights"]["top_segment"]
     under_segment = aggregated["insights"]["under_engaged_segment"]
+    metrics = post_metrics or {"likes": 0, "comments": 0, "views": 0, "interactions": 0}
     return {
         "post_id": post.id,
         "label": _preview_text(post.content),
         "created_at": post.created_at.isoformat(),
+        "likes": int(metrics.get("likes", 0) or 0),
+        "comments": int(metrics.get("comments", 0) or 0),
+        "views": int(metrics.get("views", 0) or 0),
+        "interactions": int(metrics.get("interactions", 0) or 0),
         "top_segment": top_segment,
         "under_engaged_segment": under_segment,
         "summary_text": _insight_summary(
@@ -396,6 +430,7 @@ def get_admin_course_segmentation(*, user, course_id: int, lens: str | None = No
     course = _ensure_admin_for_course(user=user, course_id=course_id)
     selected_lens, _config = _get_lens_config(lens)
     posts = _course_posts(course.id)
+    post_metric_maps = _post_metric_maps([post.id for post in posts])
     audience_user_ids = _student_ids(course.id)
     aggregated = _aggregate_for_posts(
         course_id=course.id,
@@ -412,7 +447,22 @@ def get_admin_course_segmentation(*, user, course_id: int, lens: str | None = No
             audience_user_ids=audience_user_ids,
             post_ids=[post.id],
         )
-        post_summaries.append(_post_segmentation_summary(post, post_aggregated, selected_lens))
+        likes = int(post_metric_maps["likes"].get(post.id, 0) or 0)
+        comments = int(post_metric_maps["comments"].get(post.id, 0) or 0)
+        views = int(post_metric_maps["views"].get(post.id, 0) or 0)
+        post_summaries.append(
+            _post_segmentation_summary(
+                post,
+                post_aggregated,
+                selected_lens,
+                post_metrics={
+                    "likes": likes,
+                    "comments": comments,
+                    "views": views,
+                    "interactions": likes + comments,
+                },
+            )
+        )
 
     top_segment = aggregated["insights"]["top_segment"]
     under_segment = aggregated["insights"]["under_engaged_segment"]
