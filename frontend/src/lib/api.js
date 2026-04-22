@@ -1,3 +1,5 @@
+const inflightGetRequests = new Map();
+
 export async function postJson(url, payload) {
   const response = await fetch(url, {
     method: "POST",
@@ -18,16 +20,29 @@ export async function postJson(url, payload) {
 }
 
 export async function getJson(url) {
-  const response = await fetch(url, { credentials: "include" });
-  const text = await response.text();
-  const data = text ? JSON.parse(text) : {};
-  if (!response.ok) {
-    const message = data?.error || `Request failed (${response.status})`;
-    const error = new Error(message);
-    error.status = response.status;
-    throw error;
+  if (inflightGetRequests.has(url)) {
+    return inflightGetRequests.get(url);
   }
-  return data;
+
+  const request = (async () => {
+    const response = await fetch(url, { credentials: "include" });
+    const text = await response.text();
+    const data = text ? JSON.parse(text) : {};
+    if (!response.ok) {
+      const message = data?.error || `Request failed (${response.status})`;
+      const error = new Error(message);
+      error.status = response.status;
+      throw error;
+    }
+    return data;
+  })();
+
+  inflightGetRequests.set(url, request);
+  try {
+    return await request;
+  } finally {
+    inflightGetRequests.delete(url);
+  }
 }
 
 export async function patchJson(url, payload) {

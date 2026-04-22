@@ -1,6 +1,6 @@
-﻿import { act, render } from '@testing-library/react';
+﻿import { act, render, waitFor } from '@testing-library/react';
 import { AppProvider, useApp, createEmptyProfileData } from '../../frontend/src/context/AppContext.jsx';
-import { postJson } from '../../frontend/src/lib/api';
+import { getJson, postJson } from '../../frontend/src/lib/api';
 
 vi.mock('../../frontend/src/lib/api', () => ({
   getJson: vi.fn(),
@@ -112,5 +112,44 @@ describe('AppContext behaviours', () => {
       getCtx().toggleInterest('music');
     });
     expect(getCtx().profileData.interests).not.toContain('music');
+  });
+
+  test('fetchCourses reuses the same in-flight request', async () => {
+    let resolveCourses;
+    getJson.mockImplementation((url) => {
+      if (url === '/api/auth/status/') {
+        return Promise.resolve({ authenticated: false });
+      }
+      if (url === '/api/courses/') {
+        return new Promise((resolve) => {
+          resolveCourses = resolve;
+        });
+      }
+      return Promise.resolve({});
+    });
+
+    const getCtx = renderWithProvider();
+
+    await waitFor(() => {
+      expect(getCtx().authCheckComplete).toBe(true);
+    });
+
+    let firstPromise;
+    let secondPromise;
+    act(() => {
+      firstPromise = getCtx().fetchCourses();
+      secondPromise = getCtx().fetchCourses();
+    });
+
+    const courseCalls = getJson.mock.calls.filter(([url]) => url === '/api/courses/');
+    expect(courseCalls).toHaveLength(1);
+    expect(firstPromise).toBe(secondPromise);
+
+    await act(async () => {
+      resolveCourses({ joined: [{ id: 1 }], available: [] });
+      await firstPromise;
+    });
+
+    expect(getCtx().courses.joined).toHaveLength(1);
   });
 });

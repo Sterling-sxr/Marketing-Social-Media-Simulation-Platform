@@ -94,6 +94,7 @@ export function AppProvider({ children }) {
   const [notifications, setNotifications] = useState({ items: [], unread: 0 });
   const [notificationStatus, setNotificationStatus] =
     useState(makeSimpleStatus);
+  const coursesRequestRef = useRef(null);
   const wsRef = useRef(null);
   const [toasts, setToasts] = useState([]);
   const seenNotificationIdsRef = useRef(new Set());
@@ -684,17 +685,27 @@ export function AppProvider({ children }) {
     return await postJson(`/api/courses/${courseId}/profile/`, payload);
   }, []);
 
-  const fetchCourses = useCallback(async () => {
-    setCourseStatus((prev) => ({ ...prev, loading: true, error: "" }));
-    try {
-      const data = await getJson(`${COURSE_ENDPOINT}/`);
-      setCourses(data);
-      setCourseStatus({ loading: false, message: "", error: "" });
-      return data;
-    } catch (error) {
-      setCourseStatus({ loading: false, message: "", error: error.message });
-      throw error;
+  const fetchCourses = useCallback(() => {
+    if (coursesRequestRef.current) {
+      return coursesRequestRef.current;
     }
+
+    setCourseStatus((prev) => ({ ...prev, loading: true, error: "" }));
+    const request = (async () => {
+      try {
+        const data = await getJson(`${COURSE_ENDPOINT}/`);
+        setCourses(data);
+        setCourseStatus({ loading: false, message: "", error: "" });
+        return data;
+      } catch (error) {
+        setCourseStatus({ loading: false, message: "", error: error.message });
+        throw error;
+      } finally {
+        coursesRequestRef.current = null;
+      }
+    })();
+    coursesRequestRef.current = request;
+    return request;
   }, []);
 
   const joinCourse = useCallback(async () => {
