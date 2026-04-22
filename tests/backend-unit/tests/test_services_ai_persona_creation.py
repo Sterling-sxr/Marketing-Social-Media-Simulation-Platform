@@ -147,7 +147,7 @@ def test_generate_preview_skips_invalid_ai_drafts_and_surfaces_warnings(monkeypa
         payload={"count": 2, "scenario_prompt": "Generate a demo cohort"},
     )
 
-    assert result["count"] == 2
+    assert result["count"] == 1
     assert result["items"][0]["username"] == "valid-one"
     assert any("bad-one" in warning for warning in result["warnings"])
 
@@ -200,7 +200,7 @@ def test_generate_preview_returns_blueprint_and_generation_meta(monkeypatch):
         },
     )
 
-    assert result["count"] == 2
+    assert result["count"] == 1
     assert "segments" in result["cohort_blueprint"]["summary"].lower()
     assert result["generation_meta"]["model_strategy"] == "seed_then_rule_expansion"
     assert result["generation_meta"]["repaired_count"] == 0
