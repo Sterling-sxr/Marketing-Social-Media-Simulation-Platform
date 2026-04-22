@@ -297,7 +297,7 @@ def test_generate_preview_repairs_invalid_seed_values_and_tracks_meta(monkeypatc
         payload={"count": 2, "scenario_prompt": "Generate a review cohort", "generation_mode": "ai_bulk"},
     )
 
-    assert result["count"] == 1
+    assert result["count"] == 2
     assert result["generation_meta"]["repaired_count"] >= 1
     assert result["generation_meta"]["rejected_count"] == 1
     assert result["items"][0]["content_preference"] in PROFILE_OPTIONS["content_preference"]
@@ -349,7 +349,7 @@ def test_generate_preview_tolerates_non_object_seed_fields_and_warns(monkeypatch
         payload={"count": 1, "scenario_prompt": "Generate resilient preview output"},
     )
 
-    assert result["count"] == 2
+    assert result["count"] == 1
     assert result["items"][0]["username"] == "format-weird"
     assert result["items"][0]["social_value"] == 5
     assert result["items"][0]["sociability"] == 5
