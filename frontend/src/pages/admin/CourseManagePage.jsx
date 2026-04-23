@@ -170,14 +170,11 @@ export default function CourseManagePage() {
   });
 
   return (
-    <AuthenticatedShell title="Course Management" subtitle="Manage all your Bread courses 🍩">
+    <AuthenticatedShell title="Course Management" subtitle="Manage all your Bread courses">
       <main className="flex-1 p-8 bg-gradient-to-b from-brand-50 to-white rounded-2xl min-h-[calc(100vh-8rem)]">
         {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-accent-400 via-brand-400 to-yellow-300 rounded-full flex items-center justify-center shadow-md animate-pulse">
-              <span className="text-white text-lg font-bold">🍩</span>
-            </div>
             <div>
               <h2 className="text-2xl font-semibold text-gray-800">
                 Bread Courses

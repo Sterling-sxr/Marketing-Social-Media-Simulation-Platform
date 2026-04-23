@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import Feedback from "../../components/Feedback";
-import { getJson, postJson } from "../../../lib/api";
+import { postJson } from "../../../lib/api";
 
+const GUIDED_GENERATE_MODE = "guided_generate";
 const SMART_GUIDED_MODE = "smart_guided";
-const AI_BULK_MODE = "ai_bulk";
 const ANY_OPTION_VALUE = "__any__";
 const MAX_GENERATED_USERS = 1000;
 
@@ -38,12 +38,9 @@ const COVERAGE_OPTIONS = [
 ];
 
 const ACTIVITY_OPTIONS = [
-  { value: ANY_OPTION_VALUE, label: "Any activity frequency (balanced)" },
-  { value: "Almost constantly", label: "Almost constantly" },
-  { value: "Several times a day", label: "Several times a day" },
-  { value: "About once a day", label: "About once a day" },
-  { value: "A few times a week", label: "A few times a week" },
-  { value: "About once a week or less", label: "About once a week or less" },
+  { value: "low", label: "Low" },
+  { value: "mixed", label: "Mixed" },
+  { value: "high", label: "High" },
 ];
 
 const INTEREST_LEAN_OPTIONS = [
@@ -61,31 +58,6 @@ const THEME_CARD_OPTIONS = [
   { value: "creator_trend", label: "Creator / Trend" },
 ];
 
-const DECISION_DRIVER_OPTIONS = [
-  { value: ANY_OPTION_VALUE, label: "Any decision factor (balanced)" },
-  { value: "Price", label: "Price" },
-  { value: "Quality/durability", label: "Quality/durability" },
-  { value: "Brand image", label: "Brand image" },
-  { value: "Eco-friendly", label: "Eco-friendly" },
-  { value: "Convenience", label: "Convenience" },
-];
-
-const CONTENT_PREFERENCE_OPTIONS = [
-  { value: ANY_OPTION_VALUE, label: "Any content preference (balanced)" },
-  { value: "Funny short posts/memes", label: "Funny short posts/memes" },
-  { value: "Pictures or videos", label: "Pictures or videos" },
-  { value: "Thoughtful opinions", label: "Thoughtful opinions" },
-  { value: "Detailed reviews or long posts", label: "Detailed reviews or long posts" },
-];
-
-const INTERACTION_INTENSITY_OPTIONS = [
-  { value: ANY_OPTION_VALUE, label: "Any interaction style (balanced)" },
-  { value: "Like/react to posts", label: "Like/react to posts" },
-  { value: "Comment on posts", label: "Comment on posts" },
-  { value: "Share posts with friends", label: "Share posts with friends" },
-  { value: "Mostly just scroll/watch", label: "Mostly just scroll/watch" },
-];
-
 const EMPTY_SMART_FORM = {
   count: 20,
   content_preference_bias: ANY_OPTION_VALUE,
@@ -93,17 +65,6 @@ const EMPTY_SMART_FORM = {
   interaction_intensity: ANY_OPTION_VALUE,
   age_group: ANY_OPTION_VALUE,
   activity_level: ANY_OPTION_VALUE,
-};
-
-const EMPTY_BULK_FORM = {
-  count: 12,
-  scenario_prompt: "",
-  age_group: "",
-  education_level: "",
-  income_level: "",
-  digital_time: "",
-  content_preference: "",
-  interests: [],
 };
 
 function createDraftId(item, index) {
@@ -118,19 +79,10 @@ function normalizeDrafts(items = []) {
 }
 
 function stripDraftMeta(item) {
-  const { _draftId, warnings, ...cleaned } = item;
+  const cleaned = { ...item };
+  delete cleaned._draftId;
+  delete cleaned.warnings;
   return cleaned;
-}
-
-function countConstraintSelections(form) {
-  return [
-    form.age_group,
-    form.education_level,
-    form.income_level,
-    form.digital_time,
-    form.content_preference,
-    ...(form.interests || []),
-  ].filter(Boolean).length;
 }
 
 function summarizeList(values) {
@@ -151,7 +103,7 @@ function countValues(items, getter) {
 }
 
 function getGoalLabel(goal) {
-  return GOAL_CARDS.find((card) => card.value === goal)?.label || "Smart Generate";
+  return GOAL_CARDS.find((card) => card.value === goal)?.label || "Guided Generate";
 }
 
 function buildCoverageSummary(drafts, smartProfile, smartForm) {
@@ -299,45 +251,6 @@ function pickRepresentativeDrafts(drafts, smartProfile, smartForm) {
   return items.slice(0, 5);
 }
 
-function buildBulkSummary(blueprint, generationMeta) {
-  const groups = [
-    {
-      title: "Age mix",
-      value: summarizeList(blueprint?.age_mix || []),
-    },
-    {
-      title: "Interest clusters",
-      value: summarizeList(blueprint?.interest_clusters || []),
-    },
-    {
-      title: "Activity profile",
-      value: blueprint?.activity_profile || "Mixed activity",
-    },
-    {
-      title: "Guardrails",
-      value: summarizeList(blueprint?.guardrails || []),
-    },
-  ];
-
-  return {
-    signal: "AI-Assisted Bulk Generation",
-    summaryText:
-      blueprint?.summary ||
-      "Preview generated from natural-language input plus teacher-defined audience segment constraints.",
-    groups,
-    metrics: [
-      {
-        title: "Repaired drafts",
-        value: String(Number(generationMeta?.repaired_count || 0)),
-      },
-      {
-        title: "Rejected drafts",
-        value: String(Number(generationMeta?.rejected_count || 0)),
-      },
-    ],
-  };
-}
-
 function normalizeAnyChoice(value) {
   return value && value !== ANY_OPTION_VALUE ? value : "";
 }
@@ -353,21 +266,6 @@ function formatDistribution(selectedValue, options) {
   return options.map((value) => `${value} ${share}%`).join(" / ");
 }
 
-function toCsvCell(value) {
-  const text = value == null ? "" : String(value);
-  const escaped = text.replace(/"/g, '""');
-  return /[",\n]/.test(escaped) ? `"${escaped}"` : escaped;
-}
-
-function buildCsvText(columns = [], rows = []) {
-  if (!columns.length) return "";
-  const header = columns.map((column) => toCsvCell(column)).join(",");
-  const body = rows.map((row) =>
-    columns.map((column) => toCsvCell(row?.[column] ?? "")).join(",")
-  );
-  return [header, ...body].join("\n");
-}
-
 export default function AIPersonaCreationModal({
   mode,
   courseId,
@@ -376,12 +274,11 @@ export default function AIPersonaCreationModal({
   profileOptions = {},
 }) {
   const isOpen = Boolean(mode);
-  const isBulkMode = mode === AI_BULK_MODE;
+  const isGuidedMode = mode === GUIDED_GENERATE_MODE;
   const isSmartMode = mode === SMART_GUIDED_MODE;
-  const usesLlmFlow = isBulkMode || isSmartMode;
+  const usesLlmFlow = isSmartMode;
   const [step, setStep] = useState("input");
   const [smartForm, setSmartForm] = useState(EMPTY_SMART_FORM);
-  const [bulkForm, setBulkForm] = useState(EMPTY_BULK_FORM);
   const [drafts, setDrafts] = useState([]);
   const [warnings, setWarnings] = useState([]);
   const [error, setError] = useState("");
@@ -390,26 +287,16 @@ export default function AIPersonaCreationModal({
   const [showAll, setShowAll] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [smartProfile, setSmartProfile] = useState(null);
-  const [bulkBlueprint, setBulkBlueprint] = useState(null);
-  const [generationMeta, setGenerationMeta] = useState(null);
-  const [progressHint, setProgressHint] = useState("");
-  const [taskProgress, setTaskProgress] = useState({
-    completedBatches: 0,
-    totalBatches: 0,
-  });
   const [csvPreview, setCsvPreview] = useState({
     columns: [],
     rows: [],
     csv_text: "",
   });
 
-  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
   useEffect(() => {
     if (!isOpen) return;
     setStep("input");
     setSmartForm(EMPTY_SMART_FORM);
-    setBulkForm(EMPTY_BULK_FORM);
     setDrafts([]);
     setWarnings([]);
     setError("");
@@ -418,10 +305,6 @@ export default function AIPersonaCreationModal({
     setShowAll(false);
     setShowAdvanced(false);
     setSmartProfile(null);
-    setBulkBlueprint(null);
-    setGenerationMeta(null);
-    setProgressHint("");
-    setTaskProgress({ completedBatches: 0, totalBatches: 0 });
     setCsvPreview({ columns: [], rows: [], csv_text: "" });
   }, [isOpen, mode]);
 
@@ -432,10 +315,6 @@ export default function AIPersonaCreationModal({
   const representativeDrafts = useMemo(
     () => pickRepresentativeDrafts(drafts, smartProfile, smartForm),
     [drafts, smartProfile, smartForm]
-  );
-  const bulkSummary = useMemo(
-    () => buildBulkSummary(bulkBlueprint, generationMeta),
-    [bulkBlueprint, generationMeta]
   );
   const resolvedProfileOptions = profileOptions || {};
   const smartOptionSets = useMemo(
@@ -480,7 +359,7 @@ export default function AIPersonaCreationModal({
     [smartForm, smartOptionSets]
   );
 
-  if (!isOpen || (!isSmartMode && !isBulkMode)) return null;
+  if (!isOpen || (!isGuidedMode && !isSmartMode)) return null;
 
   const updateField = (field, value) => {
     setSmartForm((prev) => ({ ...prev, [field]: value }));
@@ -488,22 +367,6 @@ export default function AIPersonaCreationModal({
 
   const setGoal = (goal) => {
     setSmartForm((prev) => ({ ...prev, goal }));
-  };
-
-  const updateBulkField = (field, value) => {
-    setBulkForm((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const toggleBulkInterest = (interest) => {
-    setBulkForm((prev) => {
-      const has = prev.interests.includes(interest);
-      return {
-        ...prev,
-        interests: has
-          ? prev.interests.filter((item) => item !== interest)
-          : [...prev.interests, interest],
-      };
-    });
   };
 
   const composeSmartScenarioPrompt = ({
@@ -552,109 +415,60 @@ export default function AIPersonaCreationModal({
     });
     return {
       count: Number(smartForm.count),
-      generation_mode: AI_BULK_MODE,
+      generation_mode: "ai_bulk",
       scenario_prompt: scenarioPrompt,
       constraints,
     };
   };
 
-  const buildBulkPayload = () => {
-    const constraints = {};
-    ["age_group", "education_level", "income_level", "digital_time", "content_preference"].forEach((field) => {
-      if (bulkForm[field]) {
-        constraints[field] = [bulkForm[field]];
+  const buildGuidedPayload = () => {
+    const payload = {
+      count: Number(smartForm.count),
+    };
+
+    [
+      "goal",
+      "coverage",
+      "interest_lean",
+      "theme_card",
+      "tightness",
+      "decision_driver",
+      "content_preference_bias",
+      "interaction_intensity",
+      "activity_level",
+      "gender",
+      "age_group",
+      "education_level",
+      "income_level",
+    ].forEach((field) => {
+      const value = normalizeAnyChoice(smartForm[field]);
+      if (value) {
+        payload[field] = value;
       }
     });
-    if (bulkForm.interests.length) {
-      constraints.interests = bulkForm.interests;
-    }
 
-    return {
-      count: Number(bulkForm.count),
-      scenario_prompt: bulkForm.scenario_prompt.trim(),
-      generation_mode: AI_BULK_MODE,
-      constraints,
-    };
+    return payload;
   };
 
   const runPreview = async () => {
     setPreviewBusy(true);
     setError("");
-    setProgressHint("Submitting generation task...");
-    setTaskProgress({ completedBatches: 0, totalBatches: 0 });
     try {
       let data;
       if (usesLlmFlow) {
-        const payload = isSmartMode ? buildSmartPayload() : buildBulkPayload();
-        const kickoff = await postJson(
-          `/api/courses/${courseId}/ai-users/generate-preview/async/`,
-          payload
+        data = await postJson(
+          `/api/courses/${courseId}/ai-users/generate-preview/`,
+          buildSmartPayload()
         );
-        setProgressHint("Task queued. Starting generation...");
-        const taskId = kickoff?.task_id;
-        if (!taskId) {
-          throw new Error("Preview task was not created.");
-        }
-        const maxPollAttempts = 600;
-        for (let attempt = 0; attempt < maxPollAttempts; attempt += 1) {
-          const task = await getJson(
-            `/api/courses/${courseId}/ai-users/generate-preview/tasks/${taskId}/`
-          );
-          if (task.status === "succeeded") {
-            setProgressHint("Generation completed. Preparing preview...");
-            setTaskProgress((current) => ({
-              completedBatches:
-                Number(task?.progress?.completed_batches || 0) ||
-                current.completedBatches,
-              totalBatches:
-                Number(task?.progress?.total_batches || 0) ||
-                current.totalBatches,
-            }));
-            data = task.result || {};
-            break;
-          }
-          if (task.status === "failed") {
-            throw new Error(task.error || "Preview generation failed.");
-          }
-          const completedBatches = Number(task?.progress?.completed_batches || 0);
-          const totalBatches = Number(task?.progress?.total_batches || 0);
-          setTaskProgress({
-            completedBatches,
-            totalBatches,
-          });
-          if (totalBatches > 1) {
-            setProgressHint(
-              `Generating personas... batch ${Math.min(
-                completedBatches + 1,
-                totalBatches
-              )}/${totalBatches} in progress`
-            );
-          }
-          if (attempt >= 120) {
-            setProgressHint(
-              "Generation is still running (over 2 minutes). This can happen with larger batches."
-            );
-          } else if (attempt >= 30) {
-            setProgressHint("Generation is still running... almost there.");
-          } else if (attempt >= 10) {
-            setProgressHint("Generating personas...");
-          }
-          await wait(2000);
-        }
-        if (!data) {
-          throw new Error(
-            "Preview generation is still running after a long wait. Please close and retry with fewer users (e.g. 8-12)."
-          );
-        }
       } else {
-        setProgressHint("Generating preview...");
-        data = await postJson(`/api/courses/${courseId}/ai-users/guided-preview/`, {});
+        data = await postJson(
+          `/api/courses/${courseId}/ai-users/guided-preview/`,
+          buildGuidedPayload()
+        );
       }
       setDrafts(normalizeDrafts(data.items || []));
       setWarnings(data.warnings || []);
       setSmartProfile(data.smart_profile || null);
-      setBulkBlueprint(data.cohort_blueprint || null);
-      setGenerationMeta(data.generation_meta || null);
       setCsvPreview(
         data.csv_preview || {
           columns: [],
@@ -664,12 +478,8 @@ export default function AIPersonaCreationModal({
       );
       setShowAll(false);
       setStep("preview");
-      setProgressHint("");
-      setTaskProgress({ completedBatches: 0, totalBatches: 0 });
     } catch (err) {
       setError(err.message || "Failed to load persona preview.");
-      setProgressHint("");
-      setTaskProgress({ completedBatches: 0, totalBatches: 0 });
     } finally {
       setPreviewBusy(false);
     }
@@ -712,39 +522,19 @@ export default function AIPersonaCreationModal({
     window.URL.revokeObjectURL(url);
   };
 
-  const removeDraft = (draftId) => {
-    setDrafts((prev) => {
-      const target = prev.find((draft) => draft._draftId === draftId);
-      const next = prev.filter((draft) => draft._draftId !== draftId);
-      if (target?.username) {
-        setCsvPreview((current) => {
-          const nextRows = (current.rows || []).filter(
-            (row) => row.username !== target.username
-          );
-          return {
-            ...current,
-            rows: nextRows,
-            csv_text: buildCsvText(current.columns || [], nextRows),
-          };
-        });
-      }
-      return next;
-    });
-  };
-
   return createPortal(
     <div className="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto bg-black/40 px-2 py-2 md:px-4 md:py-4">
       <div className="flex max-h-[94vh] w-full max-w-[96vw] flex-col overflow-hidden rounded-3xl bg-white p-5 shadow-2xl shadow-brand-200 md:max-w-[92vw] md:p-6">
         <header className="flex items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">
-              {isBulkMode ? "AI-Assisted Bulk Generation" : "Smart Generate"}
+              {isGuidedMode ? "Guided Generate" : "Smart Generate"}
             </h2>
             <p className="text-xs text-slate-500">
-              {isSmartMode
+              {isGuidedMode
+                ? "Build personas from local rule-based templates, preview the generated set, then create users in one click."
+                : isSmartMode
                 ? "Build personas with simple options, preview the generated set, then create users in one click."
-                : isBulkMode
-                ? "Describe the marketing scenario, add a few audience constraints, and preview the generated segments before import."
                 : "Choose a comparison goal first, then shape a set of audience responses with a few high-level controls."}
             </p>
           </div>
@@ -759,40 +549,6 @@ export default function AIPersonaCreationModal({
         </header>
 
         {error ? <Feedback error={error} /> : null}
-        {previewBusy && progressHint ? (
-          <div className="mt-4 rounded-2xl border border-brand-100 bg-brand-50 px-4 py-3 text-xs font-medium text-brand">
-            <p>{progressHint}</p>
-            {taskProgress.totalBatches > 0 ? (
-              <div className="mt-2">
-                <div className="mb-1 flex items-center justify-between text-[11px] text-slate-500">
-                  <span>
-                    Batch progress: {taskProgress.completedBatches}/{taskProgress.totalBatches}
-                  </span>
-                  <span>
-                    {Math.round(
-                      (Math.min(taskProgress.completedBatches, taskProgress.totalBatches) /
-                        Math.max(taskProgress.totalBatches, 1)) *
-                        100
-                    )}
-                    %
-                  </span>
-                </div>
-                <div className="h-2 w-full rounded-full bg-brand-100">
-                  <div
-                    className="h-2 rounded-full bg-brand transition-all duration-300"
-                    style={{
-                      width: `${Math.round(
-                        (Math.min(taskProgress.completedBatches, taskProgress.totalBatches) /
-                          Math.max(taskProgress.totalBatches, 1)) *
-                          100
-                      )}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            ) : null}
-          </div>
-        ) : null}
         {warnings.length ? (
           <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
             {warnings.map((warning) => (
@@ -925,104 +681,6 @@ export default function AIPersonaCreationModal({
                   </div>
                 </div>
               </>
-            ) : isBulkMode ? (
-              <>
-                <div className="rounded-3xl border border-brand-100 bg-gradient-to-br from-brand-50 via-white to-brand-50/30 p-5">
-                  <h3 className="text-xl font-semibold text-slate-900">
-                    Generate marketing audience segments from plain-language guidance
-                  </h3>
-                  <p className="mt-2 text-sm text-slate-600">
-                    The AI interprets your scenario, then the backend normalizes each persona into the existing schema so you can compare how different audience segments may respond to different posts.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <NumberField
-                    label="Number of users"
-                    value={bulkForm.count}
-                    onChange={(value) => updateBulkField("count", value)}
-                  />
-                  <label className="block text-xs font-semibold text-slate-600 md:col-span-2">
-                    Scenario prompt
-                    <textarea
-                      rows={4}
-                      value={bulkForm.scenario_prompt}
-                      onChange={(event) => updateBulkField("scenario_prompt", event.target.value)}
-                      className="mt-1 w-full rounded-2xl border border-brand-200 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand"
-                      placeholder="Describe the campaign, product, or marketing scenario you want students to test."
-                    />
-                  </label>
-                </div>
-
-                <div className="rounded-2xl border border-brand-100 bg-white p-4">
-                  <div>
-                    <h3 className="text-sm font-semibold text-slate-900">Audience constraints</h3>
-                    <p className="text-xs text-slate-500">
-                      Add a few guardrails to keep the generated audience segments on-brief. Leave fields blank for broader market coverage.
-                    </p>
-                  </div>
-                  <div className="mt-4 grid gap-4 md:grid-cols-2">
-                    <SelectField
-                      label="Age group"
-                      value={bulkForm.age_group}
-                      onChange={(value) => updateBulkField("age_group", value)}
-                      options={(profileOptions.age_groups || []).map((value) => ({ value, label: value }))}
-                      placeholder="Any age group"
-                    />
-                    <SelectField
-                      label="Education level"
-                      value={bulkForm.education_level}
-                      onChange={(value) => updateBulkField("education_level", value)}
-                      options={(profileOptions.education_levels || []).map((value) => ({ value, label: value }))}
-                      placeholder="Any education level"
-                    />
-                    <SelectField
-                      label="Income level"
-                      value={bulkForm.income_level}
-                      onChange={(value) => updateBulkField("income_level", value)}
-                      options={(profileOptions.income_levels || []).map((value) => ({ value, label: value }))}
-                      placeholder="Any income level"
-                    />
-                    <SelectField
-                      label="Digital activity"
-                      value={bulkForm.digital_time}
-                      onChange={(value) => updateBulkField("digital_time", value)}
-                      options={(profileOptions.digital_time || []).map((value) => ({ value, label: value }))}
-                      placeholder="Any activity level"
-                    />
-                    <SelectField
-                      label="Content preference"
-                      value={bulkForm.content_preference}
-                      onChange={(value) => updateBulkField("content_preference", value)}
-                      options={(profileOptions.content_preference || []).map((value) => ({ value, label: value }))}
-                      placeholder="Any content preference"
-                    />
-                  </div>
-                  <fieldset className="mt-4">
-                    <legend className="text-xs font-semibold text-slate-600">Interest clusters</legend>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {(profileOptions.interests || []).map((interest) => {
-                        const selected = bulkForm.interests.includes(interest);
-                        return (
-                          <button
-                            key={interest}
-                            type="button"
-                            aria-pressed={selected}
-                            onClick={() => toggleBulkInterest(interest)}
-                            className={`rounded-full border px-3 py-1.5 text-xs transition ${
-                              selected
-                                ? "border-brand bg-brand-50 text-brand"
-                                : "border-brand-100 bg-white text-slate-600 hover:border-brand-300"
-                            }`}
-                          >
-                            {interest}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </fieldset>
-                </div>
-              </>
             ) : (
               <>
                 <div className="rounded-3xl border border-brand-100 bg-gradient-to-br from-brand-50 via-white to-brand-50/30 p-5">
@@ -1030,7 +688,7 @@ export default function AIPersonaCreationModal({
                     Pick the kind of audience comparison you want students to run
                   </h3>
                   <p className="mt-2 text-sm text-slate-600">
-                    Smart Generate keeps the persona schema fixed, then composes contrasting audience pockets from goal-driven rules instead of external AI prompts.
+                    Guided Generate keeps the persona schema fixed, then composes contrasting audience pockets from local rule-based templates instead of external AI prompts.
                   </p>
                 </div>
 
@@ -1065,13 +723,10 @@ export default function AIPersonaCreationModal({
                     onChange={(value) => updateField("count", value)}
                   />
                   <SelectField
-                    label="Activity level"
-                    value={smartForm.activity_level}
-                    onChange={(value) => updateField("activity_level", value)}
-                    options={withAnyOption(
-                      smartOptionSets.digitalTime,
-                      "Any activity frequency (balanced)"
-                    )}
+                      label="Activity level"
+                      value={smartForm.activity_level}
+                      onChange={(value) => updateField("activity_level", value)}
+                      options={ACTIVITY_OPTIONS}
                   />
                   {smartForm.goal === "broad_audience" ? (
                     <>
@@ -1136,14 +791,11 @@ export default function AIPersonaCreationModal({
                         )}
                       />
                       <SelectField
-                        label="Interaction intensity"
-                        value={smartForm.interaction_intensity}
-                        onChange={(value) => updateField("interaction_intensity", value)}
-                        options={withAnyOption(
-                          smartOptionSets.interactionStyle,
-                          "Any interaction style (balanced)"
-                        )}
-                      />
+                      label="Interaction intensity"
+                      value={smartForm.interaction_intensity}
+                      onChange={(value) => updateField("interaction_intensity", value)}
+                      options={ACTIVITY_OPTIONS}
+                    />
                     </>
                   ) : null}
                 </div>
@@ -1175,8 +827,10 @@ export default function AIPersonaCreationModal({
                         label="Age group"
                         value={smartForm.age_group}
                         onChange={(value) => updateField("age_group", value)}
-                        options={(profileOptions.age_groups || []).map((value) => ({ value, label: value }))}
-                        placeholder="Any age group"
+                        options={withAnyOption(
+                          profileOptions.age_groups || [],
+                          "Mixed age groups"
+                        )}
                       />
                       <SelectField
                         label="Education level"
@@ -1211,22 +865,10 @@ export default function AIPersonaCreationModal({
                 type="button"
                 className="rounded-full border border-brand bg-brand px-4 py-2 text-xs font-semibold text-white transition hover:bg-brand/90 disabled:opacity-60"
                 onClick={() => {
-                  if (isSmartMode) {
+                  if (isSmartMode || isGuidedMode) {
                     const count = Number(smartForm.count);
                     if (!Number.isFinite(count) || count < 1 || count > MAX_GENERATED_USERS) {
                       setError(`Number of users must be between 1 and ${MAX_GENERATED_USERS}.`);
-                      return;
-                    }
-                  } else if (isBulkMode) {
-                    const hasPrompt = bulkForm.scenario_prompt.trim().length > 0;
-                    const hasConstraints = countConstraintSelections(bulkForm) > 0;
-                    const count = Number(bulkForm.count);
-                    if (!Number.isFinite(count) || count < 1 || count > MAX_GENERATED_USERS) {
-                      setError(`Number of users must be between 1 and ${MAX_GENERATED_USERS}.`);
-                      return;
-                    }
-                    if (!hasPrompt && !hasConstraints) {
-                      setError("Add a scenario prompt or at least one audience constraint before generating a preview.");
                       return;
                     }
                   }
@@ -1293,8 +935,6 @@ export default function AIPersonaCreationModal({
                       <CompactDraftCard
                         key={draft._draftId}
                         draft={draft}
-                        removable
-                        onRemove={() => removeDraft(draft._draftId)}
                       />
                     ))}
                   </div>
@@ -1372,6 +1012,22 @@ export default function AIPersonaCreationModal({
             )}
 
             <div className="flex items-center justify-end gap-3">
+              <button
+                type="button"
+                className="rounded-full border border-brand-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:border-brand-300 hover:text-brand disabled:opacity-60"
+                onClick={() => setStep("input")}
+                disabled={previewBusy || commitBusy}
+              >
+                Adjust Settings
+              </button>
+              <button
+                type="button"
+                className="rounded-full border border-brand-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:border-brand-300 hover:text-brand disabled:opacity-60"
+                onClick={runPreview}
+                disabled={previewBusy || commitBusy}
+              >
+                {previewBusy ? "Generating preview..." : "Regenerate"}
+              </button>
               <button
                 type="button"
                 className="rounded-full border border-brand bg-brand px-4 py-2 text-xs font-semibold text-white transition hover:bg-brand/90 disabled:opacity-60"

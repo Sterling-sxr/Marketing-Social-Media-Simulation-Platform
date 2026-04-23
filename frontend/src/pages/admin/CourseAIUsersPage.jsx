@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import AuthenticatedShell from "../components/AuthenticatedShell";
 import Feedback from "../components/Feedback";
@@ -37,6 +37,9 @@ const INITIAL_FORM = {
   influencer_type: "",
   notes: "",
 };
+
+const GUIDED_GENERATE_MODE = "guided_generate";
+const SMART_GENERATE_MODE = "smart_guided";
 
 export default function CourseAIUsersPage() {
   const { courseId: courseIdParam } = useParams();
@@ -117,9 +120,14 @@ export default function CourseAIUsersPage() {
     setFormData({ ...INITIAL_FORM, interests: [] });
   };
 
+  const openGuidedGenerate = () => {
+    setCreationMessage("");
+    setCreationMode(GUIDED_GENERATE_MODE);
+  };
+
   const openSmartGenerate = () => {
     setCreationMessage("");
-    setCreationMode("smart_guided");
+    setCreationMode(SMART_GENERATE_MODE);
   };
 
   const openEdit = (item) => {
@@ -323,10 +331,24 @@ export default function CourseAIUsersPage() {
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
+              className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
+              onClick={openGuidedGenerate}
+            >
+              Guided Generate
+            </button>
+            <button
+              type="button"
               className="rounded-full border border-brand bg-brand px-4 py-2 text-xs font-semibold text-white transition hover:bg-brand/90 disabled:opacity-60"
               onClick={openSmartGenerate}
             >
               Smart Generate
+            </button>
+            <button
+              type="button"
+              className="rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand transition hover:border-brand"
+              onClick={openCreate}
+            >
+              Advanced Create
             </button>
             <button
               type="button"
