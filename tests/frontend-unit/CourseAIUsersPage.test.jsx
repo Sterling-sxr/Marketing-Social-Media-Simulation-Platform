@@ -126,6 +126,47 @@ describe("CourseAIUsersPage persona creation flows", () => {
     });
   });
 
+  test("does not reload course ai users or profile options when authUser object refreshes with the same id", async () => {
+    const fetchProfileOptions = vi.fn().mockResolvedValue(profileOptions);
+    let appValue = {
+      authUser: { id: 1, is_staff: true, is_superuser: false, full_name: "Teacher" },
+      authCheckComplete: true,
+      profileOptions,
+      fetchProfileOptions,
+    };
+    mockedUseApp.mockImplementation(() => appValue);
+
+    const view = renderPage();
+
+    await screen.findByText(/legacy user/i);
+    expect(getJson).toHaveBeenCalledTimes(1);
+    expect(fetchProfileOptions).toHaveBeenCalledTimes(1);
+
+    appValue = {
+      ...appValue,
+      authUser: {
+        id: 1,
+        is_staff: true,
+        is_superuser: false,
+        full_name: "Teacher Updated",
+        avatar_url: "/avatar.png",
+      },
+    };
+
+    view.rerender(
+      <MemoryRouter initialEntries={["/courses/9/ai-users"]}>
+        <Routes>
+          <Route path="/courses/:courseId/ai-users" element={<CourseAIUsersPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(getJson).toHaveBeenCalledTimes(1);
+      expect(fetchProfileOptions).toHaveBeenCalledTimes(1);
+    });
+  });
+
   test("renders AI users inside a scrollable table container", async () => {
     renderPage();
 

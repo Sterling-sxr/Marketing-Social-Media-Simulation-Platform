@@ -116,6 +116,7 @@ export default function CourseManagePage() {
   const navigate = useNavigate();
   const { pushToast } = useApp();
   const { authUser, authCheckComplete } = useAuth();
+  const authUserId = authUser?.id ?? null;
   const isTeacherAdmin = isTeacher(authUser);
   const [items, setItems] = useState([]);
   const [status, setStatus] = useState({ loading: true, error: "" });
@@ -135,11 +136,11 @@ export default function CourseManagePage() {
   useEffect(() => {
     if (!authCheckComplete) return;
 
-    if (!authUser) {
+    if (!authUserId) {
       navigate("/login", { replace: true });
       return;
     }
-    if (!isTeacher(authUser)) {
+    if (!isTeacherAdmin) {
       navigate("/courses", { replace: true });
       return;
     }
@@ -153,7 +154,7 @@ export default function CourseManagePage() {
       .catch((e) =>
         setStatus({ loading: false, error: e.message || "Failed to load data" })
       );
-  }, [authUser, authCheckComplete, navigate]);
+  }, [authCheckComplete, authUserId, isTeacherAdmin, navigate]);
 
   if (!authCheckComplete || !authUser || !isTeacherAdmin) return null;
 

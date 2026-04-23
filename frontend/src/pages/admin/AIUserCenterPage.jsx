@@ -8,12 +8,13 @@ import { useAuth } from "../../context/AuthContext";
 export default function AIUserCenterPage() {
   const navigate = useNavigate();
   const { authUser, authCheckComplete } = useAuth();
+  const authUserId = authUser?.id ?? null;
   const [status, setStatus] = useState({ loading: true, error: "" });
   const [courses, setCourses] = useState([]);
 
   useEffect(() => {
     if (!authCheckComplete) return;
-    if (!authUser) return;
+    if (!authUserId) return;
     setStatus({ loading: true, error: "" });
     getJson("/api/courses/managed/")
       .then((data) => {
@@ -26,7 +27,7 @@ export default function AIUserCenterPage() {
           error: error.message || "Failed to load courses for AI users.",
         });
       });
-  }, [authUser, authCheckComplete]);
+  }, [authUserId, authCheckComplete]);
 
   if (authCheckComplete && !authUser) return <Navigate to="/login" replace />;
   if (!authCheckComplete || !authUser) return null;

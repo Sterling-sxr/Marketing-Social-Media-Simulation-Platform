@@ -21,6 +21,8 @@ function buildApiError(response, data, text, fallbackLabel = "Request failed") {
   throw error;
 }
 
+const inflightGetRequests = new Map();
+
 export async function postJson(url, payload) {
   const response = await fetch(url, {
     method: "POST",
@@ -41,16 +43,29 @@ export async function postJson(url, payload) {
 }
 
 export async function getJson(url) {
-  const response = await fetch(url, { credentials: "include" });
-  const text = await response.text();
-  const data = parseResponseBody(text);
-  if (!response.ok) {
-    buildApiError(response, data, text, "Request failed");
+  if (inflightGetRequests.has(url)) {
+    return inflightGetRequests.get(url);
   }
-  if (data === null) {
-    buildApiError(response, data, text, "Invalid response");
+
+  const request = (async () => {
+    const response = await fetch(url, { credentials: "include" });
+    const text = await response.text();
+    const data = parseResponseBody(text);
+    if (!response.ok) {
+      buildApiError(response, data, text, "Request failed");
+    }
+    if (data === null) {
+      buildApiError(response, data, text, "Invalid response");
+    }
+    return data;
+  })();
+
+  inflightGetRequests.set(url, request);
+  try {
+    return await request;
+  } finally {
+    inflightGetRequests.delete(url);
   }
-  return data;
 }
 
 export async function patchJson(url, payload) {

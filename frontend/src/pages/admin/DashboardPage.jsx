@@ -319,6 +319,7 @@ function makeAutoSummary(summary) {
 
 export default function DashboardPage() {
   const { authUser, authCheckComplete } = useAuth();
+  const authUserId = authUser?.id ?? null;
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [status, setStatus] = useState({ loading: true, error: "" });
@@ -351,7 +352,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!authCheckComplete) return;
-    if (!authUser) {
+    if (!authUserId) {
       navigate("/login", { replace: true });
       return;
     }
@@ -360,7 +361,7 @@ export default function DashboardPage() {
       return;
     }
     reloadDashboard();
-  }, [authUser, authCheckComplete, isAdmin, navigate, reloadDashboard]);
+  }, [authCheckComplete, authUserId, isAdmin, navigate, reloadDashboard]);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;

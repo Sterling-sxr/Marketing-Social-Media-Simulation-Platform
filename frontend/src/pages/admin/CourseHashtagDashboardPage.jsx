@@ -48,6 +48,7 @@ export default function CourseHashtagDashboardPage() {
   const courseId = Number(courseIdParam);
   const hashtag = decodeURIComponent(hashtagParam ?? "");
   const { authUser, authCheckComplete } = useApp();
+  const authUserId = authUser?.id ?? null;
   const navigate = useNavigate();
 
   const [data, setData] = useState(null);
@@ -60,7 +61,7 @@ export default function CourseHashtagDashboardPage() {
 
   useEffect(() => {
     if (!authCheckComplete) return;
-    if (!authUser) {
+    if (!authUserId) {
       navigate("/login", { replace: true });
       return;
     }
@@ -86,7 +87,7 @@ export default function CourseHashtagDashboardPage() {
           error: error.message || "Failed to load hashtag analytics.",
         });
       });
-  }, [authUser, authCheckComplete, isAdmin, courseId, hashtag, navigate]);
+  }, [authCheckComplete, authUserId, isAdmin, courseId, hashtag, navigate]);
 
   if (authCheckComplete && authUser && !isAdmin) {
     return <Navigate to="/courses" replace />;
