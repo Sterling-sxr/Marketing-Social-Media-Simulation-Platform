@@ -806,7 +806,6 @@ export default function CourseDashboardPage() {
             <SectionCard
               id="students-section"
               title="Response Leaders by Student"
-              subtitle="Preview students whose posts are generating the strongest visible response."
               right={
                 <DetailButton onClick={() => navigate(`/dashboard/courses/${courseId}/students`)}>
                   Open Student Dashboard
@@ -837,21 +836,7 @@ export default function CourseDashboardPage() {
             </SectionCard>
 
             <SectionCard
-              title="Response Leaders by Topic"
-              subtitle="Use topic detail to review which visible themes are drawing the strongest response."
-              right={
-                topHashtag ? (
-                  <DetailButton
-                    onClick={() =>
-                      navigate(
-                        `/dashboard/courses/${courseId}/hashtags/${encodeURIComponent(topHashtag.hashtag)}`
-                      )
-                    }
-                  >
-                    Open Hashtag Dashboard
-                  </DetailButton>
-                ) : null
-              }
+              title="Response Leaders by Hashtag"
             >
               {!hashtags.length ? (
                 <p className="text-sm text-slate-500">No hashtag analytics available for this course yet.</p>
