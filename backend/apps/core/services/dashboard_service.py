@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import threading
 import time
 from datetime import date, timedelta
@@ -29,14 +30,46 @@ from ..repositories.models import (
 )
 
 _sentiment_pipeline = None
+_sentiment_pipeline_disabled = False
 _scheduler_started = False
 _logger = logging.getLogger(__name__)
 _refreshing_users: set[int] = set()
 _refresh_users_lock = threading.Lock()
 
+_POSITIVE_TOKENS = {
+    "good",
+    "great",
+    "excellent",
+    "awesome",
+    "helpful",
+    "clear",
+    "love",
+    "like",
+    "thanks",
+    "thank",
+    "amazing",
+    "nice",
+    "well",
+}
+_NEGATIVE_TOKENS = {
+    "bad",
+    "poor",
+    "terrible",
+    "awful",
+    "confusing",
+    "unclear",
+    "hate",
+    "boring",
+    "wrong",
+    "difficult",
+    "hard",
+    "problem",
+}
+
 
 def _local_sentiment_enabled() -> bool:
-    return os.environ.get("ENABLE_LOCAL_SENTIMENT", "0") == "1"
+    value = str(os.environ.get("ENABLE_LOCAL_SENTIMENT", "0")).strip().lower()
+    return value in {"1", "true", "yes", "on"}
 
 
 def _ensure_admin(user) -> None:
@@ -49,27 +82,34 @@ def _is_admin(user) -> bool:
 
 
 def _get_sentiment_pipeline():
-    global _sentiment_pipeline
+    global _sentiment_pipeline, _sentiment_pipeline_disabled
     if not _local_sentiment_enabled():
         return None
+    if _sentiment_pipeline_disabled:
+        return None
     if _sentiment_pipeline is None:
-        import torch
-        from transformers import AutoModelForSequenceClassification, AutoTokenizer, pipeline
+        try:
+            import torch
+            from transformers import AutoModelForSequenceClassification, AutoTokenizer, pipeline
 
-        model_name = "cardiffnlp/twitter-xlm-roberta-base-sentiment"
-        tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
-        model = AutoModelForSequenceClassification.from_pretrained(
-            model_name,
-            torch_dtype=torch.float32,
-            low_cpu_mem_usage=False,
-        )
-        _sentiment_pipeline = pipeline(
-            "sentiment-analysis",
-            model=model,
-            tokenizer=tokenizer,
-            device=-1,
-            return_all_scores=False,
-        )
+            model_name = "cardiffnlp/twitter-xlm-roberta-base-sentiment"
+            tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
+            model = AutoModelForSequenceClassification.from_pretrained(
+                model_name,
+                torch_dtype=torch.float32,
+                low_cpu_mem_usage=False,
+            )
+            _sentiment_pipeline = pipeline(
+                "sentiment-analysis",
+                model=model,
+                tokenizer=tokenizer,
+                device=-1,
+                return_all_scores=False,
+            )
+        except Exception:
+            _sentiment_pipeline_disabled = True
+            _logger.exception("Failed to initialize local sentiment pipeline; using keyword fallback.")
+            return None
     return _sentiment_pipeline
 
 
@@ -82,6 +122,12 @@ def classify_comment_sentiment(text: str) -> str:
 
 def _normalize_sentiment_label(raw: str) -> str:
     label = (raw or "").lower()
+    if label in {"label_0", "0 stars", "1 star", "1 stars"}:
+        return "negative"
+    if label in {"label_2", "4 stars", "5 stars", "5 star"}:
+        return "positive"
+    if label in {"label_1", "2 stars", "3 stars", "3 star"}:
+        return "neutral"
     if "positive" in label:
         return "positive"
     if "negative" in label:
@@ -103,14 +149,29 @@ def _extract_sentiment_label(result: Any) -> str:
     return ""
 
 
+def _keyword_fallback_sentiment(text: str) -> str:
+    normalized = (text or "").lower()
+    tokens = set(re.findall(r"[a-z']+", normalized))
+    if not tokens:
+        return "neutral"
+    positive_hits = len(tokens.intersection(_POSITIVE_TOKENS))
+    negative_hits = len(tokens.intersection(_NEGATIVE_TOKENS))
+    if positive_hits > negative_hits:
+        return "positive"
+    if negative_hits > positive_hits:
+        return "negative"
+    return "neutral"
+
+
 def _classify_sentiment(text: str) -> str:
     classifier = _get_sentiment_pipeline()
     if classifier is None:
-        return "neutral"
+        return _keyword_fallback_sentiment(text)
     try:
         result = classifier(text[:512] or "")[0]
     except Exception:
-        return "neutral"
+        _logger.exception("Sentiment inference failed; falling back to keyword classifier.")
+        return _keyword_fallback_sentiment(text)
     return _normalize_sentiment_label(_extract_sentiment_label(result))
 
 
@@ -192,25 +253,10 @@ def _calculate_dashboard_metrics(user, *, range_days: int = 7) -> dict[str, Any]
 
     sentiment_counts = {"positive": 0, "neutral": 0, "negative": 0}
     if total_comments:
-        classifier = _get_sentiment_pipeline()
-        if classifier is None:
-            sentiment_counts["neutral"] = total_comments
-        else:
-            comment_texts = list(CoursePostComment.objects.filter(post_id__in=post_ids).values_list("content", flat=True))
-            # Context: Compute shared values once so all branches use the same normalized inputs.
-            for text in comment_texts:
-                try:
-                    result = classifier([text[:512] or ""])[0]
-                    label = (result.get("label") or "").lower()
-                except Exception:
-                    label = "neutral"
-
-                if "positive" in label:
-                    sentiment_counts["positive"] += 1
-                elif "negative" in label:
-                    sentiment_counts["negative"] += 1
-                else:
-                    sentiment_counts["neutral"] += 1
+        comment_texts = list(CoursePostComment.objects.filter(post_id__in=post_ids).values_list("content", flat=True))
+        for text in comment_texts:
+            label = classify_comment_sentiment(text or "")
+            sentiment_counts[label] += 1
 
     total_comment_count = sum(sentiment_counts.values())
     if total_comment_count:
@@ -288,32 +334,14 @@ def _collect_course_post_data(course, *, range_days: int | None = 7) -> dict[str
     comment_records = list(CoursePostComment.objects.filter(post_id__in=post_ids).values("post_id", "content"))
     comment_sentiments: dict[int, dict[str, int]] = {pid: {"positive": 0, "neutral": 0, "negative": 0} for pid in post_ids}
     if comment_records:
-        classifier = _get_sentiment_pipeline()
-        if classifier is None:
-            for record in comment_records:
-                post_id = record["post_id"]
-                post_stats = comment_sentiments.setdefault(
-                    post_id,
-                    {"positive": 0, "neutral": 0, "negative": 0},
-                )
-                post_stats["neutral"] = post_stats.get("neutral", 0) + 1
-        else:
-            chunk_size = 16
-            for chunk_start in range(0, len(comment_records), chunk_size):
-                chunk = comment_records[chunk_start : chunk_start + chunk_size]
-                texts = [(record.get("content") or "")[:512] for record in chunk]
-                try:
-                    results = classifier(texts)
-                except Exception:
-                    results = [None] * len(chunk)
-                for record, result in zip(chunk, results):
-                    label = _normalize_sentiment_label(_extract_sentiment_label(result))
-                    post_id = record["post_id"]
-                    post_stats = comment_sentiments.setdefault(
-                        post_id,
-                        {"positive": 0, "neutral": 0, "negative": 0},
-                    )
-                    post_stats[label] = post_stats.get(label, 0) + 1
+        for record in comment_records:
+            label = classify_comment_sentiment(record.get("content") or "")
+            post_id = record["post_id"]
+            post_stats = comment_sentiments.setdefault(
+                post_id,
+                {"positive": 0, "neutral": 0, "negative": 0},
+            )
+            post_stats[label] = post_stats.get(label, 0) + 1
 
     total_likes = sum(like_counts.values())
     total_comments = sum(comment_counts.values())

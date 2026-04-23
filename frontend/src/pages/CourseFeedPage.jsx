@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import {
@@ -304,6 +305,15 @@ export default function CourseFeedPage() {
       setEditingPost(null);
     }
   }, [courseReadOnly]);
+
+  useEffect(() => {
+    if (!showComposer) return undefined;
+    const { overflow } = document.body.style;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = overflow;
+    };
+  }, [showComposer]);
 
   // Context: Compute shared values once so all branches use the same normalized inputs.
   const loadTags = useCallback(async () => {
@@ -1438,9 +1448,16 @@ export default function CourseFeedPage() {
       ) : null}
 
       {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
-      {showComposer && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/35 p-0 sm:grid sm:place-items-center sm:p-4">
-          <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl border border-accent-100/70 bg-white/95 p-4 shadow-[0_32px_90px_-32px_rgba(91,33,182,0.45)] backdrop-blur sm:max-h-[86vh] sm:max-w-2xl sm:rounded-3xl sm:p-6">
+      {showComposer &&
+        createPortal(
+          <div className="fixed inset-0 z-[100] grid place-items-center bg-black/40 p-3 sm:p-4">
+            <button
+              type="button"
+              className="absolute inset-0"
+              aria-label="Close composer"
+              onClick={closeComposer}
+            />
+            <div className="relative max-h-[90vh] w-full overflow-y-auto rounded-3xl border border-accent-100/70 bg-white/95 p-4 shadow-[0_32px_90px_-32px_rgba(91,33,182,0.45)] backdrop-blur sm:max-h-[86vh] sm:max-w-2xl sm:p-6">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-lg font-semibold text-slate-900">
                 {isEditing ? "Edit Post" : "New Post"}
@@ -1695,8 +1712,9 @@ export default function CourseFeedPage() {
               </div>
             </form>
           </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
 
       <ConfirmDialog
         open={deleteState.open}
