@@ -3,7 +3,16 @@ import sys
 
 from django.contrib.auth import get_user_model
 
-from apps.core.repositories.models import Course, CourseAIUser, CourseAIUserIdentity, CourseMember
+from apps.core.repositories.models import (
+    Course,
+    CourseAIUser,
+    CourseAIUserIdentity,
+    CourseMember,
+    CoursePost,
+    CoursePostComment,
+    CoursePostLike,
+    CoursePostView,
+)
 
 
 def _create_user(username: str, *, is_staff: bool = False):
@@ -84,3 +93,30 @@ def test_get_course_dashboard_excludes_ai_identity_users_from_registered_student
     payload = dashboard_service.get_course_dashboard(user=admin, course_id=course.id)
 
     assert payload["summary"]["registered_students"] == 1
+
+
+def test_refresh_dashboard_snapshot_includes_views_in_engagement_totals(db):
+    admin = _create_user("admin-summary-views", is_staff=True)
+    student = _create_user("summary-views-student")
+    course = _create_course(admin, suffix="9904")
+
+    CourseMember.objects.create(course=course, user=student, role="student")
+
+    post = CoursePost.objects.create(
+        course=course,
+        author=student,
+        content="Testing dashboard engagement totals",
+    )
+    CoursePostLike.objects.create(post=post, user=admin)
+    CoursePostComment.objects.create(post=post, user=admin, content="Useful post")
+    CoursePostView.objects.create(post=post, user=admin)
+    CoursePostView.objects.create(post=post, user=student)
+
+    dashboard_service = _load_dashboard_service()
+
+    payload = dashboard_service.refresh_dashboard_snapshot(admin, range_days=7)
+
+    assert payload["total_likes"] == 1
+    assert payload["total_comments"] == 1
+    assert payload["total_views"] == 2
+    assert payload["total_interactions"] == 4

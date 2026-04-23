@@ -188,7 +188,7 @@ def _calculate_dashboard_metrics(user, *, range_days: int = 7) -> dict[str, Any]
     total_likes = PostLikeRepository.model.objects.filter(post_id__in=post_ids).count()
     total_comments = PostCommentRepository.model.objects.filter(post_id__in=post_ids).count()
     total_views = PostViewRepository.model.objects.filter(post_id__in=post_ids).count()
-    total_interactions = total_likes + total_comments
+    total_interactions = total_likes + total_comments + total_views
 
     sentiment_counts = {"positive": 0, "neutral": 0, "negative": 0}
     if total_comments:
