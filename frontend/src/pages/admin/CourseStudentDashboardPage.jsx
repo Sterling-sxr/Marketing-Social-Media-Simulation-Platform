@@ -102,6 +102,7 @@ export default function CourseStudentDashboardPage() {
   const courseId = Number(courseIdParam);
   const studentId = Number(studentIdParam);
   const { authUser, authCheckComplete } = useApp();
+  const authUserId = authUser?.id ?? null;
   const navigate = useNavigate();
 
   const [data, setData] = useState(null);
@@ -120,7 +121,7 @@ export default function CourseStudentDashboardPage() {
 
   useEffect(() => {
     if (!authCheckComplete) return;
-    if (!authUser) {
+    if (!authUserId) {
       navigate("/login", { replace: true });
       return;
     }
@@ -145,7 +146,7 @@ export default function CourseStudentDashboardPage() {
           error: error.message || "Failed to load student analytics.",
         });
       });
-  }, [authUser, authCheckComplete, canView, courseId, studentId, navigate]);
+  }, [authCheckComplete, authUserId, canView, courseId, studentId, navigate]);
 
   if (authCheckComplete && authUser && !canView) {
     return <Navigate to="/courses" replace />;

@@ -292,6 +292,7 @@ export default function CourseDashboardPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { authUser, authCheckComplete } = useApp();
+  const authUserId = authUser?.id ?? null;
 
   const [data, setData] = useState(null);
   const [status, setStatus] = useState({ loading: true, error: "" });
@@ -332,7 +333,7 @@ export default function CourseDashboardPage() {
 
   useEffect(() => {
     if (!authCheckComplete) return;
-    if (!authUser) {
+    if (!authUserId) {
       navigate("/login", { replace: true });
       return;
     }
@@ -341,10 +342,10 @@ export default function CourseDashboardPage() {
       return;
     }
     loadCourseDashboard();
-  }, [authCheckComplete, authUser, isAdmin, loadCourseDashboard, navigate]);
+  }, [authCheckComplete, authUserId, isAdmin, loadCourseDashboard, navigate]);
 
   useEffect(() => {
-    if (!authCheckComplete || !authUser || !isAdmin || !Number.isFinite(courseId)) {
+    if (!authCheckComplete || !authUserId || !isAdmin || !Number.isFinite(courseId)) {
       return;
     }
     setSegmentationStatus({ loading: true, error: "" });
@@ -360,7 +361,7 @@ export default function CourseDashboardPage() {
           error: error.message || "Failed to load representative posts.",
         });
       });
-  }, [authCheckComplete, authUser, courseId, isAdmin]);
+  }, [authCheckComplete, authUserId, courseId, isAdmin]);
 
   useEffect(() => {
     if (location.hash === "#students-section") {

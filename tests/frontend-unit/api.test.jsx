@@ -30,4 +30,27 @@ describe("api getJson", () => {
       status: 502,
     });
   });
+
+  test("reuses the same in-flight GET request for identical URLs", async () => {
+    let resolveResponse;
+    const responsePromise = new Promise((resolve) => {
+      resolveResponse = resolve;
+    });
+    const fetchMock = vi.fn().mockReturnValue(responsePromise);
+    vi.stubGlobal("fetch", fetchMock);
+
+    const first = getJson("/api/admin/dashboard/?range_days=7");
+    const second = getJson("/api/admin/dashboard/?range_days=7");
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    resolveResponse({
+      ok: true,
+      headers: { get: vi.fn().mockReturnValue("application/json") },
+      text: vi.fn().mockResolvedValue(JSON.stringify({ summary: { total_courses: 2 } })),
+    });
+
+    await expect(first).resolves.toEqual({ summary: { total_courses: 2 } });
+    await expect(second).resolves.toEqual({ summary: { total_courses: 2 } });
+  });
 });

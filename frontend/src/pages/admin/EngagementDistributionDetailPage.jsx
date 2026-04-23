@@ -118,6 +118,7 @@ function Panel({ title, subtitle, children, right }) {
 
 export default function EngagementDistributionDetailPage() {
   const { authUser, authCheckComplete } = useAuth();
+  const authUserId = authUser?.id ?? null;
   const navigate = useNavigate();
   const [detail, setDetail] = useState(null);
   const [status, setStatus] = useState({ loading: true, error: "" });
@@ -144,7 +145,7 @@ export default function EngagementDistributionDetailPage() {
 
   useEffect(() => {
     if (!authCheckComplete) return;
-    if (!authUser) {
+    if (!authUserId) {
       navigate("/login", { replace: true });
       return;
     }
@@ -153,7 +154,7 @@ export default function EngagementDistributionDetailPage() {
       return;
     }
     loadDetail();
-  }, [authCheckComplete, authUser, isAdmin, loadDetail, navigate]);
+  }, [authCheckComplete, authUserId, isAdmin, loadDetail, navigate]);
 
   if (authCheckComplete && authUser && !isAdmin) {
     return <Navigate to="/courses" replace />;

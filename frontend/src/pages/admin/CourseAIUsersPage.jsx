@@ -44,6 +44,8 @@ export default function CourseAIUsersPage() {
   const navigate = useNavigate();
   const { authUser, authCheckComplete, profileOptions, fetchProfileOptions } =
     useApp();
+  const authUserId = authUser?.id ?? null;
+  const isTeacherUser = isTeacher(authUser);
   const [status, setStatus] = useState({ loading: true, error: "" });
   const [items, setItems] = useState([]);
   const [courseInfo, setCourseInfo] = useState(null);
@@ -61,20 +63,20 @@ export default function CourseAIUsersPage() {
 
   useEffect(() => {
     if (!authCheckComplete) return;
-    if (!authUser) {
+    if (!authUserId) {
       navigate("/login", { replace: true });
       return;
     }
-    if (!isTeacher(authUser)) {
+    if (!isTeacherUser) {
       navigate("/courses", { replace: true });
     }
-  }, [authUser, authCheckComplete, navigate]);
+  }, [authCheckComplete, authUserId, isTeacherUser, navigate]);
 
   useEffect(() => {
-    if (authUser) {
+    if (authUserId) {
       fetchProfileOptions().catch(() => {});
     }
-  }, [authUser, fetchProfileOptions]);
+  }, [authUserId, fetchProfileOptions]);
 
   const load = useCallback(
     async (keyword) => {
@@ -98,9 +100,9 @@ export default function CourseAIUsersPage() {
   );
 
   useEffect(() => {
-    if (!authUser || !courseId) return;
+    if (!authUserId || !courseId) return;
     load().catch(() => {});
-  }, [authUser, courseId, load]);
+  }, [authUserId, courseId, load]);
 
   const resetForm = () => {
     setFormData({ ...INITIAL_FORM, interests: [] });
