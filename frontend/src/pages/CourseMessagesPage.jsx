@@ -14,11 +14,17 @@ const formatTimestamp = (value) => {
   )} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 };
 
+const formatUnreadLabel = (count) => {
+  const value = Number(count || 0);
+  if (value <= 0) return "All Messages";
+  return value >= 99 ? "99+ Unread" : `${value} Unread`;
+};
+
 export default function CourseMessagesPage() {
   const { courseId: courseIdParam } = useParams();
   const courseId = Number(courseIdParam);
   const navigate = useNavigate();
-  const { authUser } = useApp();
+  const { authUser, fetchNotifications } = useApp();
 
   const [status, setStatus] = useState({ loading: true, error: "" });
   const [items, setItems] = useState([]);
@@ -68,7 +74,7 @@ export default function CourseMessagesPage() {
     return `Course ${courseId} Messages`;
   }, [courseId]);
 
-  const subtitle = unread > 0 ? `${unread} Unread` : "All Messages";
+  const subtitle = formatUnreadLabel(unread);
 
   const SLIM_PILL =
     "inline-flex h-9 items-center justify-center rounded-full border border-brand-200 bg-white px-4 " +
@@ -118,13 +124,14 @@ export default function CourseMessagesPage() {
       await patchJson(url, { all: true });
       setItems((prev) => prev.map((n) => ({ ...n, is_read: true })));
       setUnread(0);
+      await fetchNotifications({ silent: true });
     } catch (error) {
       setStatus((prev) => ({
         ...prev,
         error: error.message || "Failed to mark all as read.",
       }));
     }
-  }, [unread, buildUrl]);
+  }, [unread, buildUrl, fetchNotifications]);
 
   const handleMarkReadIds = useCallback(
     async (ids) => {
@@ -140,6 +147,7 @@ export default function CourseMessagesPage() {
           return next;
         });
         setUnread((prev) => Math.max(0, prev - ids.length));
+        await fetchNotifications({ silent: true });
       } catch (error) {
         setStatus((prev) => ({
           ...prev,
@@ -147,7 +155,7 @@ export default function CourseMessagesPage() {
         }));
       }
     },
-    [buildUrl]
+    [buildUrl, fetchNotifications]
   );
 
   return (
@@ -256,4 +264,3 @@ export default function CourseMessagesPage() {
     </AuthenticatedShell>
   );
 }
-

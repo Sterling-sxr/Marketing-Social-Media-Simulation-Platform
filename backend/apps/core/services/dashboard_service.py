@@ -252,11 +252,11 @@ def _calculate_dashboard_metrics(user, *, range_days: int = 7) -> dict[str, Any]
     total_interactions = total_likes + total_comments + total_views
 
     sentiment_counts = {"positive": 0, "neutral": 0, "negative": 0}
-    if total_comments:
-        comment_texts = list(CoursePostComment.objects.filter(post_id__in=post_ids).values_list("content", flat=True))
-        for text in comment_texts:
-            label = classify_comment_sentiment(text or "")
-            sentiment_counts[label] += 1
+    for course in courses:
+        course_data = _collect_course_post_data(course, range_days=range_days)
+        for post_sentiment in course_data.get("comment_sentiments", {}).values():
+            for label in ("positive", "neutral", "negative"):
+                sentiment_counts[label] += int(post_sentiment.get(label, 0) or 0)
 
     total_comment_count = sum(sentiment_counts.values())
     if total_comment_count:

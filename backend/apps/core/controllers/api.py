@@ -127,9 +127,9 @@ def notifications_endpoint(request: HttpRequest) -> JsonResponse:
     course_id = request.GET.get("course_id") or request.GET.get("courseId")
 
     if request.method == "GET":
-        notifications, unread = list_notifications(recipient=user, course_id=course_id)
+        notifications, unread, unread_by_course = list_notifications(recipient=user, course_id=course_id)
         items = [notification_to_dict(item) for item in notifications]
-        return JsonResponse({"items": items, "unread": unread})
+        return JsonResponse({"items": items, "unread": unread, "unread_by_course": unread_by_course})
 
     if request.method == "PATCH":
         try:

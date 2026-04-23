@@ -89,6 +89,13 @@ function formatPercent(value) {
   return `${rounded}%`;
 }
 
+function formatSentimentShare(value) {
+  const numeric = Math.min(Math.max(Number(value || 0), 0), 100);
+  if (!Number.isFinite(numeric) || numeric <= 0) return "0%";
+  if (numeric < 1) return "<1%";
+  return `${Math.round(numeric)}%`;
+}
+
 function formatShortDate(value) {
   if (!value) return "";
   return new Intl.DateTimeFormat("en-US", {
@@ -417,9 +424,9 @@ export default function DashboardPage() {
   }
 
   const sentiment = data?.sentiment || {};
-  const sPos = Math.round(Math.min(Math.max(Number(sentiment.positive || 0), 0), 100));
-  const sNeu = Math.round(Math.min(Math.max(Number(sentiment.neutral || 0), 0), 100));
-  const sNeg = Math.round(Math.min(Math.max(Number(sentiment.negative || 0), 0), 100));
+  const sPos = Math.min(Math.max(Number(sentiment.positive || 0), 0), 100);
+  const sNeu = Math.min(Math.max(Number(sentiment.neutral || 0), 0), 100);
+  const sNeg = Math.min(Math.max(Number(sentiment.negative || 0), 0), 100);
 
   const courses = useMemo(
     () =>
@@ -1142,7 +1149,7 @@ export default function DashboardPage() {
                         </span>
                       </div>
                       <span className="text-[17px] font-bold text-slate-900">
-                        {item.value}%
+                        {formatSentimentShare(item.value)}
                       </span>
                     </div>
                   ))}

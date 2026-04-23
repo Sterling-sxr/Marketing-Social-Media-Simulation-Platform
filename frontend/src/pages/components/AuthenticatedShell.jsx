@@ -126,6 +126,15 @@ export default function AuthenticatedShell({
   const { initials, displayName, photoUrl } = useAvatar(authUser);
   const unread = notifications.unread ?? 0;
   const unreadByCourse = useMemo(() => {
+    if (notifications.unread_by_course && Object.keys(notifications.unread_by_course).length > 0) {
+      const byCourse = new Map();
+      Object.entries(notifications.unread_by_course).forEach(([courseId, count]) => {
+        const numericCourseId = Number(courseId);
+        if (!Number.isFinite(numericCourseId)) return;
+        byCourse.set(numericCourseId, Number(count || 0));
+      });
+      return byCourse;
+    }
     const byCourse = new Map();
     (notifications.items || []).forEach((item) => {
       if (item?.is_read) return;
@@ -134,7 +143,7 @@ export default function AuthenticatedShell({
       byCourse.set(courseId, (byCourse.get(courseId) || 0) + 1);
     });
     return byCourse;
-  }, [notifications.items]);
+  }, [notifications.items, notifications.unread_by_course]);
   const notificationLabel = notificationStatus.error
     ? notificationStatus.error
     : unread > 0

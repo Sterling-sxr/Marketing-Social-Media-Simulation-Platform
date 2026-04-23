@@ -15,6 +15,12 @@ const formatTimestamp = (value) => {
   )}`;
 };
 
+const formatUnreadLabel = (count) => {
+  const value = Number(count || 0);
+  if (value <= 0) return "All Notifications";
+  return value >= 99 ? "99+ Unread" : `${value} Unread`;
+};
+
 export default function NotificationsPage() {
   const navigate = useNavigate();
   const {
@@ -39,10 +45,7 @@ export default function NotificationsPage() {
   }, [notifications.unread, markAllNotificationsRead]);
 
   const title = "Message Notification";
-  const subtitle =
-    notifications.unread > 0
-      ? `${notifications.unread} Unread`
-      : "All Notifications";
+  const subtitle = formatUnreadLabel(notifications.unread);
 
   // Context: Compute shared values once so all branches use the same normalized inputs.
   const SLIM_PILL =

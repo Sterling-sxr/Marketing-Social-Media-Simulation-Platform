@@ -120,3 +120,39 @@ def test_refresh_dashboard_snapshot_includes_views_in_engagement_totals(db):
     assert payload["total_comments"] == 1
     assert payload["total_views"] == 2
     assert payload["total_interactions"] == 4
+
+
+def test_dashboard_summary_sentiment_matches_sentiment_detail_breakdown(db, monkeypatch):
+    admin = _create_user("admin-summary-sentiment", is_staff=True)
+    student = _create_user("summary-sentiment-student")
+    course = _create_course(admin, suffix="9905")
+
+    CourseMember.objects.create(course=course, user=student, role="student")
+
+    post = CoursePost.objects.create(
+        course=course,
+        author=student,
+        content="Testing sentiment consistency",
+    )
+    CoursePostComment.objects.create(post=post, user=admin, content="great work")
+    CoursePostComment.objects.create(post=post, user=admin, content="needs fixes")
+    CoursePostComment.objects.create(post=post, user=admin, content="noted")
+
+    dashboard_service = _load_dashboard_service()
+
+    def fake_classifier(text):
+        normalized = str(text).lower()
+        if "great" in normalized:
+            return "positive"
+        if "fix" in normalized:
+            return "negative"
+        return "neutral"
+
+    monkeypatch.setattr(dashboard_service, "classify_comment_sentiment", fake_classifier)
+
+    summary = dashboard_service.refresh_dashboard_snapshot(admin, range_days=7)
+    detail = dashboard_service.get_admin_sentiment_distribution(user=admin, range_days=7)
+
+    detail_breakdown = {item["key"]: item["percentage"] for item in detail["breakdown"]}
+
+    assert summary["sentiment"] == detail_breakdown

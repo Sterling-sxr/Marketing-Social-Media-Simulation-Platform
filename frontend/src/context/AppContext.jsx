@@ -92,7 +92,11 @@ export function AppProvider({ children }) {
   const [courses, setCourses] = useState({ joined: [], available: [] });
   const [courseStatus, setCourseStatus] = useState(makeSimpleStatus);
   const [joinCode, setJoinCode] = useState("");
-  const [notifications, setNotifications] = useState({ items: [], unread: 0 });
+  const [notifications, setNotifications] = useState({
+    items: [],
+    unread: 0,
+    unread_by_course: {},
+  });
   const [notificationStatus, setNotificationStatus] =
     useState(makeSimpleStatus);
   const coursesRequestRef = useRef(null);
@@ -742,9 +746,9 @@ export function AppProvider({ children }) {
 
   const fetchNotifications = useCallback(async ({ silent = true } = {}) => {
     if (!authUser) {
-      setNotifications({ items: [], unread: 0 });
+      setNotifications({ items: [], unread: 0, unread_by_course: {} });
       setNotificationStatus(makeSimpleStatus());
-      return { items: [], unread: 0 };
+      return { items: [], unread: 0, unread_by_course: {} };
     }
 
     // Context: Compute shared values once so all branches use the same normalized inputs.
@@ -759,7 +763,7 @@ export function AppProvider({ children }) {
         message: "",
         error: errorMessage,
       });
-      return { items: [], unread: 0 };
+      return { items: [], unread: 0, unread_by_course: {} };
     }
 
     setNotificationStatus((prev) => ({ ...prev, loading: true, error: "" }));
@@ -770,6 +774,10 @@ export function AppProvider({ children }) {
       setNotifications({
         items: data.items || [],
         unread: typeof data.unread === "number" ? data.unread : 0,
+        unread_by_course:
+          data.unread_by_course && typeof data.unread_by_course === "object"
+            ? data.unread_by_course
+            : {},
       });
       // Context: Compute shared values once so all branches use the same normalized inputs.
       if (!silent) {
@@ -861,8 +869,23 @@ export function AppProvider({ children }) {
           const nextItems = prev.items.map((n) =>
             ids.includes(n.id) ? { ...n, is_read: true } : n
           );
-          const nextUnread = nextItems.filter((n) => !n.is_read).length;
-          return { items: nextItems, unread: nextUnread };
+          const nextUnreadByCourse = { ...(prev.unread_by_course || {}) };
+          ids.forEach((id) => {
+            const target = prev.items.find((item) => item.id === id);
+            const courseId =
+              target?.course_id ??
+              target?.metadata?.course_id ??
+              target?.payload?.course_id ??
+              target?.context?.course_id;
+            const numericCourseId = Number(courseId);
+            if (!Number.isFinite(numericCourseId)) return;
+            nextUnreadByCourse[numericCourseId] = Math.max(
+              0,
+              Number(nextUnreadByCourse[numericCourseId] || 0) - 1
+            );
+          });
+          const nextUnread = Math.max(0, Number(prev.unread || 0) - Number(data?.updated || ids.length));
+          return { items: nextItems, unread: nextUnread, unread_by_course: nextUnreadByCourse };
         });
         return data;
       } catch (error) {
@@ -887,11 +910,7 @@ export function AppProvider({ children }) {
         `/api/messages/notifications/?user=${encodeURIComponent(identifier)}`,
         { all: true }
       );
-      // Context: Compute shared values once so all branches use the same normalized inputs.
-      setNotifications((prev) => {
-        const nextItems = prev.items.map((n) => ({ ...n, is_read: true }));
-        return { items: nextItems, unread: 0 };
-      });
+      await fetchNotifications({ silent: true });
       return data;
     } catch (error) {
       setNotificationStatus({
@@ -901,7 +920,7 @@ export function AppProvider({ children }) {
       });
       throw error;
     }
-  }, [authUser]);
+  }, [authUser, fetchNotifications]);
 
   useEffect(() => {
     // Context: Compute shared values once so all branches use the same normalized inputs.
@@ -948,8 +967,18 @@ export function AppProvider({ children }) {
               },
               ...prev.items,
             ];
-            const nextUnread = nextItems.filter((n) => !n.is_read).length;
-            return { items: nextItems, unread: nextUnread };
+            const nextUnreadByCourse = { ...(prev.unread_by_course || {}) };
+            const courseId =
+              data?.course_id ??
+              data?.metadata?.course_id ??
+              data?.payload?.course_id ??
+              data?.context?.course_id;
+            const numericCourseId = Number(courseId);
+            if (Number.isFinite(numericCourseId) && !data.is_read) {
+              nextUnreadByCourse[numericCourseId] = Number(nextUnreadByCourse[numericCourseId] || 0) + 1;
+            }
+            const nextUnread = Number(prev.unread || 0) + (data.is_read ? 0 : 1);
+            return { items: nextItems, unread: nextUnread, unread_by_course: nextUnreadByCourse };
           });
           registerNotification(data, { silent: false });
         }

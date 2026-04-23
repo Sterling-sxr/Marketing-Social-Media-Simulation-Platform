@@ -25,7 +25,7 @@ def list_notifications(
     recipient: str,
     limit: int = 50,
     course_id: object | None = None,
-) -> tuple[list[Notification], int]:
+) -> tuple[list[Notification], int, dict[int, int]]:
     """Execute the `list_notifications` operation with explicit data and control flow.
     Normalize inputs, delegate to dependencies, and return a predictable result.
     """
@@ -33,8 +33,16 @@ def list_notifications(
     queryset = Notification.objects.filter(recipient=recipient)
     if parsed_course_id is not None:
         queryset = queryset.filter(metadata__course_id=parsed_course_id)
-    unread_count = queryset.filter(is_read=False).count()
-    return list(queryset[:limit]), unread_count
+    unread_qs = queryset.filter(is_read=False)
+    unread_count = unread_qs.count()
+    unread_by_course: dict[int, int] = {}
+    for notification in unread_qs.only("metadata"):
+        try:
+            course_key = int((notification.metadata or {}).get("course_id"))
+        except (TypeError, ValueError):
+            continue
+        unread_by_course[course_key] = unread_by_course.get(course_key, 0) + 1
+    return list(queryset[:limit]), unread_count, unread_by_course
 
 
 def mark_as_read(*, recipient: str, ids: Iterable[int], course_id: object | None = None) -> int:
