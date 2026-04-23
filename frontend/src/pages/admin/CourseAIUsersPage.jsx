@@ -480,7 +480,7 @@ export default function CourseAIUsersPage() {
 
             {formError ? <Feedback error={formError} /> : null}
 
-            <section className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+            <section className="sticky top-0 z-10 mt-4 grid grid-cols-1 gap-4 border-b border-brand-100 bg-white pb-4 md:grid-cols-2">
               <div className="md:col-span-2">
                 <label className="block text-xs font-semibold text-slate-600">
                   Username<span className="text-red-500">*</span>
@@ -492,20 +492,6 @@ export default function CourseAIUsersPage() {
                   onChange={(e) => handleFormChange("username", e.target.value)}
                   className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
                   placeholder="Unique username for this course"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-slate-600">
-                  Display name
-                </label>
-                <input
-                  type="text"
-                  value={formData.display_name}
-                  onChange={(e) =>
-                    handleFormChange("display_name", e.target.value)
-                  }
-                  className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
-                  placeholder="Optional display name"
                 />
               </div>
             </section>
@@ -706,7 +692,39 @@ export default function CourseAIUsersPage() {
               </>
             ) : null}
 
-            <div className="mt-6 flex items-center justify-end gap-3">
+            <div className="sticky bottom-0 z-10 mt-6 rounded-2xl border border-brand-100 bg-white/95 p-3 backdrop-blur">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600">
+                    Username (required to save)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.username}
+                    onChange={(e) => handleFormChange("username", e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
+                    placeholder="Unique username for this course"
+                    disabled={formBusy}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600">
+                    Display name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.display_name}
+                    onChange={(e) => handleFormChange("display_name", e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-brand-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-brand"
+                    placeholder="Optional display name"
+                    disabled={formBusy}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 flex items-center justify-end gap-3">
               <button
                 type="button"
                 className="rounded-full border border-brand-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:border-brand-300 hover:text-brand disabled:opacity-60"

@@ -200,6 +200,8 @@ def normalize_ai_user_payload(
     if require_username and not username:
         raise ValueError("Username is required.")
     data = _payload_to_data(payload)
+    if not data.get("display_name") and username:
+        data["display_name"] = username
     return {
         "username": username,
         **data,

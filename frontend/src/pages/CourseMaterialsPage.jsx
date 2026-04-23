@@ -342,6 +342,7 @@ export default function CourseMaterialsPage() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [courseName, setCourseName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   const isTeacherOrAdmin = useMemo(() => {
     const allCourses = [...(courses.joined || []), ...(courses.available || [])];
@@ -451,6 +452,16 @@ export default function CourseMaterialsPage() {
               className="w-full rounded-full border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-800 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
             />
           </div>
+          {isTeacherOrAdmin ? (
+            <button
+              type="button"
+              onClick={() => setShowUploadModal(true)}
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-brand bg-brand px-4 py-2.5 text-sm font-semibold text-white shadow-brand transition hover:bg-brand-dark"
+            >
+              <Upload className="h-4 w-4" />
+              Upload Material
+            </button>
+          ) : null}
         </div>
 
         {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
@@ -508,6 +519,17 @@ export default function CourseMaterialsPage() {
           </div>
         )}
       </div>
+
+      {showUploadModal ? (
+        <UploadModal
+          courseId={courseId}
+          onClose={() => setShowUploadModal(false)}
+          onSuccess={(material) => {
+            setMaterials((prev) => [material, ...prev]);
+            setShowUploadModal(false);
+          }}
+        />
+      ) : null}
 
     </AuthenticatedShell>
   );
