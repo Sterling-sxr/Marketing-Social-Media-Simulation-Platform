@@ -192,17 +192,24 @@ export default function EngagementDistributionDetailPage() {
     ];
     return { total, likes, comments, views, other, breakdown };
   }, [filteredCourses]);
+  const topInteractionCourse = useMemo(
+    () =>
+      filteredCourses
+        .slice()
+        .sort((a, b) => Number(b.total_interactions || 0) - Number(a.total_interactions || 0))[0] || null,
+    [filteredCourses]
+  );
+  const dominantType = useMemo(
+    () => computedSummary.breakdown.slice().sort((a, b) => b.count - a.count)[0] || null,
+    [computedSummary]
+  );
 
   const heroInsight = useMemo(() => {
-    const topCourse = filteredCourses[0];
-    const dominantType = computedSummary.breakdown
-      .slice()
-      .sort((a, b) => b.count - a.count)[0];
     const parts = [];
-    if (topCourse && topCourse.total_interactions > 0) {
+    if (topInteractionCourse && topInteractionCourse.total_interactions > 0) {
       parts.push(
-        `${topCourse.course_code || "Top course"} has the highest interaction volume with ${formatCount(
-          topCourse.total_interactions
+        `${topInteractionCourse.course_code || "Top course"} has the highest interaction volume with ${formatCount(
+          topInteractionCourse.total_interactions
         )} total interactions.`
       );
     }
@@ -217,7 +224,7 @@ export default function EngagementDistributionDetailPage() {
       parts.push("Comments remain lighter than likes, suggesting discussion depth could be improved.");
     }
     return parts.slice(0, 2).join(" ");
-  }, [computedSummary, filteredCourses]);
+  }, [computedSummary, dominantType, topInteractionCourse]);
 
   return (
     <AuthenticatedShell
@@ -226,7 +233,7 @@ export default function EngagementDistributionDetailPage() {
           Engagement Distribution
         </span>
       }
-      subtitle="Detailed breakdown of interactions across managed courses."
+      subtitle="Drill down into likes, comments, views, and other interactions across managed courses."
       wideContent
     >
       {status.error ? <Feedback error={status.error} /> : null}
@@ -239,7 +246,7 @@ export default function EngagementDistributionDetailPage() {
               <ArrowLeft className="h-4 w-4" />
               Back to Dashboard
             </GlassButton>
-            <div className="flex flex-col gap-2.5 sm:flex-row sm:justify-end">
+            <div className="flex flex-col gap-2.5 lg:flex-row lg:flex-wrap lg:items-center lg:justify-end">
               <label className="relative inline-flex h-[42px] min-w-[260px] max-w-full items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 shadow-[0_4px_14px_rgba(15,23,42,0.05)]">
                 <div className="flex min-w-0 items-center gap-2.5">
                   <CalendarDays className="h-4 w-4 shrink-0 text-slate-500" />
@@ -275,6 +282,21 @@ export default function EngagementDistributionDetailPage() {
                   ))}
                 </select>
               </label>
+              <label className="inline-flex h-[42px] min-w-[220px] items-center rounded-2xl border border-slate-200 bg-white px-4 text-[13px] font-medium text-slate-600 shadow-[0_4px_14px_rgba(15,23,42,0.05)]">
+                <span className="mr-2 shrink-0 text-slate-400">Course</span>
+                <select
+                  value={selectedCourseId}
+                  onChange={(event) => setSelectedCourseId(event.target.value)}
+                  className="min-w-0 flex-1 bg-transparent font-semibold text-slate-700 outline-none"
+                >
+                  <option value="all">All Courses</option>
+                  {allCourses.map((course) => (
+                    <option key={course.id} value={course.id}>
+                      {course.course_code ? `${course.course_code} · ${course.name}` : course.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <GlassButton onClick={loadDetail}>
                 <RefreshCw className="h-4 w-4" />
                 Refresh
@@ -283,30 +305,11 @@ export default function EngagementDistributionDetailPage() {
           </div>
 
           <Panel
-            title="Engagement Distribution"
-            subtitle="Detailed breakdown of interactions across managed courses."
-            right={
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <label className="inline-flex h-[38px] items-center rounded-full border border-brand-100 bg-white px-3 text-[12px] font-medium text-slate-600">
-                  <span className="mr-2 text-slate-400">Sort by:</span>
-                  <select
-                    value={selectedCourseId}
-                    onChange={(event) => setSelectedCourseId(event.target.value)}
-                    className="bg-transparent font-semibold text-slate-700 outline-none"
-                  >
-                    <option value="all">All Courses</option>
-                    {allCourses.map((course) => (
-                      <option key={course.id} value={course.id}>
-                        {course.course_code || course.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-            }
+            title="Overall Interaction Summary"
+            subtitle="Interaction mix and top engagement signals for the selected scope."
           >
-            <div className="rounded-[22px] border border-brand-100 bg-white/85 p-4">
-              <div className="grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)_220px]">
+            <div className="rounded-[22px] border border-brand-100 bg-white/85 p-3.5">
+              <div className="grid items-center gap-4 xl:grid-cols-[212px_minmax(0,1fr)_240px]">
                 <div className="relative mx-auto h-[196px] w-[196px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -325,14 +328,16 @@ export default function EngagementDistributionDetailPage() {
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                    <div className="text-[42px] font-extrabold leading-none text-slate-900">
+                    <div className="text-[44px] font-extrabold leading-none tracking-tight text-slate-900">
                       {formatCount(computedSummary.total)}
                     </div>
-                    <div className="mt-1 text-[13px] text-slate-500">Total Interactions</div>
+                    <div className="mt-1 text-[12px] font-medium tracking-wide text-slate-400">
+                      Total Interactions
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid content-start gap-3">
+                <div className="grid content-start gap-2.5">
                   {computedSummary.breakdown.map((item) => (
                     <div
                       key={item.key}
@@ -340,62 +345,103 @@ export default function EngagementDistributionDetailPage() {
                     >
                       <div className="flex items-center gap-2.5">
                         <span
-                          className="h-3.5 w-3.5 rounded-[4px]"
-                          style={{ backgroundColor: TYPE_META[item.key].color }}
-                        />
-                        <span className="text-[14px] font-medium text-slate-700">{item.label}</span>
+                          className={`inline-flex h-9 w-9 items-center justify-center rounded-[12px] ${TYPE_META[item.key].tone}`}
+                        >
+                          {TYPE_META[item.key].icon}
+                        </span>
+                        <div>
+                          <div className="text-[14px] font-semibold text-slate-800">{item.label}</div>
+                          <div className="text-[12px] text-slate-400">Share of total interactions</div>
+                        </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-[15px] font-semibold text-slate-900">
+                        <div className="text-[16px] font-semibold leading-none text-slate-900">
                           {formatCount(item.count)}
                         </div>
-                        <div className="text-[12px] text-slate-400">{formatPercent(item.percentage)}</div>
+                        <div className="mt-1 text-[12px] text-slate-400">{formatPercent(item.percentage)}</div>
                       </div>
                     </div>
                   ))}
                 </div>
 
                 <div className="grid content-start gap-2.5">
-                  {["likes", "comments", "views", "other"].map((key) => (
+                  {[
+                    {
+                      key: "dominant",
+                      label: "Top Interaction Type",
+                      value: dominantType?.label || "No data",
+                      detail:
+                        computedSummary.total > 0 ? formatPercent(dominantType?.percentage || 0) : "0%",
+                      tone: "bg-emerald-50 text-emerald-600",
+                      icon: dominantType ? TYPE_META[dominantType.key].icon : <Activity className="h-4 w-4" />,
+                    },
+                    {
+                      key: "course",
+                      label: "Most Active Course",
+                      value: topInteractionCourse?.course_code || "No data",
+                      detail: topInteractionCourse?.name || "No course selected",
+                      tone: "bg-blue-50 text-blue-600",
+                      icon: <Activity className="h-4 w-4" />,
+                    },
+                    {
+                      key: "total",
+                      label: "Total Interactions",
+                      value: formatCount(computedSummary.total),
+                      detail:
+                        filteredCourses.length === 1 ? "Within selected course" : `${formatCount(filteredCourses.length)} course(s) in scope`,
+                      tone: "bg-violet-50 text-violet-600",
+                      icon: <Eye className="h-4 w-4" />,
+                    },
+                    {
+                      key: "balance",
+                      label: "Comments-to-Likes",
+                      value:
+                        computedSummary.likes > 0
+                          ? `${roundToOneDecimal(computedSummary.comments / computedSummary.likes)}x`
+                          : computedSummary.comments > 0
+                          ? "Comments lead"
+                          : "No data",
+                      detail:
+                        computedSummary.comments >= computedSummary.likes
+                          ? "Discussion depth is keeping pace"
+                          : "Reactions are outpacing discussion",
+                      tone: "bg-amber-50 text-amber-600",
+                      icon: <MessageCircle className="h-4 w-4" />,
+                    },
+                  ].map((item) => (
                     <div
-                      key={key}
+                      key={item.key}
                       className="flex items-center justify-between rounded-[16px] border border-brand-100 bg-white px-3 py-3"
                     >
                       <div className="flex items-center gap-2.5">
-                        <span
-                          className={`inline-flex h-9 w-9 items-center justify-center rounded-[12px] ${TYPE_META[key].tone}`}
-                        >
-                          {TYPE_META[key].icon}
+                        <span className={`inline-flex h-9 w-9 items-center justify-center rounded-[12px] ${item.tone}`}>
+                          {item.icon}
                         </span>
-                        <span className="text-[14px] font-semibold text-slate-700">
-                          {TYPE_META[key].label}
-                        </span>
+                        <div>
+                          <div className="text-[12px] font-medium text-slate-500">{item.label}</div>
+                          <div className="text-[14px] font-semibold text-slate-800">{item.value}</div>
+                        </div>
                       </div>
-                      <span className="text-[18px] font-bold text-slate-900">
-                        {formatCount(computedSummary[key])}
-                      </span>
+                      <div className="max-w-[96px] text-right text-[12px] leading-5 text-slate-400">
+                        {item.detail}
+                      </div>
                     </div>
                   ))}
 
-                  <GlassButton
-                    className="w-full"
-                    onClick={() => {
-                      const target =
-                        selectedCourseId !== "all"
-                          ? selectedCourseId
-                          : filteredCourses[0]?.id;
-                      if (target) navigate(`/dashboard/courses/${target}`);
-                    }}
-                    disabled={!filteredCourses.length}
-                  >
-                    View Course Analytics
-                    <ArrowUpRight className="h-4 w-4" />
-                  </GlassButton>
+                  {selectedCourseId !== "all" && filteredCourses[0]?.id ? (
+                    <GlassButton
+                      className="w-full"
+                      onClick={() => navigate(`/dashboard/courses/${filteredCourses[0].id}`)}
+                    >
+                      Open Course Analytics
+                      <ArrowUpRight className="h-4 w-4" />
+                    </GlassButton>
+                  ) : null}
                 </div>
               </div>
 
               {heroInsight ? (
-                <div className="mt-4 rounded-[18px] border border-emerald-100 bg-emerald-50/70 px-3.5 py-2 text-[13px] leading-5 text-slate-700">
+                <div className="mt-3 rounded-[18px] border border-emerald-100 bg-emerald-50/70 px-3.5 py-2 text-[13px] leading-5 text-slate-700">
                   <span className="font-semibold text-emerald-700">Insight:</span> {heroInsight}
                 </div>
               ) : null}
@@ -403,7 +449,7 @@ export default function EngagementDistributionDetailPage() {
           </Panel>
 
           <Panel
-            title="Breakdown by course"
+            title="Breakdown by Course"
             subtitle="Type-level interaction distribution across your managed courses."
             right={
               <label className="inline-flex h-[38px] items-center rounded-full border border-brand-100 bg-white px-3 text-[12px] font-medium text-slate-600">
@@ -423,7 +469,7 @@ export default function EngagementDistributionDetailPage() {
             }
           >
             <div className="overflow-hidden rounded-[22px] border border-brand-100 bg-white/90">
-              <div className="grid grid-cols-[2.2fr_1fr_1fr_1fr_1.1fr] gap-0 border-b border-slate-100 bg-slate-50/70 px-4 py-3 text-[12px] font-semibold text-slate-500">
+              <div className="grid grid-cols-[2.25fr_1fr_1fr_1fr_1.1fr] gap-0 border-b border-slate-100 bg-slate-50/70 px-4 py-2.5 text-[12px] font-semibold text-slate-500">
                 <div>Course</div>
                 <div>Likes</div>
                 <div>Comments</div>
@@ -434,19 +480,11 @@ export default function EngagementDistributionDetailPage() {
               {filteredCourses.map((course, index) => (
                 <div
                   key={course.id}
-                  className="grid grid-cols-[2.2fr_1fr_1fr_1fr_1.1fr] items-center gap-0 border-b border-slate-100 px-4 py-3 last:border-b-0"
+                  className="grid grid-cols-[2.25fr_1fr_1fr_1fr_1.1fr] items-center gap-0 border-b border-slate-100 px-4 py-2.5 last:border-b-0"
                 >
                   <div className="flex items-center gap-3 pr-4">
                     <span
-                      className={`inline-flex h-9 w-9 items-center justify-center rounded-[12px] ${
-                        index % 4 === 0
-                          ? "bg-emerald-50 text-emerald-600"
-                          : index % 4 === 1
-                          ? "bg-blue-50 text-blue-600"
-                          : index % 4 === 2
-                          ? "bg-violet-50 text-violet-600"
-                          : "bg-cyan-50 text-cyan-600"
-                      }`}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-[12px] bg-slate-100 text-slate-500"
                     >
                       <Activity className="h-4 w-4" />
                     </span>
@@ -460,10 +498,10 @@ export default function EngagementDistributionDetailPage() {
 
                   {["likes", "comments", "views"].map((key) => (
                     <div key={key} className="pr-3">
-                      <div className="text-[15px] font-semibold text-slate-900">
+                      <div className="text-[15px] font-semibold leading-none text-slate-900">
                         {formatCount(course[key])}
                       </div>
-                      <div className="text-[12px] text-slate-400">
+                      <div className="mt-1 text-[11px] text-slate-400">
                         {formatPercent(
                           computedSummary.total > 0
                             ? (Number(course[key] || 0) / computedSummary.total) * 100
@@ -474,11 +512,15 @@ export default function EngagementDistributionDetailPage() {
                   ))}
 
                   <div>
-                    <div className="text-[18px] font-bold text-slate-900">
+                    <div className="text-[17px] font-bold leading-none text-slate-900">
                       {formatCount(course.total_interactions)}
                     </div>
-                    <div className="text-[12px] text-slate-400">
-                      {formatPercent(course.share_percent || 0)}
+                    <div className="mt-1 text-[11px] text-slate-400">
+                      {formatPercent(
+                        computedSummary.total > 0
+                          ? (Number(course.total_interactions || 0) / computedSummary.total) * 100
+                          : 0
+                      )}
                     </div>
                   </div>
                 </div>
@@ -486,14 +528,20 @@ export default function EngagementDistributionDetailPage() {
             </div>
           </Panel>
 
-          {detail?.insight || heroInsight ? (
-            <div className="rounded-[20px] border border-emerald-100 bg-emerald-50/70 px-4 py-3 text-[13px] leading-6 text-slate-700">
+          {heroInsight || filteredCourses.length > 0 ? (
+            <div className="rounded-[20px] border border-emerald-100 bg-emerald-50/70 px-4 py-2.5 text-[13px] leading-6 text-slate-700">
               <span className="font-semibold text-emerald-700">Insight Summary:</span>{" "}
-              {heroInsight || detail.insight}
+              {filteredCourses.length > 1
+                ? `Interaction volume is ${Number(topInteractionCourse?.share_percent || 0) > 45 ? "concentrated in a small number of courses" : "fairly distributed across courses"}, and the current mix ${computedSummary.comments < computedSummary.likes ? "leans more toward likes than comments." : "shows meaningful discussion depth through comments."}`
+                : heroInsight}
             </div>
           ) : null}
         </div>
       ) : null}
     </AuthenticatedShell>
   );
+}
+
+function roundToOneDecimal(value) {
+  return Math.round(Number(value || 0) * 10) / 10;
 }

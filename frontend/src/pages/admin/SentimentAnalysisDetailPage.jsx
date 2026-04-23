@@ -1,13 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  CalendarDays,
-  Frown,
-  Meh,
-  RefreshCw,
-  Smile,
-} from "lucide-react";
+import { ArrowLeft, CalendarDays, Frown, Meh, RefreshCw, Smile } from "lucide-react";
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 import { useAuth } from "../../context/AuthContext";
 import { getJson } from "../../lib/api";
@@ -75,6 +68,10 @@ function buildRangeLabel(detail, selectedRangeDays) {
   const endLabel = formatShortDate(detail?.range_end);
   if (startLabel && endLabel) return `${option.label} (${startLabel} - ${endLabel})`;
   return option.label;
+}
+
+function roundToOneDecimal(value) {
+  return Math.round(Number(value || 0) * 10) / 10;
 }
 
 function GlassButton({ children, onClick, className = "", disabled = false }) {
@@ -189,18 +186,17 @@ export default function SentimentAnalysisDetailPage() {
   }, [filteredCourses]);
 
   const summaryNote = useMemo(() => {
-    const breakdown = computedSummary.breakdown.slice().sort((a, b) => b.count - a.count);
-    const dominant = breakdown[0];
+    const dominant = computedSummary.breakdown.slice().sort((a, b) => b.count - a.count)[0];
     if (!dominant || computedSummary.totalComments === 0) {
       return "No valid text items are available in the current time range.";
     }
     if (dominant.key === "neutral") {
-      return "Neutral sentiment dominates the current snapshot. Most course interactions are informational rather than strongly emotional, which is common in educational discussion.";
+      return "Neutral sentiment dominates the current snapshot. This is common in teaching contexts where most interactions are informational rather than strongly emotional.";
     }
     if (dominant.key === "positive") {
-      return "Positive sentiment leads the current snapshot. Course discussions appear constructive and generally well received.";
+      return "Positive sentiment leads the current snapshot. Discussions currently appear constructive and broadly well received.";
     }
-    return "Negative sentiment is currently the largest share. Review recent discussion threads for unresolved friction or confusing content.";
+    return "Negative sentiment is currently the largest share. Review recent threads for unresolved friction or confusing content.";
   }, [computedSummary]);
 
   const pageInsight = useMemo(() => {
@@ -211,7 +207,7 @@ export default function SentimentAnalysisDetailPage() {
     const positiveLeader = filteredCourses
       .filter((course) => course.total_comments > 0)
       .slice()
-      .sort((a, b) => Number(b.positive || 0) - Number(a.positive || 0))[0];
+      .sort((a, b) => Number(b.positive_percent || 0) - Number(a.positive_percent || 0))[0];
 
     const lines = [];
     if (neutralLeader && Number(neutralLeader.neutral_percent || 0) > 0) {
@@ -222,16 +218,16 @@ export default function SentimentAnalysisDetailPage() {
       );
     }
     if (computedSummary.negative === 0 && computedSummary.totalComments > 0) {
-      lines.push("No strong negative sentiment is detected in the current snapshot.");
-    } else if (positiveLeader && positiveLeader.positive > 0) {
+      lines.push("No clear negative signal appears in the current snapshot.");
+    } else if (positiveLeader && Number(positiveLeader.positive_percent || 0) > 0) {
       lines.push(
-        `${positiveLeader.course_code || "One course"} shows the strongest positive signal with ${formatCount(
-          positiveLeader.positive
-        )} positive comments.`
+        `${positiveLeader.course_code || "One course"} is closest to positive engagement at ${formatPercent(
+          Number(positiveLeader.positive_percent || 0)
+        )}.`
       );
     }
-    return lines.slice(0, 2).join(" ") || detail?.insight || "";
-  }, [computedSummary, detail?.insight, filteredCourses]);
+    return lines.slice(0, 2).join(" ");
+  }, [computedSummary, filteredCourses]);
 
   return (
     <AuthenticatedShell
@@ -240,7 +236,7 @@ export default function SentimentAnalysisDetailPage() {
           Sentiment Analysis
         </span>
       }
-      subtitle="Detailed analysis of comment sentiment across managed courses."
+      subtitle="Drill down into positive, neutral, and negative sentiment across managed courses."
       wideContent
     >
       {status.error ? <Feedback error={status.error} /> : null}
@@ -253,7 +249,7 @@ export default function SentimentAnalysisDetailPage() {
               <ArrowLeft className="h-4 w-4" />
               Back to Dashboard
             </GlassButton>
-            <div className="flex flex-col gap-2.5 sm:flex-row sm:justify-end">
+            <div className="flex flex-col gap-2.5 lg:flex-row lg:flex-wrap lg:items-center lg:justify-end">
               <label className="relative inline-flex h-[42px] min-w-[260px] max-w-full items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 shadow-[0_4px_14px_rgba(15,23,42,0.05)]">
                 <div className="flex min-w-0 items-center gap-2.5">
                   <CalendarDays className="h-4 w-4 shrink-0 text-slate-500" />
@@ -289,6 +285,23 @@ export default function SentimentAnalysisDetailPage() {
                   ))}
                 </select>
               </label>
+
+              <label className="inline-flex h-[42px] min-w-[220px] items-center rounded-2xl border border-slate-200 bg-white px-4 text-[13px] font-medium text-slate-600 shadow-[0_4px_14px_rgba(15,23,42,0.05)]">
+                <span className="mr-2 shrink-0 text-slate-400">Course</span>
+                <select
+                  value={selectedCourseId}
+                  onChange={(event) => setSelectedCourseId(event.target.value)}
+                  className="min-w-0 flex-1 bg-transparent font-semibold text-slate-700 outline-none"
+                >
+                  <option value="all">All Courses</option>
+                  {allCourses.map((course) => (
+                    <option key={course.id} value={course.id}>
+                      {course.course_code ? `${course.course_code} · ${course.name}` : course.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
               <GlassButton onClick={loadDetail}>
                 <RefreshCw className="h-4 w-4" />
                 Refresh
@@ -297,78 +310,69 @@ export default function SentimentAnalysisDetailPage() {
           </div>
 
           <Panel
-            title="Sentiment Analysis"
-            subtitle="Detailed analysis of comment sentiment across managed courses."
-            right={
-              <label className="inline-flex h-[38px] items-center rounded-full border border-brand-100 bg-white px-3 text-[12px] font-medium text-slate-600">
-                <span className="mr-2 text-slate-400">Course:</span>
-                <select
-                  value={selectedCourseId}
-                  onChange={(event) => setSelectedCourseId(event.target.value)}
-                  className="bg-transparent font-semibold text-slate-700 outline-none"
-                >
-                  <option value="all">All Courses</option>
-                  {allCourses.map((course) => (
-                    <option key={course.id} value={course.id}>
-                      {course.course_code || course.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            }
+            title="Overall Sentiment Summary"
+            subtitle="Current sentiment mix for the selected dashboard range."
           >
             <div className="rounded-[22px] border border-brand-100 bg-white/85 p-4">
-              <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
-                <div className="relative mx-auto h-[196px] w-[196px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={computedSummary.breakdown}
-                        dataKey="count"
-                        innerRadius={62}
-                        outerRadius={92}
-                        paddingAngle={1}
-                        stroke="none"
-                      >
-                        {computedSummary.breakdown.map((item) => (
-                          <Cell key={item.key} fill={SENTIMENT_META[item.key].color} />
-                        ))}
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                    <div className="text-[38px] font-extrabold leading-none text-slate-900">
-                      {formatCount(computedSummary.totalComments)}
+              <div className="grid items-center gap-5 lg:grid-cols-[232px_minmax(0,1fr)]">
+                <div className="mx-auto flex flex-col items-center">
+                  <div className="relative h-[196px] w-[196px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={computedSummary.breakdown}
+                          dataKey="count"
+                          innerRadius={62}
+                          outerRadius={92}
+                          paddingAngle={1}
+                          stroke="none"
+                        >
+                          {computedSummary.breakdown.map((item) => (
+                            <Cell key={item.key} fill={SENTIMENT_META[item.key].color} />
+                          ))}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                      <div className="text-[38px] font-extrabold leading-none text-slate-900">
+                        {formatCount(computedSummary.totalComments)}
+                      </div>
+                      <div className="mt-1 text-center text-[12px] leading-5 text-slate-500">
+                        Valid Texts
+                        <br />
+                        Analyzed
+                      </div>
                     </div>
-                    <div className="mt-1 text-center text-[12px] leading-5 text-slate-500">
-                      Comments
-                      <br />
-                      Analyzed
-                    </div>
+                  </div>
+                  <div className="mt-2 text-center text-[12px] leading-5 text-slate-500">
+                    {formatCount(computedSummary.totalComments)} analyzed comments in the selected range
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {computedSummary.breakdown.map((item) => (
                     <div
                       key={item.key}
-                      className="flex items-center justify-between gap-3 border-b border-slate-100 py-2 last:border-b-0"
+                      className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-[18px] border border-slate-100 bg-slate-50/55 px-4 py-3"
                     >
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex min-w-0 items-center gap-3">
                         <span
                           className={`inline-flex h-10 w-10 items-center justify-center rounded-[14px] ${SENTIMENT_META[item.key].tone}`}
                         >
                           {SENTIMENT_META[item.key].icon}
                         </span>
-                        <span className="text-[15px] font-semibold text-slate-800">
-                          {item.label}
-                        </span>
+                        <div className="min-w-0">
+                          <div className="text-[15px] font-semibold text-slate-800">
+                            {item.label}
+                          </div>
+                          <div className="text-[12px] text-slate-400">Share of analyzed texts</div>
+                        </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-[20px] font-bold text-slate-900">
+                        <div className="text-[22px] font-bold leading-none text-slate-900">
                           {formatCount(item.count)}
                         </div>
-                        <div className="text-[12px] text-slate-400">
+                        <div className="mt-1 text-[12px] text-slate-400">
                           {formatPercent(item.percentage)}
                         </div>
                       </div>
@@ -404,18 +408,18 @@ export default function SentimentAnalysisDetailPage() {
             }
           >
             <div className="overflow-hidden rounded-[22px] border border-brand-100 bg-white/90">
-              <div className="grid grid-cols-[2.2fr_1fr_1fr_1fr_1.15fr] gap-0 border-b border-slate-100 bg-slate-50/70 px-4 py-3 text-[12px] font-semibold text-slate-500">
+              <div className="grid grid-cols-[2.35fr_1fr_1fr_1fr_1.25fr] gap-0 border-b border-slate-100 bg-slate-50/70 px-4 py-3 text-[12px] font-semibold text-slate-500">
                 <div>Course</div>
                 <div>Positive</div>
                 <div>Neutral</div>
                 <div>Negative</div>
-                <div>Total Comments</div>
+                <div>Total Comments / Valid Texts</div>
               </div>
 
               {filteredCourses.map((course, index) => (
                 <div
                   key={course.id}
-                  className="grid grid-cols-[2.2fr_1fr_1fr_1fr_1.15fr] items-center gap-0 border-b border-slate-100 px-4 py-3 last:border-b-0"
+                  className="grid grid-cols-[2.35fr_1fr_1fr_1fr_1.25fr] items-center gap-0 border-b border-slate-100 px-4 py-3.5 last:border-b-0"
                 >
                   <div className="flex items-center gap-3 pr-4">
                     <span
@@ -441,21 +445,21 @@ export default function SentimentAnalysisDetailPage() {
 
                   {["positive", "neutral", "negative"].map((key) => (
                     <div key={key} className="pr-3">
-                      <div className="text-[15px] font-semibold text-slate-900">
+                      <div className="text-[16px] font-semibold leading-none text-slate-900">
                         {formatCount(course[key])}
                       </div>
-                      <div className="text-[12px] text-slate-400">
+                      <div className="mt-1 text-[12px] text-slate-400">
                         {formatPercent(Number(course[`${key}_percent`] || 0))}
                       </div>
                     </div>
                   ))}
 
                   <div>
-                    <div className="text-[18px] font-bold text-slate-900">
+                    <div className="text-[18px] font-bold leading-none text-slate-900">
                       {formatCount(course.total_comments)}
                     </div>
-                    <div className="text-[12px] text-slate-400">
-                      {formatPercent(Number(course.share_percent || 0))}
+                    <div className="mt-1 text-[12px] text-slate-400">
+                      share {formatPercent(Number(course.share_percent || 0))}
                     </div>
                   </div>
                 </div>
@@ -472,8 +476,4 @@ export default function SentimentAnalysisDetailPage() {
       ) : null}
     </AuthenticatedShell>
   );
-}
-
-function roundToOneDecimal(value) {
-  return Math.round(Number(value || 0) * 10) / 10;
 }
