@@ -215,6 +215,21 @@ function SummaryBullet({ text, tone = "default" }) {
   );
 }
 
+function SummaryStat({ label, value, tone = "brand" }) {
+  const toneStyles =
+    tone === "mint"
+      ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+      : tone === "amber"
+      ? "bg-amber-50 text-amber-700 border-amber-100"
+      : "bg-brand-50 text-brand border-brand-100";
+  return (
+    <div className={`rounded-2xl border px-3 py-2 ${toneStyles}`}>
+      <div className="text-[10px] font-semibold uppercase tracking-[0.16em] opacity-70">{label}</div>
+      <div className="mt-1 text-[18px] font-extrabold leading-none">{value}</div>
+    </div>
+  );
+}
+
 function ActivityFeedItem({ icon, title, detail, meta, tone = "brand" }) {
   const toneStyles =
     tone === "mint"
@@ -484,44 +499,152 @@ export default function DashboardPage() {
     return items.slice(0, 3);
   }, [activeCourses, bestEngagementCourse, topCourse]);
 
-  const recentActivities = [
-    topCourse
-      ? {
-          key: `top-${topCourse.id}`,
-          icon: <Trophy className="h-4 w-4" />,
-          title: `${topCourse.course_code || "Course"} is leading overall activity`,
-          detail: `${formatCount(topCourse.interactions)} interactions recorded from ${formatCount(
-            topCourse.posts
-          )} posts.`,
-          meta: "Top performer",
-          tone: "amber",
-        }
-      : null,
-    bestEngagementCourse
-      ? {
-          key: `eng-${bestEngagementCourse.id}`,
-          icon: <Zap className="h-4 w-4" />,
-          title: `${bestEngagementCourse.course_code || "Course"} has the best engagement rate`,
-          detail: `${formatRatio(bestEngagementCourse.engagementRate)} interactions per post in the selected range.`,
-          meta: "Engagement",
-          tone: "mint",
-        }
-      : null,
-    rankedByRecency[0]
-      ? {
-          key: `recent-${rankedByRecency[0].id}`,
-          icon: <Clock3 className="h-4 w-4" />,
-          title: `${rankedByRecency[0].course_code || "Course"} was refreshed most recently`,
-          detail: rankedByRecency[0].calculated_at
-            ? `Snapshot updated ${new Date(rankedByRecency[0].calculated_at).toLocaleString("en-US", {
-                hour12: false,
-              })}.`
-            : "Waiting for first snapshot update.",
-          meta: "Recent",
-          tone: "violet",
-        }
-      : null,
-  ].filter(Boolean);
+  const recentActivities = useMemo(() => {
+    const items = [];
+    const secondByInteractions = rankedByInteractions[1] || null;
+    const weakestEngagementCourse =
+      rankedByEngagement.filter((course) => course.posts > 0).slice(-1)[0] || null;
+    const interactionLeaderShare =
+      topCourse && totalInteractions > 0 ? (topCourse.interactions / totalInteractions) * 100 : 0;
+    const commentsShare = totalInteractions > 0 ? (totalComments / totalInteractions) * 100 : 0;
+    const viewsShare = totalInteractions > 0 ? (totalViews / totalInteractions) * 100 : 0;
+
+    if (topCourse) {
+      items.push({
+        key: `top-${topCourse.id}`,
+        icon: <Trophy className="h-4 w-4" />,
+        title: `${topCourse.course_code || "Course"} is leading overall activity`,
+        detail: `${formatCount(topCourse.interactions)} interactions recorded from ${formatCount(
+          topCourse.posts
+        )} posts${interactionLeaderShare > 0 ? `, contributing ${formatPercent(interactionLeaderShare)} of the dashboard total.` : "."}`,
+        meta: "Top performer",
+        tone: "amber",
+      });
+    }
+
+    if (bestEngagementCourse && bestEngagementCourse.engagementRate > 0) {
+      items.push({
+        key: `eng-${bestEngagementCourse.id}`,
+        icon: <Zap className="h-4 w-4" />,
+        title: `${bestEngagementCourse.course_code || "Course"} has the best engagement rate`,
+        detail: `${formatRatio(bestEngagementCourse.engagementRate)} interactions per post in the selected range.${secondByInteractions && secondByInteractions.id !== bestEngagementCourse.id ? ` This makes it one of the strongest templates to reuse.` : ""}`,
+        meta: "Engagement",
+        tone: "mint",
+      });
+    }
+
+    if (topCourse && secondByInteractions && topCourse.id !== secondByInteractions.id) {
+      const gap = topCourse.interactions - secondByInteractions.interactions;
+      if (gap > 0) {
+        items.push({
+          key: `gap-${topCourse.id}-${secondByInteractions.id}`,
+          icon: <Activity className="h-4 w-4" />,
+          title: `There is a visible activity gap between the top two courses`,
+          detail: `${topCourse.course_code || "Leading course"} is ahead of ${secondByInteractions.course_code || "the next course"} by ${formatCount(
+            gap
+          )} interactions.`,
+          meta: "Distribution",
+          tone: "brand",
+        });
+      }
+    }
+
+    if (weakestEngagementCourse && weakestEngagementCourse.engagementRate >= 0) {
+      items.push({
+        key: `low-eng-${weakestEngagementCourse.id}`,
+        icon: <Lightbulb className="h-4 w-4" />,
+        title: `${weakestEngagementCourse.course_code || "One course"} is underperforming on depth`,
+        detail: `${formatCount(weakestEngagementCourse.posts)} posts produced ${formatCount(
+          weakestEngagementCourse.interactions
+        )} interactions, or ${formatRatio(weakestEngagementCourse.engagementRate)} per post.`,
+        meta: "Needs attention",
+        tone: "violet",
+      });
+    }
+
+    if (totalInteractions > 0) {
+      items.push({
+        key: "mix-comments",
+        icon: <MessageSquareText className="h-4 w-4" />,
+        title:
+          commentsShare < 20
+            ? "Comments are a relatively small share of engagement"
+            : "Comment volume is contributing meaningful discussion depth",
+        detail:
+          commentsShare < 20
+            ? `${formatPercent(commentsShare)} of interactions are comments, so most activity is still lightweight rather than conversational.`
+            : `${formatPercent(commentsShare)} of interactions are comments, suggesting students are moving beyond passive reactions.`,
+        meta: "Discussion",
+        tone: commentsShare < 20 ? "amber" : "mint",
+      });
+    }
+
+    if (totalInteractions > 0 && viewsShare >= 45) {
+      items.push({
+        key: "mix-views",
+        icon: <Users className="h-4 w-4" />,
+        title: "A large share of engagement is still passive viewing",
+        detail: `${formatPercent(viewsShare)} of interactions are views, which indicates reach is healthy but conversion into comments or likes can improve.`,
+        meta: "Audience",
+        tone: "violet",
+      });
+    }
+
+    items.push({
+      key: "coverage",
+      icon: <GraduationCap className="h-4 w-4" />,
+      title: `${formatCount(activeCourses)} active course${activeCourses === 1 ? "" : "s"} contributed in this range`,
+      detail:
+        totalCourses > 0
+          ? `${formatPercent(activeCourseRate)} of managed courses are active in the current window.`
+          : "No course activity has been recorded yet.",
+      meta: "Coverage",
+      tone: "brand",
+    });
+
+    if (rankedByRecency[0]) {
+      items.push({
+        key: `recent-${rankedByRecency[0].id}`,
+        icon: <Clock3 className="h-4 w-4" />,
+        title: `${rankedByRecency[0].course_code || "Course"} was refreshed most recently`,
+        detail: rankedByRecency[0].calculated_at
+          ? `Snapshot updated ${new Date(rankedByRecency[0].calculated_at).toLocaleString("en-US", {
+              hour12: false,
+            })}.`
+          : "Waiting for first snapshot update.",
+        meta: "Recent",
+        tone: "violet",
+      });
+    }
+
+    return items.slice(0, 6);
+  }, [
+    activeCourseRate,
+    activeCourses,
+    bestEngagementCourse,
+    rankedByEngagement,
+    rankedByInteractions,
+    rankedByRecency,
+    topCourse,
+    totalComments,
+    totalCourses,
+    totalInteractions,
+    totalViews,
+  ]);
+  const recentActivityStats = useMemo(() => {
+    const leaderShare =
+      topCourse && totalInteractions > 0 ? `${formatPercent((topCourse.interactions / totalInteractions) * 100)}` : "0%";
+    const discussionShare =
+      totalInteractions > 0 ? `${formatPercent((totalComments / totalInteractions) * 100)}` : "0%";
+    const avgEngagement =
+      totalPosts > 0 ? formatRatio(totalInteractions / totalPosts) : "0.0x";
+    return [
+      { label: "Leader Share", value: leaderShare, tone: "amber" },
+      { label: "Discussion Share", value: discussionShare, tone: "mint" },
+      { label: "Avg / Post", value: avgEngagement, tone: "brand" },
+      { label: "Active Courses", value: formatCount(activeCourses), tone: "brand" },
+    ];
+  }, [activeCourses, topCourse, totalComments, totalInteractions, totalPosts]);
 
   const engagementDistributionData = useMemo(() => {
     const base = [
@@ -590,6 +713,11 @@ export default function DashboardPage() {
     aiSummaryLines.find((line) => line.toLowerCase().startsWith("recommendation:")) ||
     aiSummaryLines[2] ||
     "";
+  const aiSummaryStats = [
+    { label: "Courses", value: formatCount(totalCourses), tone: "brand" },
+    { label: "Interactions", value: formatCount(totalInteractions), tone: "mint" },
+    { label: "Posts", value: formatCount(totalPosts), tone: "amber" },
+  ];
 
   const kpiCards = [
     {
@@ -1068,10 +1196,13 @@ export default function DashboardPage() {
             </SectionCard>
           </div>
 
-          <div className="grid gap-3 xl:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.72fr)]">
-            <SectionCard title="Recent Activity" subtitle="Latest updates across your courses.">
-              <div className="space-y-2">
-                {recentActivities.slice(0, 3).map((item) => (
+          <div className="grid gap-3 xl:grid-cols-[minmax(0,1.28fr)_minmax(360px,0.98fr)]">
+            <SectionCard
+              title="Recent Activity"
+              subtitle="A richer feed of standout movements, gaps, and participation signals across your courses."
+            >
+              <div className="space-y-3">
+                {recentActivities.slice(0, 4).map((item) => (
                   <ActivityFeedItem
                     key={item.key}
                     icon={item.icon}
@@ -1084,6 +1215,23 @@ export default function DashboardPage() {
                 {recentActivities.length === 0 ? (
                   <p className="text-sm text-slate-500">No recent activity available.</p>
                 ) : null}
+                <div className="rounded-[18px] border border-brand-100 bg-[linear-gradient(180deg,#F9FDFC_0%,#FFFFFF_100%)] p-3">
+                  <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-2">
+                    {recentActivityStats.map((item) => (
+                      <SummaryStat
+                        key={item.label}
+                        label={item.label}
+                        value={item.value}
+                        tone={item.tone}
+                      />
+                    ))}
+                  </div>
+                  <div className="mt-3 rounded-2xl border border-brand-100 bg-white/80 px-3.5 py-2.5 text-[13px] leading-6 text-slate-700">
+                    {topCourse
+                      ? `${topCourse.course_code || "The leading course"} is setting the pace right now, but the dashboard suggests engagement is still concentrated rather than evenly distributed.`
+                      : "Once new interactions arrive, this panel will surface where activity is concentrated and where follow-up is needed."}
+                  </div>
+                </div>
               </div>
             </SectionCard>
 
@@ -1101,13 +1249,26 @@ export default function DashboardPage() {
                 </button>
               }
             >
-              <div className="rounded-[20px] border border-brand-100 bg-white/85 p-3.5">
-                <div className="space-y-2">
-                  <p className="text-[13px] leading-5 text-slate-700">{aiSummaryLead}</p>
-                  {aiAnalysisNote ? (
-                    <SummaryBullet
-                      text={aiAnalysisNote.replace(/^Analysis:\s*/i, "")}
+              <div className="rounded-[20px] border border-brand-100 bg-[linear-gradient(180deg,#FFFFFF_0%,#F7FCFD_100%)] p-3.5">
+                <div className="grid gap-2 sm:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
+                  {aiSummaryStats.map((item) => (
+                    <SummaryStat
+                      key={item.label}
+                      label={item.label}
+                      value={item.value}
+                      tone={item.tone}
                     />
+                  ))}
+                </div>
+                <div className="mt-3 rounded-[18px] border border-brand-100 bg-white/85 px-4 py-3">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                    Overview
+                  </div>
+                  <p className="mt-1.5 text-[14px] leading-7 text-slate-700">{aiSummaryLead}</p>
+                </div>
+                <div className="mt-3 space-y-2.5">
+                  {aiAnalysisNote ? (
+                    <SummaryBullet text={aiAnalysisNote.replace(/^Analysis:\s*/i, "")} />
                   ) : null}
                   {aiSentimentNote ? (
                     <SummaryBullet
