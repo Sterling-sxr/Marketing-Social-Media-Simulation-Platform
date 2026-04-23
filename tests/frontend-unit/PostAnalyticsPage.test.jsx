@@ -88,8 +88,8 @@ describe("PostAnalyticsPage", () => {
                 {
                   key: "practical",
                   label: "Practical learners",
-                  post_metrics: { engagement_rate: 0.7 },
-                  compare_metrics: { engagement_rate: 0.45 },
+                  post_metrics: { likes: 8, comments: 4, engagement_rate: 0.7 },
+                  compare_metrics: { likes: 5, comments: 2, engagement_rate: 0.45 },
                   delta_engagement_rate: 0.25,
                 },
               ],
@@ -132,10 +132,11 @@ describe("PostAnalyticsPage", () => {
     expect(screen.getByText(/relative performance/i)).toBeInTheDocument();
     expect(screen.getByText(/trend and momentum/i)).toBeInTheDocument();
     expect(screen.getByText(/comparison evidence/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /engagement rate/i })).toHaveAttribute(
-      "aria-pressed",
-      "true"
-    );
+    expect(screen.getAllByRole("button", { name: /total engagement/i })).toHaveLength(2);
+    screen.getAllByRole("button", { name: /total engagement/i }).forEach((button) => {
+      expect(button).toHaveAttribute("aria-pressed", "true");
+    });
+    expect(screen.queryAllByRole("button", { name: /engagement rate/i })).toHaveLength(0);
     expect(screen.queryByRole("columnheader", { name: /engagement/i })).not.toBeInTheDocument();
     expect(
       screen.queryByRole("columnheader", { name: /compare post/i })
@@ -167,19 +168,39 @@ describe("PostAnalyticsPage", () => {
     renderPage();
 
     expect(await screen.findByText(/audience segment response/i)).toBeInTheDocument();
+    const audienceCard = screen.getByText(/audience segment response/i).closest("section");
     expect(screen.getByText(/^segment share$/i)).toBeInTheDocument();
-    expect(screen.getByText(/based on engagement rate/i)).toBeInTheDocument();
-    expect(screen.getByText(/^95\.0%$/i)).toBeInTheDocument();
+    expect(screen.getByText(/based on total engagement/i)).toBeInTheDocument();
+    expect(screen.getByText(/^15$/i)).toBeInTheDocument();
     expect(screen.queryByText(/combined visible value/i)).not.toBeInTheDocument();
 
     let practicalLegend = screen.getByText("Practical learners").closest("div");
-    expect(within(practicalLegend).getByText(/70\.0%/i)).toBeInTheDocument();
+    expect(within(practicalLegend).getByText(/^12$/i)).toBeInTheDocument();
+    expect(within(practicalLegend).getByText(/\(80\.0%\)/i)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /^likes$/i }));
+    fireEvent.click(within(audienceCard).getByRole("button", { name: /^likes$/i }));
 
     expect(screen.getByText(/based on likes/i)).toBeInTheDocument();
     expect(screen.getByText(/^10$/i)).toBeInTheDocument();
     practicalLegend = screen.getByText("Practical learners").closest("div");
     expect(within(practicalLegend).getByText(/80\.0%/i)).toBeInTheDocument();
+  });
+
+  test("uses total engagement as the default comparison metric and hides engagement rate", async () => {
+    renderPage();
+
+    expect(await screen.findByText(/comparison evidence/i)).toBeInTheDocument();
+    const comparisonCard = screen.getByText(/comparison evidence/i).closest("section");
+    expect(within(comparisonCard).getByRole("button", { name: /total engagement/i })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+    expect(within(comparisonCard).queryByRole("button", { name: /engagement rate/i })).not.toBeInTheDocument();
+
+    fireEvent.change(within(comparisonCard).getByRole("combobox"), { target: { value: "202" } });
+
+    expect(await screen.findByText(/biggest total engagement gap/i)).toBeInTheDocument();
+    expect(screen.getByText(/drawing 5 more than the compare post/i)).toBeInTheDocument();
+    expect(screen.getByText("+5")).toBeInTheDocument();
   });
 });

@@ -251,6 +251,8 @@ function AudienceSegmentCard({ eyebrow, segment, tone = "emerald" }) {
     tone === "amber"
       ? "border-amber-100 bg-amber-50/60"
       : "border-emerald-100 bg-emerald-50/60";
+  const totalEngagement =
+    Number(segment?.metrics?.likes || 0) + Number(segment?.metrics?.comments || 0);
 
   if (!segment) return null;
 
@@ -262,21 +264,21 @@ function AudienceSegmentCard({ eyebrow, segment, tone = "emerald" }) {
       <h3 className="mt-2 text-[15px] font-semibold text-slate-900">{segment.label}</h3>
       <dl className="mt-3 grid grid-cols-3 gap-2 text-sm">
         <div className="rounded-2xl bg-white/80 px-3 py-2">
-          <dt className="text-slate-500">Audience</dt>
+          <dt className="whitespace-nowrap text-[11px] text-slate-500">Audience</dt>
           <dd className="mt-1 font-semibold text-slate-900">
             {formatCount(segment.audience_count)}
           </dd>
         </div>
         <div className="rounded-2xl bg-white/80 px-3 py-2">
-          <dt className="text-slate-500">Engaged</dt>
+          <dt className="whitespace-nowrap text-[11px] text-slate-500">Engaged</dt>
           <dd className="mt-1 font-semibold text-slate-900">
             {formatCount(segment.engaged_user_count)}
           </dd>
         </div>
         <div className="rounded-2xl bg-white/80 px-3 py-2">
-          <dt className="text-slate-500">Rate</dt>
+          <dt className="whitespace-nowrap text-[11px] text-slate-500">Total Engagement</dt>
           <dd className="mt-1 font-semibold text-slate-900">
-            {formatPercent(Number(segment.metrics?.engagement_rate || 0) * 100)}
+            {formatCount(totalEngagement)}
           </dd>
         </div>
       </dl>
@@ -654,7 +656,7 @@ export default function CourseDashboardPage() {
 
             <SectionCard
               title="Teaching Highlights"
-              subtitle="Short takeaways you can scan before deciding where to drill in."
+              subtitle="Short takeaways you can scan before deciding where to view more detail."
               tone="mint"
             >
               <div className="space-y-2">
@@ -804,7 +806,7 @@ export default function CourseDashboardPage() {
             <SectionCard
               id="students-section"
               title="Response Leaders by Student"
-              subtitle="Preview students whose posts are generating the strongest visible response, then open a drill-down for detail."
+              subtitle="Preview students whose posts are generating the strongest visible response."
               right={
                 <DetailButton onClick={() => navigate(`/dashboard/courses/${courseId}/students`)}>
                   Open Student Dashboard
@@ -824,7 +826,7 @@ export default function CourseDashboardPage() {
                         { label: "Posts", value: item.posts_total },
                         { label: "Interactions", value: item.interactions_total },
                       ]}
-                      actionLabel="Open Student Drill-down"
+                      actionLabel="Open Student Detail"
                       onAction={() =>
                         navigate(`/dashboard/courses/${courseId}/students/${item.user_id}`)
                       }
@@ -836,7 +838,7 @@ export default function CourseDashboardPage() {
 
             <SectionCard
               title="Response Leaders by Topic"
-              subtitle="Use topic-level drill-down to review which visible themes are drawing the strongest response."
+              subtitle="Use topic detail to review which visible themes are drawing the strongest response."
               right={
                 topHashtag ? (
                   <DetailButton
@@ -864,7 +866,7 @@ export default function CourseDashboardPage() {
                         { label: "Posts", value: item.total_posts },
                         { label: "Interactions", value: item.total_interactions },
                       ]}
-                      actionLabel="Open Hashtag Drill-down"
+                      actionLabel="Open Hashtag Detail"
                       onAction={() =>
                         navigate(
                           `/dashboard/courses/${courseId}/hashtags/${encodeURIComponent(item.hashtag)}`
