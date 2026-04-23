@@ -43,6 +43,7 @@ const RANGE_OPTIONS = [
   { value: 30, label: "Last 30 Days" },
   { value: 90, label: "Last 90 Days" },
 ];
+const DASHBOARD_AUTO_REFRESH_MS = 60 * 1000;
 
 const KPI_META = {
   total_courses: {
@@ -425,6 +426,28 @@ export default function DashboardPage() {
     media.addEventListener("change", onChange);
     return () => media.removeEventListener("change", onChange);
   }, []);
+
+  useEffect(() => {
+    if (!authCheckComplete || !authUserId || !isAdmin || typeof window === "undefined") {
+      return undefined;
+    }
+
+    const refreshIfVisible = () => {
+      if (document.visibilityState === "visible") {
+        reloadDashboard();
+      }
+    };
+
+    const intervalId = window.setInterval(refreshIfVisible, DASHBOARD_AUTO_REFRESH_MS);
+    window.addEventListener("focus", refreshIfVisible);
+    document.addEventListener("visibilitychange", refreshIfVisible);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", refreshIfVisible);
+      document.removeEventListener("visibilitychange", refreshIfVisible);
+    };
+  }, [authCheckComplete, authUserId, isAdmin, reloadDashboard]);
 
   useEffect(() => {
     setSparkSummary("");
