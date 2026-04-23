@@ -73,7 +73,12 @@ const CHART = {
   text: "#475569",
 };
 
-const DONUT_COLORS = ["#62C6A5", "#4F86E8", "#8B5CF6", "#F2A06B"];
+const ENGAGEMENT_COLORS = {
+  Likes: "#62C6A5",
+  Comments: "#4F86E8",
+  Views: "#8B5CF6",
+  Other: "#F2A06B",
+};
 
 function formatCount(value) {
   return new Intl.NumberFormat("en-US").format(Number(value || 0));
@@ -390,8 +395,11 @@ export default function DashboardPage() {
 
   const isAdmin = useMemo(() => isTeacher(authUser), [authUser]);
 
-  const reloadDashboard = useCallback(() => {
-    setStatus({ loading: true, error: "" });
+  const reloadDashboard = useCallback((options = {}) => {
+    const { silent = false } = options;
+    if (!silent) {
+      setStatus({ loading: true, error: "" });
+    }
     getJson(`/api/admin/dashboard/?range_days=${selectedRangeDays}`)
       .then((payload) => {
         setData(payload.summary || {});
@@ -434,7 +442,7 @@ export default function DashboardPage() {
 
     const refreshIfVisible = () => {
       if (document.visibilityState === "visible") {
-        reloadDashboard();
+        reloadDashboard({ silent: true });
       }
     };
 
@@ -704,7 +712,7 @@ export default function DashboardPage() {
     );
     return items.map((item, index) => ({
       ...item,
-      color: DONUT_COLORS[index],
+      color: ENGAGEMENT_COLORS[item.label] || Object.values(ENGAGEMENT_COLORS)[index] || "#CBD5E1",
       percentage: effectiveTotal > 0 ? (item.value / effectiveTotal) * 100 : 0,
     }));
   }, [totalComments, totalInteractions, totalLikes, totalViews]);
@@ -996,10 +1004,10 @@ export default function DashboardPage() {
                       <ComposedChart
                         data={compareData}
                         margin={{
-                          top: 8,
-                          right: isMobile ? 8 : 16,
-                          bottom: isMobile ? 24 : 12,
-                          left: -10,
+                          top: 22,
+                          right: isMobile ? 14 : 24,
+                          bottom: isMobile ? 28 : 16,
+                          left: isMobile ? 4 : 12,
                         }}
                         barCategoryGap={isMobile ? 10 : 16}
                       >
@@ -1013,14 +1021,14 @@ export default function DashboardPage() {
                         <YAxis
                           domain={yDomain}
                           tick={{ fill: CHART.text, fontSize: isMobile ? 10 : 11 }}
-                          width={32}
+                          width={44}
                         />
                         <YAxis
                           yAxisId="engagement"
                           orientation="right"
                           domain={engagementDomain}
                           tick={{ fill: CHART.text, fontSize: isMobile ? 10 : 11 }}
-                          width={38}
+                          width={46}
                         />
                         <Tooltip content={<CompareTooltip />} />
                         <Bar dataKey="posts" fill={CHART.posts} radius={[7, 7, 0, 0]}>
@@ -1029,6 +1037,7 @@ export default function DashboardPage() {
                             position="top"
                             fill={CHART.text}
                             fontSize={9}
+                            offset={8}
                           />
                         </Bar>
                         <Bar dataKey="interactions" fill={CHART.interactions} radius={[7, 7, 0, 0]}>
@@ -1037,6 +1046,7 @@ export default function DashboardPage() {
                             position="top"
                             fill={CHART.text}
                             fontSize={9}
+                            offset={8}
                           />
                         </Bar>
                         <Line
@@ -1053,6 +1063,7 @@ export default function DashboardPage() {
                             position="top"
                             fill={CHART.engagement}
                             fontSize={9}
+                            offset={8}
                             formatter={(value) => formatRatio(value)}
                           />
                         </Line>
@@ -1087,15 +1098,15 @@ export default function DashboardPage() {
           <div className="grid gap-3 xl:grid-cols-[1.1fr_0.95fr_1fr]">
             <SectionCard title="Engagement Distribution" subtitle="Breakdown of interactions by type.">
               <div className="rounded-[20px] border border-brand-100 bg-white/85 p-3.5">
-                <div className="grid items-center gap-3 sm:grid-cols-[132px_minmax(0,1fr)]">
-                  <div className="relative mx-auto h-[128px] w-[128px]">
+                <div className="grid items-center gap-3 sm:grid-cols-[116px_minmax(0,1fr)] sm:gap-4">
+                  <div className="relative mx-auto h-[116px] w-[116px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
                           data={engagementDistributionData}
                           dataKey="value"
-                          innerRadius={38}
-                          outerRadius={58}
+                          innerRadius={34}
+                          outerRadius={53}
                           paddingAngle={1}
                           stroke="none"
                         >
@@ -1106,7 +1117,7 @@ export default function DashboardPage() {
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                      <div className="text-[28px] font-extrabold leading-none text-slate-900">
+                      <div className="text-[26px] font-extrabold leading-none text-slate-900">
                         {formatCount(totalInteractions)}
                       </div>
                       <div className="mt-0.5 text-[12px] text-slate-500">Total</div>
@@ -1116,16 +1127,18 @@ export default function DashboardPage() {
                     {engagementDistributionData.map((item) => (
                       <div
                         key={item.label}
-                        className="flex items-center justify-between gap-2 text-[13px]"
+                        className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 text-[13px]"
                       >
                         <div className="flex min-w-0 items-center gap-2 text-slate-600">
                           <span
-                            className="h-3 w-3 rounded-[4px]"
+                            className="h-3 w-3 shrink-0 rounded-[4px]"
                             style={{ backgroundColor: item.color }}
                           />
-                          <span className="font-medium leading-none">{item.label}</span>
+                          <span className="whitespace-nowrap font-medium leading-none">
+                            {item.label}
+                          </span>
                         </div>
-                        <div className="whitespace-nowrap text-right text-slate-700">
+                        <div className="shrink-0 whitespace-nowrap text-right text-slate-700">
                           <span className="font-semibold">{formatCount(item.value)}</span>
                           <span className="ml-1 text-slate-400">
                             ({formatPercent(item.percentage)})

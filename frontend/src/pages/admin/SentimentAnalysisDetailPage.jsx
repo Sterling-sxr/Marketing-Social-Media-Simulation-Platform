@@ -13,6 +13,7 @@ const RANGE_OPTIONS = [
   { value: 14, label: "Last 14 Days" },
   { value: 30, label: "Last Month" },
 ];
+const DETAIL_AUTO_REFRESH_MS = 60 * 1000;
 
 const SORT_OPTIONS = [
   { value: "total_comments", label: "Most Comments" },
@@ -53,12 +54,24 @@ function formatPercent(value) {
   return `${rounded}%`;
 }
 
+function parseDateLabelValue(value) {
+  if (!value) return null;
+  if (value instanceof Date) return value;
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  }
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
 function formatShortDate(value) {
-  if (!value) return "";
+  const parsed = parseDateLabelValue(value);
+  if (!parsed) return "";
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
-  }).format(new Date(value));
+  }).format(parsed);
 }
 
 function buildRangeLabel(detail, selectedRangeDays) {
@@ -116,8 +129,11 @@ export default function SentimentAnalysisDetailPage() {
 
   const isAdmin = useMemo(() => isTeacher(authUser), [authUser]);
 
-  const loadDetail = useCallback(() => {
-    setStatus({ loading: true, error: "" });
+  const loadDetail = useCallback((options = {}) => {
+    const { silent = false } = options;
+    if (!silent) {
+      setStatus({ loading: true, error: "" });
+    }
     getJson(`/api/admin/dashboard/sentiment-analysis/?range_days=${selectedRangeDays}`)
       .then((payload) => {
         setDetail(payload.detail || null);
@@ -143,6 +159,28 @@ export default function SentimentAnalysisDetailPage() {
     }
     loadDetail();
   }, [authCheckComplete, authUserId, isAdmin, loadDetail, navigate]);
+
+  useEffect(() => {
+    if (!authCheckComplete || !authUserId || !isAdmin || typeof window === "undefined") {
+      return undefined;
+    }
+
+    const refreshIfVisible = () => {
+      if (document.visibilityState === "visible") {
+        loadDetail({ silent: true });
+      }
+    };
+
+    const intervalId = window.setInterval(refreshIfVisible, DETAIL_AUTO_REFRESH_MS);
+    window.addEventListener("focus", refreshIfVisible);
+    document.addEventListener("visibilitychange", refreshIfVisible);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", refreshIfVisible);
+      document.removeEventListener("visibilitychange", refreshIfVisible);
+    };
+  }, [authCheckComplete, authUserId, isAdmin, loadDetail]);
 
   if (authCheckComplete && authUser && !isAdmin) {
     return <Navigate to="/courses" replace />;
