@@ -94,11 +94,12 @@ describe("CourseAIUsersPage persona creation flows", () => {
     });
   });
 
-  test("renders smart generate entry and keeps advanced create flow", async () => {
+  test("renders guided and smart generate entries and keeps advanced create flow", async () => {
     renderPage();
 
+    expect(await screen.findByRole("button", { name: /guided generate/i })).toBeInTheDocument();
     expect(await screen.findByRole("button", { name: /smart generate/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /ai bulk generate/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /ai bulk generate/i })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /advanced create/i })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /advanced create/i }));
@@ -182,7 +183,7 @@ describe("CourseAIUsersPage persona creation flows", () => {
     );
   });
 
-  test("smart generate previews broad audience coverage and commits", async () => {
+  test("guided generate previews broad audience coverage and commits", async () => {
     getJson
       .mockResolvedValueOnce({
         course: { id: 9, course_code: "COMP9900", name: "Social Media Lab" },
@@ -249,7 +250,7 @@ describe("CourseAIUsersPage persona creation flows", () => {
 
     renderPage();
 
-    fireEvent.click(await screen.findByRole("button", { name: /smart generate/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /guided generate/i }));
 
     fireEvent.change(screen.getByLabelText(/number of users/i, { selector: "input" }), {
       target: { value: "3" },
@@ -306,19 +307,19 @@ describe("CourseAIUsersPage persona creation flows", () => {
     expect(await screen.findByText("Tech Explorer 1")).toBeInTheDocument();
   });
 
-  test("smart generate requires theme card for theme goal", async () => {
+  test("guided generate requires theme card for theme goal", async () => {
     postJson.mockRejectedValueOnce(makeApiError("Field `theme_card` is required for theme goal.", 400));
 
     renderPage();
 
-    fireEvent.click(await screen.findByRole("button", { name: /smart generate/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /guided generate/i }));
     fireEvent.click(screen.getByRole("button", { name: /focus on a theme/i }));
     fireEvent.click(screen.getByRole("button", { name: /generate preview/i }));
 
     expect(await screen.findByText(/theme_card/i)).toBeInTheDocument();
   });
 
-  test("smart generate theme goal previews and supports regenerate", async () => {
+  test("guided generate theme goal previews and supports regenerate", async () => {
     postJson
       .mockResolvedValueOnce({
         items: [
@@ -371,7 +372,7 @@ describe("CourseAIUsersPage persona creation flows", () => {
 
     renderPage();
 
-    fireEvent.click(await screen.findByRole("button", { name: /smart generate/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /guided generate/i }));
     fireEvent.click(screen.getByRole("button", { name: /focus on a theme/i }));
     fireEvent.change(screen.getByLabelText(/theme card/i), {
       target: { value: "tech_gaming" },
@@ -399,7 +400,7 @@ describe("CourseAIUsersPage persona creation flows", () => {
     );
   });
 
-  test("smart generate engagement goal supports advanced demographic filters", async () => {
+  test("guided generate engagement goal supports advanced demographic filters", async () => {
     postJson.mockResolvedValueOnce({
       items: [
         {
@@ -429,7 +430,7 @@ describe("CourseAIUsersPage persona creation flows", () => {
 
     renderPage();
 
-    fireEvent.click(await screen.findByRole("button", { name: /smart generate/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /guided generate/i }));
     fireEvent.click(screen.getByRole("button", { name: /focus on engagement style/i }));
     fireEvent.change(screen.getByLabelText(/content preference bias/i), {
       target: { value: "Thoughtful opinions" },
@@ -461,209 +462,6 @@ describe("CourseAIUsersPage persona creation flows", () => {
     });
 
     expect(await screen.findByText(/Engagement Reader 1/i)).toBeInTheDocument();
-  });
-
-  test("ai bulk generate previews blueprint summary, supports removing a draft, and commits remaining items", async () => {
-    getJson
-      .mockResolvedValueOnce({
-        course: { id: 9, course_code: "COMP9900", name: "Social Media Lab" },
-        items: [{ id: 1, username: "legacy-user", display_name: "Legacy User" }],
-        count: 1,
-      })
-      .mockResolvedValueOnce({
-        course: { id: 9, course_code: "COMP9900", name: "Social Media Lab" },
-        items: [
-          { id: 1, username: "legacy-user", display_name: "Legacy User" },
-          { id: 2, username: "launch-follower-1", display_name: "Launch Follower 1" },
-        ],
-        count: 2,
-      });
-    postJson
-      .mockResolvedValueOnce({
-        cohort_blueprint: {
-          summary: "Distinct launch-week audience segments with high visual engagement and mixed buying drivers.",
-          age_mix: ["Gen Z (16-28)", "Gen Y (29-44)"],
-          interest_clusters: ["Technology & Gaming", "Travel & Food"],
-          activity_profile: "Several times a day",
-          guardrails: ["Use only existing persona schema values."],
-        },
-        items: [
-          {
-            username: "launch-follower-1",
-            display_name: "Launch Follower 1",
-            age_group: "Gen Z (16-28)",
-            content_preference: "Pictures or videos",
-            digital_time: "Several times a day",
-            interests: ["Technology & Gaming"],
-            interaction_style: "Comment on posts",
-            decision_factor: "Convenience",
-            notes: "Seed: curious trend follower",
-            warnings: [],
-          },
-          {
-            username: "launch-follower-2",
-            display_name: "Launch Follower 2",
-            age_group: "Gen Y (29-44)",
-            content_preference: "Thoughtful opinions",
-            digital_time: "About once a day",
-            interests: ["Travel & Food"],
-            interaction_style: "Like/react to posts",
-            decision_factor: "Price",
-            notes: "Seed: thoughtful comparer",
-            warnings: [],
-          },
-        ],
-        count: 2,
-        warnings: ["Skipped draft `outlier-3`: duplicate persona signature in preview batch."],
-        generation_meta: {
-          model_strategy: "single_call_blueprint_seed",
-          repaired_count: 1,
-          rejected_count: 1,
-        },
-        limits: { max_count: 100, mode: "generated" },
-      })
-      .mockResolvedValueOnce({
-        created: 1,
-        items: [{ id: 2, username: "launch-follower-1", display_name: "Launch Follower 1" }],
-        errors: [],
-      });
-
-    renderPage();
-
-    fireEvent.click(await screen.findByRole("button", { name: /ai bulk generate/i }));
-
-    expect(await screen.findByRole("heading", { name: /ai-assisted bulk generation/i })).toBeInTheDocument();
-
-    fireEvent.change(screen.getByLabelText(/number of users/i, { selector: "input" }), {
-      target: { value: "2" },
-    });
-    fireEvent.change(screen.getByLabelText(/scenario prompt/i), {
-      target: { value: "Launch-week creator campaign audience" },
-    });
-    fireEvent.change(screen.getByLabelText(/age group/i), {
-      target: { value: "Gen Z (16-28)" },
-    });
-    fireEvent.change(screen.getByLabelText(/content preference/i), {
-      target: { value: "Pictures or videos" },
-    });
-
-    fireEvent.click(screen.getByRole("button", { name: /generate preview/i }));
-
-    await waitFor(() => {
-      expect(postJson).toHaveBeenCalledWith(
-        "/api/courses/9/ai-users/generate-preview/",
-        expect.objectContaining({
-          count: 2,
-          scenario_prompt: "Launch-week creator campaign audience",
-          generation_mode: "ai_bulk",
-          constraints: expect.objectContaining({
-            age_group: ["Gen Z (16-28)"],
-            content_preference: ["Pictures or videos"],
-          }),
-        })
-      );
-    });
-
-    expect(await screen.findByRole("heading", { name: /audience segments preview/i })).toBeInTheDocument();
-    expect(screen.getByText(/launch-week/i)).toBeInTheDocument();
-    expect(screen.getByText(/Repaired drafts/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/^1$/)).toHaveLength(2);
-    expect(screen.getByText(/Rejected drafts/i)).toBeInTheDocument();
-    expect(screen.getByText(/Skipped draft `outlier-3`/i)).toBeInTheDocument();
-    expect(screen.getByText(/Launch Follower 1/i)).toBeInTheDocument();
-    expect(screen.getByText(/Launch Follower 2/i)).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: /remove launch follower 2/i }));
-
-    await waitFor(() => {
-      expect(screen.queryByText(/Launch Follower 2/i)).not.toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByRole("button", { name: /create users/i }));
-
-    await waitFor(() => {
-      expect(postJson).toHaveBeenCalledWith("/api/courses/9/ai-users/generate-commit/", {
-        items: [
-          expect.objectContaining({
-            username: "launch-follower-1",
-            display_name: "Launch Follower 1",
-          }),
-        ],
-      });
-    });
-
-    expect(await screen.findByText(/Created 1 AI personas\./i)).toBeInTheDocument();
-  });
-
-  test("ai bulk generate keeps input state when preview fails and when adjusting settings", async () => {
-    postJson
-      .mockRejectedValueOnce(makeApiError("AI persona generation is unavailable.", 503))
-      .mockResolvedValueOnce({
-        cohort_blueprint: {
-          summary: "A small set of marketing audience segments.",
-          age_mix: ["Gen Z (16-28)"],
-          interest_clusters: ["Technology & Gaming"],
-          activity_profile: "Several times a day",
-          guardrails: ["Use only existing persona schema values."],
-        },
-        items: [
-          {
-            username: "bulk-one",
-            display_name: "Bulk One",
-            age_group: "Gen Z (16-28)",
-            content_preference: "Pictures or videos",
-            digital_time: "Several times a day",
-            interests: ["Technology & Gaming"],
-            interaction_style: "Comment on posts",
-            decision_factor: "Convenience",
-            notes: "Seed: bulk one",
-            warnings: [],
-          },
-        ],
-        count: 1,
-        warnings: [],
-        generation_meta: {
-          model_strategy: "single_call_blueprint_seed",
-          repaired_count: 0,
-          rejected_count: 0,
-        },
-        limits: { max_count: 100, mode: "generated" },
-      });
-
-    renderPage();
-
-    fireEvent.click(await screen.findByRole("button", { name: /ai bulk generate/i }));
-
-    fireEvent.change(screen.getByLabelText(/number of users/i, { selector: "input" }), {
-      target: { value: "4" },
-    });
-    fireEvent.change(screen.getByLabelText(/scenario prompt/i), {
-      target: { value: "Demo audience" },
-    });
-
-    fireEvent.click(screen.getByRole("button", { name: /generate preview/i }));
-
-    await waitFor(() => {
-      expect(postJson).toHaveBeenCalledWith(
-        "/api/courses/9/ai-users/generate-preview/",
-        expect.objectContaining({
-          count: 4,
-          scenario_prompt: "Demo audience",
-          generation_mode: "ai_bulk",
-        })
-      );
-    });
-    expect(screen.getByRole("textbox", { name: /scenario prompt/i })).toHaveValue("Demo audience");
-
-    fireEvent.click(screen.getByRole("button", { name: /generate preview/i }));
-
-    expect(await screen.findByText(/A small set of marketing audience segments/i)).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: /adjust settings/i }));
-
-    expect(await screen.findByRole("heading", { name: /ai-assisted bulk generation/i })).toBeInTheDocument();
-    expect(screen.getByLabelText(/number of users/i, { selector: "input" })).toHaveValue(4);
-    expect(screen.getByRole("textbox", { name: /scenario prompt/i })).toHaveValue("Demo audience");
   });
 
   test("csv import still works from the unified actions bar", async () => {
