@@ -279,6 +279,12 @@ describe("CourseAIUsersPage persona creation flows", () => {
         interest_lean: "tech",
       })
     );
+    expect(postJson).toHaveBeenCalledWith(
+      "/api/courses/9/ai-users/guided-preview/",
+      expect.not.objectContaining({
+        age_group: expect.anything(),
+      })
+    );
 
     expect(await screen.findByRole("heading", { name: /audience segment snapshot/i })).toBeInTheDocument();
     expect(screen.getByText(/Representative audience archetypes/i)).toBeInTheDocument();

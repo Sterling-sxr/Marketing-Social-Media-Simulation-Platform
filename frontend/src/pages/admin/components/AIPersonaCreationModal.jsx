@@ -441,8 +441,9 @@ export default function AIPersonaCreationModal({
       "education_level",
       "income_level",
     ].forEach((field) => {
-      if (smartForm[field]) {
-        payload[field] = smartForm[field];
+      const value = normalizeAnyChoice(smartForm[field]);
+      if (value) {
+        payload[field] = value;
       }
     });
 
@@ -826,8 +827,10 @@ export default function AIPersonaCreationModal({
                         label="Age group"
                         value={smartForm.age_group}
                         onChange={(value) => updateField("age_group", value)}
-                        options={(profileOptions.age_groups || []).map((value) => ({ value, label: value }))}
-                        placeholder="Any age group"
+                        options={withAnyOption(
+                          profileOptions.age_groups || [],
+                          "Mixed age groups"
+                        )}
                       />
                       <SelectField
                         label="Education level"
