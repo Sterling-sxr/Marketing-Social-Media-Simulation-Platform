@@ -7,7 +7,9 @@ import threading
 import time
 from datetime import date, timedelta
 from typing import Any
+from zoneinfo import ZoneInfo
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.utils import timezone
@@ -79,6 +81,22 @@ def _ensure_admin(user) -> None:
 
 def _is_admin(user) -> bool:
     return bool(getattr(user, "is_superuser", False) or getattr(user, "is_staff", False))
+
+
+def _analytics_timezone():
+    tz_name = getattr(settings, "ANALYTICS_TIME_ZONE", None) or getattr(settings, "TIME_ZONE", "UTC")
+    try:
+        return ZoneInfo(tz_name)
+    except Exception:
+        return timezone.get_current_timezone()
+
+
+def _analytics_now():
+    return timezone.now().astimezone(_analytics_timezone())
+
+
+def _analytics_today() -> date:
+    return _analytics_now().date()
 
 
 def _get_sentiment_pipeline():
@@ -212,8 +230,8 @@ def _count_real_student_members(*, course_ids: list[int] | None = None, course_i
 
 
 def _calculate_dashboard_metrics(user, *, range_days: int = 7) -> dict[str, Any]:
-    today = timezone.localdate()
-    now = timezone.now()
+    today = _analytics_today()
+    now = _analytics_now()
     range_start = now - timedelta(days=max(range_days, 1))
     courses = CourseRepository.filter(created_by_id=user.id)
     if not courses:
@@ -312,7 +330,7 @@ def _get_post_interactions(
 def _collect_course_post_data(course, *, range_days: int | None = 7) -> dict[str, Any]:
     posts_qs = PostRepository.model.objects.filter(course_id=course.id)
     if range_days is not None:
-        range_start = timezone.now() - timedelta(days=max(range_days, 1))
+        range_start = _analytics_now() - timedelta(days=max(range_days, 1))
         posts_qs = posts_qs.filter(created_at__gte=range_start)
     post_records = list(posts_qs.values("id", "author_id", "hashtags", "created_at", "content"))
     post_ids = [record["id"] for record in post_records]
@@ -364,7 +382,7 @@ def _collect_course_post_data(course, *, range_days: int | None = 7) -> dict[str
 
 
 def _resolve_course_range(course, range_days: int | None) -> tuple[int, date]:
-    today = timezone.localdate()
+    today = _analytics_today()
     if range_days is not None:
         safe_range_days = max(int(range_days), 1)
         return safe_range_days, today - timedelta(days=safe_range_days)
@@ -383,7 +401,7 @@ def _calculate_course_metrics_from_data(course, course_data: dict[str, Any]) -> 
     interactions_per_post = course_data["interactions_per_post"]
     comment_sentiments = course_data["comment_sentiments"]
     registered_students = _get_registered_student_count(course.id)
-    now = timezone.now()
+    now = _analytics_now()
     range_days = max(int(course_data.get("range_days") or 7), 1)
     current_start = now - timedelta(days=range_days)
     previous_start = now - timedelta(days=range_days * 2)
@@ -627,7 +645,7 @@ def refresh_course_snapshot(course, *, range_days: int | None = None) -> dict[st
     resolved_range_days, resolved_start = _resolve_course_range(course, range_days)
     course_data["range_days"] = resolved_range_days
     metrics = _calculate_course_metrics_from_data(course, course_data)
-    today = timezone.localdate()
+    today = _analytics_today()
     course_info = {
         "id": course.id,
         "name": course.name,
@@ -729,8 +747,8 @@ def refresh_dashboard_snapshot_async(user) -> None:
 def get_admin_engagement_distribution(*, user, range_days: int = 7) -> dict[str, Any]:
     _ensure_admin(user)
     safe_range_days = max(int(range_days or 7), 1)
-    today = timezone.localdate()
-    range_start = (timezone.now() - timedelta(days=safe_range_days)).date()
+    today = _analytics_today()
+    range_start = (_analytics_now() - timedelta(days=safe_range_days)).date()
     courses = CourseRepository.filter(created_by_id=user.id)
 
     course_rows: list[dict[str, Any]] = []
@@ -839,8 +857,8 @@ def get_admin_engagement_distribution(*, user, range_days: int = 7) -> dict[str,
 def get_admin_sentiment_distribution(*, user, range_days: int = 7) -> dict[str, Any]:
     _ensure_admin(user)
     safe_range_days = max(int(range_days or 7), 1)
-    today = timezone.localdate()
-    range_start = (timezone.now() - timedelta(days=safe_range_days)).date()
+    today = _analytics_today()
+    range_start = (_analytics_now() - timedelta(days=safe_range_days)).date()
     courses = CourseRepository.filter(created_by_id=user.id)
 
     course_rows: list[dict[str, Any]] = []
@@ -1180,7 +1198,7 @@ def _calculate_course_hashtag_metrics_from_data(
     )
     top_posts = top_posts[:10]
 
-    today = timezone.localdate()
+    today = _analytics_today()
     course_info = {
         "id": course.id,
         "name": course.name,
@@ -1267,7 +1285,7 @@ def _calculate_course_student_metrics_from_data(
     )
     top_posts = top_posts[:10]
 
-    today = timezone.localdate()
+    today = _analytics_today()
     course_info = {
         "id": course.id,
         "name": course.name,

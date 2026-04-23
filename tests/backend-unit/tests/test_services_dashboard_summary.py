@@ -1,7 +1,9 @@
 import importlib
 import sys
+from datetime import datetime, timezone as dt_timezone
 
 from django.contrib.auth import get_user_model
+from django.test import override_settings
 
 from apps.core.repositories.models import (
     Course,
@@ -156,3 +158,21 @@ def test_dashboard_summary_sentiment_matches_sentiment_detail_breakdown(db, monk
     detail_breakdown = {item["key"]: item["percentage"] for item in detail["breakdown"]}
 
     assert summary["sentiment"] == detail_breakdown
+
+
+@override_settings(ANALYTICS_TIME_ZONE="Australia/Sydney")
+def test_refresh_dashboard_snapshot_uses_analytics_timezone_for_range_end(db, monkeypatch):
+    admin = _create_user("admin-summary-timezone", is_staff=True)
+
+    dashboard_service = _load_dashboard_service()
+
+    monkeypatch.setattr(
+        dashboard_service.timezone,
+        "now",
+        lambda: datetime(2026, 4, 23, 15, 30, tzinfo=dt_timezone.utc),
+    )
+
+    payload = dashboard_service.refresh_dashboard_snapshot(admin, range_days=7)
+
+    assert payload["range_end"] == "2026-04-24"
+    assert payload["range_start"] == "2026-04-17"

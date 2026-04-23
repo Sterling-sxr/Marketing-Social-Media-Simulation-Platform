@@ -110,6 +110,7 @@ CHANNEL_LAYERS = {
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = os.environ.get("TZ", "UTC")
+ANALYTICS_TIME_ZONE = os.environ.get("ANALYTICS_TIME_ZONE", "Australia/Sydney")
 USE_I18N = True
 USE_TZ = True
 
