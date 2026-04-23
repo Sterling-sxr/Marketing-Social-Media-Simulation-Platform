@@ -1,24 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 
 import DashboardPage from "../../frontend/src/pages/admin/DashboardPage.jsx";
-import { useApp } from "../../frontend/src/context/AppContext";
 import { useAuth } from "../../frontend/src/context/AuthContext";
 import { getJson } from "../../frontend/src/lib/api";
-
-vi.mock("recharts", () => ({
-  BarChart: ({ children }) => <div>{children}</div>,
-  Bar: () => <div />,
-  XAxis: () => <div />,
-  YAxis: () => <div />,
-  CartesianGrid: () => <div />,
-  Tooltip: () => <div />,
-  ResponsiveContainer: ({ children }) => <div>{children}</div>,
-}));
-
-vi.mock("../../frontend/src/context/AppContext", () => ({
-  useApp: vi.fn(),
-}));
 
 vi.mock("../../frontend/src/context/AuthContext", () => ({
   useAuth: vi.fn(),
@@ -38,7 +23,6 @@ vi.mock("../../frontend/src/pages/components/AuthenticatedShell", () => ({
   ),
 }));
 
-const mockedUseApp = useApp;
 const mockedUseAuth = useAuth;
 
 function renderPage() {
@@ -54,9 +38,6 @@ function renderPage() {
 describe("DashboardPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockedUseApp.mockReturnValue({
-      pushToast: vi.fn(),
-    });
     mockedUseAuth.mockReturnValue({
       authUser: { id: 1, is_staff: true, is_superuser: false },
       authCheckComplete: true,
@@ -67,6 +48,11 @@ describe("DashboardPage", () => {
         registered_students: 80,
         total_posts: 42,
         total_interactions: 210,
+        sentiment: {
+          positive: 40,
+          neutral: 45,
+          negative: 15,
+        },
         calculated_at: "2026-04-17T10:00:00Z",
         courses: [
           {
@@ -88,13 +74,41 @@ describe("DashboardPage", () => {
         ],
       },
     });
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        summary:
+          "Overview: 2 courses, 80 students, 42 posts, and 210 interactions were recorded.\n" +
+          "Analysis: Activity is concentrated in COMP9900, so the engagement pattern is uneven across courses.\n" +
+          "Sentiment: The mix is mostly neutral, suggesting discussion is informative rather than highly emotional.\n" +
+          "Recommendation: Reuse the strongest COMP9900 post formats in lower-engagement courses next week.",
+      }),
+    });
   });
 
-  test("shows a course-first priority list and removes AI summary", async () => {
+  test("auto-generates AI summary after dashboard data loads", async () => {
     renderPage();
 
-    expect(await screen.findByText(/course priority list/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/open course catalog/i).length).toBeGreaterThan(0);
-    expect(screen.queryByText(/ai summary/i)).not.toBeInTheDocument();
+    expect(await screen.findByText(/AI Summary/i)).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        "/api/ai/analyze/",
+        expect.objectContaining({
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        })
+      );
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Activity is concentrated in COMP9900/i)
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText(/Reuse the strongest COMP9900 post formats/i)
+    ).toBeInTheDocument();
   });
 });

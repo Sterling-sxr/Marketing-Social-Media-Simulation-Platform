@@ -48,10 +48,14 @@ def _build_prompt(context: str, payload: dict[str, Any]) -> str:
         )
         dataset = json.dumps(summary, indent=2, ensure_ascii=False)
         return (
-            "You are an insightful but concise data storyteller for a university learning platform. "
-            "Given dashboard metrics in JSON, first produce one sentence summarising OVERALL totals "
-            f"({totals_text}). Then add 2-4 short sentences highlighting trends, standout courses/students, and sentiment. "
-            "Respond with plain text only (no markdown, no emoji), under 120 words.\n\n"
+            "You are an insightful analytics assistant for a university learning platform. "
+            "Given dashboard metrics in JSON, produce exactly four short plain-text lines in this format: "
+            f"Overview: <overall totals using {totals_text}> "
+            "Analysis: <what the numbers suggest and why it matters> "
+            "Sentiment: <what the sentiment mix implies> "
+            "Recommendation: <1 concrete, practical next action for the teacher>. "
+            "Do not just restate numbers. Infer patterns, concentration, momentum, or risks from the data when possible. "
+            "Keep the full response under 140 words. No markdown, no bullets, no emoji.\n\n"
             "DATA:\n" + dataset
         )
     raise ValueError(f"Unsupported analysis context: {context}")
@@ -71,8 +75,8 @@ def generate_ai_analysis(*, context: str, payload: dict[str, Any]) -> str:
             {
                 "role": "system",
                 "content": (
-                    "You craft short analytical summaries for dashboards. Respond with plain text; "
-                    "no JSON, no markdown, no emoji."
+                    "You craft concise dashboard analysis with actionable recommendations. "
+                    "Respond with plain text only; no JSON, no markdown, no emoji."
                 ),
             },
             {"role": "user", "content": prompt},
@@ -162,4 +166,3 @@ def generate_tutor_response(*, question: str, history: list[dict] | None = None)
 
 
 __all__ = ["generate_ai_analysis", "generate_tutor_response"]
-

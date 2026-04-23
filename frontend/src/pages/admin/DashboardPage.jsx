@@ -109,10 +109,10 @@ function buildRangeLabel(summary, selectedRangeDays) {
 function splitSummaryLines(summary) {
   if (!summary) return [];
   return summary
-    .split(/(?<=[.?!])\s+/)
+    .split(/\n+|(?<=[.?!])\s+/)
     .map((line) => line.trim())
     .filter(Boolean)
-    .slice(0, 3);
+    .slice(0, 4);
 }
 
 function SectionCard({ title, subtitle, children, tone = "default", right }) {
@@ -289,28 +289,48 @@ function makeAutoSummary(summary) {
     (a, b) => Number(b.total_interactions || 0) - Number(a.total_interactions || 0)
   );
   const topCourse = courses[0];
+  const secondCourse = courses[1];
+  const avgInteractionsPerPost = totalPosts > 0 ? totalInteractions / totalPosts : 0;
 
   const lines = [
     `Overview: ${totalCourses} course(s), ${totalStudents} student(s), ${totalPosts} post(s), and ${totalInteractions} interaction(s) recorded.`,
   ];
 
-  if (sPos + sNeu + sNeg > 0) {
-    lines.push(
-      `Sentiment snapshot: ${sPos}% positive, ${sNeu}% neutral, ${sNeg}% negative.`
-    );
+  if (topCourse) {
+    const topInteractions = Number(topCourse.total_interactions || 0);
+    const nextInteractions = Number(secondCourse?.total_interactions || 0);
+    if (topInteractions > 0 && topInteractions >= nextInteractions * 1.5 && courses.length > 1) {
+      lines.push(
+        `Analysis: Activity is concentrated in ${topCourse.course_code || "the top course"}, so engagement is uneven across the teaching portfolio.`
+      );
+    } else if (avgInteractionsPerPost > 0) {
+      lines.push(
+        `Analysis: Average engagement is ${avgInteractionsPerPost.toFixed(1)} interactions per post, indicating ${
+          avgInteractionsPerPost >= 5 ? "healthy response depth" : "room to strengthen participation on each post"
+        }.`
+      );
+    }
+  } else if (totalPosts > 0 || totalInteractions > 0) {
+    lines.push("Analysis: Activity is present, but there is not yet enough course-level spread to identify a clear leader.");
   }
 
-  if (topCourse) {
+  if (sPos + sNeu + sNeg > 0) {
     lines.push(
-      `${topCourse.course_code || "Top course"} is currently leading activity with ${formatCount(
-        topCourse.total_interactions
-      )} interactions.`
+      `Sentiment: ${sPos}% positive, ${sNeu}% neutral, ${sNeg}% negative, suggesting ${
+        sNeg >= 25
+          ? "some friction that may need follow-up"
+          : sPos >= 45
+          ? "students are responding constructively"
+          : "most discussion is informational rather than strongly emotional"
+      }.`
     );
   }
 
   if (totalPosts > 0 || totalInteractions > 0) {
     lines.push(
-      "Recommendation: sustain momentum by spotlighting top-performing posts and replicating their formats."
+      topCourse
+        ? `Recommendation: review the format and timing of ${topCourse.course_code || "the leading course"} posts, then reuse the strongest pattern in lower-engagement courses.`
+        : "Recommendation: review the posts that attracted the strongest responses and reuse their topic framing in the next teaching cycle."
     );
   }
 
@@ -560,11 +580,15 @@ export default function DashboardPage() {
     [autoSummary, sparkSummary]
   );
   const aiSummaryLead = aiSummaryLines[0] || "No summary available yet.";
+  const aiAnalysisNote =
+    aiSummaryLines.find((line) => line.toLowerCase().startsWith("analysis:")) ||
+    aiSummaryLines[1] ||
+    "";
   const aiSentimentNote =
-    aiSummaryLines.find((line) => line.toLowerCase().startsWith("sentiment")) || "";
+    aiSummaryLines.find((line) => line.toLowerCase().startsWith("sentiment:")) || "";
   const aiRecommendation =
     aiSummaryLines.find((line) => line.toLowerCase().startsWith("recommendation:")) ||
-    aiSummaryLines[1] ||
+    aiSummaryLines[2] ||
     "";
 
   const kpiCards = [
@@ -607,8 +631,8 @@ export default function DashboardPage() {
   ];
 
   const handleGenerateSummary = useCallback(() => {
+    if (!data || typeof data !== "object") return;
     setSparkStatus({ loading: true, error: "" });
-    const controller = new AbortController();
     fetch("/api/ai/analyze/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -616,7 +640,6 @@ export default function DashboardPage() {
         context: "dashboard_spark_summary",
         payload: data || {},
       }),
-      signal: controller.signal,
     })
       .then(async (resp) => {
         if (!resp.ok) {
@@ -630,7 +653,6 @@ export default function DashboardPage() {
         setSparkStatus({ loading: false, error: "" });
       })
       .catch((error) => {
-        if (controller.signal.aborted) return;
         setSparkSummary("");
         setSparkStatus({
           loading: false,
@@ -638,6 +660,11 @@ export default function DashboardPage() {
         });
       });
   }, [data]);
+
+  useEffect(() => {
+    if (!data || status.loading || sparkStatus.loading || sparkSummary || sparkStatus.error) return;
+    handleGenerateSummary();
+  }, [data, handleGenerateSummary, sparkStatus.error, sparkStatus.loading, sparkSummary, status.loading]);
 
   return (
     <AuthenticatedShell
@@ -1077,9 +1104,14 @@ export default function DashboardPage() {
               <div className="rounded-[20px] border border-brand-100 bg-white/85 p-3.5">
                 <div className="space-y-2">
                   <p className="text-[13px] leading-5 text-slate-700">{aiSummaryLead}</p>
+                  {aiAnalysisNote ? (
+                    <SummaryBullet
+                      text={aiAnalysisNote.replace(/^Analysis:\s*/i, "")}
+                    />
+                  ) : null}
                   {aiSentimentNote ? (
                     <SummaryBullet
-                      text={aiSentimentNote.replace(/^Sentiment snapshot:\s*/i, "")}
+                      text={aiSentimentNote.replace(/^Sentiment:\s*/i, "")}
                       tone="muted"
                     />
                   ) : null}
