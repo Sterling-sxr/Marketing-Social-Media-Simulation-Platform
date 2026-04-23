@@ -74,8 +74,23 @@ def _normalise_role(role: str) -> Literal["student", "teacher"]:
     return cast(Literal["student", "teacher"], candidate)
 
 
-def request_verification_code(email: str, role: str = "student") -> VerificationRequest:
-    _normalise_role(role)
+def _ensure_teacher_invite_code(*, role: Literal["student", "teacher"], invite_code: str = "") -> None:
+    if role != "teacher":
+        return
+    expected = str(getattr(settings, "TEACHER_REGISTRATION_INVITE_CODE", "") or "").strip()
+    if not expected:
+        raise RegistrationError("Teacher registration is currently unavailable.")
+    if (invite_code or "").strip() != expected:
+        raise RegistrationError("Invalid teacher invite code.")
+
+
+def request_verification_code(
+    email: str,
+    role: str = "student",
+    teacher_invite_code: str = "",
+) -> VerificationRequest:
+    normalised_role = _normalise_role(role)
+    _ensure_teacher_invite_code(role=normalised_role, invite_code=teacher_invite_code)
     normalised_email = normalise_email(email)
     if not EMAIL_REGEX.match(normalised_email):
         raise RegistrationError("Please use an email from a .edu.au domain.")
@@ -116,8 +131,15 @@ def verify_registration_code(*, email: str, code: str) -> None:
     clear_state(purpose=PURPOSE, email=normalised_email)
 
 
-def complete_registration(*, email: str, password: str, role: str = "student") -> UserCreationResult:
+def complete_registration(
+    *,
+    email: str,
+    password: str,
+    role: str = "student",
+    teacher_invite_code: str = "",
+) -> UserCreationResult:
     normalised_role = _normalise_role(role)
+    _ensure_teacher_invite_code(role=normalised_role, invite_code=teacher_invite_code)
     normalised_email = normalise_email(email)
     if not EMAIL_REGEX.match(normalised_email):
         raise RegistrationError("Please use an email from a .edu.au domain.")

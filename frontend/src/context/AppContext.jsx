@@ -62,6 +62,7 @@ export function AppProvider({ children }) {
   // Context: Compute shared values once so all branches use the same normalized inputs.
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerRole, setRegisterRole] = useState("student");
+  const [registerTeacherCode, setRegisterTeacherCode] = useState("");
   const [registerStatus, setRegisterStatus] = useState(makeStatus);
   const [verifyDigits, setVerifyDigits] = useState(["", "", "", ""]);
   const [verifyStatus, setVerifyStatus] = useState(makeStatus);
@@ -220,6 +221,7 @@ export function AppProvider({ children }) {
   const resetRegisterFlow = useCallback(() => {
     setRegisterEmail("");
     setRegisterRole("student");
+    setRegisterTeacherCode("");
     setRegisterStatus(makeStatus());
     setVerifyDigits(["", "", "", ""]);
     setVerifyStatus(makeStatus());
@@ -257,6 +259,7 @@ export function AppProvider({ children }) {
       const data = await postJson(AUTH_ENDPOINTS.registerStart, {
         email: trimmed,
         role: registerRole,
+        teacher_invite_code: registerTeacherCode,
       });
       setRegisterEmail(trimmed);
       setVerifyContext({ mode: "register", email: trimmed, role: registerRole });
@@ -283,7 +286,7 @@ export function AppProvider({ children }) {
       });
       return false;
     }
-  }, [registerEmail, registerRole]);
+  }, [registerEmail, registerRole, registerTeacherCode]);
 
   const startReset = useCallback(async () => {
     const trimmed = resetEmail.trim();
@@ -498,6 +501,7 @@ export function AppProvider({ children }) {
         email: registerVerifiedEmail,
         password: registerPassword,
         role: registerRole,
+        teacher_invite_code: registerTeacherCode,
       });
       setRegisterCompleteStatus({
         loading: false,
@@ -513,7 +517,13 @@ export function AppProvider({ children }) {
       });
       return false;
     }
-  }, [registerPassword, registerPasswordConfirm, registerRole, registerVerifiedEmail]);
+  }, [
+    registerPassword,
+    registerPasswordConfirm,
+    registerRole,
+    registerTeacherCode,
+    registerVerifiedEmail,
+  ]);
 
   const completeReset = useCallback(async () => {
     if (!resetVerifiedEmail) {
@@ -984,6 +994,8 @@ export function AppProvider({ children }) {
     setRegisterEmail,
     registerRole,
     setRegisterRole,
+    registerTeacherCode,
+    setRegisterTeacherCode,
     registerStatus,
     startRegister,
     resetRegisterFlow,

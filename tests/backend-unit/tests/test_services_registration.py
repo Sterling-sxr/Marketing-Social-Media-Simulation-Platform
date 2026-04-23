@@ -28,18 +28,39 @@ def test_registration_happy_path(db, settings):
 
 
 def test_teacher_registration_sets_superuser_and_staff_roles(db):
-    email = "teacher@ad.unsw.edu.au"
-    request_verification_code(email, role="teacher")
-    verify_registration_code(email=email, code="1234")
+    from django.test import override_settings
 
-    result = complete_registration(
-        email=email,
-        password="StrongPass1!",
-        role="teacher",
-    )
-    assert result.created is True
-    assert bool(getattr(result.user, "is_staff", False)) is True
-    assert bool(getattr(result.user, "is_superuser", False)) is True
+    email = "teacher@ad.unsw.edu.au"
+    with override_settings(TEACHER_REGISTRATION_INVITE_CODE="teacher-only"):
+        request_verification_code(
+            email,
+            role="teacher",
+            teacher_invite_code="teacher-only",
+        )
+        verify_registration_code(email=email, code="1234")
+
+        result = complete_registration(
+            email=email,
+            password="StrongPass1!",
+            role="teacher",
+            teacher_invite_code="teacher-only",
+        )
+        assert result.created is True
+        assert bool(getattr(result.user, "is_staff", False)) is True
+        assert bool(getattr(result.user, "is_superuser", False)) is True
+
+
+def test_teacher_registration_requires_invite_code(db):
+    from django.test import override_settings
+
+    email = "blocked-teacher@ad.unsw.edu.au"
+    with override_settings(TEACHER_REGISTRATION_INVITE_CODE="teacher-only"):
+        with pytest.raises(RegistrationError):
+            request_verification_code(
+                email,
+                role="teacher",
+                teacher_invite_code="wrong-code",
+            )
 
 
 def test_registration_rejects_non_edu_email(db):
