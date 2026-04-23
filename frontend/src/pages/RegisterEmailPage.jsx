@@ -11,6 +11,8 @@ export default function RegisterEmailPage() {
     setRegisterEmail,
     registerRole,
     setRegisterRole,
+    registerTeacherCode,
+    setRegisterTeacherCode,
     registerStatus,
     startRegister,
     resetRegisterFlow,
@@ -75,6 +77,21 @@ export default function RegisterEmailPage() {
             className="field-input"
           />
         </label>
+
+        {registerRole === "teacher" ? (
+          <label className="field-label">
+            Teacher invite code
+            <input
+              type="password"
+              value={registerTeacherCode}
+              placeholder="Enter teacher invite code"
+              onChange={(event) => setRegisterTeacherCode(event.target.value)}
+              autoComplete="off"
+              required
+              className="field-input"
+            />
+          </label>
+        ) : null}
 
         <button
           type="submit"
