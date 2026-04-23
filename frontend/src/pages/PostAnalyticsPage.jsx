@@ -41,14 +41,14 @@ const METRICS = [
 ];
 
 const SEGMENT_METRICS = [
-  { key: "engagement_rate", label: "Engagement Rate" },
+  { key: "total_engagement", label: "Total Engagement" },
   { key: "views", label: "Views" },
   { key: "likes", label: "Likes" },
   { key: "comments", label: "Comments" },
 ];
 
 const COMPARISON_METRICS = [
-  { key: "engagement_rate", label: "Engagement Rate" },
+  { key: "total_engagement", label: "Total Engagement" },
   { key: "likes", label: "Likes" },
   { key: "comments", label: "Comments" },
 ];
@@ -63,10 +63,15 @@ function formatCount(value) {
   return new Intl.NumberFormat("en-US").format(Number(value || 0));
 }
 
+function getDerivedMetricValue(metricKey, metrics) {
+  if (metricKey === "total_engagement") {
+    return Number(metrics?.likes ?? 0) + Number(metrics?.comments ?? 0);
+  }
+  return Number(metrics?.[metricKey] ?? 0);
+}
+
 function formatSegmentLegendValue(metricKey, value) {
-  return metricKey === "engagement_rate"
-    ? formatRate(value)
-    : formatCount(value);
+  return formatMetricValue(metricKey, value);
 }
 
 function SectionCard({ title, subtitle, children, tone = "default", right }) {
@@ -480,19 +485,19 @@ function SegmentResponseChart({ segments, metricKey }) {
   }
 
   const ranked = [...segments].sort((a, b) => {
-    const aValue = Number(a.metrics?.[metricKey] ?? 0);
-    const bValue = Number(b.metrics?.[metricKey] ?? 0);
+    const aValue = getDerivedMetricValue(metricKey, a.metrics);
+    const bValue = getDerivedMetricValue(metricKey, b.metrics);
     return bValue - aValue;
   });
   const maxValue = Math.max(
-    ...ranked.map((segment) => Number(segment.metrics?.[metricKey] ?? 0)),
+    ...ranked.map((segment) => getDerivedMetricValue(metricKey, segment.metrics)),
     1
   );
 
   return (
     <div className="space-y-3">
       {ranked.map((segment) => {
-        const rawValue = Number(segment.metrics?.[metricKey] ?? 0);
+        const rawValue = getDerivedMetricValue(metricKey, segment.metrics);
         const width = metricKey === "engagement_rate"
           ? Math.max(0, Math.min(100, rawValue * 100))
           : (rawValue / maxValue) * 100;
@@ -525,7 +530,7 @@ function SegmentSharePieChart({ segments, metricKey }) {
       .map((segment, index) => ({
         key: segment.key,
         label: segment.label,
-        rawValue: Number(segment.metrics?.[metricKey] ?? 0),
+        rawValue: getDerivedMetricValue(metricKey, segment.metrics),
         color: SEGMENT_PIE_COLORS[index % SEGMENT_PIE_COLORS.length],
       }))
       .filter((segment) => Number.isFinite(segment.rawValue) && segment.rawValue > 0);
@@ -723,13 +728,13 @@ function getComparisonRows(comparison, metricKey) {
     .map((segment) => ({
       key: segment.key,
       label: segment.label,
-      postValue: Number(segment.post_metrics?.[metricKey] ?? 0),
-      compareValue: Number(segment.compare_metrics?.[metricKey] ?? 0),
+      postValue: getDerivedMetricValue(metricKey, segment.post_metrics),
+      compareValue: getDerivedMetricValue(metricKey, segment.compare_metrics),
       delta:
         metricKey === "engagement_rate"
           ? Number(segment.delta_engagement_rate ?? 0)
-          : Number(segment.post_metrics?.[metricKey] ?? 0) -
-            Number(segment.compare_metrics?.[metricKey] ?? 0),
+          : getDerivedMetricValue(metricKey, segment.post_metrics) -
+            getDerivedMetricValue(metricKey, segment.compare_metrics),
     }))
     .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
 }
@@ -824,8 +829,8 @@ export default function PostAnalyticsPage() {
   const [analytics, setAnalytics] = useState(null);
   const [status, setStatus] = useState({ loading: true, error: "" });
   const [activeMetric, setActiveMetric] = useState("likes");
-  const [activeSegmentMetric, setActiveSegmentMetric] = useState("engagement_rate");
-  const [comparisonMetric, setComparisonMetric] = useState("engagement_rate");
+  const [activeSegmentMetric, setActiveSegmentMetric] = useState("total_engagement");
+  const [comparisonMetric, setComparisonMetric] = useState("total_engagement");
   const [activeHashtag, setActiveHashtag] = useState(null);
   const [selectedLens, setSelectedLens] = useState("interests");
   const [comparePostId, setComparePostId] = useState("");
@@ -1216,7 +1221,7 @@ export default function PostAnalyticsPage() {
                       <div>
                         <h4 className="text-base font-semibold text-slate-800">Post-to-post audience comparison</h4>
                         <p className="text-xs text-slate-500">
-                          Switch between engagement rate, likes, and comments without leaving the audience-segment view.
+                          Switch between total engagement, likes, and comments without leaving the audience-segment view.
                         </p>
                       </div>
                       <select

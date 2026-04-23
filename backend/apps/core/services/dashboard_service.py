@@ -12,6 +12,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from ..repositories import (
+    CourseAIUserIdentityRepository,
     CourseMemberRepository,
     CourseRepository,
     PostCommentRepository,
@@ -130,6 +131,25 @@ def _summarize_sentiment(counts: dict[str, int]) -> dict[str, Any]:
     }
 
 
+def _count_real_student_members(*, course_ids: list[int] | None = None, course_id: int | None = None) -> int:
+    filters: dict[str, Any] = {"role": "student"}
+    if course_id is not None:
+        filters["course_id"] = course_id
+    elif course_ids is not None:
+        filters["course_id__in"] = course_ids
+
+    member_user_ids = set(
+        CourseMemberRepository.model.objects.filter(**filters).values_list("user_id", flat=True)
+    )
+    if not member_user_ids:
+        return 0
+
+    ai_identity_user_ids = set(
+        CourseAIUserIdentityRepository.model.objects.filter(user_id__in=member_user_ids).values_list("user_id", flat=True)
+    )
+    return len(member_user_ids - ai_identity_user_ids)
+
+
 def _calculate_dashboard_metrics(user, *, range_days: int = 7) -> dict[str, Any]:
     today = timezone.localdate()
     now = timezone.now()
@@ -156,11 +176,7 @@ def _calculate_dashboard_metrics(user, *, range_days: int = 7) -> dict[str, Any]
     course_ids = [c.id for c in courses]
     active_courses = sum(1 for c in courses if getattr(c, "end_date", None) is None or c.end_date >= today)
 
-    members = CourseMemberRepository.model.objects.filter(
-        course_id__in=course_ids,
-        role="student",
-    ).values_list("user_id", flat=True)
-    registered_students = len(set(members))
+    registered_students = _count_real_student_members(course_ids=course_ids)
 
     posts = PostRepository.model.objects.filter(
         course_id__in=course_ids,
@@ -331,11 +347,7 @@ def _resolve_course_range(course, range_days: int | None) -> tuple[int, date]:
 
 
 def _get_registered_student_count(course_id: int) -> int:
-    members = CourseMemberRepository.model.objects.filter(
-        course_id=course_id,
-        role="student",
-    ).values_list("user_id", flat=True)
-    return len(set(members))
+    return _count_real_student_members(course_id=course_id)
 
 
 def _calculate_course_metrics_from_data(course, course_data: dict[str, Any]) -> dict[str, Any]:
