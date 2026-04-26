@@ -193,6 +193,9 @@ Content-Type: application/json
   "end_date": "2026-12-01"
 }
 
+### Delete course
+DELETE {{base}}/api/courses/1/
+
 ### Course profile (GET)
 GET {{base}}/api/courses/1/profile/
 
@@ -345,4 +348,3 @@ Content-Type: application/json
 
 ### Delete post
 DELETE {{base}}/api/courses/1/posts/1/
-

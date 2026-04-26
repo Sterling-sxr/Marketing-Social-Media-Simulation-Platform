@@ -8,6 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from ..repositories import CourseMemberRepository
 from ..services import (
     create_course,
+    delete_course,
     get_course_profile,
     join_course_by_code,
     list_courses_for_user,
@@ -171,8 +172,19 @@ def update_course_view(request: HttpRequest, course_id: int) -> JsonResponse:
     if auth_error:
         return auth_error
 
+    if request.method == "DELETE":
+        try:
+            delete_course(user=request.user, course_id=course_id)
+        except PermissionError as exc:
+            return JsonResponse({"error": str(exc)}, status=403)
+        except ValueError as exc:
+            return JsonResponse({"error": str(exc)}, status=404)
+        return JsonResponse({"ok": True})
+
     if request.method not in {"PUT", "PATCH"}:
-        return JsonResponse({"error": "Method not allowed"}, status=405)
+        response = JsonResponse({"error": "Method not allowed"}, status=405)
+        response["Allow"] = "PUT, PATCH, DELETE"
+        return response
 
     try:
         payload = json.loads(request.body.decode() or "{}")

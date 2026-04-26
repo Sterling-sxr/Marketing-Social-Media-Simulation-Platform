@@ -93,7 +93,7 @@
 | `courses/` | `courses-list` | GET | 当前用户可见/已加入的课程列表。 |
 | `courses/join/` | `courses-join` | POST | 通过 `join_code` 加入课程。 |
 | `courses/create/` | `courses-create` | POST | 创建新课程。 |
-| `courses/<course_id>/` | `courses-update` | PUT, PATCH | 更新课程元数据。 |
+| `courses/<course_id>/` | `courses-update` | PUT, PATCH, DELETE | 更新课程元数据；DELETE 永久删除课程及其级联数据。 |
 | `courses/<course_id>/profile/` | `courses-profile` | GET, POST, PUT | 读取或保存课程设置/课程侧 profile。 |
 | `courses/managed/` | `courses-managed` | GET | 当前用户作为管理员可管理的课程。 |
 
