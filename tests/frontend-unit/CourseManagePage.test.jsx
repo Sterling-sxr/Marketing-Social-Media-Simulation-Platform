@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 import CourseManagePage from "../../frontend/src/pages/admin/CourseManagePage.jsx";
@@ -46,11 +46,13 @@ function renderPage() {
 }
 
 describe("CourseManagePage", () => {
+  let confirmSpy;
+  let pushToast;
+
   beforeEach(() => {
     vi.clearAllMocks();
-    mockedUseApp.mockReturnValue({
-      pushToast: vi.fn(),
-    });
+    pushToast = vi.fn();
+    mockedUseApp.mockReturnValue({ pushToast });
     getJson.mockResolvedValue({
       items: [
         {
@@ -64,6 +66,11 @@ describe("CourseManagePage", () => {
     });
     deleteJson.mockResolvedValue({});
     patchJson.mockResolvedValue({});
+    confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+  });
+
+  afterEach(() => {
+    confirmSpy?.mockRestore();
   });
 
   test("does not reload managed courses when authUser object refreshes with the same id", async () => {
@@ -98,5 +105,56 @@ describe("CourseManagePage", () => {
     await waitFor(() => {
       expect(getJson).toHaveBeenCalledTimes(1);
     });
+  });
+
+  test("deletes a course from the management list after confirmation", async () => {
+    mockedUseAuth.mockReturnValue({
+      authUser: { id: 7, is_staff: true, is_superuser: false, full_name: "Teacher" },
+      authCheckComplete: true,
+    });
+
+    renderPage();
+
+    expect(await screen.findByText(/bread studio/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /delete course/i }));
+
+    await waitFor(() => {
+      expect(confirmSpy).toHaveBeenCalled();
+      expect(deleteJson).toHaveBeenCalledWith("/api/courses/1/");
+    });
+    await waitFor(() => {
+      expect(screen.queryByText(/bread studio/i)).not.toBeInTheDocument();
+    });
+    expect(pushToast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "Course deleted",
+      })
+    );
+  });
+
+  test("shows a failure toast when deleting a course fails", async () => {
+    mockedUseAuth.mockReturnValue({
+      authUser: { id: 7, is_staff: true, is_superuser: false, full_name: "Teacher" },
+      authCheckComplete: true,
+    });
+    deleteJson.mockRejectedValue(new Error("Method not allowed"));
+
+    renderPage();
+
+    expect(await screen.findByText(/bread studio/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /delete course/i }));
+
+    await waitFor(() => {
+      expect(deleteJson).toHaveBeenCalledWith("/api/courses/1/");
+    });
+    expect(pushToast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "Delete failed",
+        message: "Method not allowed",
+      })
+    );
+    expect(screen.getByText(/bread studio/i)).toBeInTheDocument();
   });
 });

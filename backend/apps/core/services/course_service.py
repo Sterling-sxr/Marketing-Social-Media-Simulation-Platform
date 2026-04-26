@@ -92,7 +92,7 @@ def join_course_by_code(*, user, join_code: str):
     return membership
 
 
-__all__ = ["list_courses_for_user", "join_course_by_code", "update_course"]
+__all__ = ["list_courses_for_user", "join_course_by_code", "update_course", "delete_course"]
 
 
 def _generate_join_code(length: int = 8) -> str:
@@ -274,3 +274,15 @@ def update_course(
         "start_date": course.start_date.isoformat(),
         "end_date": course.end_date.isoformat(),
     }
+
+
+@transaction.atomic
+def delete_course(*, user, course_id: int) -> None:
+    if not (getattr(user, "is_superuser", False) or getattr(user, "is_staff", False)):
+        raise PermissionError("Only administrators can delete courses.")
+
+    course = CourseRepository.get_by_id(course_id)
+    if not course:
+        raise ValueError("Course not found.")
+
+    course.delete()

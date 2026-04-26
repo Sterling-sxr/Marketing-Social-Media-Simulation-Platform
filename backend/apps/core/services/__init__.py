@@ -60,6 +60,7 @@ from .course_profile_service import (
 )
 from .course_service import (
     create_course,
+    delete_course,
     join_course_by_code,
     list_courses_for_user,
     list_managed_courses,
@@ -160,6 +161,7 @@ __all__ = [
     "create_course",
     "list_managed_courses",
     "update_course",
+    "delete_course",
     "get_course_profile",
     "save_course_profile",
     "list_course_posts",
