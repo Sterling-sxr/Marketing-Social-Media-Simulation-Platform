@@ -1,4 +1,4 @@
-from .ai_analysis_service import generate_ai_analysis, generate_tutor_response
+from .ai_analysis_service import generate_ai_analysis
 from .ai_persona_creation_service import (
     GUIDED_TEMPLATES,
     MAX_PERSONA_PREVIEW_COUNT,
@@ -13,7 +13,6 @@ from .ai_persona_task_service import (
     start_generated_preview_task,
 )
 from .ai_user_reaction_service import (
-    handle_post_reactions,
     schedule_ai_reactions,
 )
 from .ai_user_service import (
@@ -203,9 +202,7 @@ __all__ = [
     "CourseAINotFoundError",
     "CSV_COLUMNS",
     "schedule_ai_reactions",
-    "handle_post_reactions",
     "generate_ai_analysis",
-    "generate_tutor_response",
     "preview_guided_personas",
     "build_csv_preview_from_items",
     "commit_guided_personas",

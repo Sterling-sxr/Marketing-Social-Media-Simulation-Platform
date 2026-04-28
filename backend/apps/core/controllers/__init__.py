@@ -1,4 +1,4 @@
-from .ai_controller import ai_analyze, ai_tutor
+from .ai_controller import ai_analyze
 from .api import (
     files_endpoint,
     gmail_oauth_callback,
@@ -148,7 +148,6 @@ __all__ = [
     "dashboard_course_segmentation",
     "admin_course_post_segmentation",
     "ai_analyze",
-    "ai_tutor",
     "course_materials_view",
     "course_material_detail_view",
     "search_posts",

@@ -1,5 +1,5 @@
 ## Summary
-- [ ] Linked issue / Jira ticket: <!-- e.g. W16B-42 -->
+- [ ] Linked issue / Jira ticket: <!-- e.g. F09D-42 -->
 - [ ] High-level explanation of the change
 - [ ] Mention the main files or areas affected if useful
 - [ ] Mention any setup or config changes if applicable
@@ -12,7 +12,7 @@
 - [ ] I updated related docs or README if needed
 
 ## Review Checklist
-- [ ] Branch uses the required `W16B-XX-short-description` naming.
+- [ ] Branch uses the required `F09D-XX-short-description` naming.
 - [ ] Commits are scoped and have descriptive messages.
 - [ ] At least one reviewer has been requested.
 - [ ] I have responded to reviewer comments (or left clarifying replies).

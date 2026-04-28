@@ -106,10 +106,10 @@ describe("CourseAIUsersPage persona creation flows", () => {
 
     expect(await screen.findByRole("heading", { name: /create ai user/i })).toBeInTheDocument();
 
-    fireEvent.change(screen.getByPlaceholderText(/unique username for this course/i), {
+    fireEvent.change(screen.getAllByPlaceholderText(/unique username for this course/i)[0], {
       target: { value: "manual-user" },
     });
-    fireEvent.change(screen.getByPlaceholderText(/optional display name/i), {
+    fireEvent.change(screen.getAllByPlaceholderText(/optional display name/i)[0], {
       target: { value: "Manual User" },
     });
 

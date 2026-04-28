@@ -19,3 +19,5 @@ tiktoken>=0.5.0
 wsaccel>=0.6.4
 openai>=1.30.0
 dotenv
+pytest==8.3.2
+pytest-django==4.9.0

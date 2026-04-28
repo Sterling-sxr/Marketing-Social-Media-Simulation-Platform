@@ -59,10 +59,6 @@ export default function HomePage() {
             <h1 className="text-2xl font-bold sm:text-4xl lg:text-4xl">
               Join us and explore a new campus social platform
             </h1>
-            <p className="text-sm text-slate-600 sm:text-base">
-              Create posts, follow classmates, and explore engagement analytics
-              through simulation.
-            </p>
           </div>
 
           <div className="absolute inset-0 hidden md:block pointer-events-none z-0">

@@ -316,18 +316,6 @@ async def _async_request_decision(prompt: str, client: Any) -> ReactionDecision 
         return None
 
 
-# Context: Compute shared values once so all branches use the same normalized inputs.
-# Context: Compute shared values once so all branches use the same normalized inputs.
-# Purpose: Orchestrate `handle_post_reactions` with clear validation, dependency calls, and response mapping.
-# Input contract: Normalize required values early and fail fast on malformed payloads.
-# Output contract: Return a stable success/error shape after translating service outcomes.
-def handle_post_reactions(course_id: int, post_id: int) -> None:
-    """Execute the `handle_post_reactions` operation with explicit data and control flow.
-    Normalize inputs, delegate to dependencies, and return a predictable result.
-    """
-    asyncio.run(async_handle_post_reactions(course_id, post_id))
-
-
 def _request_decision(prompt: str, client: Any = None) -> ReactionDecision | None:
     """Execute the `_request_decision` operation with explicit data and control flow.
     Normalize inputs, delegate to dependencies, and return a predictable result.
@@ -352,7 +340,6 @@ def evaluate_persona_prompt(prompt: str) -> ReactionDecision | None:
 
 __all__ = [
     "schedule_ai_reactions",
-    "handle_post_reactions",
     "async_handle_post_reactions",
     "evaluate_persona_prompt",
     "ReactionDecision",

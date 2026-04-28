@@ -7,14 +7,14 @@ It mirrors the workshop requirements so tutors can verify compliance quickly.
 - Every feature, bug fix, or refactor starts from `sprint3` (or the current sprint
   branch) and lives in its own branch.
 - Use the ticket prefix plus a short description, e.g.
-  `W16B-42-ai-user-dashboard` or `bugfix/W16B-18-login-timeout`.
+  `F09D-42-ai-user-dashboard` or `bugfix/F09D-18-login-timeout`.
 - Keep the branch focused on **one deliverable** so that rebases and reviews stay
   manageable.
 
 ## Commits
 - Commit in small, logical chunks (~50–150 lines of diff is ideal).
 - Each commit message must describe both the “what” and the “why”. Recommended
-  format: `W16B-42: add skeleton loader for analytics cards`.
+  format: `F09D-42: add skeleton loader for analytics cards`.
 - Avoid dumping secrets or build artefacts in commits—`.env`, `node_modules`,
   compiled assets, and database dumps stay out of Git.
 
@@ -34,11 +34,17 @@ GitHub Actions (`.github/workflows/ci.yml`) runs automatically on every push or 
 
 | Job | Purpose |
 | --- | --- |
-| `backend-tests` | Installs Python deps, runs `ruff` linting, `python manage.py check`, and `python manage.py test`. |
-| `frontend-lint` | Installs Node deps and runs `npm run lint` (ESLint over all React source files). |
+| `backend-quality` | Installs backend dependencies, runs `ruff check backend`, then `python backend/manage.py check`. |
+| `backend-tests` | Runs Django test suite via `python backend/manage.py test`. |
+| `backend-unit-tests` | Runs pytest-based backend unit tests in `tests/backend-unit/`. |
+| `frontend-quality` | Installs frontend dependencies, runs `npm run lint`, and validates `npm run build`. |
+| `frontend-unit-tests` | Runs Vitest frontend unit tests under `tests/frontend-unit/`. |
+| `docker-build-validation` | Builds backend/frontend Docker images to ensure container build reliability. |
+| `security-audit` | Runs dependency audits for Python and Node packages (`continue-on-error`). |
+| `ci-summary` | Final required gate that passes only when all required quality jobs succeed. |
 
-Only merge after both jobs succeed. If a job fails locally, use the same commands
-before pushing to keep CI green.
+Only merge after all required jobs succeed. If a job fails locally, use the same
+commands before pushing to keep CI green.
 
 ## FAQ
 - **How do I enforce the commit template?** Run  

@@ -1251,22 +1251,7 @@ export default function CourseFeedPage() {
           </div>
         </div>
 
-          <div className="flex flex-wrap items-center gap-2 lg:hidden">
-            <button
-              type="button"
-              onClick={() => setMobileFilterOpen(true)}
-              className="inline-flex h-9 items-center rounded-full border border-brand-300 bg-white px-4 text-xs font-semibold text-brand-700 transition hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-300"
-              aria-label="Open feed filters"
-            >
-              Filters
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate(homePath)}
-              className="inline-flex h-9 items-center rounded-full border border-brand-300 bg-white px-4 text-xs font-semibold text-brand-700 transition hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-300"
-            >
-              Back
-            </button>
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={handleRefresh}
@@ -1274,48 +1259,23 @@ export default function CourseFeedPage() {
             >
               Refresh
             </button>
-            {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
-            <a
-              href={`/courses/${courseId}/materials`}
-              className="inline-flex h-9 items-center gap-1.5 rounded-full border border-brand-400 bg-brand-50 px-4 text-xs font-semibold text-brand-800 transition hover:bg-brand-100 focus:outline-none focus:ring-2 focus:ring-brand-300"
+            <button
+              type="button"
+              onClick={openComposer}
+              disabled={courseReadOnly}
+              title={createPostDisabledTitle}
+              aria-disabled={courseReadOnly}
+              className={`inline-flex h-9 items-center rounded-full px-4 text-xs font-semibold text-white transition ${
+                courseReadOnly
+                  ? "cursor-not-allowed bg-slate-400"
+                  : "bg-gradient-to-r from-brand-500 via-accent-400 to-accent-500 hover:brightness-110"
+              }`}
             >
-              📂 Materials
-            </a>
+              Create Post
+            </button>
           </div>
 
           {feedStatus.error ? <Feedback error={feedStatus.error} /> : null}
-
-          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
-          <div className="sticky top-0 z-20 -mx-6 hidden px-6 pt-2 lg:block">
-            <div className="flex items-center justify-end gap-3 rounded-b-2xl border-b border-brand-100/60 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/60 py-3">
-              <button
-                type="button"
-                onClick={handleRefresh}
-                className="inline-flex h-10 items-center gap-2 rounded-full border-2 bg-white px-5 text-sm font-semibold
-                 text-accent-700 border-accent-400/80 transition-all duration-200 hover:bg-accent-50 hover:shadow-md"
-                title="Refresh"
-              >
-                Refresh
-              </button>
-
-              <button
-                type="button"
-                onClick={openComposer}
-                className={`inline-flex h-10 items-center gap-2 rounded-full px-7 text-sm font-semibold text-white shadow-md
-                  bg-gradient-to-r from-brand-500 via-accent-400 to-accent-500
-                  hover:from-brand-600 hover:via-accent-500 hover:to-accent-500
-                  transition-all duration-200 hover:shadow-[0_8px_24px_-6px_rgba(236,72,153,0.45)] active:scale-[0.97]
-                  border-2 border-white/40 ${courseReadOnly ? "cursor-not-allowed opacity-70" : ""} ${
-                    !showComposer && !courseReadOnly ? "animate-pulse" : ""
-                  }`}
-                disabled={courseReadOnly}
-                title={createPostDisabledTitle}
-                aria-disabled={courseReadOnly}
-              >
-                Create Post
-              </button>
-            </div>
-          </div>
 
           {renderFeed()}
         </main>
@@ -1434,17 +1394,6 @@ export default function CourseFeedPage() {
             )}
           </div>
         </div>
-      ) : null}
-
-      {!courseReadOnly ? (
-        <button
-          type="button"
-          onClick={openComposer}
-          className="fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] right-4 z-30 inline-flex h-14 items-center justify-center rounded-full bg-gradient-to-r from-brand-500 via-accent-400 to-accent-500 px-5 text-sm font-semibold text-white shadow-[0_14px_28px_-8px_rgba(236,72,153,0.5)] transition hover:scale-[1.02] hover:shadow-[0_18px_30px_-10px_rgba(236,72,153,0.55)] focus:outline-none focus:ring-2 focus:ring-accent-300 lg:hidden"
-          aria-label="Create post"
-        >
-          + Post
-        </button>
       ) : null}
 
       {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}

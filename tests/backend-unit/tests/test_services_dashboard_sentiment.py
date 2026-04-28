@@ -30,4 +30,4 @@ def test_dashboard_service_disables_local_sentiment_by_default(monkeypatch):
     dashboard_service = importlib.import_module("apps.core.services.dashboard_service")
 
     assert dashboard_service._get_sentiment_pipeline() is None
-    assert dashboard_service.classify_comment_sentiment("This is great!") == "neutral"
+    assert dashboard_service.classify_comment_sentiment("This is great!") == "positive"

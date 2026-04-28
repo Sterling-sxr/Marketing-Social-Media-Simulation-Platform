@@ -48,19 +48,20 @@ describe("AuthenticatedShell teacher sidebar", () => {
   test("uses the dashboard sidebar on dashboard course pages", () => {
     renderShell("/dashboard/courses/9");
 
-    expect(screen.getByText("Course Manage")).toBeInTheDocument();
-    expect(screen.getByText("AI User")).toBeInTheDocument();
-    expect(screen.getByText("Dashboard")).toBeInTheDocument();
+    // Link labels can appear in both desktop sidebar and mobile nav.
+    expect(screen.getAllByText("Course Manage").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("AI User").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Dashboard").length).toBeGreaterThan(0);
     expect(screen.queryByText("Analyze")).not.toBeInTheDocument();
   });
 
   test("removes analyze from teacher course-page sidebar", () => {
     renderShell("/courses/9");
 
-    expect(screen.getByText("Course Dashboard")).toBeInTheDocument();
-    expect(screen.getByText("Community")).toBeInTheDocument();
-    expect(screen.getByText("Materials")).toBeInTheDocument();
-    expect(screen.getByText("Messages")).toBeInTheDocument();
+    expect(screen.getAllByText("Course Dashboard").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Community").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Materials").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Messages").length).toBeGreaterThan(0);
     expect(screen.queryByText("Analyze")).not.toBeInTheDocument();
   });
 
@@ -78,13 +79,13 @@ describe("AuthenticatedShell teacher sidebar", () => {
     renderShell("/courses/9");
 
     expect(screen.queryByText("Course Dashboard")).not.toBeInTheDocument();
-    expect(screen.getByText("Community")).toBeInTheDocument();
-    expect(screen.getByText("Materials")).toBeInTheDocument();
-    expect(screen.getByText("Messages")).toBeInTheDocument();
+    expect(screen.getAllByText("Community").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Materials").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Messages").length).toBeGreaterThan(0);
   });
 
   test("can hide the desktop sidebar for full-width pages", () => {
-    renderShell("/courses/9/posts/101/analytics", { hideSidebar: true });
+    renderShell("/courses/9/posts/101/analytics", { hideSidebar: true, hideMobileNav: true });
 
     expect(screen.queryByText("Navigation")).not.toBeInTheDocument();
     expect(screen.queryByText("Community")).not.toBeInTheDocument();

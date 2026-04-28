@@ -1,22 +1,37 @@
-[![Open in Visual Studio Code](https://classroom.github.com/assets/open-in-vscode-2e0aaae1b6195c2367325f4f02e2d04e9abb55f0b24a779b69b11b9e10269abc.svg)](https://classroom.github.com/online_ide?assignment_repo_id=20525206&assignment_repo_type=AssignmentRepo)
-
-# Capstone Project W16B Donut (Installation Manual)
+# Capstone Project 9900-F09D-BREAD
 
 ## Overview
-This repo contains both the Django backend and Vite/React frontend for the Donut capstone project. The stack is containerised with Docker Compose so you can bring the entire system up with one command.
+This repo contains both the Django backend and Vite/React frontend for the Bread capstone project. The stack is containerised with Docker Compose so you can bring the entire system up with one command.
 
 ## Directory Layout
 - `backend/` – Django project (apps live inside `backend/apps/`).
 - `frontend/` – Vite/React single page app.
 - `nginx/` – reverse proxy that serves the frontend and proxies API/media.
 - `docs/` – project documentation and artefacts.
-  - `docs/requirements/` – user stories and requirement specs.
-  - `docs/design/` – design sprint deliverables per sprint.
-  - `docs/db/schema/` – database DDL scripts, e.g. `edu_social.sql` for table structure reference.
+  - `docs/db/schema/` – database DDL scripts, e.g. `postgres-schema.sql` for table structure reference.
 
 ## Prerequisites
 - Docker 24+
 - Docker Compose plugin
+
+## Software Quality submission artefacts
+
+For the Software Quality Assessment submission, this folder includes:
+
+- `TESTING.md` — what tests exist, how to run them, manual testing checklist
+- `INSTALLATION_MANUAL.md` — the source text for the installation manual PDF
+- `INSTALLATION_MANUAL.pdf` — generated installation manual (see below)
+- `.env.example` — environment template (do **not** submit real `.env` secrets)
+
+To generate the PDF + the submission zip:
+
+```bash
+python3 tools/make_submission.py
+```
+
+This creates:
+- `INSTALLATION_MANUAL.pdf`
+- `dist/sprint3_software_quality.zip`
 
 ## First-Time Setup
 1. Duplicate the environment example: `cp .env.example .env` and adjust secrets or ports as needed.
@@ -55,8 +70,8 @@ Notes:
 - Override API target if needed: `VITE_API_BASE=http://gateway docker compose up -d frontend-dev`.
 
 ## Git Workflow
-- Create feature/fix branches from `sprint3` (or the active sprint branch) using names such as `W16B-42-short-description`.
-- Keep commits small and descriptive, e.g. `W16B-42: describe change`.
+- Create feature/fix branches from `sprint3` (or the active sprint branch) using names such as `F09D-42-short-description`.
+- Keep commits small and descriptive, e.g. `F09D-42: describe change`.
 - Merge back via Pull Request into `sprint3/main`, request at least one teammate review, and leave meaningful review comments.
 - Run the local validation commands below (or see `docs/git-workflow.md`) before pushing.
 - GitHub Actions runs backend tests and frontend ESLint automatically; fix any failures locally before merging.
@@ -76,6 +91,14 @@ cd frontend
 npm run lint
 ```
 
+Backend unit tests in Docker:
+
+```bash
+docker compose run --rm \
+  -v "$(pwd)/tests/backend-unit:/app/tests/backend-unit:ro" \
+  backend sh -lc "pip install -r /app/tests/backend-unit/requirements.txt && python -m pytest -c /app/tests/backend-unit/pytest.ini /app/tests/backend-unit"
+```
+
 ## Tests Overview
 The `tests/` directory contains three complementary suites so you can target validation at the right level:
 
@@ -92,9 +115,7 @@ The `tests/` directory contains three complementary suites so you can target val
 - Email sending: Gmail API is wired up for sending verification emails, but for the current demo the verification code is fixed as `1234` for both registration and password reset (no real email delivery required).
 
 ## Documentation & Schema
-- Requirements: see `docs/requirements/user_story.md`
-- Design artefacts: see sprint folders under `docs/design/`
-- Database schema SQL: `docs/db/schema/edu_social.sql`
+- Database schema SQL: `docs/db/schema/postgres-schema.sql`
 
 Keep these documents updated alongside code changes so new contributors can follow the latest requirements and schema definitions.
 
@@ -148,3 +169,15 @@ GitHub Actions workflow for backend lint and checks, backend tests, frontend lin
 Check the failed step in the Actions tab before requesting review.
 - before opening a PR:
 Make sure local backend and frontend checks have been run if possible.
+
+## Submission Branch Check
+Software Quality marking checks the `main` branch. Before submission:
+
+```bash
+git checkout main
+git pull
+git merge sprint3
+git status
+```
+
+Confirm required files exist on `main`: `README.md`, `TESTING.md`, `INSTALLATION_MANUAL.pdf`, `.env.example`, and Docker configs.

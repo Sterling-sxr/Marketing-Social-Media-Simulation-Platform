@@ -6,9 +6,6 @@ import AuthenticatedShell from "./components/AuthenticatedShell";
 import { getJson, deleteJson } from "../lib/api";
 import { canManageCourse } from "../lib/access";
 import {
-  Bell,
-  BookOpen,
-  BotMessageSquare,
   Download,
   Eye,
   FileText,
@@ -413,18 +410,6 @@ export default function CourseMaterialsPage() {
     }
   };
 
-  // Context: Compute shared values once so all branches use the same normalized inputs.
-  // Context: Compute shared values once so all branches use the same normalized inputs.
-  const globalMobileNav = useMemo(
-    () => [
-      { to: "/courses", label: "Courses", icon: <BookOpen className="h-5 w-5" /> },
-      { to: "/search", label: "Search", icon: <Search className="h-5 w-5" /> },
-      { to: "/notifications", label: "Messages", icon: <Bell className="h-5 w-5" /> },
-      { to: "/ai-tutor", label: "AI Tutor", icon: <BotMessageSquare className="h-5 w-5" /> },
-    ],
-    []
-  );
-
   if (authCheckComplete && !authUser) {
     return <Navigate to="/login" replace />;
   }
@@ -434,7 +419,6 @@ export default function CourseMaterialsPage() {
     <AuthenticatedShell
       title={courseName ? `${courseName} — Materials` : "Course Materials"}
       subtitle="Download lecture slides, assignments, and resources for this course."
-      mobileNavLinks={globalMobileNav}
     >
       <div className="space-y-5">
         {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}

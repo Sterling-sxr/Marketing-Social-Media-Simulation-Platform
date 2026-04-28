@@ -40,36 +40,6 @@ afterAll(() => {
 const stubComponent = ({ children, ...props }: any) =>
   React.createElement('div', props, children);
 
-vi.mock(
-  'lucide-react',
-  () =>
-    new Proxy(
-      { __esModule: true },
-      {
-        get: (_, key) => {
-          if (key === '__esModule') return true;
-          return stubComponent;
-        },
-      }
-    ),
-  { virtual: true }
-);
-
-vi.mock(
-  'recharts',
-  () =>
-    new Proxy(
-      { __esModule: true },
-      {
-        get: (_, key) => {
-          if (key === '__esModule') return true;
-          return stubComponent;
-        },
-      }
-    ),
-  { virtual: true }
-);
-
 afterEach(() => {
   cleanup();
   vi.clearAllTimers();

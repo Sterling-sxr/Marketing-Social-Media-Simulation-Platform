@@ -8,6 +8,8 @@ const __dirname = path.dirname(__filename);
 
 const localNodeModules = path.resolve(__dirname, 'node_modules');
 const frontendNodeModules = path.resolve(__dirname, '../../frontend/node_modules');
+const stubsDir = path.resolve(__dirname, 'stubs');
+const frontendSrcDir = path.resolve(__dirname, '../../frontend/src');
 
 export default defineConfig({
   plugins: [react({ jsxRuntime: 'classic' })],
@@ -18,8 +20,10 @@ export default defineConfig({
       'react-dom': path.resolve(localNodeModules, 'react-dom'),
       'react-dom/client': path.resolve(localNodeModules, 'react-dom', 'client'),
       'react-router-dom': path.resolve(localNodeModules, 'react-router-dom'),
-      'lucide-react': path.resolve(localNodeModules, 'lucide-react'),
-      recharts: path.resolve(frontendNodeModules, 'recharts'),
+      // Avoid loading the full icon library in unit tests (can stall bundling in CI).
+      'lucide-react': path.resolve(stubsDir, 'lucide-react.js'),
+      // Avoid loading the full charting library in unit tests.
+      recharts: path.resolve(stubsDir, 'recharts.js'),
     },
   },
   test: {
@@ -35,5 +39,21 @@ export default defineConfig({
     },
     testTimeout: 15000,
     hookTimeout: 15000,
+    coverage: {
+      provider: 'istanbul',
+      all: true,
+      reportsDirectory: './coverage',
+      reporter: ['text-summary', 'html', 'clover', 'json', 'json-summary'],
+      // Note: use a root-relative glob here; Istanbul matching is more reliable than absolute paths.
+      include: ['../../frontend/src/**/*.{js,jsx}'],
+      exclude: [
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/coverage/**',
+        '**/stubs/**',
+        '**/*.test.*',
+        '**/tests/**',
+      ],
+    },
   },
 });

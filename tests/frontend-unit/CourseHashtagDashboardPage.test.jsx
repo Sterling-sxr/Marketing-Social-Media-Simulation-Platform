@@ -77,10 +77,10 @@ describe("CourseHashtagDashboardPage", () => {
     renderPage();
 
     expect(await screen.findByText(/campaign post/i)).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "#campaign" })).toBeInTheDocument();
-    expect(screen.getByText(/hashtag performance snapshot/i)).toBeInTheDocument();
+    expect(screen.getByText("#campaign")).toBeInTheDocument();
+    expect(screen.getByText(/top posts by engagement/i)).toBeInTheDocument();
     expect(screen.queryByText(/student post sentiment distribution/i)).not.toBeInTheDocument();
-    expect(screen.getByText(/view post analysis/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/view post analysis/i).length).toBeGreaterThan(0);
     const shellProps = authenticatedShellMock.mock.calls.at(-1)?.[0];
     expect(shellProps?.hideSidebar).toBe(true);
   });

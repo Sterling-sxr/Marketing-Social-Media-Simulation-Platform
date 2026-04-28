@@ -27,7 +27,7 @@ MIN_PASSWORD_LENGTH = 8
 
 _RESET_TEMPLATE = (
     "Hi there,\n\n"
-    "You requested to reset your Donut platform password.\n"
+    "You requested to reset your Bread platform password.\n"
     "Use this verification code within 5 minutes: {code}\n\n"
     "If this wasn't you, please ignore this email."
 )
@@ -54,7 +54,7 @@ class PasswordResetRequest:
 def _send_reset_email(email: str, code: str) -> None:
     try:
         send_gmail_message(
-            subject="Donut Password Reset Code",
+            subject="Bread Password Reset Code",
             body=_RESET_TEMPLATE.format(code=code),
             recipient=email,
         )

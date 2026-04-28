@@ -36,7 +36,6 @@ import OnboardingProfilePage from "./pages/OnboardingProfilePage";
 import StudentAnalysisPage from "./pages/StudentAnalysisPage";
 import CourseStudentsPage from "./pages/admin/CourseStudentsPage.jsx";
 import SearchPage from "./pages/SearchPage";
-import AITutorPage from "./pages/AITutorPage";
 import CourseMaterialsPage from "./pages/CourseMaterialsPage";
 import CourseOverviewPage from "./pages/CourseOverviewPage";
 import CourseMembersPage from "./pages/CourseMembersPage";
@@ -79,7 +78,6 @@ export default function App() {
           <Route path="/reset/success" element={<ResetSuccessPage />} />
           <Route path="/studenthome" element={<Navigate to="/courses" replace />} />
           <Route path="/student/analysis" element={<Navigate to="/courses" replace />} />
-          <Route path="/ai-tutor" element={<AITutorPage />} />
           <Route path="/profile" element={<MyProfileRedirect />} />
           <Route path="/profile/edit" element={<ProfilePage />} />
           <Route

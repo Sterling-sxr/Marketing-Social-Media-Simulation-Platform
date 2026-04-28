@@ -98,6 +98,7 @@ export default function AuthenticatedShell({
     fetchCourses,
   } = useApp();
   const isTeacherUser = Boolean(authUser?.is_superuser || authUser?.is_staff);
+  const effectiveHideMobileNav = hideMobileNav || isTeacherUser;
   const defaultLandingPath = getDefaultLandingPath(authUser);
 
   // Context: Compute shared values once so all branches use the same normalized inputs.
@@ -270,6 +271,7 @@ export default function AuthenticatedShell({
     // Context: Compute shared values once so all branches use the same normalized inputs.
     return dedupeByTo(sidebarLinks).slice(0, 5);
   }, [mobileNavLinks, sidebarLinks, authUser?.id]);
+  const mobileNavColumns = Math.min(Math.max(compactLinks.length, 1), 5);
 
   return (
     <div
@@ -561,12 +563,15 @@ export default function AuthenticatedShell({
         </main>
       </div>
 
-      {!hideMobileNav ? (
+      {!effectiveHideMobileNav ? (
         <nav
           className="fixed inset-x-0 bottom-0 z-40 border-t border-brand-100/80 bg-white/80 px-2 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] shadow-[0_-10px_30px_rgba(15,23,42,0.12)] backdrop-blur lg:hidden"
           aria-label="Mobile navigation"
         >
-          <div className="mx-auto grid w-full max-w-6xl grid-cols-5 gap-1">
+          <div
+            className="mx-auto grid w-full max-w-6xl gap-1"
+            style={{ gridTemplateColumns: `repeat(${mobileNavColumns}, minmax(0, 1fr))` }}
+          >
             {compactLinks.map((link) => {
               const active = isActiveLink(link.to, location);
               const isMessages = isMessagesLink(link.to);

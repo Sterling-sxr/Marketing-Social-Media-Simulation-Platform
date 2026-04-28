@@ -60,7 +60,6 @@
 | 相对路径 | `name` | HTTP 方法 | 说明 |
 |----------|--------|-----------|------|
 | `ai/analyze/` | `ai-analyze` | POST | AI 内容分析类接口。 |
-| `ai/tutor/` | `ai-tutor` | POST | AI 导师/对话类接口。 |
 
 # Context: Compute shared values once so all branches use the same normalized inputs.
 

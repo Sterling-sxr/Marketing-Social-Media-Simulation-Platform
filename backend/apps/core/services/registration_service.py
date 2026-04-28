@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 _VERIFICATION_TEMPLATE = (
     "Hi there,\n\n"
-    "Your Donut platform verification code is: {code}\n"
+    "Your Bread platform verification code is: {code}\n"
     "It will expire in 5 minutes.\n\n"
     "If you did not request this, please ignore this email."
 )
@@ -55,7 +55,7 @@ class VerificationRequest:
 def _send_code_email(email: str, code: str) -> None:
     try:
         send_gmail_message(
-            subject="Donut Verification Code",
+            subject="Bread Verification Code",
             body=_VERIFICATION_TEMPLATE.format(code=code),
             recipient=email,
         )
