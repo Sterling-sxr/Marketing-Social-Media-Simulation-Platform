@@ -4,7 +4,7 @@
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
 endobj
 2 0 obj
-<< /Length 2050 >>
+<< /Length 2454 >>
 stream
 BT
 /F1 11 Tf
@@ -48,29 +48,59 @@ T*
 T*
 () Tj
 T*
+(### Install Docker) Tj
+T*
+() Tj
+T*
+(If you don’t have Docker installed yet:) Tj
+T*
+() Tj
+T*
+(1\) Install Docker for your OS) Tj
+T*
+(   - Docker Desktop \(recommended on Windows/macOS\): follow the official guide:) Tj
+T*
+([https://docs.docker.com/desktop/]\(https://docs.docker.com/desktop/\)) Tj
+T*
+(   - Linux: install the Docker Engine + Docker Compose plugin \(v2\) following the official guide:) Tj
+T*
+([https://docs.docker.com/engine/]\(https://docs.docker.com/engine/\) and) Tj
+T*
+([https://docs.docker.com/compose/]\(https://docs.docker.com/compose/\)) Tj
+T*
+() Tj
+T*
+(2\) Start the Docker service) Tj
+T*
+(   - Docker Desktop usually starts automatically after installation.) Tj
+T*
+(   - On Linux you may need to start/enable the daemon \(exact command depends on your distro\).) Tj
+T*
+() Tj
+T*
+(3\) Verify Docker is working) Tj
+T*
+(```bash) Tj
+T*
+(docker --version) Tj
+T*
+(docker compose version) Tj
+T*
+(```) Tj
+T*
+() Tj
+T*
+(If both commands work, you’re ready to run this project with `docker compose up -d`.) Tj
+T*
+() Tj
+T*
 (### Repository contents \(what is included\)) Tj
 T*
 () Tj
 T*
-(The submission zip contains:) Tj
+(The submission zip is generated from this repository and includes the files needed to run the) Tj
 T*
-() Tj
-T*
-(- `docker-compose.yml`) Tj
-T*
-(- `backend/` \(Django\)) Tj
-T*
-(- `frontend/` \(Vite/React\)) Tj
-T*
-(- `nginx/` \(reverse proxy gateway\)) Tj
-T*
-(- `tests/` \(unit + integration helpers\)) Tj
-T*
-(- `README.md`, `TESTING.md`, `.env.example`, and this manual) Tj
-T*
-() Tj
-T*
-(The zip does **not** include:) Tj
+(system, excluding:) Tj
 T*
 () Tj
 T*
@@ -79,6 +109,28 @@ T*
 (- `.env` \(real secrets\)) Tj
 T*
 (- `node_modules/`, `.venv/`, `__pycache__/`, build caches, Docker volumes) Tj
+T*
+(- `dist/` \(derived artefacts\)) Tj
+T*
+() Tj
+T*
+(In practice, the zip will include `docker-compose.yml`, `backend/`, `frontend/`, `nginx/`,) Tj
+T*
+ET
+
+endstream
+endobj
+3 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+4 0 obj
+<< /Length 1387 >>
+stream
+BT
+/F1 11 Tf
+14 TL
+50 781 Td
+(`tests/`, and documentation files like `README.md`, `TESTING.md`, and this manual.) Tj
 T*
 () Tj
 T*
@@ -104,6 +156,12 @@ T*
 T*
 (Required for local Docker run \(dev defaults provided in `.env.example`\):) Tj
 T*
+(- `TZ`) Tj
+T*
+(- `DJANGO_DEBUG`) Tj
+T*
+(- `ALLOWED_HOSTS`) Tj
+T*
 (- `DJANGO_SECRET_KEY`) Tj
 T*
 (- Postgres: `PG_DB`, `PG_USER`, `PG_PASSWORD`) Tj
@@ -116,20 +174,6 @@ T*
 T*
 (- `GATEWAY_PORT`) Tj
 T*
-ET
-
-endstream
-endobj
-3 0 obj
-<< /Type /Page /Parent 8 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
-endobj
-4 0 obj
-<< /Length 1314 >>
-stream
-BT
-/F1 11 Tf
-14 TL
-50 781 Td
 () Tj
 T*
 (Optional \(can be blank\):) Tj
@@ -192,6 +236,20 @@ T*
 T*
 (```bash) Tj
 T*
+ET
+
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 1679 >>
+stream
+BT
+/F1 11 Tf
+14 TL
+50 781 Td
 (docker compose down) Tj
 T*
 (```) Tj
@@ -236,20 +294,6 @@ T*
 T*
 (`http://localhost:${GATEWAY_PORT}`\)) Tj
 T*
-ET
-
-endstream
-endobj
-5 0 obj
-<< /Type /Page /Parent 8 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
-endobj
-6 0 obj
-<< /Length 2070 >>
-stream
-BT
-/F1 11 Tf
-14 TL
-50 781 Td
 (- **Backend API \(via gateway\)**: `http://localhost:8080/api/...`) Tj
 T*
 () Tj
@@ -312,13 +356,25 @@ T*
 T*
 () Tj
 T*
+ET
+
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 1014 >>
+stream
+BT
+/F1 11 Tf
+14 TL
+50 781 Td
 (```bash) Tj
 T*
 (python -m venv .venv) Tj
 T*
 (source .venv/bin/activate) Tj
-T*
-(pip install -r backend/requirements.txt) Tj
 T*
 (pip install -r tests/backend-unit/requirements.txt) Tj
 T*
@@ -360,33 +416,35 @@ ET
 
 endstream
 endobj
-7 0 obj
-<< /Type /Page /Parent 8 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 6 0 R >>
-endobj
-8 0 obj
-<< /Type /Pages /Kids [ 3 0 R 5 0 R 7 0 R ] /Count 3 >>
-endobj
 9 0 obj
-<< /Type /Catalog /Pages 8 0 R >>
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 8 0 R >>
 endobj
 10 0 obj
-<< /Title (INSTALLATION_MANUAL) /Producer (make_submission.py) >>
+<< /Type /Pages /Kids [ 3 0 R 5 0 R 7 0 R 9 0 R ] /Count 4 >>
+endobj
+11 0 obj
+<< /Type /Catalog /Pages 10 0 R >>
+endobj
+12 0 obj
+<< /Title (INSTALLATION_MANUAL) /Producer (INSTALLATION_MANUAL) >>
 endobj
 xref
-0 11
+0 13
 0000000000 65535 f 
 0000000015 00000 n 
 0000000085 00000 n 
-0000002187 00000 n 
-0000002313 00000 n 
-0000003679 00000 n 
-0000003805 00000 n 
-0000005927 00000 n 
-0000006053 00000 n 
-0000006124 00000 n 
-0000006173 00000 n 
+0000002591 00000 n 
+0000002718 00000 n 
+0000004157 00000 n 
+0000004284 00000 n 
+0000006015 00000 n 
+0000006142 00000 n 
+0000007208 00000 n 
+0000007335 00000 n 
+0000007413 00000 n 
+0000007464 00000 n 
 trailer
-<< /Size 11 /Root 9 0 R /Info 10 0 R >>
+<< /Size 13 /Root 11 0 R /Info 12 0 R >>
 startxref
-6255
+7547
 %%EOF
