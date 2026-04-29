@@ -4,17 +4,17 @@
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
 endobj
 2 0 obj
-<< /Length 2358 >>
+<< /Length 2280 >>
 stream
 BT
 /F1 11 Tf
 1 0 0 1 50 791.89 Tm
 14 TL
-(BREAD \(FINAL\) ? INSTALLATION MANUAL \(PDF SOURCE\)) Tj
+(BREAD \(FINAL\) - INSTALLATION MANUAL \(PDF SOURCE\)) Tj
 T*
 () Tj
 T*
-(This markdown file is the source for `INSTALLATION_MANUAL.pdf`. It is also included in the) Tj
+(This markdown file is the source for INSTALLATION_MANUAL.pdf. It is also included in the) Tj
 T*
 (submission zip for convenience.) Tj
 T*
@@ -24,27 +24,27 @@ T*
 T*
 () Tj
 T*
-(  ? **OS**: any OS that supports Docker \(Linux/macOS/Windows\)) Tj
+(- OS: any OS that supports Docker \(Linux/macOS/Windows\)) Tj
 T*
-(  ? **Docker**: 24+ recommended) Tj
+(- Docker: 24+ recommended) Tj
 T*
-(  ? **Docker Compose**: Docker Compose plugin \(v2\)) Tj
+(- Docker Compose: Docker Compose plugin \(v2\)) Tj
 T*
-(  ? **Browser**: Chrome/Firefox \(latest\)) Tj
+(- Browser: Chrome/Firefox \(latest\)) Tj
 T*
-(  ? **Disk**: enough space for Docker images + volumes \(Postgres/MinIO\)) Tj
+(- Disk: enough space for Docker images + volumes \(Postgres/MinIO\)) Tj
 T*
-(  ? **Ports**) Tj
+(- Ports) Tj
 T*
-(  - `8080` \(default\): gateway \(frontend + API proxy\)) Tj
+(  - 8080 \(default\): gateway \(frontend + API proxy\)) Tj
 T*
-(  - `5173` \(optional\): `frontend-dev` Vite dev server) Tj
+(  - 5173 \(optional\): frontend-dev Vite dev server) Tj
 T*
-(  - `15432` \(optional\): Postgres port mapping for local debugging) Tj
+(  - 15432 \(optional\): Postgres port mapping for local debugging) Tj
 T*
-(  - `15672` \(optional\): RabbitMQ management UI) Tj
+(  - 15672 \(optional\): RabbitMQ management UI) Tj
 T*
-(  - `9001` \(optional\): MinIO console) Tj
+(  - 9001 \(optional\): MinIO console) Tj
 T*
 () Tj
 T*
@@ -52,7 +52,7 @@ T*
 T*
 () Tj
 T*
-(If you don?t have Docker installed yet:) Tj
+(If you don't have Docker installed yet:) Tj
 T*
 () Tj
 T*
@@ -62,9 +62,9 @@ T*
 T*
 ([https://docs.docker.com/desktop/]\(https://docs.docker.com/desktop/\)) Tj
 T*
-(   - Linux: install the Docker Engine + Docker Compose plugin \(v2\) following the official) Tj
+(   - Linux: install the Docker Engine + Docker Compose plugin \(v2\) following the official guide:) Tj
 T*
-(guide: [https://docs.docker.com/engine/]\(https://docs.docker.com/engine/\) and) Tj
+([https://docs.docker.com/engine/]\(https://docs.docker.com/engine/\) and) Tj
 T*
 ([https://docs.docker.com/compose/]\(https://docs.docker.com/compose/\)) Tj
 T*
@@ -80,17 +80,17 @@ T*
 T*
 (3\) Verify Docker is working) Tj
 T*
-(```bash) Tj
+(bash) Tj
 T*
 (docker --version) Tj
 T*
 (docker compose version) Tj
 T*
-(```) Tj
+() Tj
 T*
 () Tj
 T*
-(If both commands work, you?re ready to run this project with `docker compose up -d`.) Tj
+(If both commands work, you're ready to run this project with docker compose up -d.) Tj
 T*
 () Tj
 T*
@@ -104,28 +104,28 @@ T*
 T*
 () Tj
 T*
-(  ? `.git/`) Tj
+(- .git/) Tj
 T*
-(  ? `.env` \(real secrets\)) Tj
+(- .env \(real secrets\)) Tj
 T*
-(  ? `node_modules/`, `.venv/`, `__pycache__/`, build caches, Docker volumes) Tj
+(- node_modules/, .venv/, __pycache__/, build caches, Docker volumes) Tj
 T*
-(  ? `dist/` \(derived artefacts\)) Tj
+(- dist/ \(derived artefacts\)) Tj
 T*
 () Tj
 ET
 endstream
 endobj
 3 0 obj
-<< /Length 1482 >>
+<< /Length 1384 >>
 stream
 BT
 /F1 11 Tf
 1 0 0 1 50 791.89 Tm
 14 TL
-(In practice, the zip will include `docker-compose.yml`, `backend/`, `frontend/`, `nginx/`,) Tj
+(In practice, the zip will include docker-compose.yml, backend/, frontend/, nginx/, tests/, and) Tj
 T*
-(`tests/`, and documentation files like `README.md`, `TESTING.md`, and this manual.) Tj
+(documentation files like README.md, TESTING.md, and this manual.) Tj
 T*
 () Tj
 T*
@@ -137,45 +137,45 @@ T*
 T*
 () Tj
 T*
-(```bash) Tj
+(bash) Tj
 T*
 (cp .env.example .env) Tj
 T*
-(```) Tj
+() Tj
 T*
 () Tj
 T*
-(2\) Adjust variables in `.env` if needed.) Tj
+(2\) Adjust variables in .env if needed.) Tj
 T*
 () Tj
 T*
-(Required for local Docker run \(dev defaults provided in `.env.example`\):) Tj
+(Required for local Docker run \(dev defaults provided in .env.example\):) Tj
 T*
-(  ? `TZ`) Tj
+(- TZ) Tj
 T*
-(  ? `DJANGO_DEBUG`) Tj
+(- DJANGO_DEBUG) Tj
 T*
-(  ? `ALLOWED_HOSTS`) Tj
+(- ALLOWED_HOSTS) Tj
 T*
-(  ? `DJANGO_SECRET_KEY`) Tj
+(- DJANGO_SECRET_KEY) Tj
 T*
-(  ? Postgres: `PG_DB`, `PG_USER`, `PG_PASSWORD`) Tj
+(- Postgres: PG_DB, PG_USER, PG_PASSWORD) Tj
 T*
-(  ? RabbitMQ: `MQ_USER`, `MQ_PASS`) Tj
+(- RabbitMQ: MQ_USER, MQ_PASS) Tj
 T*
-(  ? MinIO: `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_BUCKET`) Tj
+(- MinIO: S3_ACCESS_KEY, S3_SECRET_KEY, S3_BUCKET) Tj
 T*
-(  ? `PUBLIC_MEDIA_URL`) Tj
+(- PUBLIC_MEDIA_URL) Tj
 T*
-(  ? `GATEWAY_PORT`) Tj
+(- GATEWAY_PORT) Tj
 T*
 () Tj
 T*
 (Optional \(can be blank\):) Tj
 T*
-(  ? Gmail OAuth variables \(`GMAIL_*`\)) Tj
+(- Gmail OAuth variables \(GMAIL_*\)) Tj
 T*
-(  ? DeepSeek/LLM variables \(`DEEPSEEK_*`\)) Tj
+(- DeepSeek/LLM variables \(DEEPSEEK_*\)) Tj
 T*
 () Tj
 T*
@@ -183,7 +183,7 @@ T*
 T*
 () Tj
 T*
-(From the project root \(same folder as `docker-compose.yml`\):) Tj
+(From the project root \(same folder as docker-compose.yml\):) Tj
 T*
 () Tj
 T*
@@ -191,11 +191,11 @@ T*
 T*
 () Tj
 T*
-(```bash) Tj
+(bash) Tj
 T*
 (docker compose build) Tj
 T*
-(```) Tj
+() Tj
 T*
 () Tj
 T*
@@ -203,11 +203,11 @@ T*
 T*
 () Tj
 T*
-(```bash) Tj
+(bash) Tj
 T*
 (docker compose up -d) Tj
 T*
-(```) Tj
+() Tj
 T*
 () Tj
 T*
@@ -215,13 +215,13 @@ T*
 T*
 () Tj
 T*
-(```bash) Tj
+(bash) Tj
 T*
 (docker compose ps) Tj
 T*
 (docker compose logs -f) Tj
 T*
-(```) Tj
+() Tj
 T*
 () Tj
 T*
@@ -230,7 +230,7 @@ ET
 endstream
 endobj
 4 0 obj
-<< /Length 1810 >>
+<< /Length 1727 >>
 stream
 BT
 /F1 11 Tf
@@ -238,11 +238,11 @@ BT
 14 TL
 () Tj
 T*
-(```bash) Tj
+(bash) Tj
 T*
 (docker compose down) Tj
 T*
-(```) Tj
+() Tj
 T*
 () Tj
 T*
@@ -250,11 +250,11 @@ T*
 T*
 () Tj
 T*
-(```bash) Tj
+(bash) Tj
 T*
 (docker compose down -v) Tj
 T*
-(```) Tj
+() Tj
 T*
 () Tj
 T*
@@ -262,17 +262,17 @@ T*
 T*
 () Tj
 T*
-(  ? The backend container runs migrations at startup.) Tj
+(- The backend container runs migrations at startup.) Tj
 T*
-(  ? If you need to run migrations manually:) Tj
+(- If you need to run migrations manually:) Tj
 T*
 () Tj
 T*
-(```bash) Tj
+(bash) Tj
 T*
 (docker compose exec backend python manage.py migrate) Tj
 T*
-(```) Tj
+() Tj
 T*
 () Tj
 T*
@@ -280,17 +280,15 @@ T*
 T*
 () Tj
 T*
-(  ? **Main entry \(frontend + API gateway\)**: `http://localhost:8080` \(or) Tj
+(- Main entry \(frontend + API gateway\): http://localhost:8080 \(or http://localhost:${GATEWAY_PORT}\)) Tj
 T*
-(    `http://localhost:${GATEWAY_PORT}`\)) Tj
-T*
-(  ? **Backend API \(via gateway\)**: `http://localhost:8080/api/...`) Tj
+(- Backend API \(via gateway\): http://localhost:8080/api/...) Tj
 T*
 () Tj
 T*
 (Notes:) Tj
 T*
-(  ? The gateway serves the frontend and proxies `/api/` and `/media/` to backend/storage.) Tj
+(- The gateway serves the frontend and proxies /api/ and /media/ to backend/storage.) Tj
 T*
 () Tj
 T*
@@ -300,13 +298,13 @@ T*
 T*
 (For marking and local testing:) Tj
 T*
-(  ? Verification code is fixed to **`1234`** in dev/test mode \(no real email required\).) Tj
+(- Verification code is fixed to 1234 in dev/test mode \(no real email required\).) Tj
 T*
-(  ? Teacher registration invite code comes from `TEACHER_REGISTRATION_INVITE_CODE` in `.env`) Tj
+(- Teacher registration invite code comes from TEACHER_REGISTRATION_INVITE_CODE in .env \(default in) Tj
 T*
-(    \(default in `.env.example`: `12345678`\).) Tj
+(.env.example: 12345678\).) Tj
 T*
-(  ? Some flows require `.edu.au` emails \(see `tests/integration/README.md` for examples\).) Tj
+(- Some flows require .edu.au emails \(see tests/integration/README.md for examples\).) Tj
 T*
 () Tj
 T*
@@ -314,15 +312,13 @@ T*
 T*
 () Tj
 T*
-(See `TESTING.md` for:) Tj
+(See TESTING.md for:) Tj
 T*
-(  ? What tests exist \(frontend unit, backend unit, integration helpers\)) Tj
+(- What tests exist \(frontend unit, backend unit, integration helpers\)) Tj
 T*
-(  ? How to run each test suite) Tj
+(- How to run each test suite) Tj
 T*
-(  ? What must be tested manually \(auth, profile, courses, posts, dashboards, uploads,) Tj
-T*
-(    notifications\)) Tj
+(- What must be tested manually \(auth, profile, courses, posts, dashboards, uploads, notifications\)) Tj
 T*
 () Tj
 T*
@@ -334,32 +330,32 @@ T*
 T*
 () Tj
 T*
-(```bash) Tj
+(bash) Tj
 T*
 (cd tests/frontend-unit) Tj
 T*
 (npm install) Tj
+T*
+(npm test) Tj
+T*
+() Tj
 ET
 endstream
 endobj
 5 0 obj
-<< /Length 1174 >>
+<< /Length 1043 >>
 stream
 BT
 /F1 11 Tf
 1 0 0 1 50 791.89 Tm
 14 TL
-(npm test) Tj
-T*
-(```) Tj
-T*
 () Tj
 T*
 (Backend unit:) Tj
 T*
 () Tj
 T*
-(```bash) Tj
+(bash) Tj
 T*
 (python -m venv .venv) Tj
 T*
@@ -373,7 +369,7 @@ T*
 T*
 (pytest) Tj
 T*
-(```) Tj
+() Tj
 T*
 () Tj
 T*
@@ -381,27 +377,23 @@ T*
 T*
 () Tj
 T*
-(  ? **Port already in use**: change `GATEWAY_PORT` in `.env` \(and restart: `docker compose down) Tj
+(- Port already in use: change GATEWAY_PORT in .env \(and restart: docker compose down && docker) Tj
 T*
-(    && docker compose up -d`\)) Tj
+(compose up -d\)) Tj
 T*
-(  ? **Containers unhealthy**: run `docker compose logs -f` and verify Postgres healthcheck) Tj
+(- Containers unhealthy: run docker compose logs -f and verify Postgres healthcheck passes) Tj
 T*
-(    passes) Tj
+(- Database connection errors: ensure postgres is healthy; check PG_* values in .env) Tj
 T*
-(  ? **Database connection errors**: ensure `postgres` is healthy; check `PG_*` values in `.env`) Tj
+(- Uploads not accessible: ensure PUBLIC_MEDIA_URL matches gateway URL and that minio + minio-init) Tj
 T*
-(  ? **Uploads not accessible**: ensure `PUBLIC_MEDIA_URL` matches gateway URL and that `minio`) Tj
+(are running) Tj
 T*
-(    + `minio-init` are running) Tj
+(- AI features slow or failing: leave DEEPSEEK_API_KEY empty to disable AI, or increase gateway) Tj
 T*
-(  ? **AI features slow or failing**: leave `DEEPSEEK_API_KEY` empty to disable AI, or increase) Tj
+(timeout if enabling) Tj
 T*
-(    gateway timeout if enabling) Tj
-T*
-(  ? **Gmail not configured**: leave `GMAIL_*` blank; demo mode should still allow core flows to) Tj
-T*
-(    work) Tj
+(- Gmail not configured: leave GMAIL_* blank; demo mode should still allow core flows to work) Tj
 T*
 () Tj
 ET
@@ -430,17 +422,17 @@ xref
 0000000000 65535 f 
 0000000015 00000 n 
 0000000085 00000 n 
-0000002495 00000 n 
-0000004029 00000 n 
-0000005891 00000 n 
-0000007117 00000 n 
-0000007250 00000 n 
-0000007383 00000 n 
-0000007516 00000 n 
-0000007649 00000 n 
-0000007725 00000 n 
+0000002417 00000 n 
+0000003853 00000 n 
+0000005632 00000 n 
+0000006727 00000 n 
+0000006860 00000 n 
+0000006993 00000 n 
+0000007126 00000 n 
+0000007259 00000 n 
+0000007335 00000 n 
 trailer
 << /Size 12 /Root 11 0 R >>
 startxref
-7776
+7386
 %%EOF
