@@ -515,7 +515,7 @@ export default function EngagementDistributionDetailPage() {
                 <div>Total Interactions</div>
               </div>
 
-              {filteredCourses.map((course, index) => (
+              {filteredCourses.map((course) => (
                 <div
                   key={course.id}
                   className="grid grid-cols-[2.25fr_1fr_1fr_1fr_1.1fr] items-center gap-0 border-b border-slate-100 px-4 py-2.5 last:border-b-0"

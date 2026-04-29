@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { deleteJson, getJson, postJson, patchJson } from "../lib/api";
+import { deleteJson, getJson, postJson } from "../lib/api";
 import { useApp } from "../context/AppContext";
 import Feedback from "./components/Feedback";
 import ConfirmDialog from "./components/ConfirmDialog";
@@ -8,7 +8,6 @@ import PostCard from "./components/PostCard";
 import { hasProfanity } from "../lib/profanity";
 import ProfanityHint from "./components/ProfanityHint";
 import AuthenticatedShell from "./components/AuthenticatedShell";
-import { getDefaultLandingPath } from "../lib/access";
 
 export default function PostDetailPage() {
   const { courseId: courseIdParam, postId: postIdParam } = useParams();
@@ -16,7 +15,6 @@ export default function PostDetailPage() {
   const postId = Number(postIdParam);
   const navigate = useNavigate();
   const { authUser, authCheckComplete } = useApp();
-  const homePath = getDefaultLandingPath(authUser);
 
   const [post, setPost] = useState(null);
   const [courseInfo, setCourseInfo] = useState(null);
@@ -26,7 +24,6 @@ export default function PostDetailPage() {
   const [commentText, setCommentText] = useState("");
   const [commentBusy, setCommentBusy] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-  const [deleteBusy, setDeleteBusy] = useState(false);
   const [commentScan, setCommentScan] = useState({ has: false, word: "" });
 
   const load = useCallback(async () => {
@@ -56,7 +53,6 @@ export default function PostDetailPage() {
 
   const isReadOnly = Boolean(courseInfo?.read_only);
   const courseEndDate = courseInfo?.end_date || null;
-  const authorName = authUser?.full_name || authUser?.username || "User";
 
   // Context: Compute shared values once so all branches use the same normalized inputs.
   const isOwner = useMemo(() => {
@@ -152,72 +148,6 @@ export default function PostDetailPage() {
       setCommentBusy(false);
     }
   };
-
-  // Purpose: `HeaderBar` owns one cohesive concern so state transitions and side effects remain easy to trace.
-  const HeaderBar = () => (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-accent-100/60 bg-white/95 backdrop-blur">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 lg:px-6 lg:py-4">
-        <div className="flex items-center gap-2">
-          {/* Context: Keep related UI rendering and event handlers together for predictable updates. Reason: Grouping this logic makes interaction flows easier to debug and extend. */}
-          <button
-            type="button"
-            onClick={() => navigate(`/courses/${courseId}`)}
-            aria-label="Back to course feed"
-            className="flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700 transition hover:bg-brand-100 focus:outline-none focus:ring-2 focus:ring-brand-200"
-          >
-            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M19 12H5M5 12l7-7M5 12l7 7" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span>Back</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate(homePath)}
-            aria-label="Return to home"
-            className="hidden items-center gap-2.5 text-xl font-bold sm:flex"
-          >
-            <img
-              src="/logo.jpg"
-              alt="Bread"
-              className="h-8 w-8 rounded-lg object-cover sm:h-10 sm:w-10 lg:h-12 lg:w-12"
-            />
-            <span className="bg-gradient-to-r from-brand-500 via-accent-400 to-accent-500 bg-clip-text text-lg text-transparent sm:text-xl">
-              Bread
-            </span>
-          </button>
-        </div>
-
-        <div className="flex min-w-0 items-center gap-2 sm:gap-3 lg:gap-5">
-          <div className="flex min-w-0 items-center gap-2 rounded-full border border-accent-200/70 bg-white/90 px-2.5 py-1.5 sm:gap-3 sm:px-4 sm:py-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-accent-300 via-accent-200 to-accent-200 text-sm font-semibold text-slate-800 sm:h-10 sm:w-10 sm:text-base">
-              {authorName.charAt(0).toUpperCase()}
-            </div>
-            <div className="min-w-0 leading-tight">
-              <p className="max-w-[100px] truncate text-xs font-semibold text-slate-800 sm:max-w-[12rem] sm:text-sm">
-                {authorName}
-              </p>
-              <p className="hidden max-w-[12rem] truncate text-xs text-slate-500 sm:block">
-                {authUser?.email || "zxxxxxxx@ad.unsw.edu.au"}
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => navigate("/", { replace: true })}
-            className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-brand-100 to-accent-100 px-2.5 py-1.5 text-xs font-semibold text-brand-600 sm:px-4 sm:py-2 sm:text-sm"
-            aria-label="Logout"
-          >
-            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
-              <path d="M13 3a1 1 0 0 1 1 1v4h-2V5H6v14h6v-3h2v4a1 1 0 0 1-1 1H5a2 2 0 0 1 2-2V5a2 2 0 0 1 2-2h8z" />
-              <path d="M21 12a1 1 0 0 0-1-1h-7v2h7a1 1 0 0 0 1-1zm-3.707-4.707-1.414 1.414L18.586 11H13v2h5.586l-2.707 2.293 1.414 1.414L22 12l-4.707-4.707z" />
-            </svg>
-            <span className="hidden sm:inline">Logout</span>
-          </button>
-        </div>
-      </div>
-    </header>
-  );
 
   return (
     <AuthenticatedShell
@@ -402,7 +332,7 @@ export default function PostDetailPage() {
         cancelLabel="Cancel"
         onConfirm={() => {}}
         onCancel={() => setConfirmDeleteOpen(false)}
-        processing={deleteBusy}
+        processing={false}
         tone="danger"
       />
     </AuthenticatedShell>

@@ -1,4 +1,4 @@
-## Bread (Sprint 3) — Installation Manual (PDF source)
+## Bread (Final) — Installation Manual (PDF source)
 
 This markdown file is the source for `INSTALLATION_MANUAL.pdf`. It is also included in the submission zip for convenience.
 
@@ -128,6 +128,7 @@ Notes:
 
 For marking and local testing:
 - Verification code is fixed to **`1234`** in dev/test mode (no real email required).
+- Teacher registration invite code comes from `TEACHER_REGISTRATION_INVITE_CODE` in `.env` (default in `.env.example`: `12345678`).
 - Some flows require `.edu.au` emails (see `tests/integration/README.md` for examples).
 
 ### Testing instructions
@@ -152,6 +153,7 @@ Backend unit:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
+pip install -r backend/requirements.txt
 pip install -r tests/backend-unit/requirements.txt
 cd tests/backend-unit
 pytest

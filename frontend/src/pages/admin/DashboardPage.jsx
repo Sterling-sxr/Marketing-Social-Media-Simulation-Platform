@@ -11,7 +11,6 @@ import {
   Meh,
   MessageSquareText,
   Smile,
-  Sparkles,
   Trophy,
   Users,
   GraduationCap,

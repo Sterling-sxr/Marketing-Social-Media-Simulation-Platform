@@ -1,5 +1,5 @@
 // Context: Compute shared values once so all branches use the same normalized inputs.
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import AuthenticatedShell from "./components/AuthenticatedShell";

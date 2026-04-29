@@ -33,7 +33,6 @@ import CourseStudentDashboardPage from "./pages/admin/CourseStudentDashboardPage
 import CourseAIUsersPage from "./pages/admin/CourseAIUsersPage";
 import PeopleFollowsPage from "./pages/PeopleFollowsPage";
 import OnboardingProfilePage from "./pages/OnboardingProfilePage";
-import StudentAnalysisPage from "./pages/StudentAnalysisPage";
 import CourseStudentsPage from "./pages/admin/CourseStudentsPage.jsx";
 import SearchPage from "./pages/SearchPage";
 import CourseMaterialsPage from "./pages/CourseMaterialsPage";

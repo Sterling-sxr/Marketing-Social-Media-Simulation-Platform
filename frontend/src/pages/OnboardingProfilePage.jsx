@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useApp, createEmptyProfileData } from "../context/AppContext";
 import Feedback from "./components/Feedback";
-import CircleImage from "./components/CircleImage";
 
 /* Purpose: `EditSection` owns one cohesive concern so state transitions and side effects remain easy to trace. */
 function EditSection({

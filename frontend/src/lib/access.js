@@ -2,7 +2,7 @@ export function isTeacher(user) {
   return Boolean(user?.is_superuser || user?.is_staff);
 }
 
-export function getDefaultLandingPath(user) {
+export function getDefaultLandingPath() {
   return "/courses";
 }
 

@@ -4,7 +4,6 @@ import { useApp } from "../../context/AppContext";
 import { getDefaultLandingPath } from "../../lib/access";
 import {
   BookOpen,
-  Search,
   Bell,
   FileText,
   LayoutDashboard,
@@ -81,7 +80,6 @@ export default function AuthenticatedShell({
   mobileNavLinks,
   hideMobileNav = false,
   hideSidebar = false,
-  showNotifications = false, // Inline explanation: Keep this non-obvious normalization rule explicit.
   wideContent = false,
   /* Context: Keep related logic in one section so assumptions and control flow stay explicit. Reason: Localizing side effects lowers review cost and reduces accidental regressions. */
   printFriendlyChrome = false,

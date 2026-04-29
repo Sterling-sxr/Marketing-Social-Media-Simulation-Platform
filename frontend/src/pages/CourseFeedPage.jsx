@@ -198,12 +198,6 @@ export default function CourseFeedPage() {
     ? subtitleParts.join(" · ")
     : "Catch up with the latest class discussions.";
 
-  const postsActive =
-    location.pathname === `/courses/${courseId}/community` ||
-    location.pathname.startsWith(`/courses/${courseId}/hashtags/`);
-  const materialsActive = location.pathname === `/courses/${courseId}/materials`;
-  const messagesActive = location.pathname === `/courses/${courseId}/messages`;
-
   const courseProfileTitle = useMemo(() => {
     if (headerCourse) {
       return `${headerCourse.course_code || ""} ${
@@ -865,7 +859,7 @@ export default function CourseFeedPage() {
           message: "Updated successfully!",
         });
       } else {
-        const data = await postJson(`/api/courses/${courseId}/posts/`, payload);
+        await postJson(`/api/courses/${courseId}/posts/`, payload);
 
         // Context: Compute shared values once so all branches use the same normalized inputs.
         setComposerStatus({

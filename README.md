@@ -79,7 +79,7 @@ Backend unit tests in Docker:
 ```bash
 docker compose run --rm \
   -v "$(pwd)/tests/backend-unit:/app/tests/backend-unit:ro" \
-  backend sh -lc "pip install -r /app/tests/backend-unit/requirements.txt && python -m pytest -c /app/tests/backend-unit/pytest.ini /app/tests/backend-unit"
+  backend sh -lc "pip install --root-user-action=ignore -r /app/requirements.txt && pip install --root-user-action=ignore pytest==8.3.2 pytest-django==4.9.0 && python -m pytest -p no:cacheprovider -c /app/tests/backend-unit/pytest.ini /app/tests/backend-unit"
 ```
 
 ## Tests Overview
@@ -138,11 +138,7 @@ Keep these documents updated alongside code changes so new contributors can foll
 - Each AI persona gets a generated system user account that is added to the course roster; likes/comments/notifications run through that account so analytics and permissions remain consistent.
 
 ### CSV template example
-```csv
-username,display_name,gender,city,age_group,education_level,income_level,social_value,sociability,openness,content_preference,interests,shopping_frequency,buying_behavior,decision_factor,shopping_preference,digital_time,interaction_style,influencer_type,notes
-ai_student_01,Alice AI,Female,Sydney,Gen Z (16-28),University Education,"$50K - $89,999 /year",7,6,8,Funny short posts/memes,"Fitness & Sports;Travel & Food",Often,Brand loyal,Quality/durability,Both online and in stores,Several times a day,Comment on posts,Fashion & Beauty,"Prefers eco-friendly brands"
-ai_student_02,Bob AI,Male,Melbourne,Gen Y (29-44),Post-graduate Education,"$90K - $149,999 /year",5,5,5,Thoughtful opinions,"Technology & Gaming,Outdoor & Nature",Sometimes,Price-sensitive,Price,Online only,About once a day,Mostly just scroll/watch,Tech & Gaming,""
-```
+Use the ready-to-import sample at the repository root: `ai_personas_50_valid.csv`.
 
 > Run `docker compose exec backend python manage.py migrate` beforehand to create/update the `CourseAIUser` and `CourseAIUserIdentity` tables.
 
@@ -159,23 +155,5 @@ ai_student_02,Bob AI,Male,Melbourne,Gen Y (29-44),Post-graduate Education,"$90K 
 - `security-audit` runs too, but it is non-blocking (`continue-on-error: true`), so it does not prevent the `ci-summary` gate from passing.
 - If CI fails: check the failed step in the GitHub Actions page before requesting review.
 - Before opening a PR: make sure you have run local backend and frontend checks if possible.
-
-## Submission Branch Check
-Software Quality marking checks the `main` branch. Before submission:
-
-```bash
-git checkout main
-git pull
-git checkout -b F09D-XX-software-quality
-git add .
-git commit -m "Software quality assessment changes"
-git push -u origin HEAD
-#
-# Open a PR targeting `main` and merge it after all `ci-summary` gate checks pass.
-#
-git checkout main
-git pull
-git status
-```
 
 Confirm required files exist on `main`: `README.md`, `TESTING.md`, `INSTALLATION_MANUAL.pdf`, `.env.example`, and Docker configs.

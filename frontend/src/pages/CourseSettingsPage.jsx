@@ -1,10 +1,8 @@
-import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import AuthenticatedShell from "./components/AuthenticatedShell";
 
 export default function CourseSettingsPage() {
-  const { courseId: courseIdParam } = useParams();
-  const courseId = Number(courseIdParam);
   const navigate = useNavigate();
   const { authUser, authCheckComplete } = useApp();
 

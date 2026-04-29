@@ -1,6 +1,6 @@
 ## Software Quality Assessment — Testing Guide
 
-This document explains what tests exist in `sprint3/`, how to run them, what they cover, and what must be tested manually.
+This document explains what tests exist in this repository, how to run them, what they cover, and what must be tested manually.
 
 ### Test suites included
 
@@ -55,7 +55,7 @@ How to run backend tests in Docker container:
 docker compose exec backend python manage.py test
 docker compose run --rm \
   -v "$(pwd)/tests/backend-unit:/app/tests/backend-unit:ro" \
-  backend sh -lc "pip install -r /app/tests/backend-unit/requirements.txt && python -m pytest -c /app/tests/backend-unit/pytest.ini /app/tests/backend-unit"
+  backend sh -lc "pip install --root-user-action=ignore -r /app/requirements.txt && pip install --root-user-action=ignore pytest==8.3.2 pytest-django==4.9.0 && python -m pytest -p no:cacheprovider -c /app/tests/backend-unit/pytest.ini /app/tests/backend-unit"
 ```
 
 ### Integration helpers (manual / semi-automated)
@@ -72,6 +72,7 @@ These behaviors are expected to be verified manually via the UI at `http://local
 
 - **Auth**
   - Registration flow (send code → verify code → set password)
+  - Teacher registration invite code should match `TEACHER_REGISTRATION_INVITE_CODE` in `.env` (default in `.env.example`: `12345678`)
   - Login / logout
   - Password reset flow
   - Notes:
