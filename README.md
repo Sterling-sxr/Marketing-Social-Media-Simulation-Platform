@@ -55,7 +55,7 @@ Notes:
 - Keep commits small and descriptive, e.g. `F09D-42: describe change`.
 - Open a Pull Request to merge your branch into `main`.
 - Request at least one teammate review and leave meaningful review comments.
-- Run the local validation commands below (or see `docs/git-workflow.md`) before pushing.
+- Run the local validation commands below before pushing.
 - GitHub Actions runs backend tests and frontend ESLint automatically; fix any failures locally before merging.
 
 ### Local CI commands
