@@ -14,25 +14,6 @@ This repo contains both the Django backend and Vite/React frontend for the Bread
 - Docker 24+
 - Docker Compose plugin
 
-## Software Quality submission artefacts
-
-For the Software Quality Assessment submission, this folder includes:
-
-- `TESTING.md` — what tests exist, how to run them, manual testing checklist
-- `INSTALLATION_MANUAL.md` — the source text for the installation manual PDF
-- `INSTALLATION_MANUAL.pdf` — generated installation manual (see below)
-- `.env.example` — environment template (do **not** submit real `.env` secrets)
-
-To generate the PDF + the submission zip:
-
-```bash
-python3 tools/make_submission.py
-```
-
-This creates:
-- `INSTALLATION_MANUAL.pdf`
-- `dist/sprint3_software_quality.zip`
-
 ## First-Time Setup
 1. Duplicate the environment example: `cp .env.example .env` and adjust secrets or ports as needed.
 2. Build the containers: `docker compose build`
@@ -70,9 +51,10 @@ Notes:
 - Override API target if needed: `VITE_API_BASE=http://gateway docker compose up -d frontend-dev`.
 
 ## Git Workflow
-- Create feature/fix branches from `sprint3` (or the active sprint branch) using names such as `F09D-42-short-description`.
+- Create a new feature/fix branch for your changes using names such as `F09D-42-short-description`.
 - Keep commits small and descriptive, e.g. `F09D-42: describe change`.
-- Merge back via Pull Request into `sprint3/main`, request at least one teammate review, and leave meaningful review comments.
+- Open a Pull Request to merge your branch into `main`.
+- Request at least one teammate review and leave meaningful review comments.
 - Run the local validation commands below (or see `docs/git-workflow.md`) before pushing.
 - GitHub Actions runs backend tests and frontend ESLint automatically; fix any failures locally before merging.
 
@@ -85,6 +67,7 @@ source .venv/bin/activate
 ruff check backend
 python backend/manage.py check
 python backend/manage.py test
+python -m pytest -c tests/backend-unit/pytest.ini tests/backend-unit
 
 # Frontend
 cd frontend
@@ -103,16 +86,36 @@ docker compose run --rm \
 The `tests/` directory contains three complementary suites so you can target validation at the right level:
 
 - **Frontend unit (`tests/frontend-unit/`)** – Vitest + React Testing Library covering six files (21 assertions). `App.test.jsx` exercises the landing/login experience (hero copy, password toggle, success/error toasts), `AppContext.test.jsx` validates helper methods such as `createEmptyProfileData`, login/logout, pushToast/dismissToast, interest toggles, and provider guard logic, while `ToastHost`, `Feedback`, `CircleImage`, and `DigitInput` each have focused specs for rendering, navigation, and keyboard behaviour. Run via `cd tests/frontend-unit && npm install && npm test` (or `npm run test:ui` for watch/UI mode). For full flow descriptions and coverage, see `tests/frontend-unit/README.md`.
-- **Backend unit (`tests/backend-unit/`)** – Pytest + pytest-django service tests for demo APIs (`/api/messages/*`), media uploads, message helpers, notification fan-out, and the full registration flow (send/verify code, throttling, password rules, Gmail fallback). Fixtures stub Redis/S3/Channels so everything runs on SQLite with a temp media directory. Activate `.venv`, install `backend/requirements.txt` plus `tests/backend-unit/requirements.txt`, and run `python -m pytest -c tests/backend-unit/pytest.ini tests/backend-unit`. Detailed setup and coverage live in `tests/backend-unit/README.md`.
+- **Backend unit (`tests/backend-unit/`)** – Pytest + pytest-django service tests for demo APIs (`/api/messages/*`), media uploads, message helpers, notification fan-out, and the full registration flow (send/verify code, throttling, password rules, Gmail fallback). Fixtures stub Redis/S3/Channels so everything runs on SQLite with a temp media directory. Activate `.venv`, install `tests/backend-unit/requirements.txt`, and run `python -m pytest -c tests/backend-unit/pytest.ini tests/backend-unit`. Detailed setup and coverage live in `tests/backend-unit/README.md`.
 - **Integration helpers (`tests/integration/`)** – higher-level assets: `full_api.http` (VS Code REST Client collection covering auth, profiles, courses, posts, AI users, analytics, and demo messaging/uploads), `run_e2e.ps1` (PowerShell script that starts Docker Compose then walks through auth/profile/demo APIs), and `ws_test.py` (simple WebSocket subscriber; requires the `websockets` package). Sample upload files live under `tests/integration/assets/`. See `tests/integration/README.md` for the full scripts and coverage details.
 
 ## Auth Flow
-- Visit `http://localhost:8080` (Twitter-style landing page) and use the buttons to enter the registration/login flow; in debug mode the verification code is rendered directly.
-- Registration has three steps: `POST /api/auth/send-code/` (email) → `POST /api/auth/verify-code/` (4-digit code) → `POST /api/auth/set-password/` (password).
+- Entry points:
+  - Registration: `POST` flow starts from `/register/email` (from the landing page).
+  - Login/Logout: via `/login` and the authenticated header.
+  - Password reset: via `/reset/email`.
+- Registration (email OTP) supports both **student** and **teacher** roles:
+  - Step 1: Send verification code  
+    - UI: on `/register/email`, select `Student` or `Teacher` (Teacher requires `Teacher invite code`) and enter your school email.
+    - API: `POST /api/auth/send-code/` with payload `{ email, role, teacher_invite_code }`.
+    - Teacher invite code source: set `TEACHER_REGISTRATION_INVITE_CODE` in `.env` (default example in `.env.example`: `12345678`), then enter the same value in the Teacher invite code field.
+    - In dev/test mode the verification code is fixed to `1234` (and is returned as `dev_code`), so you can verify without real email delivery.
+  - Step 2: Verify the 4-digit code  
+    - UI: `/register/verify`
+    - API: `POST /api/auth/verify-code/` with payload `{ email, code }`.
+  - Step 3: Set password  
+    - UI: `/register/password`
+    - API: `POST /api/auth/set-password/` with payload `{ email, password, role, teacher_invite_code }` (password must be at least 8 characters).
+    - On success the app auto-logins and redirects to `/courses`.
 - Login/Logout: `POST /api/auth/login/` and `POST /api/auth/logout/`.
-- Password reset: `POST /api/auth/reset/send-code/` → `POST /api/auth/reset/verify-code/` → `POST /api/auth/reset/complete/`.
-- Verification codes are cached in Redis, so ensure the `redis` container is healthy via `docker compose ps` before testing.
-- Email sending: Gmail API is wired up for sending verification emails, but for the current demo the verification code is fixed as `1234` for both registration and password reset (no real email delivery required).
+- Password reset:
+  - Step 1: `POST /api/auth/reset/send-code/` with payload `{ email }`
+  - Step 2: `POST /api/auth/reset/verify-code/` with payload `{ email, code }`
+  - Step 3: `POST /api/auth/reset/complete/` with payload `{ email, password }`
+- Verification code caching & throttling:
+  - Verification codes are cached/rate-limited (via Redis in the intended setup), so ensure the `redis` container is healthy via `docker compose ps` before testing.
+- Email sending:
+  - Gmail OAuth is optional; when not configured the system should still work in dev/test mode using the fixed `1234` code.
 
 ## Documentation & Schema
 - Database schema SQL: `docs/db/schema/postgres-schema.sql`
@@ -120,19 +123,19 @@ The `tests/` directory contains three complementary suites so you can target val
 Keep these documents updated alongside code changes so new contributors can follow the latest requirements and schema definitions.
 
 ## Course Personas
-- The unified profile is replaced by **per-course personas**. When a user opens a course without a persona they are redirected to `/courses/<course_id>/profile` (same UI as onboarding) and must complete it before viewing posts.
-- Data lives in the new `CourseProfile` table (migration `0019_courseprofile`). After pulling latest code run `docker compose exec backend python manage.py migrate`; the migration copies existing `UserProfile` data into every joined course.
+- Course persona data is stored per course in the `CourseProfile` table.
+- Users set up (or update) their course persona on `/courses/<course_id>/profile` (the same onboarding UI). The course Community page includes a `View course profile` link and shows a `Complete profile` CTA when a `CourseProfile` row does not exist for the current user/course.
 - API endpoints:
-  - `GET /api/courses/<course_id>/profile/` returns course metadata, completion status, and persona details (if present).
-  - `POST /api/courses/<course_id>/profile/` saves or updates persona fields.
-- `/courses`, `/courses/manage`, and the personal `Profile` page all surface persona completion state per course. Incomplete courses show a “Complete profile” CTA pointing to the setup page.
+  - `GET /api/courses/<course_id>/profile/` returns course metadata plus `profile_completed` and `profile` (persona fields) or `profile: null`.
+  - `POST /api/courses/<course_id>/profile/` saves or updates persona fields and returns updated `profile` + `profile_completed: true`.
+- The student `Profile` page shows a `Course Personas` list for joined courses, and the Community feed offers the profile quick link/modal.
 
 ## AI User Management
-- Admins/super-admins can open a course card from `Courses → Manage`; the `Enter Course →` button now includes a `Manage AI Users` action.
-- The management page lists every AI persona in that course with create/edit/delete/search and CSV bulk import.
-- Form fields mirror the human profile options (gender, city, age band, education, income, lifestyle interests, shopping habits, social-media usage, etc.).
-- CSV import can overwrite existing AI users with the same name in the same course. Interest fields accept comma/semicolon separated lists, numeric fields require integers 1–10, and fields containing commas must be wrapped in double quotes.
-- Each AI persona gets a hidden system account that joins the course roster; likes, comments, and notifications run through that account so analytics and permissions stay consistent.
+- Teachers/admins select a course from `/ai-users` (AI User Center). Each course card has a `Manage AI Users` button that opens `/courses/<course_id>/ai-users`.
+- The per-course management page lists every AI persona with create/edit/delete/search and CSV bulk import.
+- Form fields mirror the persona schema (gender, city, age group, education/income levels, lifestyle interests, shopping habits, etc.).
+- CSV import overwrites existing AI users with the same username in the same course; interests accept comma/semicolon-separated values, numeric fields validate as integers 1–10, and any CSV field containing commas must be quoted.
+- Each AI persona gets a generated system user account that is added to the course roster; likes/comments/notifications run through that account so analytics and permissions remain consistent.
 
 ### CSV template example
 ```csv
@@ -144,31 +147,18 @@ ai_student_02,Bob AI,Male,Melbourne,Gen Y (29-44),Post-graduate Education,"$90K 
 > Run `docker compose exec backend python manage.py migrate` beforehand to create/update the `CourseAIUser` and `CourseAIUserIdentity` tables.
 
 ### AI automation (DeepSeek)
-- Configure `DEEPSEEK_API_KEY` in `.env` or the deployment environment (optional overrides: `DEEPSEEK_API_BASE`, `DEEPSEEK_MODEL_NAME`, `DEEPSEEK_POST_DELAY_SECONDS`, `DEEPSEEK_AI_USER_DELAY_SECONDS`). Leaving the API key empty disables AI interactions.
-- The AI persona `generate-preview` flow also calls DeepSeek synchronously, so it can take noticeably longer than local draft generation such as `guided-preview`.
-- If you change nginx timeout settings for AI preview requests, restart the gateway so the new proxy config is loaded: `docker compose restart gateway`.
-- After a post is committed, the backend asynchronously calls the DeepSeek API for each AI persona to decide likes/comments and posts them via the persona’s system account.
-- API failures and network errors are caught and logged so normal posting is unaffected.
-- Post-analytics sentiment snapshots run on the same scheduler (controlled by `POST_ANALYTICS_REFRESH_INTERVAL`, default 1 hour). A snapshot is also triggered once at service startup.
-
-
-# Celery 
-- run dashboard:
-docker compose exec backend python manage.py shell -c \
-  "from apps.core.services.dashboard_service import refresh_all_dashboards; refresh_all_dashboards()"
-
-
-- asynchronous 
-docker compose exec backend python manage.py shell -c \
-"from apps.core.services.dashboard_service import refresh_all_dashboards_async; refresh_all_dashboards_async()"
+- Configure `DEEPSEEK_API_KEY` in `.env` or the deployment environment (optional overrides: `DEEPSEEK_API_BASE`, `DEEPSEEK_MODEL_NAME`, `DEEPSEEK_POST_DELAY_SECONDS`). Leaving the API key empty disables DeepSeek-backed flows (Smart `generate-preview`, AI reactions, and AI analysis).
+- The AI persona `generate-preview` flow calls DeepSeek synchronously (OpenAI SDK `chat.completions.create` with `stream=false`), so it can take longer than the rule-based `guided-preview`.
+- After a post is committed, the backend schedules background AI reactions via `schedule_ai_reactions()` in a thread; reactions for each AI persona run concurrently after `DEEPSEEK_POST_DELAY_SECONDS`.
+- API failures and network errors in reaction/LLM calls are caught and logged so normal posting is unaffected.
+- Post-analytics sentiment snapshots are refreshed by `post_analytics_snapshot_service` on a loop controlled by `POST_ANALYTICS_REFRESH_INTERVAL` (default 3600 seconds), with an initial refresh triggered shortly after service startup.
 
 ## CI
-- run on push, pull request, and manual trigger:
-GitHub Actions workflow for backend lint and checks, backend tests, frontend lint and build, frontend unit tests, security audit, and Docker build validation.
-- if CI fails:
-Check the failed step in the Actions tab before requesting review.
-- before opening a PR:
-Make sure local backend and frontend checks have been run if possible.
+- Runs on push, pull request, and manual trigger.
+- Required CI jobs (quality gate is `ci-summary`): `backend-quality`, `backend-tests`, `backend-unit-tests`, `frontend-quality`, `frontend-unit-tests`, `docker-build-validation`.
+- `security-audit` runs too, but it is non-blocking (`continue-on-error: true`), so it does not prevent the `ci-summary` gate from passing.
+- If CI fails: check the failed step in the GitHub Actions page before requesting review.
+- Before opening a PR: make sure you have run local backend and frontend checks if possible.
 
 ## Submission Branch Check
 Software Quality marking checks the `main` branch. Before submission:
@@ -176,7 +166,15 @@ Software Quality marking checks the `main` branch. Before submission:
 ```bash
 git checkout main
 git pull
-git merge sprint3
+git checkout -b F09D-XX-software-quality
+git add .
+git commit -m "Software quality assessment changes"
+git push -u origin HEAD
+#
+# Open a PR targeting `main` and merge it after all `ci-summary` gate checks pass.
+#
+git checkout main
+git pull
 git status
 ```
 

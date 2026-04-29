@@ -91,7 +91,7 @@ These behaviors are expected to be verified manually via the UI at `http://local
   - Dashboard summary pages and drill-down pages
   - Segmentation analytics endpoints where applicable
 - **AI / LLM-dependent behavior**
-  - If `DEEPSEEK_API_KEY` is **empty**, AI reactions should be disabled and the system should still work normally.
+  - If `DEEPSEEK_API_KEY` is **empty**, DeepSeek-backed flows should be disabled (AI reactions, Smart `generate-preview`/`generate-commit`, and DeepSeek-based `ai_analyze`/analysis endpoints). The rest of the system should still work normally.
   - If configured, AI persona preview/commit and post-reaction behavior may take longer; check gateway timeouts if needed.
 - **WebSockets**
   - Notifications page updates; optionally validate with `tests/integration/ws_test.py`

@@ -16,22 +16,36 @@ This markdown file is the source for `INSTALLATION_MANUAL.pdf`. It is also inclu
   - `15672` (optional): RabbitMQ management UI
   - `9001` (optional): MinIO console
 
+### Install Docker
+
+If you don’t have Docker installed yet:
+
+1) Install Docker for your OS
+   - Docker Desktop (recommended on Windows/macOS): follow the official guide: [https://docs.docker.com/desktop/](https://docs.docker.com/desktop/)
+   - Linux: install the Docker Engine + Docker Compose plugin (v2) following the official guide: [https://docs.docker.com/engine/](https://docs.docker.com/engine/) and [https://docs.docker.com/compose/](https://docs.docker.com/compose/)
+
+2) Start the Docker service
+   - Docker Desktop usually starts automatically after installation.
+   - On Linux you may need to start/enable the daemon (exact command depends on your distro).
+
+3) Verify Docker is working
+```bash
+docker --version
+docker compose version
+```
+
+If both commands work, you’re ready to run this project with `docker compose up -d`.
+
 ### Repository contents (what is included)
 
-The submission zip contains:
-
-- `docker-compose.yml`
-- `backend/` (Django)
-- `frontend/` (Vite/React)
-- `nginx/` (reverse proxy gateway)
-- `tests/` (unit + integration helpers)
-- `README.md`, `TESTING.md`, `.env.example`, and this manual
-
-The zip does **not** include:
+The submission zip is generated from this repository and includes the files needed to run the system, excluding:
 
 - `.git/`
 - `.env` (real secrets)
 - `node_modules/`, `.venv/`, `__pycache__/`, build caches, Docker volumes
+- `dist/` (derived artefacts)
+
+In practice, the zip will include `docker-compose.yml`, `backend/`, `frontend/`, `nginx/`, `tests/`, and documentation files like `README.md`, `TESTING.md`, and this manual.
 
 ### Environment setup
 
@@ -44,6 +58,9 @@ cp .env.example .env
 2) Adjust variables in `.env` if needed.
 
 Required for local Docker run (dev defaults provided in `.env.example`):
+- `TZ`
+- `DJANGO_DEBUG`
+- `ALLOWED_HOSTS`
 - `DJANGO_SECRET_KEY`
 - Postgres: `PG_DB`, `PG_USER`, `PG_PASSWORD`
 - RabbitMQ: `MQ_USER`, `MQ_PASS`
@@ -135,7 +152,6 @@ Backend unit:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -r backend/requirements.txt
 pip install -r tests/backend-unit/requirements.txt
 cd tests/backend-unit
 pytest
