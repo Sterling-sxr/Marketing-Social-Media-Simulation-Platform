@@ -1,7 +1,7 @@
-# Capstone Project 9900-F09D-BREAD
+# Marketing Social Media Simulation Platform
 
 ## Overview
-This repo contains both the Django backend and Vite/React frontend for the Bread capstone project. The stack is containerised with Docker Compose so you can bring the entire system up with one command.
+Marketing Social Media Simulation Platform contains a Django backend and Vite/React frontend for course-based social media simulation, AI personas, and engagement analytics. The stack is containerised with Docker Compose so you can bring the entire system up with one command.
 
 ## Directory Layout
 - `backend/` – Django project (apps live inside `backend/apps/`).
